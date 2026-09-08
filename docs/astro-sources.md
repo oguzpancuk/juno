@@ -35,6 +35,12 @@ Known weak spots, kept deliberately:
   (that would be 1,440 keys); the layering rule keeps them from
   contradicting each other in one reading.
 
+Layering is enforced mechanically by `packages/astro/src/content-rules.test.ts`
+(banned word classes per layer, no shared sentence or 4-word sequence
+between a planet's sign and house texts, antonym scan over all 1,440
+sign+house pairs) and was judged once in full by evaluator passes over
+every pair (see NOTES, 2026-09-09).
+
 Coherence between the geometry (score, strongest aspect) and the written
 characters was checked on seven sample pairs by an independent evaluator
 pass; the findings were applied to the texts, not to the samples

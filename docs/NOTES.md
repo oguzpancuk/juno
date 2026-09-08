@@ -10,6 +10,32 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Layering guarantee: rules test + full-pair judgment
+
+- Owner approved the three-layer guarantee for sign/house/aspect text
+  consistency (the astrological standard covers score vs aspect text;
+  sign-vs-house consistency inside one reading is our own layering rule).
+- Layer 1+2 (`packages/astro/src/content-rules.test.ts`, in the battery):
+  house texts carry no sign-owned tempo/temperament words; aspect texts
+  carry no sign names or element flavour (whole-word Turkish match); no
+  sentence repeated between sign and house layers; all 1,440 planet
+  sign+house pairs scanned for antonym pairs and for any shared 4-word
+  sequence.
+- Layer 3 (one-off): five evaluator passes judged every one of the 1,440
+  pairs twice. First pass flagged 190 (house texts asserting tempo,
+  visibility or dignity; outer-planet sign texts written as life areas).
+  Response: all 120 house texts rewritten to life area + behaviour, 51
+  Jupiter–Pluto sign texts rewritten to temperament (`e9ce67c`). Second
+  pass flagged 111, mostly natural-house restatements (Leo/5, Virgo/6 …)
+  and a few residual mode claims in house texts; ~70 texts rephrased with
+  distinct vocabulary. Rewritten texts re-audited against the references:
+  houses 117/120, outer signs 56/60, deviations applied.
+- Known residual, accepted: a sign and its natural house share a theme by
+  definition; texts now differ in wording and in mode (how vs where) but
+  a reader will still see the theme twice in 1/12 of placements.
+- Verified: battery green; astro 236 tests. Not verified: no third
+  judgment pass; no screenshots (text-only change).
+
 ## 2026-09-08 — Owner decision: compatibility stays purely geometric
 
 - Owner confirmed the scoring model: the score comes only from inter-chart
