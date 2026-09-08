@@ -5,9 +5,7 @@ import { normalizeDegrees, signOf, signedDelta, type Sign } from './signs';
 
 /** Birth instant and place. The engine never sees local time or a zone. */
 export const ChartInputSchema = z.object({
-  utc: z
-    .date()
-    .refine((d) => Number.isFinite(d.getTime()), 'utc must be a valid Date'),
+  utc: z.date(),
   latitude: z.number().finite().min(-90).max(90),
   longitude: z.number().finite().min(-180).max(180),
 });
@@ -29,7 +27,7 @@ export interface Chart {
   readonly planets: Readonly<Record<Planet, Placement>>;
 }
 
-const ONE_HOUR_MS = 60 * 60 * 1000;
+const HALF_HOUR_MS = 30 * 60 * 1000;
 
 /**
  * Apparent geocentric ecliptic longitude of date for a planet, in degrees.
@@ -42,13 +40,22 @@ export function geocentricLongitude(planet: Planet, utc: Date): number {
   return normalizeDegrees(Ecliptic(vector).elon);
 }
 
-function isRetrograde(planet: Planet, utc: Date, longitude: number): boolean {
+/**
+ * Retrograde when the apparent longitude is decreasing at `utc`. A central
+ * difference (t ± 30 min) estimates the velocity at t itself; a forward
+ * difference would flip the flag 30 minutes early around every station.
+ */
+function isRetrograde(planet: Planet, utc: Date): boolean {
   if (planet === 'sun' || planet === 'moon') return false;
-  const later = geocentricLongitude(
+  const before = geocentricLongitude(
     planet,
-    new Date(utc.getTime() + ONE_HOUR_MS),
+    new Date(utc.getTime() - HALF_HOUR_MS),
   );
-  return signedDelta(later - longitude) < 0;
+  const after = geocentricLongitude(
+    planet,
+    new Date(utc.getTime() + HALF_HOUR_MS),
+  );
+  return signedDelta(after - before) < 0;
 }
 
 function place(planet: Planet, utc: Date): Placement {
@@ -58,7 +65,7 @@ function place(planet: Planet, utc: Date): Placement {
     longitude,
     sign: signOf(longitude),
     degree: longitude % 30,
-    retrograde: isRetrograde(planet, utc, longitude),
+    retrograde: isRetrograde(planet, utc),
   };
 }
 

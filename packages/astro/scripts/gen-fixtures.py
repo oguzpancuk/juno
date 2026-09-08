@@ -7,8 +7,11 @@ geocentric positions, Placidus houses. Output feeds
 packages/astro/src/__fixtures__/*.json; the engine under test must match
 every value within 1 degree (ADR-0004).
 
+The fixture directory is in .prettierignore: this script's output is the
+canonical byte form, so re-running it must produce no diff.
+
 Usage (dev machine only; never part of the battery):
-  python3 -m venv .venv && .venv/bin/pip install pyswisseph
+  python3 -m venv .venv && .venv/bin/pip install pyswisseph==2.10.3.2
   .venv/bin/python packages/astro/scripts/gen-fixtures.py
 """
 from __future__ import annotations

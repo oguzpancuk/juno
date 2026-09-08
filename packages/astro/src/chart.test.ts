@@ -30,13 +30,14 @@ describe.each(fixtures)('computeChart · $id', (fixture) => {
     expect(actual.retrograde).toBe(expected.retrograde);
   });
 
-  it('places every planet inside its sign', () => {
+  it('keeps sign and degree consistent with the longitude', () => {
     for (const planet of PLANETS) {
-      const { longitude, degree } = chart.planets[planet];
+      const { longitude, sign, degree } = chart.planets[planet];
+      expect(sign).toBe(signOf(longitude));
       expect(degree).toBeGreaterThanOrEqual(0);
       expect(degree).toBeLessThan(30);
-      expect(Math.floor(longitude / 30) * 30 + degree).toBeCloseTo(
-        longitude,
+      expect(longitude - degree).toBeCloseTo(
+        Math.floor(longitude / 30) * 30,
         9,
       );
     }
@@ -58,6 +59,16 @@ describe('computeChart · determinism and validation', () => {
     const chart = computeChart(input);
     expect(chart.planets.sun.retrograde).toBe(false);
     expect(chart.planets.moon.retrograde).toBe(false);
+  });
+
+  it('agrees with the Swiss Ephemeris across a station (Mercury, 2024-01-02 ~03:07Z)', () => {
+    // A forward difference flipped at 02:37Z; the central difference and the
+    // Swiss Ephemeris instantaneous speed both flip between 03:05 and 03:10.
+    const at = (iso: string) =>
+      computeChart({ ...input, utc: new Date(iso) }).planets.mercury.retrograde;
+    expect(at('2024-01-02T02:50:00Z')).toBe(true);
+    expect(at('2024-01-02T03:00:00Z')).toBe(true);
+    expect(at('2024-01-02T03:20:00Z')).toBe(false);
   });
 
   it('rejects an invalid date', () => {

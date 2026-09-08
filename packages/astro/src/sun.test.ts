@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sunLongitude, sunSign } from './sun';
 
-// Reference longitudes from astro.com (Swiss Ephemeris), apparent geocentric,
+// Reference longitudes from the Swiss Ephemeris (see __fixtures__), apparent geocentric,
 // tropical. Tolerance 1° per ADR-0004 (asserted explicitly); the numbers
 // are far from sign cusps.
 describe('sunSign', () => {
