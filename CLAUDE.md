@@ -21,6 +21,7 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 |---|---|
 | `apps/mobile` | Expo app (Expo Router) |
 | `packages/astro` | Pure-TS natal chart + compatibility engine, no RN deps |
+| `packages/geo` | Offline city list (GeoNames) + local time → UTC, no RN deps |
 | `supabase/` | Migrations, Edge Functions (Deno), local config |
 
 | Purpose | Command |

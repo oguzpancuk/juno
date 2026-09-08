@@ -36,12 +36,16 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       schema has no "unknown time" branch.
       — done when: Ascendant and MC within 1° and every planet in the same
       house as astro.com on the 3 fixtures (battery).
-- [ ] **S3 — Birth place → UTC instant.** Offline city list for Turkey +
-      major world cities (GeoNames cities15000 subset: name, lat, lon, IANA
-      zone) as a JSON asset with a Zod schema; local date+time + IANA zone →
-      UTC via `Intl` so historical DST rules apply.
-      — done when: Vitest resolves "İstanbul, 1995-07-14 03:30" and
-      "Ankara, 1990-01-01 12:00" to the UTC instants astro.com uses (battery).
+- [x] **S3 — Birth place → UTC instant.** `packages/geo`: offline city
+      list (GeoNames cities15000 subset — all Turkish entries plus world
+      cities ≥ 100 k, ~1 MB JSON, Zod-validated at first use, CC BY 4.0
+      attribution owed in the app), diacritic-insensitive prefix search, and
+      `localToUtc(local, ianaZone)` via `Intl` so historical DST rules apply;
+      `resolveBirth(cityId, local)` yields the chart engine input.
+      — done when: Vitest resolves "İstanbul, 1995-07-14 03:30",
+      "Ankara, 1990-01-01 12:00", Helsinki 2001 and Sydney 1988 to the UTC
+      instants of the astro fixtures, plus Turkey's 2016 zone change and a
+      DST gap/overlap (battery).
 - [ ] **S4 — Backend skeleton with RLS.** `supabase init`; migration 0001:
       `profiles` (id = auth uid, display_name, birth_date, birth_utc,
       birth_city, chart jsonb, big_three, gender, interested_in, location

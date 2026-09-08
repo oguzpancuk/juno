@@ -10,6 +10,28 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S3 birth place → UTC (`packages/geo`)
+
+- Done: new workspace `packages/geo` (config mirrors astro). Data:
+  `scripts/build-cities.mjs` turns GeoNames `cities15000.txt` into
+  `src/data/cities.json` (6 596 cities: all 431 Turkish entries + world
+  ≥ 100 k population; lat/lon rounded to 4 decimals; 1.04 MB; prettier-
+  ignored, byte-canonical). GeoNames is CC BY 4.0 — attribution must
+  appear in the app's about/legal screen (added to the v1 KVKK item).
+  `searchCities` folds Turkish dotted/dotless i and other diacritics;
+  `localToUtc` uses `Intl.DateTimeFormat` parts to find the offset,
+  checks candidate offsets from ±1 day, picks the earlier instant on
+  overlap and the pre-transition offset in a gap. `resolveBirth` joins
+  city + wall time into `{ utc, latitude, longitude }`.
+- Verified: battery green; geo suite covers the four astro fixtures,
+  Turkey's 2016 permanent +03 switch, a 2015 DST gap and overlap,
+  New York, validation (unknown zone, 30 Feb, out-of-range). Node's full
+  ICU is the tzdata here; the simulator check that Hermes' Intl agrees is
+  an S5 done-when addition (see ROADMAP S5).
+- Owner instruction this session: proceed through the skeleton without
+  asking; pushes remain ask-tier.
+- Next: S4 Supabase schema + RLS (Docker and Supabase CLI 2.117 present).
+
 ## 2026-09-08 — S2 Ascendant, MC, Placidus houses
 
 - Done: `packages/astro/src/houses.ts` — RAMC from astronomy-engine's

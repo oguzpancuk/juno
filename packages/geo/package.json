@@ -1,0 +1,15 @@
+{
+  "name": "@stardate/geo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Offline birth-place lookup (GeoNames subset) and local time → UTC via IANA zones. No I/O at runtime.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "build:cities": "node scripts/build-cities.mjs"
+  }
+}
