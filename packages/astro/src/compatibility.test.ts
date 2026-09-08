@@ -1,0 +1,239 @@
+import { describe, expect, it } from 'vitest';
+import { PLANETS } from './bodies';
+import { computeChart } from './chart';
+import {
+  BODIES,
+  aspectBetween,
+  compatibility,
+  elementsAgree,
+  parseStarterKey,
+  scoreFrom,
+  starterKey,
+  type ChartForScoring,
+} from './compatibility';
+import { toPublicChart } from './public';
+import { signOf } from './signs';
+import ankara from './__fixtures__/ankara-1990.json';
+import istanbul from './__fixtures__/istanbul-1995.json';
+import sydney from './__fixtures__/sydney-1988.json';
+
+const publicOf = (fx: typeof istanbul) =>
+  toPublicChart(
+    computeChart({
+      utc: new Date(fx.input.utc),
+      latitude: fx.input.latitude,
+      longitude: fx.input.longitude,
+    }),
+  );
+
+/** Synthetic chart from body longitudes (houses irrelevant for scoring). */
+function synthetic(
+  longitudes: Record<(typeof BODIES)[number], number>,
+): ChartForScoring {
+  const planets = Object.fromEntries(
+    PLANETS.map((p) => [
+      p,
+      {
+        longitude: longitudes[p],
+        sign: signOf(longitudes[p]),
+        degree: longitudes[p] % 30,
+        house: 1,
+        retrograde: false,
+      },
+    ]),
+  ) as ChartForScoring['planets'];
+  return { planets, houses: { ascendant: longitudes.ascendant } };
+}
+
+describe('scoreFrom (ADR-0003)', () => {
+  it('is 50 with no aspects, bounded, and rewards activity', () => {
+    expect(scoreFrom(0, 0)).toBe(50);
+    expect(scoreFrom(100, 0)).toBe(95);
+    expect(scoreFrom(0, 100)).toBe(5);
+    expect(scoreFrom(1000, 0)).toBeLessThanOrEqual(100);
+    expect(scoreFrom(5, 5)).toBe(50);
+    expect(scoreFrom(10, 2)).toBeGreaterThan(scoreFrom(5, 1)); // same ratio, more activity
+  });
+});
+
+describe('aspectBetween (ADR-0003 table)', () => {
+  it('exact Sun trine Sun: base 3, tight bonus capped at 1', () => {
+    expect(aspectBetween('sun', 0, 'sun', 120)?.term).toBe(3);
+  });
+
+  it('Moon square Venus with 3° orb: 1 · 0.9 · −3 · 0.5', () => {
+    expect(aspectBetween('moon', 10, 'venus', 103)).toEqual({
+      planetA: 'moon',
+      aspect: 'square',
+      planetB: 'venus',
+      orb: 3,
+      term: -1.35,
+    });
+  });
+
+  it('Saturn square Moon uses the −4 override; Saturn trine Moon does not', () => {
+    expect(aspectBetween('saturn', 0, 'moon', 90)?.term).toBeCloseTo(
+      -4 * 0.7,
+      6,
+    ); // orb 0 → factor 1
+    expect(aspectBetween('moon', 0, 'saturn', 120)?.term).toBeCloseTo(
+      3 * 0.7,
+      6,
+    );
+  });
+
+  it('outer-planet pairs get 0.75 × orb', () => {
+    expect(aspectBetween('sun', 0, 'jupiter', 6.5)).toBeNull(); // 6.5 > 8·0.75
+    expect(aspectBetween('sun', 0, 'jupiter', 5.9)).not.toBeNull();
+    expect(aspectBetween('sun', 0, 'mars', 7.9)).not.toBeNull();
+  });
+
+  it('tight orb bonus: 1.5° square → factor (1 − 1.5/6) · 1.25 = 0.9375', () => {
+    expect(aspectBetween('sun', 0, 'moon', 91.5)?.term).toBeCloseTo(
+      -3 * 0.9375,
+      6,
+    );
+  });
+
+  it('returns null outside every orb', () => {
+    expect(aspectBetween('sun', 0, 'moon', 45)).toBeNull();
+  });
+});
+
+describe('compatibility', () => {
+  // Hand-built pair: only Sun△Sun (exact) and Moon□Venus (3°) are in orb;
+  // every other body is parked ≥ 10° from any aspect angle to every other.
+  // (found by a one-off greedy search over whole degrees; hand-verified below)
+  const a = synthetic({
+    sun: 0,
+    moon: 100,
+    mercury: 22,
+    venus: 22,
+    mars: 22,
+    jupiter: 5,
+    saturn: 5,
+    uranus: 5,
+    neptune: 5,
+    pluto: 5,
+    ascendant: 22,
+  });
+  const b = synthetic({
+    sun: 120,
+    moon: 31,
+    mercury: 31,
+    venus: 193,
+    mars: 31,
+    jupiter: 15,
+    saturn: 15,
+    uranus: 15,
+    neptune: 15,
+    pluto: 15,
+    ascendant: 31,
+  });
+
+  it('finds exactly the hand-built aspects', () => {
+    const result = compatibility(a, b);
+    const pairs = result.aspects
+      .map((x) => `${x.planetA}-${x.aspect}-${x.planetB}`)
+      .sort();
+    expect(pairs).toEqual(['moon-square-venus', 'sun-trine-sun']);
+  });
+
+  it('scores the hand-computed value: H = 3 + 2 (Suns fire) + 2 (Moons water/earth), T = 1.35 → 65', () => {
+    const result = compatibility(a, b);
+    expect(result.harmony).toBe(7);
+    expect(result.tension).toBe(1.35);
+    expect(result.score).toBe(65);
+    expect(result.strongest?.planetA).toBe('sun');
+    expect(result.strongest?.aspect).toBe('trine');
+  });
+
+  it('is symmetric in score and mirrors the strongest aspect', () => {
+    const ab = compatibility(a, b);
+    const ba = compatibility(b, a);
+    expect(ba.score).toBe(ab.score);
+    expect(ba.harmony).toBe(ab.harmony);
+    expect(ba.tension).toBe(ab.tension);
+    expect(ba.strongest).toEqual({
+      ...ab.strongest,
+      planetA: ab.strongest?.planetB,
+      planetB: ab.strongest?.planetA,
+    });
+  });
+
+  it('is symmetric and bounded on real charts', () => {
+    const charts = [istanbul, ankara, sydney].map(publicOf);
+    for (const x of charts) {
+      for (const y of charts) {
+        const xy = compatibility(x, y);
+        const yx = compatibility(y, x);
+        expect(xy.score).toBe(yx.score);
+        expect(xy.score).toBeGreaterThanOrEqual(0);
+        expect(xy.score).toBeLessThanOrEqual(100);
+        expect(xy.aspects.length).toBe(yx.aspects.length);
+      }
+    }
+  });
+
+  it('skips generational (outer–outer) pairs', () => {
+    const x = synthetic({
+      sun: 0,
+      moon: 0,
+      mercury: 0,
+      venus: 0,
+      mars: 0,
+      jupiter: 0,
+      saturn: 0,
+      uranus: 0,
+      neptune: 0,
+      pluto: 0,
+      ascendant: 0,
+    });
+    const result = compatibility(x, x);
+    expect(
+      result.aspects.some(
+        (p) => p.planetA === 'uranus' && p.planetB === 'pluto',
+      ),
+    ).toBe(false);
+    expect(
+      result.aspects.some((p) => p.planetA === 'sun' && p.planetB === 'pluto'),
+    ).toBe(true);
+  });
+});
+
+describe('starterKey', () => {
+  it('encodes the strongest aspect in a<b orientation and round-trips', () => {
+    const x = publicOf(istanbul);
+    const y = publicOf(ankara);
+    const key = starterKey(x, y);
+    expect(key).toMatch(
+      /^[a-z]+-(conjunction|sextile|square|trine|opposition)-[a-z]+$/,
+    );
+    const parsed = parseStarterKey(key ?? '');
+    expect(parsed).not.toBeNull();
+    expect(BODIES).toContain(parsed?.planetA);
+    // Reversed charts give the mirrored key.
+    const back = parseStarterKey(starterKey(y, x) ?? '');
+    expect(back).toEqual({
+      planetA: parsed?.planetB,
+      aspect: parsed?.aspect,
+      planetB: parsed?.planetA,
+    });
+  });
+
+  it('rejects malformed keys', () => {
+    expect(parseStarterKey('sun-trine')).toBeNull();
+    expect(parseStarterKey('hey <script>')).toBeNull();
+    expect(parseStarterKey('sun-quincunx-moon')).toBeNull();
+  });
+});
+
+describe('elementsAgree', () => {
+  it('same element or complementary pair', () => {
+    expect(elementsAgree('aries', 'leo')).toBe(true);
+    expect(elementsAgree('aries', 'gemini')).toBe(true); // fire–air
+    expect(elementsAgree('taurus', 'cancer')).toBe(true); // earth–water
+    expect(elementsAgree('aries', 'taurus')).toBe(false);
+    expect(elementsAgree('cancer', 'libra')).toBe(false);
+  });
+});

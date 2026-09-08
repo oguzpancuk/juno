@@ -23,6 +23,22 @@ export {
   type Sign,
 } from './signs';
 export {
+  ASPECTS,
+  BODIES,
+  aspectBetween,
+  compatibility,
+  elementsAgree,
+  parseStarterKey,
+  scoreFrom,
+  starterKey,
+  strongestOf,
+  type Aspect,
+  type Body,
+  type ChartForScoring,
+  type Compatibility,
+  type InterAspect,
+} from './compatibility';
+export {
   BigThreeSchema,
   PublicChartSchema,
   PublicPlacementSchema,
