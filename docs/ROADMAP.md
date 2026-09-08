@@ -136,12 +136,15 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
 <!-- What makes the skeleton shippable to a TestFlight cohort. Order is the
      build order; Apple-required items are marked (Apple). -->
 
-- [ ] **Chat (PRD-6).** `messages` table, RLS (only the two match members),
+- [x] **Chat (PRD-6).** `messages` table, RLS (only the two match members),
       Realtime subscription, conversation list with last message + unread
       flag; starter pinned at top of the thread.
       — done when: RLS Vitest proves a third user gets 0 rows and cannot
       insert (battery); two simulators show a message crossing within 2 s
-      (`screenshots/v1-chat.png`, manual timing).
+      (`screenshots/v1-chat.png`, manual timing). _Done: 8 RLS tests plus a
+      Realtime test that measures the crossing (346 ms) and proves an
+      outsider's socket stays silent; the second simulator was replaced by
+      a scripted peer (see NOTES 2026-09-09)._
 - [ ] **Profile photos + bio (PRD-3).** Supabase Storage bucket with
       per-user folder policy; 1–6 photos; profile absent from `discover`
       until ≥ 1 photo.

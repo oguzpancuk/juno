@@ -10,6 +10,46 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — v1 chat (unattended session)
+
+- Done: `messages` table with `is_match_member()` (security definer,
+  search_path pinned, execute granted to authenticated only) behind every
+  policy; insert pins `sender_id` to the caller; update is limited to the
+  recipient and, by trigger, to `read_at`; no delete policy; table added
+  to the Realtime publication. `match_profiles` extended with
+  `last_body`/`last_at`/`last_sender_id`/`unread_count` (lateral joins), so
+  the conversation list needs no second query.
+- App: `lib/chat.ts` (Zod rows, `useThread` with postgres_changes filtered
+  by `match_id`, merge-by-id so a row arriving twice renders once),
+  `/chat/[id]` with the starter pinned above the thread, matches screen
+  turned into a conversation list (last message, "Sen:" prefix, unread
+  badge), match screen links into the thread.
+- Behaviour fixed mid-session: the thread first marked messages read from
+  the Realtime handler, so a backgrounded (still-mounted) thread marked
+  them read while the user was on another screen. Read receipts now fire
+  only from `useFocusEffect` and from a focused-guarded effect. Verified
+  both ways in the simulator against the database.
+- Verified: battery green on a clean tree; 8 new RLS tests; a Realtime
+  test measuring the crossing (346 ms against a 2 s budget) that also
+  asserts an outsider receives nothing; `screenshots/v1-chat.png` (peer
+  message arriving live in the open thread) and
+  `v1-conversations.png` (unread badge, last message).
+- NOT verified: sending a message from the app's own composer. Text
+  injection into a React Native TextInput does not work in this
+  simulator setup (taps and swipes do; `simctl` typing and clipboard
+  paste both fail, with and without the hardware-keyboard default). The
+  insert path is covered by the RLS tests instead. Also not done: two
+  real simulators side by side; the peer was a service-role script
+  (`supabase/scripts/seed-message.ts`).
+- Gotchas: Metro in CI mode does not regenerate `.expo/types/router.d.ts`
+  when a route file is added — restart Expo or typed `href`s fail to
+  typecheck. A simulator session can be planted by writing the
+  supabase-js session into Expo Go's AsyncStorage
+  (`…/ExponentExperienceData/@anonymous/<slug>/RCTAsyncLocalStorage`, key
+  `sb-127-auth-token`, value in a file named by the key's MD5 when over
+  1 KB); `supabase/scripts/make-tester.ts` creates the matching profile.
+- Next: profile photos + bio (Storage policies), then safety controls.
+
 ## 2026-09-09 — App name: constraint and shortlist
 
 - Owner ruled out Turkish names: the shipped app name must not be Turkish
