@@ -10,6 +10,14 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Owner sign-off on the interpretation texts
+
+- Owner approved the Turkish content as of `459ce54` ("metinleri
+  onaylıyorum"). ROADMAP v1 item "Full Turkish content" closed; its
+  done-when is now fully met (completeness test, screenshots, sign-off).
+- Owner asked for app name proposals; recorded in the next entry when a
+  name is chosen.
+
 ## 2026-09-09 — Layering guarantee: rules test + full-pair judgment
 
 - Owner approved the three-layer guarantee for sign/house/aspect text
