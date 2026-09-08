@@ -73,9 +73,10 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       sign/house (placeholder one-line Turkish text per planet-in-sign; full
       texts in v1).
       — done when: `screenshots/s5-chart.png` shows the chart for fixture #1
-      and the values equal the fixture (screenshot + manual compare); the
-      profile row exists in local DB with a location (manual: Supabase
-      Studio).
+      and the values equal the fixture (screenshot + manual compare), which
+      also proves Hermes' `Intl` resolves Europe/Istanbul 1995 like Node's
+      ICU; the profile row exists in local DB with a location (manual:
+      Supabase Studio).
 - [ ] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
 chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
       and returns 0–100 plus the strongest inter-chart aspect as
@@ -130,7 +131,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       profile flow (manual; not simulator-testable).
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
-      privacy policy hosted at a URL.
+      privacy policy hosted at a URL; about/legal screen credits GeoNames
+      (CC BY 4.0) and astronomy-engine (MIT).
       — done when: profile insert without `consent_at` is rejected by a
       CHECK constraint (battery) and the URL returns 200 (manual).
 - [ ] **Full Turkish content.** ~360 snippets in
