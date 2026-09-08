@@ -10,7 +10,7 @@ export function searchKey(text: string): string {
     .replace(/İ/g, 'i')
     .replace(/ı/g, 'i')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
 }

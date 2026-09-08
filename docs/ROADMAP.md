@@ -75,7 +75,8 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       — done when: `screenshots/s5-chart.png` shows the chart for fixture #1
       and the values equal the fixture (screenshot + manual compare), which
       also proves Hermes' `Intl` resolves Europe/Istanbul 1995 like Node's
-      ICU; the profile row exists in local DB with a location (manual:
+      ICU (a second manual check at a midnight wall time guards the ICU
+      "24" hour quirk); the city index is warmed on screen mount; the profile row exists in local DB with a location (manual:
       Supabase Studio).
 - [ ] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
 chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
@@ -143,6 +144,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: a Vitest asserts every key the engine can emit has a
       non-empty snippet (battery); `screenshots/v1-placement-detail.png`;
       owner sign-off recorded in NOTES.
+- [ ] **Server-side birth_utc validation.** Devices with stale tzdata
+      (Android especially) can compute a wrong `birth_utc`; an Edge Function
+      (Deno, full ICU) recomputes it from city + wall time and rejects a
+      mismatch before the profile is stored.
+      — done when: a Vitest against the local stack proves an inconsistent
+      `birth_utc` is rejected and a consistent one accepted (battery).
+- [ ] **City search UX.** Word-prefix matching ("york" → New York) and a
+      curated Turkish exonym list (Viyana, Münih, Londra …) in
+      `packages/geo`.
+      — done when: Vitest covers both (battery).
 - [ ] **Location refresh.** "Konumu güncelle" in settings re-reads device
       location and updates `location`.
       — done when: manual check in Studio shows the point changed.

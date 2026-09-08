@@ -41,10 +41,14 @@ export function utcOffsetMinutes(utcMs: number, timeZone: string): number {
     field('year'),
     field('month') - 1,
     field('day'),
-    field('hour'),
+    // Some ICU builds print midnight as "24" despite hourCycle h23.
+    field('hour') % 24,
     field('minute'),
     field('second'),
   );
+  // Rounded to the minute: pre-1910 local-mean-time offsets carry seconds
+  // (Istanbul IMT was +1:56:56); that error is < 1 minute of time,
+  // i.e. < 1′ of Ascendant, and accepted.
   return Math.round((wall - utcMs) / MINUTE_MS);
 }
 

@@ -64,12 +64,48 @@ describe('localToUtc · historical rules', () => {
   });
 
   it('fall-back overlap picks the earlier instant', () => {
-    // Istanbul 2015-10-25: 04:00 EEST → 03:00 EET, so 03:30 happened twice.
-    const utc = localToUtc(
-      { year: 2015, month: 10, day: 25, hour: 3, minute: 30 },
+    // Istanbul 2015-11-08 (postponed from Oct 25 for the election):
+    // 04:00 EEST → 03:00 EET, so 03:30 happened twice; first is EEST.
+    const istanbul = localToUtc(
+      { year: 2015, month: 11, day: 8, hour: 3, minute: 30 },
       'Europe/Istanbul',
     );
-    expect(iso(utc)).toBe('2015-10-25T00:30:00.000Z');
+    expect(iso(istanbul)).toBe('2015-11-08T00:30:00.000Z');
+    // New York 2015-11-01: 02:00 EDT → 01:00 EST; 01:30 first as EDT (−4).
+    const newYork = localToUtc(
+      { year: 2015, month: 11, day: 1, hour: 1, minute: 30 },
+      'America/New_York',
+    );
+    expect(iso(newYork)).toBe('2015-11-01T05:30:00.000Z');
+  });
+
+  it('handles a zone that skipped a whole day (Samoa 2011)', () => {
+    // 2011-12-30 never happened in Apia; the pre-transition offset (−10)
+    // applies, which is the same instant as 2011-12-31 (+14).
+    const utc = localToUtc(
+      { year: 2011, month: 12, day: 30, hour: 12, minute: 0 },
+      'Pacific/Apia',
+    );
+    expect(iso(utc)).toBe('2011-12-30T22:00:00.000Z');
+  });
+
+  it('handles a half-hour zone and a midnight wall time', () => {
+    expect(
+      iso(
+        localToUtc(
+          { year: 2000, month: 1, day: 1, hour: 0, minute: 0 },
+          'Asia/Kolkata',
+        ),
+      ),
+    ).toBe('1999-12-31T18:30:00.000Z');
+    expect(
+      iso(
+        localToUtc(
+          { year: 2000, month: 1, day: 1, hour: 0, minute: 0 },
+          'Europe/Istanbul',
+        ),
+      ),
+    ).toBe('1999-12-31T22:00:00.000Z');
   });
 
   it('UTC and a west-of-Greenwich zone', () => {

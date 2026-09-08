@@ -50,10 +50,23 @@ describe('searchCities', () => {
     }
   });
 
-  it('ranks exact matches before longer prefixes, then by population', () => {
+  it('ranks an exact match before a larger prefix match', () => {
+    // Van (525k) is an exact match; Vancouver (662k) only a prefix match.
+    const hits = searchCities('van', 5);
+    expect(hits[0]?.name).toBe('Van');
+    expect(hits.slice(1).some((c) => c.name === 'Vancouver')).toBe(true);
+  });
+
+  it('orders prefix matches by population and honours the limit', () => {
     const hits = searchCities('ank', 5);
     expect(hits[0]?.id).toBe(ANKARA);
     expect(hits.length).toBeLessThanOrEqual(5);
+  });
+
+  it('shows Turkish spellings for cities GeoNames names in ASCII', () => {
+    for (const name of ['Ümraniye', 'Batıkent', 'İsparta']) {
+      expect(searchCities(name, 1)[0]?.name).toBe(name);
+    }
   });
 
   it('returns nothing for an empty or unknown query', () => {

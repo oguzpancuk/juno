@@ -12,7 +12,12 @@ const MIN_WORLD_POPULATION = 100_000;
 const HOME_COUNTRY = 'TR';
 // GeoNames' primary name is the ASCII form for a few Turkish cities; the
 // Turkish UI should show the local spelling.
-const NAME_OVERRIDES = new Map([[745044, 'İstanbul']]);
+const NAME_OVERRIDES = new Map([
+  [745044, 'İstanbul'],
+  [738377, 'Ümraniye'],
+  [442301, 'Batıkent'],
+  [311073, 'İsparta'],
+]);
 
 const source = process.argv[2];
 if (!source) {
@@ -27,14 +32,28 @@ const out = resolve(
 const lines = readFileSync(source, 'utf8').split('\n').filter(Boolean);
 
 const cities = [];
+const skipped = [];
 for (const line of lines) {
   const f = line.split('\t');
   const id = Number(f[0]);
   const country = f[8];
   const population = Number(f[14]);
   const timeZone = f[17];
-  if (!timeZone) continue;
   if (country !== HOME_COUNTRY && population < MIN_WORLD_POPULATION) continue;
+  const problem =
+    !Number.isInteger(id) || id <= 0
+      ? 'bad id'
+      : !f[1] || !f[2]
+        ? 'missing name'
+        : !timeZone
+          ? 'missing time zone'
+          : !Number.isFinite(Number(f[4])) || !Number.isFinite(Number(f[5]))
+            ? 'bad coordinates'
+            : null;
+  if (problem) {
+    skipped.push(`${id} ${f[1]} (${country}): ${problem}`);
+    continue;
+  }
   cities.push({
     id,
     name: NAME_OVERRIDES.get(id) ?? f[1],
@@ -48,6 +67,19 @@ for (const line of lines) {
   });
 }
 cities.sort((a, b) => b.population - a.population || a.id - b.id);
+
+if (skipped.length > 0) {
+  console.error(`skipped ${skipped.length} rows:\n  ${skipped.join('\n  ')}`);
+  if (skipped.some((row) => row.includes(`(${HOME_COUNTRY})`))) {
+    console.error('a home-country row was skipped; refusing to write');
+    process.exit(1);
+  }
+}
+const ids = new Set(cities.map((c) => c.id));
+if (ids.size !== cities.length) {
+  console.error('duplicate ids in output; refusing to write');
+  process.exit(1);
+}
 
 const body = cities.map((c) => JSON.stringify(c)).join(',\n  ');
 writeFileSync(out, `[\n  ${body}\n]\n`);
