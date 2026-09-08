@@ -22,6 +22,8 @@ import { resolveBirth } from '../../geo/src/index';
 
 const TENSE = [
   'gerilim',
+  'baskı',
+  'kaçar',
   'çatış',
   'sürtüş',
   'zorl',

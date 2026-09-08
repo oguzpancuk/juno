@@ -68,7 +68,7 @@
     "question": "Sana güzel gelen şeyleri nasıl seçersin?"
   },
   "sun-square-venus": {
-    "meaning": "Sevgi ile kimlik gerilir; beğeni ile kabul arasında fark. Kendin olmak sevilmekten önce gelir.",
+    "meaning": "Zevkler ve değerler tam örtüşmez; biri diğerinin beğenisini anlamakta zorlanabilir, kim ne kadar verdi hesabı kolay açılır. Farkı sorun değil merak olarak karşıladığınızda beğeni kabule dönüşür.",
     "question": "Sevilmek için değişmen gerektiğini hissettiğin oldu mu?"
   },
   "sun-trine-venus": {
@@ -80,7 +80,7 @@
     "question": "Bir ilişkiden beklediğin ilk şey ne?"
   },
   "sun-conjunction-mars": {
-    "meaning": "Kimlik ile eylem buluşur: enerjik, cesur, bazen rekabetçi bir bağ. Birlikte çok şey yaparsınız; kimin lider olduğu konuşulmalı.",
+    "meaning": "Kimlik ile eylem aynı noktada buluşur: fiziksel çekim güçlü, enerji yüksek, bazen rekabetçi bir bağ. Birlikte çok şey yapabilirsiniz; kimin öne geçtiği konuşulmazsa kıvılcım sürtüşmeye dönebilir.",
     "question": "Rekabet seni ateşler mi, yorar mı?"
   },
   "sun-sextile-mars": {
@@ -196,11 +196,11 @@
     "question": "Cesaret sana neyi hatırlatır?"
   },
   "moon-opposition-mars": {
-    "meaning": "Duygu ile arzu karşı kutuplarda; çekim ve gerilim bir arada. Öfkenin altındaki ihtiyacı bul.",
+    "meaning": "Duygu ile arzu karşı kutuplarda: çekim ve gerilim bir arada, biri yaklaşırken diğeri geri çekilebilir. Öfkenin altındaki ihtiyacı birlikte bulduğunuzda bu iniş çıkış yakınlığa dönüşür.",
     "question": "Tartışmalar seni yakınlaştırır mı, uzaklaştırır mı?"
   },
   "moon-conjunction-ascendant": {
-    "meaning": "Duygu ile görünüş buluşur: biri diğerinin yüzünde huzur bulur. Hızlı ve doğal bir yakınlık kurulur.",
+    "meaning": "Duygu ile görünüş buluşur: biri diğerinin yüzünde huzur bulur, yakınlık hızlı ve doğal gelir. Duygu bu kadar kolay akınca kimin neyi taşıdığını gözetmek, bakımı bağımlılığa çevirmemek gerekir.",
     "question": "Yüzümde ilk ne gördün?"
   },
   "moon-sextile-ascendant": {
@@ -208,7 +208,7 @@
     "question": "Rahat hissettiğin ortamı nasıl anlarsın?"
   },
   "moon-square-ascendant": {
-    "meaning": "Biri diğerini olduğundan farklı hisseder; ilk izlenim yanıltabilir. Zaman ve dürüstlük doğruyu gösterir.",
+    "meaning": "Biri diğerinin tavrını kolayca üstüne alınabilir; küçük bir söz büyük bir kırgınlığa dönüşebilir. İhtiyacı açık söylemek ve tepkiyi yavaşlatmak bu hassasiyeti yakınlığa çevirir.",
     "question": "İlk izlenimin seni yanılttığı oldu mu?"
   },
   "moon-trine-ascendant": {
@@ -380,7 +380,7 @@
     "question": "Sen hızlı mı karar verirsin, planlı mı?"
   },
   "mars-conjunction-ascendant": {
-    "meaning": "Enerji ile görünüş buluşur: biri diğerini harekete geçirir. Cesur ve doğrudan bir tanışma.",
+    "meaning": "Enerji ile görünüş buluşur: fiziksel çekim güçlü, tanışma cesur ve doğrudan olur. Biri diğerini harekete geçirir; tempo ve kimin yön verdiği konuşulmazsa bu enerji sürtüşmeye dönebilir.",
     "question": "İlk adımı sen mi atarsın, beklersin mi?"
   },
   "mars-sextile-ascendant": {
@@ -397,7 +397,7 @@
   },
   "mars-opposition-ascendant": {
     "meaning": "Enerji Alçalan'a düşer: güçlü bir çekim ve ortaklık, biri diğerini harekete geçirir. Rakip değil takım olduğunuzda bu açı ilişkinin motoru olur.",
-    "question": "Bir takımda kaptan mı olursun, motor mu?"
+    "question": "Seni harekete geçiren biriyle yan yana kalmak sana kolay gelir mi?"
   },
   "ascendant-conjunction-ascendant": {
     "meaning": "Aynı görünüş dili: birbirinizi ilk anda tanırsınız. Benzer yüzler, benzer maskeler.",
@@ -436,7 +436,7 @@
     "question": "Şanslı hissettiğin dönemler oldu mu; o zaman yanında kim vardı?"
   },
   "sun-opposition-jupiter": {
-    "meaning": "Kimlik ile inanç karşı karşıya: farklı hayat felsefeleri taşıyorsunuz. Merak ettiğinizde bu fark bir köprü, yargıladığınızda bir duvar olur.",
+    "meaning": "Biri diğerini memnun etmek için fazlasını vaat edebilir; övgü ve keyif bol, ayrıntı ve ölçü kolay kaçar. Cömertliği gerçekçi bir ölçüyle dengelediğinizde bu açı yalnızca iyi gelir.",
     "question": "Hayat felsefeni tek cümleyle söylesen ne olurdu?"
   },
   "sun-conjunction-saturn": {
@@ -500,7 +500,7 @@
     "question": "Bir ilişkide kendini kaybettiğin oldu mu?"
   },
   "sun-conjunction-pluto": {
-    "meaning": "Kimlik ile güç buluşur: yoğun, dönüştürücü, kaçınılmaz bir bağ. Bu ilişki ikinizi de değiştirir; soru, nasıl değişeceğiniz.",
+    "meaning": "Kimlik ile güç buluşur: yoğun, dönüştürücü, kolay bırakılmayan bir bağ. Biri diğerini yönetme isteği duyabilir; gücü paylaştığınızda bu ilişki ikinizi de büyütür, paylaşmadığınızda yıpratır.",
     "question": "Seni değiştiren bir ilişki oldu mu?"
   },
   "sun-sextile-pluto": {
@@ -536,7 +536,7 @@
     "question": "Rahat hissettiren şeylerin listesini yapsak ilk ne olurdu?"
   },
   "moon-opposition-jupiter": {
-    "meaning": "Duygu ile inanç karşı karşıya; huzuru farklı yerlerde arıyor olabilirsiniz. Merak ettiğinizde fark bir köprü olur.",
+    "meaning": "Biri diğerine iyi gelmek isterken duyguyu ve vaadi büyütebilir; umut bol, ölçü kolay kaçar. Verilen sözü küçük tutup tutmayı seçtiğinizde bu açı sıcak ve destekleyici kalır.",
     "question": "Huzur senin için ne demek?"
   },
   "moon-conjunction-saturn": {
@@ -640,7 +640,7 @@
     "question": "İnancının sarsıldığı bir an oldu mu?"
   },
   "mercury-conjunction-saturn": {
-    "meaning": "Zihin ile yapı buluşur: ciddi, derin, disiplinli bir sohbet dili. Az ama öz konuşursunuz; söylenen söz tutulur.",
+    "meaning": "Zihin ile yapı buluşur: ciddi, ölçülü, sözü tutulan bir sohbet dili. Biri diğerinin yanında konuşmadan önce tartabilir; bu mesafe saygıyla açıldığında derinlik, açılmadığında soğukluk olur.",
     "question": "Az konuşan insanlara güvenir misin?"
   },
   "mercury-sextile-saturn": {
@@ -700,7 +700,7 @@
     "question": "Bir şeyin doğru olduğunu nasıl anlarsın?"
   },
   "mercury-conjunction-pluto": {
-    "meaning": "Zihin ile güç buluşur: derin, delici, dönüştürücü sohbetler. Sırlar açılır; söylenmeyen de duyulur.",
+    "meaning": "Zihin ile güç buluşur: derin, delici, dönüştürücü sohbetler kurulur ve sırlar açılır. Biri konuşmayı yönetmeye ya da bir şeyi saklamaya eğilim gösterebilir; açıklık bu derinliği güvene çevirir.",
     "question": "Sırrını söyleyebileceğin insanları nasıl seçersin?"
   },
   "mercury-sextile-pluto": {
@@ -736,7 +736,7 @@
     "question": "Şımartılmak sana nasıl gelir?"
   },
   "venus-opposition-jupiter": {
-    "meaning": "Sevgi ile inanç karşı karşıya; keyfi farklı yerlerde arıyor olabilirsiniz. Merak ettiğinizde fark zenginlik olur.",
+    "meaning": "Sevgi burada cömert ve keyifli ama beklentiler kolayca büyür; biri diğerinden gerçekte olandan fazlasını umabilir. Beklentiyi gerçek boyutuna indirdiğinizde cömertlik hayal kırıklığı değil bolluk getirir.",
     "question": "Keyif senin için ne demek?"
   },
   "venus-conjunction-saturn": {
@@ -796,7 +796,7 @@
     "question": "Zarif bulduğun şeyler ne?"
   },
   "venus-opposition-neptune": {
-    "meaning": "Sevgi ile ideal karşı karşıya; aldatılma ya da aldanma riski taşır. Gerçeği kabul ettiğinizde sevgi ayakları yere basar.",
+    "meaning": "Biri diğerini olduğundan güzel görebilir, diğeri bu ideale yetişme baskısı hissedebilir; hayal ile gerçek arasında gidip gelmek tanıdık olur. Birbirinizi olduğunuz gibi gördüğünüzde sevgi ayakları yere basar.",
     "question": "Gerçek mi güzel, hayal mi?"
   },
   "venus-conjunction-pluto": {
@@ -816,7 +816,7 @@
     "question": "Tutku ve güven aynı ilişkide olur mu?"
   },
   "venus-opposition-pluto": {
-    "meaning": "Sevgi ile güç karşı karşıya; manipülasyon riski taşır. Değerini bilen bu açıdan dönüşerek çıkar, kaybederek değil.",
+    "meaning": "Sevgi ile güç karşı kutuplarda: çekim yoğun, kaybetme korkusu ve itme-çekme tanıdık gelir. Birbirinizi elde tutmaya değil anlamaya çalıştığınızda bu açı dönüştürür, tüketmez.",
     "question": "Sevgide güç dengesi konuşulur mu sence?"
   },
   "mars-conjunction-jupiter": {
@@ -956,7 +956,7 @@
     "question": "Olgunluk senin için ne demek?"
   },
   "saturn-opposition-ascendant": {
-    "meaning": "Yapı Alçalan'a düşer: ciddi, kalıcı, sorumluluk taşıyan bir ortaklık. Geç ısınır ama kurulduğunda sarsılmaz; yakınlığa izin vermek gerekir.",
+    "meaning": "Yapı Alçalan'a düşer: ciddi, kalıcı, sorumluluk taşıyan bir ortaklık. Biri diğerini düzeltme ya da yönetme eğilimine girebilir; eşitlik konuşulduğunda geç ısınan bu bağ sarsılmaz olur.",
     "question": "Geç gelen şeylere değer verir misin?"
   },
   "uranus-conjunction-ascendant": {
@@ -997,7 +997,7 @@
   },
   "neptune-opposition-ascendant": {
     "meaning": "Hayal Alçalan'a düşer: romantik, sezgisel, idealize bir partnerlik. Gerçeği gördüğünüzde büyü bozulmaz, kalıcı olur.",
-    "question": "Romantizm sence gerçeklikle çelişir mi?"
+    "question": "Birini olduğu gibi görmeye başladığın an ne değişir sence?"
   },
   "pluto-conjunction-ascendant": {
     "meaning": "Güç ile görünüş buluşur: yoğun, dönüştürücü, unutulmaz bir tanışma. Kontrol gölge; derinlik ödül.",
