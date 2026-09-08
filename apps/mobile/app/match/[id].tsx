@@ -90,12 +90,7 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: '#0b0b1a',
   },
-  kicker: {
-    color: '#7c6cff',
-    fontSize: 14,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
+  kicker: { color: '#7c6cff', fontSize: 14, letterSpacing: 2 },
   title: { color: '#f5f2ff', fontSize: 30, fontWeight: '800' },
   row: { flexDirection: 'row', gap: 8, marginTop: 8 },
   chip: {

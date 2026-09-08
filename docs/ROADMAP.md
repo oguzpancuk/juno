@@ -90,8 +90,8 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       ICU (a second manual check at a midnight wall time guards the ICU
       "24" hour quirk); the city index is warmed on screen mount; the profile row exists in local DB with a location (manual:
       Supabase Studio).
-- [x] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
-chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
+- [x] **S6 — Discover with compatibility (PRD-4).** The engine's
+      `compatibility(chartA, chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
       and returns 0–100, harmony/tension sums, every inter-aspect and the
       strongest one; `starterKey`/`parseStarterKey` encode the
       `likes.starter_key` contract; `describeAspectTr` renders the why-line.
@@ -108,15 +108,20 @@ chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
       score and distance; after Pass and Like the cards do not return on
       re-entry (manual, verified); `screenshots/s6-radius-500.png` shows
       the Ankara seed appearing only after the radius is widened (manual).
-- [ ] **S7 — Match + conversation starter (PRD-5).** `starter(chartA,
-chartB)` picks the strongest aspect and renders a Turkish template
-      sentence with a question; the match trigger stores it; the app
-      subscribes to `matches` via Realtime and shows a match screen with the
-      starter.
-      — done when: Vitest covers starter selection for 3 pairs (battery); the
-      seed script makes seeded user B like the tester, the tester likes B in
-      the simulator, and `screenshots/s7-match.png` shows the match screen
-      with the starter within 5 s (screenshot + manual).
+- [x] **S7 — Match + conversation starter (PRD-5).** `starterSentenceTr`
+      renders a like's `starter_key` from the viewer's side with a question
+      (one placeholder line per aspect type; pair-specific lines are v1
+      content); the match trigger stores the agreed key; the root layout
+      subscribes to `matches` inserts over Realtime (RLS-scoped) and opens
+      `/match/[id]`, which reads `match_profiles` through Zod; a matches list
+      links back to each match; `supabase/scripts/seed-like.ts` makes a
+      seeded user like a tester on the local stack.
+      — done when: Vitest covers starter selection/orientation and the
+      sentence for both sides (battery); `seed-like.ts deniz` then Like on
+      Deniz in the simulator shows `screenshots/s7-match.png` with the
+      starter within 5 s (observed: immediate) and `s7-matches.png` lists
+      the match; the `matches` row carries the same key both clients
+      computed (manual, psql).
 
 Skeleton exit: all seven checked, `verify.sh` green on clean HEAD,
 code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.

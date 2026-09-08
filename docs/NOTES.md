@@ -10,6 +10,36 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S7 match + conversation starter
+
+- Done: `starterSentenceTr` (astro), `lib/matches.ts` (Zod rows from
+  `match_profiles`, `useMatchListener` on Realtime `postgres_changes`
+  INSERT for `matches`), `/match/[id]`, `/matches`, discover nav link,
+  `seed-like.ts` (service role, refuses non-local URLs). S6 review fixes
+  landed in `5eb862e` (deterministic tie-break — documented as not
+  mirror-invariant on exact ties, harmless because keys are computed in
+  a<b order; element bonus from stored signs; settings guards; the root
+  `tsconfig.json`/`lint` script that `expo lint` had scaffolded removed).
+- Verified: battery green (astro 186). Simulator: `seed-like.ts
+t3@stardate.local deniz` wrote Deniz → Ayse (`jupiter-square-venus`,
+  Deniz is `a`); Like on Deniz produced one `matches` row and the match
+  screen opened at once via Realtime, showing "Venüs'ün onun Jüpiter'iyle
+  kare açı yapıyor. Sürtüşme de çekim demek; …?" from Ayse's side
+  (`screenshots/s7-match.png`); the matches list shows the same
+  (`s7-matches.png`).
+- Gotchas: RN `textTransform: 'uppercase'` maps Turkish i → I (rendered
+  "EŞLEŞTINIZ"); pre-uppercase Turkish strings instead. Prettier flips the
+  indentation of a code span broken across lines in a Markdown list —
+  keep code spans on one line. `expo lint` from the repo root scaffolds
+  `eslint.config.js`, `tsconfig.json` and a `lint` script at the root;
+  always run it inside `apps/mobile`. Python edit scripts must be
+  idempotent and assert every anchor; this session lost edits three
+  times to prettier reformatting anchor text between runs.
+- Walking skeleton complete (S0–S7). Skeleton exit items still open:
+  remotes + CI never run (no GitHub remote; creating one is outward-facing
+  and waits for the owner), code-reviewer on S7, evaluator-qa after this
+  unattended run.
+
 ## 2026-09-08 — S6 discover with compatibility
 
 - Done: `packages/astro/src/compatibility.ts` (ADR-0003 verbatim: body
