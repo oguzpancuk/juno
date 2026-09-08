@@ -32,7 +32,8 @@ const BODY_WEIGHT: Readonly<Record<Body, number>> = {
   pluto: 0.5,
 };
 
-const OUTER: ReadonlySet<Body> = new Set([
+/** Social and generational bodies: pairs among these are never scored or emitted. */
+export const OUTER_BODIES: ReadonlySet<Body> = new Set([
   'jupiter',
   'saturn',
   'uranus',
@@ -142,7 +143,7 @@ export function aspectBetween(
   lonB: number,
 ): InterAspect | null {
   const separation = Math.abs(signedDelta(lonB - lonA));
-  const outer = OUTER.has(planetA) || OUTER.has(planetB);
+  const outer = OUTER_BODIES.has(planetA) || OUTER_BODIES.has(planetB);
   for (const aspect of ASPECTS) {
     const spec = ASPECT_SPEC[aspect];
     const orb = Math.abs(separation - spec.angle);
@@ -189,7 +190,7 @@ export function compatibility(
   const aspects: InterAspect[] = [];
   for (const planetA of BODIES) {
     for (const planetB of BODIES) {
-      if (OUTER.has(planetA) && OUTER.has(planetB)) continue; // generational pairs
+      if (OUTER_BODIES.has(planetA) && OUTER_BODIES.has(planetB)) continue; // generational pairs
       const found = aspectBetween(
         planetA,
         longitudeOf(chartA, planetA),
@@ -299,7 +300,7 @@ export function natalAspects(chart: ChartForScoring): InterAspect[] {
     for (let j = i + 1; j < BODIES.length; j++) {
       const a = BODIES[i] ?? 'sun';
       const b = BODIES[j] ?? 'sun';
-      if (OUTER.has(a) && OUTER.has(b)) continue;
+      if (OUTER_BODIES.has(a) && OUTER_BODIES.has(b)) continue;
       const hit = aspectBetween(
         a,
         longitudeOf(chart, a),

@@ -3,6 +3,7 @@ import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import {
   BODIES,
+  OUTER_BODIES,
   compatibility,
   natalAspects,
   type Aspect,
@@ -117,14 +118,8 @@ describe('engine emission matches the key space', () => {
     opposition: 180,
   } as const;
   const PARK = 200;
-  const OUTERS = new Set<Body>([
-    'jupiter',
-    'saturn',
-    'uranus',
-    'neptune',
-    'pluto',
-  ]);
-  const OUTER_PAIR = (a: Body, b: Body) => OUTERS.has(a) && OUTERS.has(b);
+  const OUTER_PAIR = (a: Body, b: Body) =>
+    OUTER_BODIES.has(a) && OUTER_BODIES.has(b);
 
   it('every natal aspect the engine can emit has a text', () => {
     for (let i = 0; i < BODIES.length; i++) {

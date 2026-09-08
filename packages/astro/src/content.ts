@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import { PLANETS, type Planet } from './bodies';
-import { ASPECTS, BODIES, type Aspect, type Body } from './compatibility';
+import {
+  ASPECTS,
+  BODIES,
+  OUTER_BODIES,
+  type Aspect,
+  type Body,
+} from './compatibility';
 
-const OUTER_BODIES: ReadonlySet<Body> = new Set([
-  'jupiter',
-  'saturn',
-  'uranus',
-  'neptune',
-  'pluto',
-]);
 const emitted = (a: Body, b: Body): boolean =>
   !(OUTER_BODIES.has(a) && OUTER_BODIES.has(b));
 /**
