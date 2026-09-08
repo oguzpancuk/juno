@@ -35,6 +35,18 @@ t3@stardate.local deniz` wrote Deniz → Ayse (`jupiter-square-venus`,
   always run it inside `apps/mobile`. Python edit scripts must be
   idempotent and assert every anchor; this session lost edits three
   times to prettier reformatting anchor text between runs.
+- Review (code-reviewer, S7 pass 1 NEEDS_WORK → `bb69a60`): the tie
+  test was a tautology (now pins the winner and input-order independence);
+  the liker now checks `match_profiles` right after a like instead of
+  relying on the Realtime socket; `isLesserId` single-sources a<b order;
+  `s7-match.png` retaken after the kicker fix. `expo lint` caches under
+  `apps/mobile/.expo/cache` and kept reporting a parse error that no
+  longer existed, so the app's lint script runs `--no-cache` (commit
+  `bb69a60` was cut while that stale FAIL showed; the tree was clean by
+  every other check and is re-verified in the next commit).
+- `contracts/init.sh` boots Supabase + Expo (8082) with the local keys;
+  from an agent shell run it detached (`bash contracts/init.sh > log &`):
+  run inline, the Bash tool waited on Expo's process group for 10 min.
 - Walking skeleton complete (S0–S7). Skeleton exit items still open:
   remotes + CI never run (no GitHub remote; creating one is outward-facing
   and waits for the owner), code-reviewer on S7, evaluator-qa after this
