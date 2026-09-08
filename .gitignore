@@ -1,0 +1,27 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+*.log
+.DS_Store
+.claude/.session-reads.log
+.claude/settings.local.json
+.claude/worktrees/
+.claude/last-reviewed
+
+# Expo / EAS
+.expo/
+expo-env.d.ts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# test output
+coverage/
