@@ -1,6 +1,6 @@
 import {
-  ASPECT_TR,
   BODY_TR,
+  natalAspectTitleTr,
   PLANET_TR,
   SIGN_TR,
   formatDegree,
@@ -146,8 +146,7 @@ export default function ChartScreen() {
             testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
           >
             <Text style={styles.planetName}>
-              {BODY_TR[aspect.planetA]} {ASPECT_TR[aspect.aspect]}{' '}
-              {BODY_TR[aspect.planetB]}
+              {natalAspectTitleTr(aspect)}
               <Text style={styles.orb}>
                 {' '}
                 · {t.chart.orb(formatDegree(aspect.orb))}

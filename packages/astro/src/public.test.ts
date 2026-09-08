@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { PublicChartSchema, bigThree, toPublicChart } from './public';
-import { describeAspectTr, formatDegree } from './tr';
+import { describeAspectTr, formatDegree, natalAspectTitleTr } from './tr';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
 const chart = computeChart({
@@ -141,5 +141,20 @@ describe('describeAspectTr', () => {
         planetB: 'mars',
       }),
     ).toBe("Satürn'ün onun Mars'ıyla kare açı yapıyor.");
+  });
+});
+
+describe('natalAspectTitleTr', () => {
+  it('titles an Ascendant opposition as a Descendant placement', () => {
+    expect(
+      natalAspectTitleTr({
+        planetA: 'venus',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe("Venüs Alçalan'da");
+    expect(
+      natalAspectTitleTr({ planetA: 'sun', aspect: 'square', planetB: 'mars' }),
+    ).toBe('Güneş kare Mars');
   });
 });

@@ -126,6 +126,23 @@ export function describeAspectTr(
   return `${BODY_TR_GENITIVE[planetA]} onun ${BODY_TR_WITH[planetB]} ${ASPECT_VERB_TR[aspect.aspect]}.`;
 }
 
+/**
+ * Natal aspect card title: "Venüs kare Mars". An opposition to the
+ * Ascendant is a Descendant placement (ADR-0003 amendment 1) and is
+ * titled that way so the title agrees with the text below it.
+ */
+export function natalAspectTitleTr(
+  aspect: Pick<InterAspect, 'planetA' | 'aspect' | 'planetB'>,
+): string {
+  if (aspect.aspect === 'opposition') {
+    if (aspect.planetB === 'ascendant')
+      return `${BODY_TR[aspect.planetA]} Alçalan'da`;
+    if (aspect.planetA === 'ascendant')
+      return `${BODY_TR[aspect.planetB]} Alçalan'da`;
+  }
+  return `${BODY_TR[aspect.planetA]} ${ASPECT_TR[aspect.aspect]} ${BODY_TR[aspect.planetB]}`;
+}
+
 /** Third-person possessive: "onun Ay'ı", "onun Venüs'ü". */
 const BODY_TR_POSSESSIVE: Readonly<Record<Body, string>> = {
   sun: "Güneş'i",

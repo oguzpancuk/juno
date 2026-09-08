@@ -85,6 +85,7 @@ export {
 export { sunLongitude, sunSign } from './sun';
 export {
   ASPECT_TR,
+  natalAspectTitleTr,
   BODY_TR,
   PLANET_TR,
   SIGN_TR,
