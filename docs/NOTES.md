@@ -29,6 +29,11 @@
 - Gotchas: macOS has no `timeout`; earlier "timed out" commands silently
   never ran. `z.record(enum, …)` in zod 3 makes keys optional — the fixture
   schema builds an explicit object instead.
+- Review (code-reviewer, 2 passes, PASS on e342576..HEAD): retrograde
+  moved to a central difference (t ± 30 min) with a regression test on
+  Mercury's 2024-01-02 ~03:07Z station checked against pyswisseph; fixture
+  directory prettier-ignored so `gen-fixtures.py` output is byte-canonical
+  (rerun after commit is a no-op); ADR-0004 names the real oracle.
 - Next: S2 Ascendant + Placidus (fixtures already hold the reference).
 
 ## 2026-09-08 — S0 walking skeleton: environment boots, battery green
