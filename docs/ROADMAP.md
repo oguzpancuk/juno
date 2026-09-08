@@ -14,7 +14,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
      other person with a compatibility score → mutual like → chart-based
      conversation starter. Chat itself is v1 (the starter is the value). -->
 - [ ] **S0 — Environment boots, battery is born.** Root `package.json` with
-  npm workspaces; `packages/astro` (tsup/tsc, Vitest) with ONE real test
+  npm workspaces; `packages/astro` (tsc, Vitest) with ONE real test
   (Sun sign for a known date); `apps/mobile` from `create-expo-app` with
   Expo Router rendering a "stardate" screen; shared `tsconfig` strict,
   ESLint, Prettier; `.claude/hooks/verify.sh` unchanged.
@@ -26,49 +26,60 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
   `astronomy-engine`; input is UTC instant + lat/lon; Zod schema on input.
   — done when: Vitest compares 3 reference charts (astro.com printouts
   stored as JSON fixtures) and every planet is within 1° (battery).
-- [ ] **S2 — Ascendant + houses, unknown-time fallback (PRD-1/2).**
-  Placidus cusps and Ascendant; when `timeKnown: false` the engine returns
-  whole-sign houses and no Ascendant, and the UI later hides them.
-  — done when: Ascendant within 1° on the same 3 fixtures; a 4th fixture
-  with unknown time asserts `ascendant === null` (battery).
+- [ ] **S2 — Ascendant + Placidus houses (PRD-1/2).** Ascendant, MC and 12
+  cusps; each planet gets a house. Birth time is mandatory: the Zod input
+  schema has no "unknown time" branch.
+  — done when: Ascendant and MC within 1° and every planet in the same
+  house as astro.com on the 3 fixtures (battery).
 - [ ] **S3 — Birth place → UTC instant.** Offline city list for Turkey +
-  major world cities (GeoNames cities15000 subset, name/lat/lon/IANA tz);
-  local date+time + IANA zone → UTC via `Intl`/`date-fns-tz` so historical
-  DST rules apply (assumption for PRD open question 1: offline list).
+  major world cities (GeoNames cities15000 subset: name, lat, lon, IANA
+  zone) as a JSON asset with a Zod schema; local date+time + IANA zone →
+  UTC via `Intl` so historical DST rules apply.
   — done when: Vitest resolves "İstanbul, 1995-07-14 03:30" and
   "Ankara, 1990-01-01 12:00" to the UTC instants astro.com uses (battery).
 - [ ] **S4 — Backend skeleton with RLS.** `supabase init`; migration 0001:
-  `profiles` (id = auth uid, display_name, birth_date, birth_time_known,
-  birth_utc, city, chart jsonb, big_three), `likes` (from, to, kind),
+  `profiles` (id = auth uid, display_name, birth_date, birth_utc,
+  birth_city, chart jsonb, big_three, gender, interested_in, location
+  geography(point), radius_km default 50), `likes` (from, to, kind),
   `matches` (a, b, starter, created_at) with a trigger that inserts a match
-  on mutual like; RLS: own profile read/write, other profiles read-only
-  and only public columns (a view), likes insert-own only, matches
-  read-own only; email OTP auth enabled in `config.toml`.
+  on mutual like; RLS: own profile read/write; other profiles only via a
+  `discover` view that applies mutual gender preference + radius and
+  exposes public columns plus rounded distance, never `location` or
+  `birth_utc`; likes insert-own only; matches read-own only; email OTP
+  auth enabled in `config.toml`.
   — done when: `npx supabase db reset` succeeds and a Vitest suite in
   `supabase/tests` (supabase-js against local stack, run only when
-  `SUPABASE_LOCAL=1`) proves: anon reads 0 profiles; user A cannot read
-  B's `birth_utc`; A liking B then B liking A yields exactly one match row
-  (battery, gated on local stack; skip reports as FAIL in CI until the
-  Supabase CLI step is added to `ci.yml`).
+  `SUPABASE_LOCAL=1`) proves: anon reads 0 profiles; A cannot read B's
+  `birth_utc` or `location`; a profile outside A's radius or with a
+  non-matching preference is absent from A's `discover`; A liking B then
+  B liking A yields exactly one match row (battery, gated on local stack;
+  reported as FAIL in CI until the Supabase CLI step is added to
+  `ci.yml`).
 - [ ] **S5 — Sign in, birth data, chart screen (PRD-1, PRD-2 UI half).**
-  Email OTP sign-in; onboarding form (display name, city picker, date,
-  time or "bilmiyorum"; birth date < 18 years ago rejected inline); chart
-  computed on device with `packages/astro`, profile row upserted with the
-  chart JSON; chart screen lists big three + 10 planets with sign/house
-  (placeholder one-line Turkish text per planet-in-sign; full texts in v1).
+  Email OTP sign-in; onboarding form (display name, gender, interested
+  in, birth city picker, date, time — all required; birth date < 18 years
+  ago rejected inline); device location requested once, city centre used
+  on refusal; chart computed on device with `packages/astro`; profile row
+  upserted with chart JSON; chart screen lists big three + 10 planets with
+  sign/house (placeholder one-line Turkish text per planet-in-sign; full
+  texts in v1).
   — done when: `screenshots/s5-chart.png` shows the chart for fixture #1
   and the values equal the fixture (screenshot + manual compare); the
-  profile row exists in local DB (manual: Supabase Studio).
-- [ ] **S6 — Discover with compatibility (PRD-4, minimal).** `compatibility
-  (chartA, chartB)` in `packages/astro` returns 0–100 plus the strongest
-  inter-chart aspect as a `{ planetA, aspect, planetB }` triple; a seed
-  script creates 5 profiles in the same city; discover screen shows one
-  card (name, age, city, big three, score, one-line "why"); Like and Pass
-  write `likes`; shown profiles exclude already-liked/passed.
-  — done when: Vitest asserts the score is symmetric, bounded and equals a
-  hand-computed value for one fixture pair (battery);
-  `screenshots/s6-discover.png` shows a card with a score; after Pass the
-  card does not return on reload (manual).
+  profile row exists in local DB with a location (manual: Supabase
+  Studio).
+- [ ] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
+  chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
+  and returns 0–100 plus the strongest inter-chart aspect as
+  `{ planetA, aspect, planetB }`; a seed script creates 5 profiles within
+  50 km and 1 outside; discover screen shows one card (name, age,
+  distance km, big three, score, one-line "why"), Like and Pass write
+  `likes`; shown profiles exclude already-liked/passed; radius slider in
+  settings updates `radius_km`.
+  — done when: Vitest asserts the score is symmetric, bounded and equals
+  the hand-computed ADR example for one fixture pair (battery);
+  `screenshots/s6-discover.png` shows a card with score and distance; the
+  out-of-radius seed never appears and after Pass a card does not return
+  on reload (manual).
 - [ ] **S7 — Match + conversation starter (PRD-5).** `starter(chartA,
   chartB)` picks the strongest aspect and renders a Turkish template
   sentence with a question; the match trigger stores it; the app
@@ -92,15 +103,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
   insert (battery); two simulators show a message crossing within 2 s
   (`screenshots/v1-chat.png`, manual timing).
 - [ ] **Profile photos + bio (PRD-3).** Supabase Storage bucket with
-  per-user folder policy; 1–6 photos; profile invisible in discovery until
-  ≥ 1 photo.
+  per-user folder policy; 1–6 photos; profile absent from `discover`
+  until ≥ 1 photo.
   — done when: Storage policy test proves user A cannot write to B's
   folder (battery); a photo-less seeded profile never appears in discover
   (manual); `screenshots/v1-profile.png`.
-- [ ] **Gender + preference filter (PRD-4).** Schema per PRD open question
-  6 (assumption until answered: woman / man / everyone).
-  — done when: discovery RLS view test proves mismatched preferences yield
-  0 rows (battery).
 - [ ] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),
   delete account (Edge Function with service role deletes auth user +
   storage objects; cascades handle rows).
@@ -111,29 +118,31 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
   — done when: manual sign-in on a real device works and creates the same
   profile flow (manual; not simulator-testable).
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
-  text at sign-up, stored `consent_at`; privacy policy hosted at a URL.
+  text at sign-up (covers birth data and location), stored `consent_at`;
+  privacy policy hosted at a URL.
   — done when: profile insert without `consent_at` is rejected by a
   CHECK constraint (battery) and the URL returns 200 (manual).
-- [ ] **Full Turkish content.** ~120 planet-in-sign, ~120 planet-in-house
-  and ~50 aspect/starter snippets in `packages/astro/content/tr/*.json`,
-  each keyed and validated by Zod; detail screen per placement; aspects
-  list on the chart screen. Source per PRD open question 3.
+- [ ] **Full Turkish content.** ~360 snippets in
+  `packages/astro/content/tr/*.json` (120 planet-in-sign, 120
+  planet-in-house, 12 Ascendant signs, ~105 aspect starters), authored by
+  Claude, reviewed by the owner, each keyed and validated by Zod; detail
+  screen per placement; aspects list on the chart screen.
   — done when: a Vitest asserts every key the engine can emit has a
-  non-empty snippet (battery); `screenshots/v1-placement-detail.png`.
-- [ ] **Unknown-time UX (PRD open question 8).** Note on the chart screen
-  when the Ascendant is missing.
-  — done when: `screenshots/v1-no-time.png` shows the note and no houses.
-- [ ] **Compatibility formula review (PRD open question 2).** Documented
-  weights in `docs/adr/0003-compatibility.md`; tests updated.
-  — done when: ADR merged and the S6 fixture test passes with the new
-  weights (battery).
+  non-empty snippet (battery); `screenshots/v1-placement-detail.png`;
+  owner sign-off recorded in NOTES.
+- [ ] **Location refresh.** "Konumu güncelle" in settings re-reads device
+  location and updates `location`.
+  — done when: manual check in Studio shows the point changed.
 - [ ] **Metrics.** SQL views for onboarding completion, matches,
   conversations with ≥ 3 messages each side; crash reporting (Sentry via
-  `sentry-expo`).
+  `@sentry/react-native`).
   — done when: the views return the PRD success-signal numbers on the seed
   data (manual, Supabase Studio); a forced test crash appears in Sentry.
-- [ ] **TestFlight.** Hosted Supabase project (EU), EAS project, first
-  `eas build` + `eas submit`; refs recorded in `docs/NOTES.md`.
+- [ ] **TestFlight.** Confirm Apple Developer Program membership for
+  oguzpancuk (create if missing — ask-tier), reserve bundle ID
+  `com.oguzpancuk.stardate`, check App Store name availability; hosted
+  Supabase project (EU), EAS project, first `eas build` + `eas submit`;
+  refs recorded in `docs/NOTES.md`.
   — done when: `/deploy-checklist` passes and an external tester installs
   the build (manual). Ask-tier: never without the owner's yes.
 
@@ -146,10 +155,10 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
 - **LLM-generated explanations and starters** — PRD non-goal for now;
   templates are deterministic and testable. Revisit if TestFlight users
   call the texts generic; the Edge Function boundary makes it a drop-in.
-- **Photo pre-moderation** — PRD open question 5; reports + block satisfy
-  Apple for a small cohort. Revisit before public launch.
-- **Nationwide discovery** — PRD open question 4; same-city keeps the seed
-  cohort dense enough to produce matches.
+- **Photo pre-moderation** — owner decided reports-only (2026-09-08);
+  revisit before public launch if reports volume demands it.
+- **Travel / passport mode (set a location by hand)** — the one-shot
+  location plus manual refresh covers the seed cohort.
 - **Transits, daily horoscope, notifications about "today"** — a
   retention feature for a product that first needs to prove matching.
 - **Payments / premium** — nothing to gate yet.
