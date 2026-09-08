@@ -1,12 +1,30 @@
 import { Ecliptic, GeoVector } from 'astronomy-engine';
 import { z } from 'zod';
 import { PLANETS, PLANET_BODY, type Planet } from './bodies';
+import {
+  MAX_PLACIDUS_LATITUDE,
+  computeHouses,
+  houseOf,
+  type HouseNumber,
+  type Houses,
+} from './houses';
 import { normalizeDegrees, signOf, signedDelta, type Sign } from './signs';
 
-/** Birth instant and place. The engine never sees local time or a zone. */
+/**
+ * Birth instant and place. The engine never sees local time or a zone.
+ * Latitude is capped where Placidus houses stop existing (ADR-0004).
+ */
 export const ChartInputSchema = z.object({
   utc: z.date(),
-  latitude: z.number().finite().min(-90).max(90),
+  latitude: z
+    .number()
+    .finite()
+    .min(-MAX_PLACIDUS_LATITUDE, {
+      message: `latitude must be within ±${MAX_PLACIDUS_LATITUDE}° for Placidus houses`,
+    })
+    .max(MAX_PLACIDUS_LATITUDE, {
+      message: `latitude must be within ±${MAX_PLACIDUS_LATITUDE}° for Placidus houses`,
+    }),
   longitude: z.number().finite().min(-180).max(180),
 });
 
@@ -20,11 +38,14 @@ export interface Placement {
   /** Degrees into the sign, [0, 30). */
   readonly degree: number;
   readonly retrograde: boolean;
+  /** Placidus house, 1–12. */
+  readonly house: HouseNumber;
 }
 
 export interface Chart {
   readonly input: ChartInput;
   readonly planets: Readonly<Record<Planet, Placement>>;
+  readonly houses: Houses;
 }
 
 const HALF_HOUR_MS = 30 * 60 * 1000;
@@ -58,7 +79,7 @@ function isRetrograde(planet: Planet, utc: Date): boolean {
   return signedDelta(after - before) < 0;
 }
 
-function place(planet: Planet, utc: Date): Placement {
+function place(planet: Planet, utc: Date, houses: Houses): Placement {
   const longitude = geocentricLongitude(planet, utc);
   return {
     body: planet,
@@ -66,6 +87,7 @@ function place(planet: Planet, utc: Date): Placement {
     sign: signOf(longitude),
     degree: longitude % 30,
     retrograde: isRetrograde(planet, utc),
+    house: houseOf(longitude, houses.cusps),
   };
 }
 
@@ -76,9 +98,10 @@ function place(planet: Planet, utc: Date): Placement {
  */
 export function computeChart(raw: ChartInput): Chart {
   const input = ChartInputSchema.parse(raw);
+  const houses = computeHouses(input.utc, input.latitude, input.longitude);
   const planets = {} as Record<Planet, Placement>; // why: filled for every PLANETS key just below
   for (const planet of PLANETS) {
-    planets[planet] = place(planet, input.utc);
+    planets[planet] = place(planet, input.utc, houses);
   }
-  return { input, planets };
+  return { input, planets, houses };
 }

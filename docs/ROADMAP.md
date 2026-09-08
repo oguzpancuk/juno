@@ -31,7 +31,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       `scripts/gen-fixtures.py`, the same engine astro.com runs, stored as
       JSON fixtures validated by Zod) and every planet is within 1° with the
       same sign and retrograde state (battery).
-- [ ] **S2 — Ascendant + Placidus houses (PRD-1/2).** Ascendant, MC and 12
+- [x] **S2 — Ascendant + Placidus houses (PRD-1/2).** Ascendant, MC and 12
       cusps; each planet gets a house. Birth time is mandatory: the Zod input
       schema has no "unknown time" branch.
       — done when: Ascendant and MC within 1° and every planet in the same

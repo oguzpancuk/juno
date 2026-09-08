@@ -10,6 +10,21 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S2 Ascendant, MC, Placidus houses
+
+- Done: `packages/astro/src/houses.ts` — RAMC from astronomy-engine's
+  Greenwich apparent sidereal time + east longitude, true obliquity of
+  date from `e_tilt`; Ascendant and MC closed-form; cusps 11/12/2/3 by
+  fixed-point iteration on right ascension (semi-arc thirds), 4–9 by
+  opposition; `houseOf(longitude, cusps)` assigns houses. `computeChart`
+  now returns `houses` and each placement carries `house`. Zod caps
+  |latitude| at 66° with a Placidus message (ADR-0004).
+- Verified: battery green (124 Vitest cases). Ascendant, MC and all 12
+  cusps agree with the Swiss Ephemeris fixtures within 0.2″ on all three
+  charts, including Helsinki at 60°N; every planet lands in the same house
+  as the reference (like-for-like `houseOf` on the fixture values).
+- Next: S3 birth place → UTC (offline city list, IANA zone via Intl).
+
 ## 2026-09-08 — S1 planets in signs
 
 - Done: `packages/astro` `computeChart({ utc, latitude, longitude })` →

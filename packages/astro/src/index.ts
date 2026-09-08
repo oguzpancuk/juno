@@ -8,6 +8,13 @@ export {
   type Placement,
 } from './chart';
 export {
+  MAX_PLACIDUS_LATITUDE,
+  computeHouses,
+  houseOf,
+  type HouseNumber,
+  type Houses,
+} from './houses';
+export {
   SIGNS,
   normalizeDegrees,
   signOf,
