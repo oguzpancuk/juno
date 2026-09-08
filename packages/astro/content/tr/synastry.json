@@ -73,7 +73,7 @@
   },
   "sun-trine-venus": {
     "meaning": "Sevgi kimliğe kolayca akar; birbirinizden hoşlanmanız zahmetsiz.",
-    "question": "Birine hemen ısınmak sana sık olur mu?"
+    "question": "Birine güvenmeye karar verdiğin anı nasıl anlarsın?"
   },
   "sun-opposition-venus": {
     "meaning": "Sevgi ve kimlik karşı kutuplarda; çekim güçlü, beklentiler farklı. Konuşulmayan beklenti bu bağın tek riski.",
@@ -92,15 +92,15 @@
     "question": "Tartışma sonrası barışmak sana kolay gelir mi?"
   },
   "sun-trine-mars": {
-    "meaning": "Enerji kimliği kolayca destekler; cesaret ve hareket ortak dil.",
-    "question": "Seni en son cesaretlendiren şey neydi?"
+    "meaning": "Enerji kimliği kolayca destekler: birlikte iş yapmak ve yol almak doğal gelir.",
+    "question": "Birlikte bir şey yapmak mı, birlikte konuşmak mı seni daha çok yakınlaştırır?"
   },
   "sun-opposition-mars": {
     "meaning": "Kimlik ile eylem karşı kutuplarda: güç mücadelesi ya da güçlü ortaklık. Rakip değil takım olmak seçim.",
     "question": "Bir takımda kaptan mı olursun, motor mu?"
   },
   "sun-conjunction-ascendant": {
-    "meaning": "Biri kimliğiyle diğerinin görünüşüne dokunur: kendini onda görmek gibi. Hızlı ve doğal bir tanışıklık.",
+    "meaning": "Biri kimliğiyle diğerinin görünüşüne dokunur: kendini onda görmek gibi. Doğal bir tanışıklık; kendini tanıtmaya gerek kalmaz.",
     "question": "İlk izlenimlerin genellikle doğru çıkar mı?"
   },
   "sun-sextile-ascendant": {
@@ -160,7 +160,7 @@
     "question": "Sen kalbinle mi karar verirsin, aklınla mı?"
   },
   "moon-conjunction-venus": {
-    "meaning": "Şefkat ile sevgi buluşur: yumuşak, sıcak, besleyici bir bağ. Klasik sevgi açılarından biri.",
+    "meaning": "Duygusal ihtiyaç ile sevgi dili aynı yerde buluşur: biri neye ihtiyaç duyuyorsa diğeri onu doğal olarak verir. Klasik sevgi açılarından biri.",
     "question": "Birine bakım göstermek senin için nasıl bir şey?"
   },
   "moon-sextile-venus": {
@@ -460,7 +460,7 @@
     "question": "İlişkide eşitlik senin için ne demek?"
   },
   "sun-conjunction-uranus": {
-    "meaning": "Kimlik ile özgürlük buluşur: heyecan verici, öngörülemez, elektrikli bir bağ. Sıkıcı olmayacak; sürdürmek ise bilinçli bir seçim ister.",
+    "meaning": "Biri diğerinin alışkanlıklarını sarsar; yan yana gelince ikiniz de daha özgür, daha az tahmin edilebilir olursunuz. Heyecan hazır; ritmi birlikte seçersiniz.",
     "question": "Sürprizleri sever misin, planları mı?"
   },
   "sun-sextile-uranus": {
@@ -560,7 +560,7 @@
     "question": "İhtiyacını söylemek sana zor gelir mi?"
   },
   "moon-conjunction-uranus": {
-    "meaning": "Duygu ile özgürlük buluşur: heyecan verici ama dalgalı bir bağ. Güvende hissetmek için birlikte bir ritim kurmanız gerekir.",
+    "meaning": "Biri diğerinin duygusal alışkanlıklarını sarsar: heyecan verici ama alışılmış düzenin dışında bir bağ. Güvende hissetmek için birlikte yeni bir ritim kurmanız gerekir.",
     "question": "Heyecan mı istersin, huzur mu?"
   },
   "moon-sextile-uranus": {
@@ -728,8 +728,8 @@
     "question": "Güzel hissettiren anları nasıl biriktirirsin?"
   },
   "venus-square-jupiter": {
-    "meaning": "Sevgide abartı ve savurganlık riski var; büyük vaatler küçük gerçeklerle çelişebilir. Ölçüyü bulduğunuzda cömertlik güvene dönüşür.",
-    "question": "Fazla vaat eden insanlara güvenir misin?"
+    "meaning": "Biri sevgiyi büyük jestlerle, diğeri ölçüyle gösterir; beklenti farkı hayal kırıklığına dönüşebilir. Ölçüyü birlikte bulduğunuzda cömertlik güvene dönüşür.",
+    "question": "Sevgiyi büyük jestlerle mi, küçük ayrıntılarla mı gösterirsin?"
   },
   "venus-trine-jupiter": {
     "meaning": "Sevgi ve bolluk uyumlu; birbirinizi şımartır, hayatı birlikte güzelleştirirsiniz. Verici ve cömert bir bağ kurulur.",
@@ -760,7 +760,7 @@
     "question": "Sorumluluk ile sevgi aynı şey mi sence?"
   },
   "venus-conjunction-uranus": {
-    "meaning": "Sevgi ile özgürlük buluşur: ani, heyecanlı, elektrikli bir çekim. Başlaması kolay; sürdürmek ayrı bir sanat.",
+    "meaning": "Biri diğerinin sevgi kalıplarını sarsar: ani, heyecanlı, sıra dışı bir çekim. Başlaması kolay; sürdürmek ayrı bir sanat.",
     "question": "Ani başlayan ilişkilere inanır mısın?"
   },
   "venus-sextile-uranus": {
@@ -860,7 +860,7 @@
     "question": "Kurallar seni rahatlatır mı, sıkar mı?"
   },
   "mars-conjunction-uranus": {
-    "meaning": "Eylem ile özgürlük buluşur: ani, elektrikli, cesur bir bağ. Kaza riski gölge; keşif ödül.",
+    "meaning": "Biri diğerinin eylem tarzını sarsar: ani, cesur, alışılmadık bir enerji. Acele kararlar gölge; birlikte keşif ödül.",
     "question": "Ani kararlar alır mısın?"
   },
   "mars-sextile-uranus": {
