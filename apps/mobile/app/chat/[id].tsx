@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   MAX_MESSAGE_LENGTH,
   isSendable,
@@ -38,6 +39,9 @@ export default function ChatScreen() {
   const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
   const { messages, send } = useThread(matchId, userId);
+  // Without the inset the send button sits under the home indicator and
+  // the bottom of it is not tappable.
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!matchId || !userId) return;
@@ -176,7 +180,12 @@ export default function ChatScreen() {
       />
 
       {failed ? <Text style={styles.failed}>{t.chat.sendFailed}</Text> : null}
-      <View style={styles.composer}>
+      <View
+        style={[
+          styles.composer,
+          { paddingBottom: Math.max(insets.bottom, 12) + 12 },
+        ]}
+      >
         <TextInput
           style={styles.input}
           value={draft}
@@ -239,7 +248,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 8,
     padding: 16,
-    paddingBottom: 28,
     borderTopWidth: 1,
     borderTopColor: '#1c1a33',
   },

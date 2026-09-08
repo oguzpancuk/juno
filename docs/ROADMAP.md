@@ -203,9 +203,12 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `packages/geo`.
       — done when: Vitest covers both (battery). _Done: tiered search plus
       53 exonyms, resolved by ascii name + country and guarded by a test._
-- [ ] **Location refresh.** "Konumu güncelle" in settings re-reads device
+- [x] **Location refresh.** "Konumu güncelle" in settings re-reads device
       location and updates `location`.
-      — done when: manual check in Studio shows the point changed.
+      — done when: manual check in Studio shows the point changed. _Done:
+      simulator moved to Ankara, the stored point went from
+      POINT(29.02 41.03) to POINT(32.86 39.93) (grid-snapped);
+      `screenshots/v1-location.png`._
 - [ ] **Metrics.** SQL views for onboarding completion, matches,
       conversations with ≥ 3 messages each side; crash reporting (Sentry via
       `@sentry/react-native`).

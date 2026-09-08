@@ -10,6 +10,45 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Chat review fixes, city search, location refresh
+
+- Chat review (code-reviewer, NEEDS_WORK → fixed in `9ac71ae`): a matched
+  user could set `created_at` and `read_at` on insert. A chosen
+  `created_at` pins that message as the other person's conversation
+  preview forever (no delete, no unmatch in v1); a preset `read_at` posts
+  a message that never counts as unread. Both are now stamped by a
+  before-insert trigger, the receipt cannot be cleared or backdated, and a
+  CHECK holds `read_at >= created_at`. Also: `is_match_member` pins
+  `search_path` to '', the conversation list refetches on focus (the badge
+  used to stay stale after reading), `fetchMessages` takes the newest 200
+  descending (an unbounded ascending query freezes at PostgREST's 1000-row
+  cap), `markThreadRead` reports failures, and a ref guards double-tap
+  send. Two new RLS tests cover the timestamp invariants.
+- City search (`1a7e73d`): tiered matching plus 53 Turkish exonyms. The
+  reviewer caught that a half-typed exonym outranked real names ("is" gave
+  İskenderiye before İstanbul); exonym prefixes now sit after whole-name
+  matches, with a test.
+- Location refresh: `lib/location.ts` holds the one-shot fix shared with
+  onboarding, `updateLocation` writes the point, settings has "Konumu
+  güncelle" with working/done/failed states.
+- Commit hygiene: `9ac71ae` mixed three unrelated changes (chat fixes, the
+  geo ranking fix, the location feature) because everything was staged
+  together; the message only describes the chat fixes. Not rewritten
+  (history rewriting is ask-tier); recorded here instead.
+- Simulator gotchas worth keeping: the `pati` dev build
+  (`com.oguzpancuk.pati`) competes for `exp://` AND for keyboard focus —
+  typed text landed in it for most of this session until it was
+  terminated with `simctl terminate`. After that, text entry into a React
+  Native TextInput works. Some Pressables need a press-and-hold
+  (`touch_path` with ~130 ms) rather than an instant tap. The chat
+  composer's send button was clipped under the home indicator (no safe-area
+  inset) — found by driving the UI, fixed with `useSafeAreaInsets`.
+- Verified: battery green; location change observed in the database
+  (`screenshots/v1-location.png`). NOT verified: a message sent from the
+  app's own composer. Text now reaches the composer and the send button
+  enables, but no send was observed completing; the insert path is covered
+  by the RLS suite, the UI wiring is not.
+
 ## 2026-09-09 — v1 chat (unattended session)
 
 - Done: `messages` table with `is_match_member()` (security definer,
