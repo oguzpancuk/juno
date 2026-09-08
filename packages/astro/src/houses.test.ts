@@ -92,8 +92,10 @@ describe('houseOf', () => {
   });
 
   it('handles cusps that wrap past 360°', () => {
-    // why: map() widens the tuple to number[]; the length is unchanged.
-    const wrapped = cusps.map((c) => (c + 345) % 360) as unknown as Cusps; // house 1 starts at 345°
+    // house 1 starts at 345°
+    const wrapped: Cusps = [
+      345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315,
+    ];
     expect(houseOf(350, wrapped)).toBe(1);
     expect(houseOf(10, wrapped)).toBe(1);
     expect(houseOf(20, wrapped)).toBe(2);
@@ -113,5 +115,14 @@ describe('latitude limit', () => {
       /Placidus/,
     );
     expect(() => computeChart({ ...input, latitude: -70 })).toThrow(/Placidus/);
+  });
+
+  it('computeHouses enforces the same cap when called directly', () => {
+    expect(() => computeHouses(input.utc, 70, input.longitude)).toThrow(
+      /Placidus/,
+    );
+    expect(() => computeHouses(input.utc, -66.5, input.longitude)).toThrow(
+      /Placidus/,
+    );
   });
 });

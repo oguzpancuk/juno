@@ -23,6 +23,13 @@
   cusps agree with the Swiss Ephemeris fixtures within 0.2″ on all three
   charts, including Helsinki at 60°N; every planet lands in the same house
   as the reference (like-for-like `houseOf` on the fixture values).
+- Review (code-reviewer, 2 passes, PASS on b4e0d5f..HEAD): planet houses
+  now judged against `swe.house_pos` in the fixtures (independent oracle),
+  Sydney 1988 southern fixture added (cusps ≤ 0.19″), cusps typed as a
+  12-tuple, non-convergence throws, latitude cap is one refine. Lesson:
+  I reported a direct `computeHouses` throw test as added when a text
+  replace had silently missed; the reviewer caught it. Assert replacements
+  (`assert old in s`) so a miss fails loudly.
 - Next: S3 birth place → UTC (offline city list, IANA zone via Intl).
 
 ## 2026-09-08 — S1 planets in signs
