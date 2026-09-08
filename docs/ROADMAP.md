@@ -90,19 +90,24 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       ICU (a second manual check at a midnight wall time guards the ICU
       "24" hour quirk); the city index is warmed on screen mount; the profile row exists in local DB with a location (manual:
       Supabase Studio).
-- [ ] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
-chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
-      and returns 0–100 plus the strongest inter-chart aspect as
-      `{ planetA, aspect, planetB }`; a seed script creates 5 profiles within
-      50 km and 1 outside; discover screen shows one card (name, age,
-      distance km, big three, score, one-line "why"), Like and Pass write
-      `likes`; shown profiles exclude already-liked/passed; radius slider in
-      settings updates `radius_km`.
-      — done when: Vitest asserts the score is symmetric, bounded and equals
-      the hand-computed ADR example for one fixture pair (battery);
-      `screenshots/s6-discover.png` shows a card with score and distance; the
-      out-of-radius seed never appears and after Pass a card does not return
-      on reload (manual).
+- [x] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
+    chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
+      and returns 0–100, harmony/tension sums, every inter-aspect and the
+      strongest one; `starterKey`/`parseStarterKey` encode the
+      `likes.starter_key` contract; `describeAspectTr` renders the why-line.
+      `supabase/scripts/gen-seed.ts` (tsx) writes six seeded users with
+      real charts (five around Istanbul, one in Ankara). Discover screen
+      shows one card (name, age, distance km, big three, score, why-line),
+      sorted by score then distance; Like/Pass write `likes` with a
+      uuid-ordered starter key; swiped profiles are excluded by the view.
+      Settings offer radius presets 5/25/50/100/500 km (chips, not a slider
+      — same function, no extra dependency).
+      — done when: Vitest asserts the score is symmetric, bounded, equals
+      the hand-computed synthetic pair (65) and matches the ADR table case
+      by case (battery); `screenshots/s6-discover.png` shows a card with
+      score and distance; after Pass and Like the cards do not return on
+      re-entry (manual, verified); `screenshots/s6-radius-500.png` shows
+      the Ankara seed appearing only after the radius is widened (manual).
 - [ ] **S7 — Match + conversation starter (PRD-5).** `starter(chartA,
 chartB)` picks the strongest aspect and renders a Turkish template
       sentence with a question; the match trigger stores it; the app
