@@ -10,6 +10,41 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — Interpretation content (owner priority)
+
+- Owner asked for professional, 1–2-sentence analysis of every chart and
+  compatibility combination without drowning the user. Built:
+  `packages/astro/content/tr/` — signs 132, houses 120, retrograde 8,
+  natal aspects 216 (45 body pairs × 5 minus 9 geometrically impossible
+  Sun–Mercury/Sun–Venus/Mercury–Venus hard aspects), synastry 255 (51
+  pairs × 5, each meaning + opening question), Sun/Moon element pairs 20,
+  score bands 5 — 756 texts, Zod-validated, `content.test.ts` enumerates
+  every key the engine can emit and fails on a missing or unknown key
+  (generational outer–outer pairs are excluded from both engine and key
+  space). Engine: `natalAspects`, `natalReading`, `synastryReading`,
+  `starterFromKey`. UI: chart screen shows sign + house + retrograde
+  lines per planet and the strongest natal aspects with orbs; discover
+  card has an expandable detail (band, elements, top 3 aspects); match
+  screen shows the pair-specific starter (headline, meaning, question),
+  score band, element lines and top 5 aspects.
+- Quality pass: the first draft of the 300 outer-planet entries was
+  telegraphic ("… fazla vaat. Ölçü."); all rewritten as full sentences in
+  `b0fd8cf`. Voice: natal texts address the user ("sen"), synastry texts
+  describe the pair neutrally so one text serves both viewers; the
+  mechanical headline is oriented per viewer by the engine.
+- Verified: battery green (astro 218 tests); `screenshots/c1-chart-texts.png`,
+  `c1-aspects.png`, `c1-synastry.png` on the real user (Ayse / Deniz).
+  Not done: owner sign-off on the texts (the done-when's last clause);
+  ROADMAP item marked in progress until then.
+- Gotchas: `exp://` is claimed by both Expo Go and the pati dev build on
+  this simulator, so `openurl` sometimes fronts pati and typed text lands
+  there — `xcrun simctl launch booted host.exp.Exponent` before typing.
+  An expired session once left the app on "Yükleniyor…" with no network
+  request until Expo Go was relaunched (then it resolved to signed-out);
+  not reproduced, worth watching (v1 SecureStore/session item).
+  `prettier --write` must include `packages/astro/content` after regenerating
+  JSON from Python (indent differs).
+
 ## 2026-09-08 — S7 match + conversation starter
 
 - Done: `starterSentenceTr` (astro), `lib/matches.ts` (Zod rows from
