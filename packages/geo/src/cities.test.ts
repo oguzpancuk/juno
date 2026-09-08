@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { resolveBirth } from './birth';
-import { allCities, cityById, searchCities, searchKey } from './cities';
+import {
+  EXONYMS,
+  allCities,
+  cityById,
+  exonymCities,
+  searchCities,
+  searchKey,
+} from './cities';
 
 const ISTANBUL = 745044;
 const ANKARA = 323786;
@@ -101,5 +108,51 @@ describe('resolveBirth', () => {
         local: { year: 1995, month: 7, day: 14, hour: 3, minute: 30 },
       }),
     ).toThrow(/unknown city/);
+  });
+});
+
+describe('search ranking', () => {
+  it('reaches a city by a later word in its name', () => {
+    const york = searchCities('york', 5);
+    expect(york.map((c) => c.name)).toContain('New York City');
+    // An exact whole-name hit still outranks a word hit.
+    expect(york[0]?.name).toBe('York');
+    expect(searchCities('angeles', 5).map((c) => c.name)).toContain(
+      'Los Angeles',
+    );
+  });
+
+  it('resolves every Turkish exonym to a real city', () => {
+    const resolved = exonymCities();
+    const missing = EXONYMS.filter((e) => !resolved.has(searchKey(e.tr))).map(
+      (e) => e.tr,
+    );
+    expect(missing).toEqual([]);
+    expect(resolved.size).toBe(EXONYMS.length);
+  });
+
+  it('puts the exonym first for the Turkish spelling', () => {
+    for (const [typed, expected] of [
+      ['Viyana', 'Vienna'],
+      ['Londra', 'London'],
+      ['Atina', 'Athens'],
+      ['Moskova', 'Moscow'],
+      ['Zürih', 'Zürich'],
+      ['Mekke', 'Makkah'],
+      ['Bombay', 'Mumbai'],
+    ] as const) {
+      expect(searchCities(typed, 3)[0]?.name).toBe(expected);
+    }
+  });
+
+  it('still answers a plain Turkish city prefix first', () => {
+    expect(searchCities('ista', 3)[0]?.name).toBe('İstanbul');
+    expect(searchCities('İzmir', 1)[0]?.name).toBe('İzmir');
+  });
+
+  it('returns nothing for an empty or unmatched query', () => {
+    expect(searchCities('', 5)).toEqual([]);
+    expect(searchCities('   ', 5)).toEqual([]);
+    expect(searchCities('zzzznotacity', 5)).toEqual([]);
   });
 });
