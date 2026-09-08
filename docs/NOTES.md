@@ -53,6 +53,10 @@
   reviewer caught it; `natalReading` drops a geometrically impossible
   pair from a tampered row instead of throwing; dead placeholder starter
   code removed; duplicate question fixed.
+- Review pass 3: PASS for the whole content range. `c1-synastry.png`
+  recaptured with viewer-oriented headlines. Open: owner sign-off on the
+  texts; reviewer's remaining minor is a third copy of the outer-planet
+  set in the test (engine, content, test) — export one when convenient.
 - Gotchas: `exp://` is claimed by both Expo Go and the pati dev build on
   this simulator, so `openurl` sometimes fronts pati and typed text lands
   there — `xcrun simctl launch booted host.exp.Exponent` before typing.
