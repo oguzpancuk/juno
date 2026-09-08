@@ -4,6 +4,7 @@ import { SIGNS } from './signs';
 import { CONTENT_FILES, KEY_SPACES } from './content';
 import type { HouseNumber } from './houses';
 import { SIGN_TR } from './tr';
+import SYNASTRY_RAW from '../content/tr/synastry.json';
 
 /**
  * Layering contract for the interpretation texts. One reading prints a
@@ -59,21 +60,36 @@ const ANTONYMS: readonly (readonly [string, string])[] = [
   ['soğuk', 'sıcak'],
 ];
 
-const LETTER = 'a-zçğıöşü';
+const LETTER = 'a-zçğıöşüâîû';
+
+const escape = (needle: string): string =>
+  needle.toLocaleLowerCase('tr').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Whole-word, case-insensitive (Turkish) containment; sign names must not match inside "yayılır" or "boğar". */
 function has(text: string, needle: string): boolean {
-  const n = needle
-    .toLocaleLowerCase('tr')
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(^|[^${LETTER}])${n}(?=[^${LETTER}]|$)`, 'u').test(
+  return new RegExp(
+    `(^|[^${LETTER}])${escape(needle)}(?=[^${LETTER}]|$)`,
+    'u',
+  ).test(text.toLocaleLowerCase('tr'));
+}
+
+/** Word-start containment so a stem matches its Turkish suffixed forms ("gösteriş" hits "gösterişli", "yavaş ısın" hits "yavaş ısınır"). */
+function hasStem(text: string, stem: string): boolean {
+  return new RegExp(`(^|[^${LETTER}])${escape(stem)}`, 'u').test(
     text.toLocaleLowerCase('tr'),
   );
 }
 
+/** A missing or empty key is a failure here, not a silently passing pair. */
+function textOf(map: Readonly<Record<string, string>>, key: string): string {
+  const text = map[key];
+  if (!text) throw new Error(`content key missing or empty: ${key}`);
+  return text;
+}
+
 function sentences(text: string): string[] {
   return text
-    .split(/(?<=[.!?])\s+/)
+    .split(/(?<=[.!?…])\s+/)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }
@@ -82,7 +98,8 @@ describe('content/tr · layering rules', () => {
   it('house texts do not carry sign-owned tempo or temperament words', () => {
     const hits: string[] = [];
     for (const [key, text] of Object.entries(CONTENT_FILES.houses)) {
-      for (const w of SIGN_OWNED) if (has(text, w)) hits.push(`${key}: ${w}`);
+      for (const w of SIGN_OWNED)
+        if (hasStem(text, w)) hits.push(`${key}: ${w}`);
     }
     expect(hits).toEqual([]);
   });
@@ -91,13 +108,13 @@ describe('content/tr · layering rules', () => {
     const hits: string[] = [];
     for (const [key, text] of Object.entries(CONTENT_FILES.natalAspects)) {
       for (const w of SIGN_FLAVOUR)
-        if (has(text, w.toLocaleLowerCase('tr')))
-          hits.push(`natal ${key}: ${w}`);
+        if (has(text, w)) hits.push(`natal ${key}: ${w}`);
     }
-    for (const [key, meaning] of Object.entries(CONTENT_FILES.synastry)) {
-      for (const w of SIGN_FLAVOUR)
-        if (has(meaning, w.toLocaleLowerCase('tr')))
-          hits.push(`synastry ${key}: ${w}`);
+    for (const [key, entry] of Object.entries(SYNASTRY_RAW)) {
+      for (const w of SIGN_FLAVOUR) {
+        if (has(entry.meaning, w)) hits.push(`synastry ${key}: ${w}`);
+        if (has(entry.question, w)) hits.push(`synastry ${key} question: ${w}`);
+      }
     }
     expect(hits).toEqual([]);
   });
@@ -120,12 +137,15 @@ describe('content/tr · layering rules', () => {
     let pairs = 0;
     for (const planet of PLANETS) {
       for (const sign of SIGNS) {
-        const s = CONTENT_FILES.signs[`${planet}-${sign}`] ?? '';
+        const s = textOf(CONTENT_FILES.signs, `${planet}-${sign}`);
         for (const house of HOUSES) {
-          const h = CONTENT_FILES.houses[`${planet}-${house}`] ?? '';
+          const h = textOf(CONTENT_FILES.houses, `${planet}-${house}`);
           pairs++;
           for (const [a, b] of ANTONYMS) {
-            if ((has(s, a) && has(h, b)) || (has(s, b) && has(h, a)))
+            if (
+              (hasStem(s, a) && hasStem(h, b)) ||
+              (hasStem(s, b) && hasStem(h, a))
+            )
               hits.push(`${planet}-${sign} × ${planet}-${house}: ${a}/${b}`);
           }
         }
@@ -151,10 +171,10 @@ describe('content/tr · layering rules', () => {
     for (const planet of PLANETS) {
       const houseGrams = HOUSES.map(
         (h) =>
-          [h, grams(CONTENT_FILES.houses[`${planet}-${h}`] ?? '')] as const,
+          [h, grams(textOf(CONTENT_FILES.houses, `${planet}-${h}`))] as const,
       );
       for (const sign of SIGNS) {
-        const sg = grams(CONTENT_FILES.signs[`${planet}-${sign}`] ?? '');
+        const sg = grams(textOf(CONTENT_FILES.signs, `${planet}-${sign}`));
         for (const [h, hg] of houseGrams) {
           const shared = [...sg].find((g) => hg.has(g));
           if (shared)

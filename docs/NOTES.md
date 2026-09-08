@@ -19,13 +19,16 @@
   house texts carry no sign-owned tempo/temperament words; aspect texts
   carry no sign names or element flavour (whole-word Turkish match); no
   sentence repeated between sign and house layers; all 1,440 planet
-  sign+house pairs scanned for antonym pairs and for any shared 4-word
-  sequence.
+  sign+house pairs scanned for antonym pairs (stem match, so Turkish
+  suffixes count) and for any shared 4-word sequence. The antonym scan is
+  a regression guard: on today's corpus no pair fires; consistency itself
+  was established by the evaluator passes below.
 - Layer 3 (one-off): five evaluator passes judged every one of the 1,440
   pairs twice. First pass flagged 190 (house texts asserting tempo,
   visibility or dignity; outer-planet sign texts written as life areas).
-  Response: all 120 house texts rewritten to life area + behaviour, 51
-  Jupiter–Pluto sign texts rewritten to temperament (`e9ce67c`). Second
+  Response: 115 of 120 house texts rewritten to life area + behaviour
+  across the range (97 in `e9ce67c`), 52 Jupiter–Pluto sign texts
+  rewritten to temperament. Second
   pass flagged 111, mostly natural-house restatements (Leo/5, Virgo/6 …)
   and a few residual mode claims in house texts; ~70 texts rephrased with
   distinct vocabulary. Rewritten texts re-audited against the references:
