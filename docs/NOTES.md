@@ -9,6 +9,22 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — /spec + /mvp-scope
+- Owner decisions (asked in one batch): Turkey-first, Turkish UI; template
+  text, no LLM; `astronomy-engine` (MIT) for ephemeris; MVP loop is
+  swipe + mutual like + in-app chat. Recorded in `docs/PRD.md`.
+- Written: `docs/PRD.md` (7 core interactions, each with a "works when"
+  clause; 8 open questions for the owner) and `docs/ROADMAP.md`
+  (walking skeleton S0–S7, v1 list with Apple-required items, deferred
+  list with reasons). Chat is v1, not skeleton: the match screen with the
+  starter is the value; messaging is standard machinery.
+- Assumptions taken until the owner answers PRD open questions: offline
+  city list for geocoding (Q1); same-city discovery (Q4); woman/man/
+  everyone preference model (Q6). Each is marked in the ROADMAP item.
+- Verified: nothing runnable yet; verify.sh still FAILs by design until S0.
+- Next: answer PRD open questions (at least Q1, Q3, Q6 before S3/S5/v1),
+  then S0 (skeleton boot + battery).
+
 ## 2026-09-08 — instantiated from maya 22e7efe
 - Repo created by /new-product. Owner delegated the stack choice (no
   technical preference); recorded as ADR-0002, not a guess.
