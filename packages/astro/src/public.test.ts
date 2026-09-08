@@ -39,6 +39,18 @@ describe('toPublicChart', () => {
     ).not.toHaveProperty('input');
   });
 
+  it('keeps degree at 4 decimals (float modulo is inexact)', () => {
+    const edge = {
+      ...chart,
+      planets: {
+        ...chart.planets,
+        sun: { ...chart.planets.sun, longitude: 30.15 },
+      },
+    };
+    expect(toPublicChart(edge).planets.sun.degree).toBe(0.15);
+    expect(formatDegree(toPublicChart(edge).planets.sun.degree)).toBe('0°09′');
+  });
+
   it('never emits 360 or a degree of 30 after rounding at a boundary', () => {
     const edge = {
       ...chart,

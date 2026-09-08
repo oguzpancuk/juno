@@ -10,6 +10,9 @@ import { fileURLToPath } from 'node:url';
 
 const MIN_WORLD_POPULATION = 100_000;
 const HOME_COUNTRY = 'TR';
+// Placidus houses are undefined beyond ±66° (ADR-0004); such birthplaces
+// cannot produce a chart, so they are not offered at all.
+const MAX_LATITUDE = 66;
 // GeoNames' primary name is the ASCII form for a few Turkish cities; the
 // Turkish UI should show the local spelling.
 const NAME_OVERRIDES = new Map([
@@ -40,6 +43,7 @@ for (const line of lines) {
   const population = Number(f[14]);
   const timeZone = f[17];
   if (country !== HOME_COUNTRY && population < MIN_WORLD_POPULATION) continue;
+  if (Math.abs(Number(f[4])) > MAX_LATITUDE) continue;
   const problem =
     !Number.isInteger(id) || id <= 0
       ? 'bad id'

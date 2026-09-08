@@ -4,6 +4,7 @@ import {
   ANKARA,
   ISTANBUL,
   ISTANBUL_NEARBY,
+  NOWHERE,
   STARTER,
   profileRow,
 } from './fixtures';
@@ -64,7 +65,7 @@ let alice: TestUser; // woman, wants men, Istanbul
 let bob: TestUser; // man, wants women, ~6 km away
 let carol: TestUser; // man, wants women, Ankara (out of radius)
 let dave: TestUser; // man, wants men (preference mismatch with Alice)
-let erin: TestUser; // unspecified gender, wants everyone; third party for match visibility
+let erin: TestUser; // unspecified, wants everyone, isolated mid-Atlantic; third party for match visibility
 let frank: TestUser; // man, wants women, nearby: the one Alice passes on
 const users: TestUser[] = [];
 
@@ -134,7 +135,8 @@ beforeAll(async () => {
       display_name: 'Erin',
       gender: 'unspecified',
       interested_in: 'everyone',
-      lonLat: ISTANBUL_NEARBY,
+      lonLat: NOWHERE,
+      radius_km: 5,
     }),
   );
   await insertProfile(
@@ -328,13 +330,10 @@ describe('discover', () => {
   });
 
   it("shows 'everyone' seekers only profiles that accept them back", async () => {
+    // Erin sits mid-Atlantic with a 5 km radius, so rows left by manual
+    // testing cannot leak in; the assertion stays strict.
     const { data } = await erin.client.from('discover').select('id');
-    // Erin wants everyone; no fixture user accepts 'unspecified'. Other rows
-    // (manual testing on the same local DB) may exist, so assert absence.
-    const seen = ids(data);
-    for (const other of [alice, bob, carol, dave, frank]) {
-      expect(seen).not.toContain(other.id);
-    }
+    expect(ids(data)).toEqual([]);
   });
 });
 

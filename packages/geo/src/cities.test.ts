@@ -25,6 +25,12 @@ describe('city data', () => {
     }
   });
 
+  it('offers no birthplace beyond ±66° latitude (Placidus cap, ADR-0004)', () => {
+    for (const city of allCities())
+      expect(Math.abs(city.latitude)).toBeLessThanOrEqual(66);
+    expect(searchCities('Murmansk', 1)).toEqual([]);
+  });
+
   it('is sorted by population, largest first', () => {
     const pops = allCities().map((c) => c.population);
     for (let i = 1; i < pops.length; i++) {

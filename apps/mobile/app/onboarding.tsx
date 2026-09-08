@@ -39,12 +39,14 @@ async function deviceLocation(): Promise<
   try {
     const permission = await Location.requestForegroundPermissionsAsync();
     if (!permission.granted) return undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS);
+    });
     const position = await Promise.race([
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
-      new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS),
-      ),
-    ]);
+      timeout,
+    ]).finally(() => clearTimeout(timer));
     if (!position) return undefined;
     return {
       latitude: position.coords.latitude,

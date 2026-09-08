@@ -59,7 +59,9 @@ export function toPublicChart(chart: Chart): PublicChart {
       // Derived from the rounded longitude so sign, degree and longitude
       // stay mutually consistent at a sign boundary (29.99996 → 0 next sign).
       sign: signOf(longitude),
-      degree: longitude % 30,
+      // Rounded again: float modulo of a 4-decimal value is inexact
+      // (30.15 % 30 = 0.14999999999999858 would print 0°08′).
+      degree: Number((longitude % 30).toFixed(4)),
       house: p.house,
       retrograde: p.retrograde,
     };
