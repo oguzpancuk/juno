@@ -10,6 +10,19 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — Owner decision: compatibility stays purely geometric
+
+- Owner confirmed the scoring model: the score comes only from inter-chart
+  aspects, weights, orbs and the Sun/Moon element bonus (ADR-0003). The
+  natal character texts are not an input, and no semantic trait-matching
+  layer will be added; "if the astrology is right, the system is right".
+- Consequence: text-to-score consistency is guaranteed by construction
+  (each scored aspect shows its own text, direction checked mechanically
+  for all 469 aspect keys). Sign-text vs house-text consistency within one
+  reading is our own layering rule, not something the sources guarantee;
+  the mechanical guards for it (lexicon lint and full 1,440-pair scan) are
+  proposed, not yet built.
+
 ## 2026-09-08 — Content verified against references; geometry–meaning coherence
 
 - Owner asked (a) that every chart text be interpreted correctly and
