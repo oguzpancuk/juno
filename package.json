@@ -13,7 +13,8 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "verify": "bash .claude/hooks/verify.sh"
+    "verify": "bash .claude/hooks/verify.sh",
+    "lint": "expo lint"
   },
   "devDependencies": {
     "prettier": "^3.9.6",

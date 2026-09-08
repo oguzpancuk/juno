@@ -40,6 +40,7 @@ export const t = {
       underage: 'stardate 18 yaş ve üzeri içindir.',
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },
+    switchAccount: 'Farklı bir hesapla gir',
     locationHint:
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },
@@ -53,10 +54,34 @@ export const t = {
     house: 'ev',
     retrograde: 'R',
     signOut: 'Çıkış yap',
+    discover: 'Keşfet ›',
+  },
+  discover: {
+    title: 'Keşfet',
+    myChart: 'Haritam',
+    settings: 'Ayarlar',
+    scoreLabel: 'uyum',
+    like: 'Beğen',
+    pass: 'Geç',
+    under1km: '1 km altı',
+    empty:
+      'Yakınlarda şimdilik kimse kalmadı. Yarıçapı ayarlardan genişletebilirsin.',
+    noAspect:
+      'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
+    noAspectWhy: 'Haritalarınız birbirine değmiyor.',
+    remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
+  },
+  settings: {
+    title: 'Ayarlar',
+    back: '‹ Keşfet',
+    radius: 'Keşif yarıçapı',
+    radiusHint:
+      'Bu mesafe içindeki kişiler gösterilir. Konumun başkalarına sadece km olarak görünür.',
   },
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene' },
   errors: {
     generic: 'Bir şeyler ters gitti, tekrar dene.',
+    emailInvalid: 'E-posta adresi geçersiz görünüyor.',
     otpInvalid: 'Kod geçersiz ya da süresi dolmuş. Yeni kod iste.',
     rateLimited: 'Çok sık denedin, biraz bekle.',
     alreadyExists: 'Bu kayıt zaten var.',

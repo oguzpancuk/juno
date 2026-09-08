@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { PublicChartSchema, bigThree, toPublicChart } from './public';
-import { formatDegree } from './tr';
+import { describeAspectTr, formatDegree } from './tr';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
 const chart = computeChart({
@@ -89,5 +89,27 @@ describe('formatDegree', () => {
     expect(formatDegree(21.1354)).toBe('21°08′');
     expect(formatDegree(0)).toBe('0°00′');
     expect(formatDegree(29.999)).toBe('29°59′');
+  });
+});
+
+describe('describeAspectTr', () => {
+  it('renders the why-line with Turkish suffixes', () => {
+    expect(
+      describeAspectTr({ planetA: 'moon', aspect: 'trine', planetB: 'venus' }),
+    ).toBe("Ay'ın onun Venüs'üyle üçgen açı yapıyor.");
+    expect(
+      describeAspectTr({
+        planetA: 'sun',
+        aspect: 'conjunction',
+        planetB: 'ascendant',
+      }),
+    ).toBe("Güneş'in onun Yükselen'iyle kavuşuyor.");
+    expect(
+      describeAspectTr({
+        planetA: 'saturn',
+        aspect: 'square',
+        planetB: 'mars',
+      }),
+    ).toBe("Satürn'ün onun Mars'ıyla kare açı yapıyor.");
   });
 });

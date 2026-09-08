@@ -48,4 +48,12 @@ export {
   type PublicChart,
 } from './public';
 export { sunLongitude, sunSign } from './sun';
-export { PLANET_TR, SIGN_TR, SIGN_TR_LOCATIVE, formatDegree } from './tr';
+export {
+  ASPECT_TR,
+  BODY_TR,
+  PLANET_TR,
+  SIGN_TR,
+  SIGN_TR_LOCATIVE,
+  describeAspectTr,
+  formatDegree,
+} from './tr';

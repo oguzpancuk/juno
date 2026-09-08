@@ -1,5 +1,5 @@
 import { PLANETS, PLANET_TR, SIGN_TR, formatDegree } from '@stardate/astro';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -68,8 +68,15 @@ export default function ChartScreen() {
       contentContainerStyle={styles.content}
       testID="chart-screen"
     >
-      <Text style={styles.title}>{t.chart.title}</Text>
-      <Text style={styles.subtitle}>{profile.display_name}</Text>
+      <View style={styles.head}>
+        <View>
+          <Text style={styles.title}>{t.chart.title}</Text>
+          <Text style={styles.subtitle}>{profile.display_name}</Text>
+        </View>
+        <Link href="/discover" style={styles.navLink} testID="go-discover">
+          {t.chart.discover}
+        </Link>
+      </View>
 
       <Text style={styles.section}>{t.chart.bigThree}</Text>
       <View style={styles.row}>
@@ -154,6 +161,12 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: '#0b0b1a',
   },
+  head: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  navLink: { color: '#c9c4e3', fontSize: 15, paddingTop: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
   subtitle: { color: '#9a94b8', fontSize: 14 },
   section: {

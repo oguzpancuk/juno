@@ -22,6 +22,7 @@ import {
 } from '@/lib/profile';
 import { dbErrorText } from '@/lib/errors';
 import { useSession } from '@/lib/session';
+import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
 
 const num = (s: string): number | null =>
@@ -149,6 +150,14 @@ export default function Onboarding() {
       >
         <Text style={styles.title}>{t.onboarding.title}</Text>
         <Text style={styles.subtitle}>{t.onboarding.subtitle}</Text>
+        <Pressable
+          testID="sign-out"
+          onPress={() => {
+            void supabase.auth.signOut().then(() => router.replace('/sign-in'));
+          }}
+        >
+          <Text style={styles.switchAccount}>{t.onboarding.switchAccount}</Text>
+        </Pressable>
 
         <Text style={styles.label}>{t.onboarding.name}</Text>
         <TextInput
@@ -295,7 +304,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b0b1a' },
   content: { padding: 24, paddingTop: 64, gap: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  subtitle: { color: '#9a94b8', fontSize: 14, marginBottom: 12 },
+  subtitle: { color: '#9a94b8', fontSize: 14, marginBottom: 4 },
+  switchAccount: { color: '#5f5a7a', fontSize: 12, marginBottom: 12 },
   label: { color: '#c9c4e3', fontSize: 14, marginTop: 10 },
   input: {
     backgroundColor: '#15142a',

@@ -7,21 +7,20 @@ import { t } from './strings';
  * the screen (PRD: single-language UI).
  */
 export function authErrorText(error: AuthError): string {
-  const code = error.code ?? '';
-  if (
-    code === 'otp_expired' ||
-    code === 'otp_disabled' ||
-    /expired|invalid/i.test(error.message)
-  ) {
-    return t.errors.otpInvalid;
+  switch (error.code) {
+    case 'validation_failed':
+    case 'email_address_invalid':
+      return t.errors.emailInvalid;
+    case 'otp_expired':
+    case 'otp_disabled':
+      return t.errors.otpInvalid;
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit':
+      return t.errors.rateLimited;
+    default:
+      // 403 on verifyOtp with a wrong code carries no code in some versions.
+      return error.status === 403 ? t.errors.otpInvalid : t.errors.generic;
   }
-  if (
-    code === 'over_email_send_rate_limit' ||
-    code === 'over_request_rate_limit'
-  ) {
-    return t.errors.rateLimited;
-  }
-  return t.errors.generic;
 }
 
 export function dbErrorText(error: PostgrestError): string {
