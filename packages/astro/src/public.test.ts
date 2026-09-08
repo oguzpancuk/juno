@@ -15,8 +15,8 @@ describe('toPublicChart', () => {
   const pub = toPublicChart(chart);
 
   it('contains no engine input', () => {
-    expect(JSON.stringify(pub)).not.toMatch(/utc|latitude|longitude"?:\s*28/);
     expect(Object.keys(pub).sort()).toEqual(['houses', 'planets', 'version']);
+    expect(JSON.stringify(pub)).not.toMatch(/"(utc|latitude|input)"/);
   });
 
   it('round-trips through its schema and keeps every planet within 1″', () => {
@@ -32,13 +32,33 @@ describe('toPublicChart', () => {
     expect(parsed.houses.cusps).toHaveLength(12);
   });
 
-  it('rejects a chart with a smuggled input field', () => {
-    expect(() =>
-      PublicChartSchema.parse({ ...pub, input: { utc: 'x' } }),
-    ).not.toThrow(); // non-strict: unknown keys are stripped…
+  it('strips unknown keys such as a smuggled input field', () => {
+    // The DB CHECK is the hard guard; the schema keeps the stored shape clean.
     expect(
       PublicChartSchema.parse({ ...pub, input: { utc: 'x' } }),
-    ).not.toHaveProperty('input'); // …not stored
+    ).not.toHaveProperty('input');
+  });
+
+  it('never emits 360 or a degree of 30 after rounding at a boundary', () => {
+    const edge = {
+      ...chart,
+      planets: {
+        ...chart.planets,
+        sun: {
+          ...chart.planets.sun,
+          longitude: 359.99996,
+          degree: 29.99996,
+          sign: 'pisces' as const,
+        },
+      },
+      houses: { ...chart.houses, ascendant: 359.99996 },
+    };
+    const out = toPublicChart(edge);
+    expect(out.planets.sun.longitude).toBe(0);
+    expect(out.planets.sun.degree).toBe(0);
+    expect(out.planets.sun.sign).toBe('aries');
+    expect(out.houses.ascendant).toBe(0);
+    expect(bigThree(out).rising).toBe('aries');
   });
 });
 

@@ -329,8 +329,12 @@ describe('discover', () => {
 
   it("shows 'everyone' seekers only profiles that accept them back", async () => {
     const { data } = await erin.client.from('discover').select('id');
-    // Erin wants everyone; nobody in the fixture accepts 'unspecified'.
-    expect(ids(data)).toEqual([]);
+    // Erin wants everyone; no fixture user accepts 'unspecified'. Other rows
+    // (manual testing on the same local DB) may exist, so assert absence.
+    const seen = ids(data);
+    for (const other of [alice, bob, carol, dave, frank]) {
+      expect(seen).not.toContain(other.id);
+    }
   });
 });
 

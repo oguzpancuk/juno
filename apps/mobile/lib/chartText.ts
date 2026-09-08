@@ -16,7 +16,7 @@ const PLANET_THEME: Readonly<Record<Planet, string>> = {
   mercury: 'düşünme ve iletişim biçimini anlatır',
   venus: 'sevme ve ilişki kurma biçimini anlatır',
   mars: 'isteklerini ve harekete geçme tarzını anlatır',
-  jupiter: 'nerede büyüdüğünü ve şansını anlatır',
+  jupiter: 'nerede genişlediğini ve şansını anlatır',
   saturn: 'sorumluluklarını ve sınırlarını anlatır',
   uranus: 'nerede farklı olduğunu anlatır',
   neptune: 'hayallerini ve sezgilerini anlatır',

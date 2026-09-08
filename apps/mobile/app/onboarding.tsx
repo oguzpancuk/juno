@@ -1,4 +1,4 @@
-import { searchCities, type City } from '@stardate/geo';
+import { isValidCalendarDate, searchCities, type City } from '@stardate/geo';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -20,10 +20,40 @@ import {
   type Gender,
   type Interest,
 } from '@/lib/profile';
+import { dbErrorText } from '@/lib/errors';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 
-const num = (s: string): number | null => (/^\d+$/.test(s) ? Number(s) : null);
+const num = (s: string): number | null =>
+  /^\d{1,4}$/.test(s) ? Number(s) : null;
+
+const LOCATION_TIMEOUT_MS = 5000;
+
+/**
+ * One-shot device position, or undefined when refused, unavailable or slow:
+ * the city centre is the documented fallback and submit must never hang.
+ */
+async function deviceLocation(): Promise<
+  { latitude: number; longitude: number } | undefined
+> {
+  try {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (!permission.granted) return undefined;
+    const position = await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
+      new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS),
+      ),
+    ]);
+    if (!position) return undefined;
+    return {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+  } catch {
+    return undefined;
+  }
+}
 
 export default function Onboarding() {
   const session = useSession();
@@ -67,11 +97,8 @@ export default function Onboarding() {
       d === null ||
       m === null ||
       y === null ||
-      d < 1 ||
-      d > 31 ||
-      m < 1 ||
-      m > 12 ||
-      y < 1900
+      y < 1900 ||
+      !isValidCalendarDate(y, m, d)
     ) {
       return setError(t.onboarding.errors.date);
     }
@@ -83,21 +110,7 @@ export default function Onboarding() {
       return setError(t.onboarding.errors.generic);
 
     setBusy(true);
-    let device: { latitude: number; longitude: number } | undefined;
-    try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.granted) {
-        const position = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-        });
-        device = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-      }
-    } catch {
-      device = undefined; // refused or unavailable: city centre is used
-    }
+    const device = await deviceLocation();
     try {
       const result = await createProfile({
         userId: session.session.user.id,
@@ -108,17 +121,16 @@ export default function Onboarding() {
         local,
         device,
       });
-      if ('error' in result) {
-        setError(
-          result.error === 'underage'
-            ? t.onboarding.errors.underage
-            : result.error,
-        );
+      if (result.ok || result.reason === 'exists') {
+        router.replace('/chart');
         return;
       }
-      router.replace('/chart');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t.onboarding.errors.generic);
+      if (result.reason === 'underage') setError(t.onboarding.errors.underage);
+      else if (result.reason === 'invalid-date')
+        setError(t.onboarding.errors.date);
+      else if (result.reason === 'db') setError(dbErrorText(result.error));
+    } catch {
+      setError(t.onboarding.errors.generic);
     } finally {
       setBusy(false);
     }

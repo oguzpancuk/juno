@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isValidCalendarDate } from './schema';
 import { localToUtc, utcOffsetMinutes } from './time';
 
 const iso = (d: Date) => d.toISOString();
@@ -150,5 +151,15 @@ describe('utcOffsetMinutes', () => {
       180,
     );
     expect(utcOffsetMinutes(Date.UTC(1990, 0, 1), 'Europe/Istanbul')).toBe(120);
+  });
+});
+
+describe('isValidCalendarDate', () => {
+  it('accepts real dates and rejects roll-overs', () => {
+    expect(isValidCalendarDate(2000, 2, 29)).toBe(true);
+    expect(isValidCalendarDate(1900, 2, 29)).toBe(false);
+    expect(isValidCalendarDate(1990, 2, 31)).toBe(false);
+    expect(isValidCalendarDate(1990, 4, 31)).toBe(false);
+    expect(isValidCalendarDate(1990, 12, 31)).toBe(true);
   });
 });

@@ -6,7 +6,12 @@ import {
   toPublicChart,
   type PublicChart,
 } from '@stardate/astro';
-import { resolveBirth, type LocalDateTime } from '@stardate/geo';
+import {
+  isValidCalendarDate,
+  resolveBirth,
+  type LocalDateTime,
+} from '@stardate/geo';
+import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { supabase } from './supabase';
 
@@ -70,16 +75,17 @@ export interface OnboardingInput {
 
 export const MIN_AGE_YEARS = 18;
 
+/**
+ * Same rule as the DB CHECK (`birth_date <= current_date - 18 years`,
+ * Postgres interval arithmetic: 29 Feb − 18 y = 28 Feb), on the UTC
+ * calendar the DB also uses.
+ */
 export function isAtLeast18(local: LocalDateTime, today = new Date()): boolean {
-  const cutoff = new Date(
-    Date.UTC(
-      today.getUTCFullYear() - MIN_AGE_YEARS,
-      today.getUTCMonth(),
-      today.getUTCDate(),
-    ),
-  );
-  const birth = new Date(Date.UTC(local.year, local.month - 1, local.day));
-  return birth <= cutoff;
+  const y = today.getUTCFullYear() - MIN_AGE_YEARS;
+  const m = today.getUTCMonth();
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const cutoff = Date.UTC(y, m, Math.min(today.getUTCDate(), lastDay));
+  return Date.UTC(local.year, local.month - 1, local.day) <= cutoff;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -89,10 +95,27 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * the public form (no instant, no coordinates); birth data lives in its
  * own private columns.
  */
+export type CreateProfileResult =
+  | { readonly ok: true; readonly chart: PublicChart }
+  | {
+      readonly ok: false;
+      readonly reason: 'underage' | 'exists' | 'invalid-date';
+    }
+  | {
+      readonly ok: false;
+      readonly reason: 'db';
+      readonly error: PostgrestError;
+    };
+
 export async function createProfile(
   input: OnboardingInput,
-): Promise<{ chart: PublicChart } | { error: string }> {
-  if (!isAtLeast18(input.local)) return { error: 'underage' };
+): Promise<CreateProfileResult> {
+  if (
+    !isValidCalendarDate(input.local.year, input.local.month, input.local.day)
+  ) {
+    return { ok: false, reason: 'invalid-date' };
+  }
+  if (!isAtLeast18(input.local)) return { ok: false, reason: 'underage' };
   const birth = resolveBirth({ cityId: input.cityId, local: input.local });
   const chart = toPublicChart(
     computeChart({
@@ -119,6 +142,10 @@ export async function createProfile(
     interested_in: input.interestedIn,
     location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
   });
-  if (error) return { error: error.message };
-  return { chart };
+  if (error) {
+    // A lost response after a committed insert: the profile exists, move on.
+    if (error.code === '23505') return { ok: false, reason: 'exists' };
+    return { ok: false, reason: 'db', error };
+  }
+  return { ok: true, chart };
 }

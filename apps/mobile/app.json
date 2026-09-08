@@ -35,6 +35,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#0b0b1a"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "stardate, yakınındaki kişileri göstermek için konumunu bir kez okur. Konum sadece mesafe olarak paylaşılır, koordinatın kimseye gösterilmez."
+        }
       ]
     ]
   }

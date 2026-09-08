@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
 
@@ -31,7 +32,7 @@ export default function SignIn() {
     });
     setBusy(false);
     if (err) {
-      setError(err.message);
+      setError(authErrorText(err));
       return;
     }
     setStep({ kind: 'code', email: target });
@@ -48,7 +49,7 @@ export default function SignIn() {
     });
     setBusy(false);
     if (err) {
-      setError(err.message);
+      setError(authErrorText(err));
       return;
     }
     router.replace('/');

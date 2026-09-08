@@ -11,6 +11,7 @@ export {
   LocalDateTimeSchema,
   TimeZoneSchema,
   isKnownTimeZone,
+  isValidCalendarDate,
   type City,
   type LocalDateTime,
 } from './schema';

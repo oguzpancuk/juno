@@ -1,6 +1,7 @@
 import {
   LocalDateTimeSchema,
   TimeZoneSchema,
+  isValidCalendarDate,
   type LocalDateTime,
 } from './schema';
 
@@ -53,25 +54,19 @@ export function utcOffsetMinutes(utcMs: number, timeZone: string): number {
 }
 
 function wallClockMs(local: LocalDateTime): number {
-  const ms = Date.UTC(
+  // Date.UTC silently rolls 31 Feb into March; reject such dates.
+  if (!isValidCalendarDate(local.year, local.month, local.day)) {
+    throw new RangeError(
+      `invalid calendar date ${local.year}-${local.month}-${local.day}`,
+    );
+  }
+  return Date.UTC(
     local.year,
     local.month - 1,
     local.day,
     local.hour,
     local.minute,
   );
-  // Date.UTC silently rolls 31 Feb into March; reject such dates.
-  const d = new Date(ms);
-  if (
-    d.getUTCFullYear() !== local.year ||
-    d.getUTCMonth() !== local.month - 1 ||
-    d.getUTCDate() !== local.day
-  ) {
-    throw new RangeError(
-      `invalid calendar date ${local.year}-${local.month}-${local.day}`,
-    );
-  }
-  return ms;
 }
 
 /**

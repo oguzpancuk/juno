@@ -76,7 +76,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       mismatched reciprocal key is refused; the committed types match
       `gen types` (battery; CI starts a stack via supabase/setup-cli pinned
       to the CLI version the tests assert).
-- [ ] **S5 — Sign in, birth data, chart screen (PRD-1, PRD-2 UI half).**
+- [x] **S5 — Sign in, birth data, chart screen (PRD-1, PRD-2 UI half).**
       Email OTP sign-in; onboarding form (display name, gender, interested
       in, birth city picker, date, time — all required; birth date < 18 years
       ago rejected inline); device location requested once, city centre used
@@ -156,6 +156,13 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: a Vitest asserts every key the engine can emit has a
       non-empty snippet (battery); `screenshots/v1-placement-detail.png`;
       owner sign-off recorded in NOTES.
+- [ ] **Session in SecureStore.** The skeleton keeps the Supabase session
+      (refresh token) in AsyncStorage, Supabase's documented Expo default but
+      plaintext in the sandbox; wrap an AES key in expo-secure-store and
+      encrypt the AsyncStorage value (SecureStore's 2 KB limit rules out
+      storing the session directly).
+      — done when: the session survives an app restart and the AsyncStorage
+      value is ciphertext (manual, simulator).
 - [ ] **Server-side birth_utc validation.** Devices with stale tzdata
       (Android especially) can compute a wrong `birth_utc`; an Edge Function
       (Deno, full ICU) recomputes it from city + wall time and rejects a

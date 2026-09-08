@@ -10,6 +10,51 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S5 sign-in, onboarding, chart screen
+
+- Done: `apps/mobile` screens — sign-in (email OTP: `signInWithOtp` +
+  `verifyOtp`, session in AsyncStorage), onboarding (name, gender,
+  interest, offline city search, date + mandatory time, calendar and 18+
+  checks mirroring the DB, one-shot device location with a 5 s timeout
+  and city-centre fallback), chart (big three badges, ten planets with
+  sign/degree/house/retrograde and placeholder Turkish lines, sign-out).
+  `lib/profile.ts` computes the chart on device, stores the `PublicChart`
+  form (no engine input) and reads rows back through Zod; `lib/errors.ts`
+  maps auth/Postgres error codes to Turkish (raw provider text never
+  reaches the screen); 23505 on insert routes to the chart (lost response
+  after a committed insert). `packages/astro` gained `PublicChartSchema`,
+  `toPublicChart` (boundary-safe rounding: 359.99996 → 0, sign/degree
+  derived from the rounded longitude), `bigThree`, Turkish names and
+  `formatDegree`; `packages/geo` gained `isValidCalendarDate`.
+- Verified: battery green; `screenshots/s5-chart.png` shows fixture #1
+  (İstanbul 1995-07-14 03:30) and every visible value equals the Swiss
+  Ephemeris fixture (Sun Yengeç 21°08′ 2. ev … Plüton Akrep 27°59′ R);
+  the DB row has `birth_utc` 00:30Z, i.e. Hermes' Intl agrees with Node.
+  `screenshots/s5-midnight.png`: a second user born 00:10 local resolves to
+  1995-07-13T21:10Z — no ICU "24" hour quirk on Hermes/iOS. Both users
+  denied location; the stored point is the snapped city centre.
+- Manual-test hygiene: `db reset` wipes local users, and Expo Go keeps the
+  JS app alive across it — the chart screen can show a profile that no
+  longer exists until a sign-out. The RLS suite must not assume an empty
+  DB (one test did; fixed to assert absence of fixture users).
+- Dev loop: keys are passed as `EXPO_PUBLIC_*` env vars on the `expo
+start` command line (the `.env` write was refused by the tool
+  permissions; `.env.example` documents the variables). Port 8082, `--clear`
+  after route changes; typed routes regenerate on `expo start`.
+  Simulator typing drops characters occasionally (a "14" arrived as "1",
+  an e-mail lost its tail, autocorrect turned "Gece" into "Hence") —
+  always screenshot before submitting.
+- Review (code-reviewer, S5 pass 1 NEEDS_WORK → fixes in this commit):
+  location call could hang submit forever; boundary rounding could throw
+  a ZodError on a valid chart; 30 Feb passed the UI check; English error
+  text; duplicate-profile dead end; `zod` undeclared in the app; effect
+  refetch keyed on session object; `expo-location` plugin with a Turkish
+  purpose string. v1 gains "session in SecureStore".
+- Known: two clients on different engine versions produce different
+  starter keys and can never match (trigger refuses) — the v1 app-update
+  story must version the key or the engine (noted for S7).
+- Next: S6 discover + compatibility.
+
 ## 2026-09-08 — S4 backend skeleton with RLS
 
 - Done: `supabase init` (CLI 2.117, Postgres 17), migration

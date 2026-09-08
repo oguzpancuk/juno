@@ -44,3 +44,17 @@ export const TimeZoneSchema = z
   .string()
   .min(1)
   .refine(isKnownTimeZone, { message: 'unknown IANA time zone' });
+
+/** True when the y/m/d triple is a real calendar date (no 30 Feb). */
+export function isValidCalendarDate(
+  year: number,
+  month: number,
+  day: number,
+): boolean {
+  const d = new Date(Date.UTC(year, month - 1, day));
+  return (
+    d.getUTCFullYear() === year &&
+    d.getUTCMonth() === month - 1 &&
+    d.getUTCDate() === day
+  );
+}

@@ -34,6 +34,8 @@ export const SUPABASE_CLI_VERSION = '2.117.0';
  * Prefer a `supabase` binary on PATH (CI's setup-cli); otherwise the
  * pinned npm package through npx (local dev). Never `supabase@latest`.
  */
+class CliVersionMismatch extends Error {}
+
 let cliChecked = false;
 
 export function supabaseCli(args: readonly string[]): string {
@@ -50,7 +52,7 @@ export function supabaseCli(args: readonly string[]): string {
         options,
       ).trim();
       if (!version.endsWith(SUPABASE_CLI_VERSION)) {
-        throw new Error(
+        throw new CliVersionMismatch(
           `supabase CLI ${version} found, ${SUPABASE_CLI_VERSION} required`,
         );
       }
@@ -61,8 +63,7 @@ export function supabaseCli(args: readonly string[]): string {
   try {
     return run('supabase', []);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('required'))
-      throw error;
+    if (error instanceof CliVersionMismatch) throw error;
     return run('npx', [`supabase@${SUPABASE_CLI_VERSION}`]);
   }
 }

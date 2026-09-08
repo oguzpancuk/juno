@@ -19,24 +19,42 @@ export default function ChartScreen() {
   const session = useSession();
   const [state, setState] = useState<ProfileState>({ status: 'loading' });
 
+  const userId =
+    session.status === 'signed-in' ? session.session.user.id : null;
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
-    if (session.status !== 'signed-in') return;
+    if (!userId) return;
     let cancelled = false;
-    void fetchOwnProfile(session.session.user.id).then((s) => {
+    void fetchOwnProfile(userId).then((s) => {
       if (!cancelled) setState(s);
     });
     return () => {
       cancelled = true;
     };
-  }, [session]);
+  }, [userId, attempt]);
 
+  if (state.status === 'error') {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.muted}>{t.errors.generic}</Text>
+        <Pressable
+          testID="retry"
+          onPress={() => {
+            setState({ status: 'loading' });
+            setAttempt((n) => n + 1);
+          }}
+        >
+          <Text style={styles.link}>{t.common.retry}</Text>
+        </Pressable>
+      </View>
+    );
+  }
   if (state.status !== 'ready') {
     return (
       <View style={styles.center}>
         <ActivityIndicator color="#9a94b8" />
-        <Text style={styles.muted}>
-          {state.status === 'error' ? state.message : t.common.loading}
-        </Text>
+        <Text style={styles.muted}>{t.common.loading}</Text>
       </View>
     );
   }
@@ -172,4 +190,5 @@ const styles = StyleSheet.create({
   planetText: { color: '#9a94b8', fontSize: 13 },
   signOut: { marginTop: 24, alignItems: 'center', padding: 12 },
   muted: { color: '#9a94b8' },
+  link: { color: '#c9c4e3', padding: 12 },
 });

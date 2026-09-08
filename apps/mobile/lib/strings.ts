@@ -45,7 +45,7 @@ export const t = {
   },
   chart: {
     title: 'Doğum haritan',
-    bigThree: 'Üçlün',
+    bigThree: 'Büyük üçlün',
     sun: 'Güneş',
     moon: 'Ay',
     rising: 'Yükselen',
@@ -54,5 +54,13 @@ export const t = {
     retrograde: 'R',
     signOut: 'Çıkış yap',
   },
-  common: { loading: 'Yükleniyor…' },
+  common: { loading: 'Yükleniyor…', retry: 'Tekrar dene' },
+  errors: {
+    generic: 'Bir şeyler ters gitti, tekrar dene.',
+    otpInvalid: 'Kod geçersiz ya da süresi dolmuş. Yeni kod iste.',
+    rateLimited: 'Çok sık denedin, biraz bekle.',
+    alreadyExists: 'Bu kayıt zaten var.',
+    invalidData: 'Girdiğin bilgiler kabul edilmedi, kontrol et.',
+    notAllowed: 'Bunu yapmaya iznin yok.',
+  },
 } as const;

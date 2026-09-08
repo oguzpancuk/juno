@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PLANETS, type Planet } from './bodies';
 import type { Chart } from './chart';
-import { SIGNS, type Sign } from './signs';
+import { SIGNS, signOf } from './signs';
 
 /**
  * The chart as stored in `profiles.chart` and shown to other users:
@@ -45,18 +45,21 @@ export const BigThreeSchema = z.object({
 
 export type BigThree = z.infer<typeof BigThreeSchema>;
 
-const round = (value: number, decimals: number): number =>
-  Number(value.toFixed(decimals));
+/** Round to 4 decimals (< 1″) and fold a rounded-up 360 back to 0. */
+const roundDeg = (value: number): number => Number(value.toFixed(4)) % 360;
 
 /** Strip the engine input and round to 4 decimals (< 1″) for storage. */
 export function toPublicChart(chart: Chart): PublicChart {
   const planets = {} as Record<Planet, z.infer<typeof PublicPlacementSchema>>; // why: filled for every PLANETS key below
   for (const planet of PLANETS) {
     const p = chart.planets[planet];
+    const longitude = roundDeg(p.longitude);
     planets[planet] = {
-      longitude: round(p.longitude, 4),
-      sign: p.sign,
-      degree: round(p.degree, 4),
+      longitude,
+      // Derived from the rounded longitude so sign, degree and longitude
+      // stay mutually consistent at a sign boundary (29.99996 → 0 next sign).
+      sign: signOf(longitude),
+      degree: longitude % 30,
       house: p.house,
       retrograde: p.retrograde,
     };
@@ -65,9 +68,9 @@ export function toPublicChart(chart: Chart): PublicChart {
     version: 1,
     planets,
     houses: {
-      ascendant: round(chart.houses.ascendant, 4),
-      mc: round(chart.houses.mc, 4),
-      cusps: chart.houses.cusps.map((c) => round(c, 4)),
+      ascendant: roundDeg(chart.houses.ascendant),
+      mc: roundDeg(chart.houses.mc),
+      cusps: chart.houses.cusps.map(roundDeg),
     },
   });
 }
@@ -75,7 +78,9 @@ export function toPublicChart(chart: Chart): PublicChart {
 export function bigThree(
   chart: Pick<PublicChart, 'planets'> & { houses: { ascendant: number } },
 ): BigThree {
-  const risingIndex = Math.floor(chart.houses.ascendant / 30);
-  const rising: Sign = SIGNS[risingIndex] ?? 'aries'; // why: ascendant is in [0, 360) so the index is 0..11
-  return { sun: chart.planets.sun.sign, moon: chart.planets.moon.sign, rising };
+  return {
+    sun: chart.planets.sun.sign,
+    moon: chart.planets.moon.sign,
+    rising: signOf(chart.houses.ascendant),
+  };
 }
