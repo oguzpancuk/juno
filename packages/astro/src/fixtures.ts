@@ -9,6 +9,7 @@ import { PLANETS, type Planet } from './bodies';
 const PlanetRefSchema = z.object({
   longitude: z.number().min(0).max(360),
   retrograde: z.boolean(),
+  house: z.number().int().min(1).max(12),
 });
 
 // why: z.record() with an enum key makes every key optional in zod 3; the

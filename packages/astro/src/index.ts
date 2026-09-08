@@ -11,6 +11,7 @@ export {
   MAX_PLACIDUS_LATITUDE,
   computeHouses,
   houseOf,
+  type Cusps,
   type HouseNumber,
   type Houses,
 } from './houses';

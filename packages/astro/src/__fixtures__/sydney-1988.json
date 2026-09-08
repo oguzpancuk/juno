@@ -1,0 +1,78 @@
+{
+  "id": "sydney-1988",
+  "note": "Sydney, 5 Mar 1988 07:20 AEDT (UTC+11); southern hemisphere",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus, planet house via house_pos with ecliptic latitude 0",
+  "input": {
+    "utc": "1988-03-04T20:20:00Z",
+    "latitude": -33.8688,
+    "longitude": 151.2093
+  },
+  "planets": {
+    "sun": {
+      "longitude": 344.4809,
+      "retrograde": false,
+      "house": 12
+    },
+    "moon": {
+      "longitude": 177.3955,
+      "retrograde": false,
+      "house": 7
+    },
+    "mercury": {
+      "longitude": 317.3926,
+      "retrograde": false,
+      "house": 11
+    },
+    "venus": {
+      "longitude": 28.2175,
+      "retrograde": false,
+      "house": 2
+    },
+    "mars": {
+      "longitude": 277.6989,
+      "retrograde": false,
+      "house": 10
+    },
+    "jupiter": {
+      "longitude": 29.2161,
+      "retrograde": false,
+      "house": 2
+    },
+    "saturn": {
+      "longitude": 271.4301,
+      "retrograde": false,
+      "house": 10
+    },
+    "uranus": {
+      "longitude": 270.6334,
+      "retrograde": false,
+      "house": 10
+    },
+    "neptune": {
+      "longitude": 279.805,
+      "retrograde": false,
+      "house": 10
+    },
+    "pluto": {
+      "longitude": 222.4756,
+      "retrograde": true,
+      "house": 8
+    }
+  },
+  "ascendant": 350.7326,
+  "mc": 259.9034,
+  "cusps": [
+    350.7326,
+    17.3098,
+    47.5185,
+    79.9034,
+    112.3602,
+    143.0227,
+    170.7326,
+    197.3098,
+    227.5185,
+    259.9034,
+    292.3602,
+    323.0227
+  ]
+}

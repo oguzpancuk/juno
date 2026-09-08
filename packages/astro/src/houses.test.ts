@@ -2,16 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { ReferenceChartSchema } from './fixtures';
-import { computeHouses, houseOf } from './houses';
+import { computeHouses, houseOf, type Cusps } from './houses';
 import { signedDelta } from './signs';
 import ankara from './__fixtures__/ankara-1990.json';
 import helsinki from './__fixtures__/helsinki-2001.json';
 import istanbul from './__fixtures__/istanbul-1995.json';
+import sydney from './__fixtures__/sydney-1988.json';
 
 // ADR-0004: Ascendant, MC and cusps within 1° of the Swiss Ephemeris.
 const TOLERANCE_DEG = 1;
 
-const fixtures = [istanbul, ankara, helsinki].map((raw) =>
+const fixtures = [istanbul, ankara, helsinki, sydney].map((raw) =>
   ReferenceChartSchema.parse(raw),
 );
 
@@ -34,13 +35,9 @@ describe.each(fixtures)('computeHouses · $id', (fixture) => {
   it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const)(
     'cusp %i within 1° of the reference',
     (house) => {
-      const actual = houses.cusps[house - 1];
-      const expected = fixture.cusps[house - 1];
-      expect(actual).toBeDefined();
-      expect(expected).toBeDefined();
-      expect(angularError(actual ?? 0, expected ?? 0)).toBeLessThan(
-        TOLERANCE_DEG,
-      );
+      const actual = houses.cusps[house - 1] ?? Number.NaN;
+      const expected = fixture.cusps[house - 1] ?? Number.NaN;
+      expect(angularError(actual, expected)).toBeLessThan(TOLERANCE_DEG);
     },
   );
 
@@ -74,17 +71,18 @@ describe.each(fixtures)('planet houses · $id', (fixture) => {
     longitude: fixture.input.longitude,
   });
 
-  it.each(PLANETS)('%s is in the same house as the reference', (planet) => {
-    // Like-for-like: the reference house is the reference longitude placed
-    // against the reference cusps, so a cusp-adjacent planet is judged by
-    // the same rule on both sides.
-    const expected = houseOf(fixture.planets[planet].longitude, fixture.cusps);
-    expect(chart.planets[planet].house).toBe(expected);
-  });
+  it.each(PLANETS)(
+    '%s is in the same house as the Swiss Ephemeris',
+    (planet) => {
+      // fixture.planets[*].house comes from swe.house_pos (ecliptic latitude
+      // 0), an independent oracle rather than our own houseOf on its numbers.
+      expect(chart.planets[planet].house).toBe(fixture.planets[planet].house);
+    },
+  );
 });
 
 describe('houseOf', () => {
-  const cusps = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+  const cusps: Cusps = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
 
   it('places a longitude on a cusp in the house that cusp starts', () => {
     expect(houseOf(0, cusps)).toBe(1);
@@ -94,15 +92,12 @@ describe('houseOf', () => {
   });
 
   it('handles cusps that wrap past 360°', () => {
-    const wrapped = cusps.map((c) => (c + 345) % 360); // house 1 starts at 345°
+    // why: map() widens the tuple to number[]; the length is unchanged.
+    const wrapped = cusps.map((c) => (c + 345) % 360) as unknown as Cusps; // house 1 starts at 345°
     expect(houseOf(350, wrapped)).toBe(1);
     expect(houseOf(10, wrapped)).toBe(1);
     expect(houseOf(20, wrapped)).toBe(2);
     expect(houseOf(344, wrapped)).toBe(12);
-  });
-
-  it('rejects a cusp list that is not twelve long', () => {
-    expect(() => houseOf(0, [0, 90, 180, 270])).toThrow(RangeError);
   });
 });
 

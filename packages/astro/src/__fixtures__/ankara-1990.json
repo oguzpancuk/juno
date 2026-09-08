@@ -1,7 +1,7 @@
 {
   "id": "ankara-1990",
   "note": "Ankara, 1 Jan 1990 12:00 EET (UTC+2)",
-  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus, planet house via house_pos with ecliptic latitude 0",
   "input": {
     "utc": "1990-01-01T10:00:00Z",
     "latitude": 39.9334,
@@ -10,43 +10,53 @@
   "planets": {
     "sun": {
       "longitude": 280.7293,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "moon": {
       "longitude": 332.1459,
-      "retrograde": false
+      "retrograde": false,
+      "house": 11
     },
     "mercury": {
       "longitude": 295.6967,
-      "retrograde": true
+      "retrograde": true,
+      "house": 10
     },
     "venus": {
       "longitude": 306.2325,
-      "retrograde": true
+      "retrograde": true,
+      "house": 11
     },
     "mars": {
       "longitude": 249.9414,
-      "retrograde": false
+      "retrograde": false,
+      "house": 8
     },
     "jupiter": {
       "longitude": 95.1599,
-      "retrograde": true
+      "retrograde": true,
+      "house": 3
     },
     "saturn": {
       "longitude": 285.6477,
-      "retrograde": false
+      "retrograde": false,
+      "house": 10
     },
     "uranus": {
       "longitude": 275.7805,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "neptune": {
       "longitude": 282.035,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "pluto": {
       "longitude": 227.0909,
-      "retrograde": false
+      "retrograde": false,
+      "house": 7
     }
   },
   "ascendant": 22.9168,

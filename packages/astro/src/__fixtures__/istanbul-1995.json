@@ -1,7 +1,7 @@
 {
   "id": "istanbul-1995",
   "note": "Istanbul, 14 Jul 1995 03:30 EEST (UTC+3)",
-  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus, planet house via house_pos with ecliptic latitude 0",
   "input": {
     "utc": "1995-07-14T00:30:00Z",
     "latitude": 41.0082,
@@ -10,43 +10,53 @@
   "planets": {
     "sun": {
       "longitude": 111.1354,
-      "retrograde": false
+      "retrograde": false,
+      "house": 2
     },
     "moon": {
       "longitude": 313.0799,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "mercury": {
       "longitude": 95.7728,
-      "retrograde": false
+      "retrograde": false,
+      "house": 1
     },
     "venus": {
       "longitude": 100.7038,
-      "retrograde": false
+      "retrograde": false,
+      "house": 1
     },
     "mars": {
       "longitude": 175.7077,
-      "retrograde": false
+      "retrograde": false,
+      "house": 4
     },
     "jupiter": {
       "longitude": 246.1188,
-      "retrograde": true
+      "retrograde": true,
+      "house": 6
     },
     "saturn": {
       "longitude": 354.7031,
-      "retrograde": true
+      "retrograde": true,
+      "house": 10
     },
     "uranus": {
       "longitude": 298.8033,
-      "retrograde": true
+      "retrograde": true,
+      "house": 8
     },
     "neptune": {
       "longitude": 294.2488,
-      "retrograde": true
+      "retrograde": true,
+      "house": 8
     },
     "pluto": {
       "longitude": 237.9933,
-      "retrograde": true
+      "retrograde": true,
+      "house": 6
     }
   },
   "ascendant": 80.497,

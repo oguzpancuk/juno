@@ -19,10 +19,7 @@ export const ChartInputSchema = z.object({
   latitude: z
     .number()
     .finite()
-    .min(-MAX_PLACIDUS_LATITUDE, {
-      message: `latitude must be within ±${MAX_PLACIDUS_LATITUDE}° for Placidus houses`,
-    })
-    .max(MAX_PLACIDUS_LATITUDE, {
+    .refine((v) => Math.abs(v) <= MAX_PLACIDUS_LATITUDE, {
       message: `latitude must be within ±${MAX_PLACIDUS_LATITUDE}° for Placidus houses`,
     }),
   longitude: z.number().finite().min(-180).max(180),

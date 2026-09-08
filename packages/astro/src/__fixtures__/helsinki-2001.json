@@ -1,7 +1,7 @@
 {
   "id": "helsinki-2001",
   "note": "Helsinki, 20 Nov 2001 18:45 EET (UTC+2); high latitude for Placidus",
-  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus, planet house via house_pos with ecliptic latitude 0",
   "input": {
     "utc": "2001-11-20T16:45:00Z",
     "latitude": 60.1699,
@@ -10,43 +10,53 @@
   "planets": {
     "sun": {
       "longitude": 238.4319,
-      "retrograde": false
+      "retrograde": false,
+      "house": 5
     },
     "moon": {
       "longitude": 303.4739,
-      "retrograde": false
+      "retrograde": false,
+      "house": 8
     },
     "mercury": {
       "longitude": 230.364,
-      "retrograde": false
+      "retrograde": false,
+      "house": 5
     },
     "venus": {
       "longitude": 225.2168,
-      "retrograde": false
+      "retrograde": false,
+      "house": 5
     },
     "mars": {
       "longitude": 316.8283,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "jupiter": {
       "longitude": 105.1492,
-      "retrograde": true
+      "retrograde": true,
+      "house": 12
     },
     "saturn": {
       "longitude": 72.5219,
-      "retrograde": true
+      "retrograde": true,
+      "house": 12
     },
     "uranus": {
       "longitude": 321.0928,
-      "retrograde": false
+      "retrograde": false,
+      "house": 9
     },
     "neptune": {
       "longitude": 306.3086,
-      "retrograde": false
+      "retrograde": false,
+      "house": 8
     },
     "pluto": {
       "longitude": 254.4754,
-      "retrograde": false
+      "retrograde": false,
+      "house": 6
     }
   },
   "ascendant": 109.3006,

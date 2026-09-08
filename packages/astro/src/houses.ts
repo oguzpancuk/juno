@@ -5,11 +5,29 @@ const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
 
 /**
- * Placidus is undefined where the ecliptic can be circumpolar
- * (|latitude| > 90° − obliquity ≈ 66.5°). The iteration below stops
- * converging well before that, so the schema rejects |latitude| > 66.
+ * Placidus cusps do not exist where part of the ecliptic never rises or
+ * sets (|latitude| > 90° − obliquity ≈ 66.5°): the semi-arc equation has
+ * no solution (|cos SA| > 1) and the Ascendant formula is singular at
+ * RAMC 90°/270°. No better solver lifts this; the cap is 66° to keep a
+ * margin below the obliquity-dependent limit.
  */
 export const MAX_PLACIDUS_LATITUDE = 66;
+
+/** Twelve cusps, index 0 = house 1, degrees [0, 360). */
+export type Cusps = readonly [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
 
 /** House number 1–12. */
 export type HouseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
@@ -20,7 +38,7 @@ export interface Houses {
   /** Ecliptic longitude of the Midheaven (cusp 10), degrees [0, 360). */
   readonly mc: number;
   /** Twelve Placidus cusps, index 0 = house 1, degrees [0, 360). */
-  readonly cusps: readonly number[];
+  readonly cusps: Cusps;
   /** Right ascension of the MC, degrees; kept for tests and diagnostics. */
   readonly ramc: number;
   /** True obliquity of the ecliptic used, degrees. */
@@ -72,6 +90,7 @@ function placidusCusp(
   const tanPhi = Math.tan(latitudeDeg * DEG);
   const tanEps = Math.tan(eps);
   let ra = ramcDeg + offsetDeg + sign * fraction * 90;
+  let converged = false;
   for (let i = 0; i < 100; i++) {
     // Declination of the ecliptic point at RA: tan δ = tan ε · sin α.
     // Semi-arc from the meridian to the horizon: cos SA = −tan φ · tan δ.
@@ -83,11 +102,19 @@ function placidusCusp(
     }
     const semiArc = Math.acos(cosSA) * RAD;
     const next = ramcDeg + offsetDeg + sign * fraction * semiArc;
-    if (Math.abs(next - ra) < 1e-9) {
-      ra = next;
+    const step = Math.abs(next - ra);
+    ra = next;
+    if (step < 1e-9) {
+      converged = true;
       break;
     }
-    ra = next;
+  }
+  if (!converged) {
+    // why: the contraction factor is ≤ 0.65 inside the latitude cap, so
+    // this is unreachable; a silent stale value would be worse than a throw.
+    throw new RangeError(
+      `Placidus cusp did not converge at latitude ${latitudeDeg}`,
+    );
   }
   return eclipticLongitudeOfRA(ra, obliquityDeg);
 }
@@ -121,7 +148,7 @@ export function computeHouses(
   const c3 = cusp(1 / 3, 180, -1);
   const opposite = (deg: number) => normalizeDegrees(deg + 180);
 
-  const cusps = [
+  const cusps: Cusps = [
     asc,
     c2,
     c3,
@@ -138,18 +165,15 @@ export function computeHouses(
   return { ascendant: asc, mc, cusps, ramc, obliquity };
 }
 
-/** House (1–12) containing an ecliptic longitude, given cusps in order. */
-export function houseOf(
-  longitude: number,
-  cusps: readonly number[],
-): HouseNumber {
-  if (cusps.length !== 12) {
-    throw new RangeError(`houseOf: expected 12 cusps, got ${cusps.length}`);
-  }
+/**
+ * House (1–12) containing an ecliptic longitude, given cusps in zodiacal
+ * order. A longitude exactly on a cusp belongs to the house that cusp
+ * starts.
+ */
+export function houseOf(longitude: number, cusps: Cusps): HouseNumber {
   for (let i = 0; i < 12; i++) {
-    const start = cusps[i];
-    const end = cusps[(i + 1) % 12];
-    if (start === undefined || end === undefined) continue;
+    const start = cusps[i] ?? 0; // why: tuple index is always in range; ?? satisfies noUncheckedIndexedAccess
+    const end = cusps[(i + 1) % 12] ?? 0;
     const span = normalizeDegrees(end - start);
     const offset = normalizeDegrees(longitude - start);
     if (offset < span) return (i + 1) as HouseNumber; // why: i is 0..11, so i + 1 is a HouseNumber

@@ -6,11 +6,12 @@ import { signOf, signedDelta } from './signs';
 import ankara from './__fixtures__/ankara-1990.json';
 import helsinki from './__fixtures__/helsinki-2001.json';
 import istanbul from './__fixtures__/istanbul-1995.json';
+import sydney from './__fixtures__/sydney-1988.json';
 
 // ADR-0004: every planet within 1° of the Swiss Ephemeris reference.
 const TOLERANCE_DEG = 1;
 
-const fixtures = [istanbul, ankara, helsinki].map((raw) =>
+const fixtures = [istanbul, ankara, helsinki, sydney].map((raw) =>
   ReferenceChartSchema.parse(raw),
 );
 

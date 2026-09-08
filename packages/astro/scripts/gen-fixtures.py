@@ -45,6 +45,8 @@ CHARTS = [
      "Ankara, 1 Jan 1990 12:00 EET (UTC+2)"),
     ("helsinki-2001", "2001-11-20T16:45:00Z", 60.1699, 24.9384,
      "Helsinki, 20 Nov 2001 18:45 EET (UTC+2); high latitude for Placidus"),
+    ("sydney-1988", "1988-03-04T20:20:00Z", -33.8688, 151.2093,
+     "Sydney, 5 Mar 1988 07:20 AEDT (UTC+11); southern hemisphere"),
 ]
 
 FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
@@ -60,21 +62,27 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for chart_id, utc, lat, lon, note in CHARTS:
         jd = julian_day(utc)
+        cusps, ascmc = swe.houses(jd, lat, lon, b"P")
+        armc = ascmc[2]
+        (obliquity, *_), _ = swe.calc_ut(jd, swe.ECL_NUT, FLAGS)
         planets = {}
         for name, body in PLANETS:
             (elon, _lat, _dist, speed, *_), _ = swe.calc_ut(jd, body, FLAGS)
+            # House by ecliptic longitude alone (ecliptic latitude 0), which
+            # is how chart wheels place planets; the engine does the same.
+            house = int(swe.house_pos(armc, lat, obliquity, [elon, 0.0], b"P"))
             planets[name] = {
                 "longitude": round(elon, 4),
                 "retrograde": speed < 0,
+                "house": house,
             }
-        cusps, ascmc = swe.houses(jd, lat, lon, b"P")
         fixture = {
             "id": chart_id,
             "note": note,
             "source": (
                 f"Swiss Ephemeris {swe.version} via pyswisseph, Moshier mode "
                 "(FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; "
-                "houses: Placidus"
+                "houses: Placidus, planet house via house_pos with ecliptic latitude 0"
             ),
             "input": {"utc": utc, "latitude": lat, "longitude": lon},
             "planets": planets,
