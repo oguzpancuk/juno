@@ -14,9 +14,18 @@ export default tseslint.config(
     },
     rules: {
       // An astronomy engine interpolates numbers into messages constantly.
+      // Options replace the preset's object wholesale, so every field is
+      // spelled out to keep strict-type-checked's other prohibitions.
       '@typescript-eslint/restrict-template-expressions': [
         'error',
-        { allowNumber: true },
+        {
+          allowAny: false,
+          allowBoolean: false,
+          allowNever: false,
+          allowNullish: false,
+          allowNumber: true,
+          allowRegExp: false,
+        },
       ],
     },
   },

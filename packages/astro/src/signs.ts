@@ -23,9 +23,9 @@ export function normalizeDegrees(deg: number): number {
       `normalizeDegrees: expected a finite number, got ${deg}`,
     );
   }
-  const d = ((deg % 360) + 360) % 360;
-  // (-1e-15 % 360 + 360) % 360 can round to exactly 360; fold it back.
-  return d === 360 ? 0 : d;
+  // IEEE remainder is exact and, for positive operands, always < 360, so
+  // the outer % also folds the case where (deg % 360) + 360 rounds to 360.
+  return ((deg % 360) + 360) % 360;
 }
 
 /** Sign for an ecliptic longitude in degrees (tropical zodiac). */
