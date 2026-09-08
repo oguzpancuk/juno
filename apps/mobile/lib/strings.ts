@@ -113,6 +113,14 @@ export const t = {
     customRadius: (km: number) => `Şu an ${km} km (özel değer).`,
     radiusHint:
       'Bu mesafe içindeki kişiler gösterilir. Konumun başkalarına sadece km olarak görünür.',
+    location: 'Konum',
+    updateLocation: 'Konumu güncelle',
+    locating: 'Konum alınıyor…',
+    locationUpdated: 'Konumun güncellendi.',
+    locationDenied:
+      'Konum alınamadı. İzni açtıysan tekrar dene; kapalıysa doğum şehrin kullanılır.',
+    locationHint:
+      'Konumun ~1 km’lik bir hücreye yuvarlanarak saklanır; kimse tam yerini görmez.',
   },
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene' },
   errors: {

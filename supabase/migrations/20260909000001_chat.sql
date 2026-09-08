@@ -11,8 +11,10 @@ create table public.messages (
   body text not null
     check (body ~ '[^[:space:]]' and char_length(body) <= 2000),
   -- Set by the recipient when the thread is opened; never by the sender.
+  -- Both timestamps are server-owned (see the triggers below).
   read_at timestamptz,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  check (read_at is null or read_at >= created_at)
 );
 
 -- Thread reads are "newest first for one match"; unread counting is a
@@ -30,7 +32,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.matches m
@@ -42,8 +44,30 @@ $$;
 revoke all on function public.is_match_member(uuid) from public, anon;
 grant execute on function public.is_match_member(uuid) to authenticated;
 
+-- The two timestamps are the server's, not the client's. A sender who can
+-- choose created_at pins their message to the top (or bottom) of the other
+-- person's thread and conversation list forever — there is no delete — and
+-- a sender who can preset read_at posts a message that never counts as
+-- unread.
+create or replace function public.messages_server_times()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.created_at = now();
+  new.read_at = null;
+  return new;
+end;
+$$;
+
+create trigger messages_server_times
+  before insert on public.messages
+  for each row execute function public.messages_server_times();
+
 -- Only read_at may change after insert: an edited message would let one
--- side rewrite what the other already read.
+-- side rewrite what the other already read. The receipt itself is stamped
+-- by the server and cannot be cleared, so "read" stays a fact rather than
+-- a client-chosen value.
 create or replace function public.forbid_message_edit()
 returns trigger
 language plpgsql
@@ -56,6 +80,10 @@ begin
      or new.created_at is distinct from old.created_at then
     raise exception 'only read_at may change' using errcode = 'check_violation';
   end if;
+  if new.read_at is null then
+    raise exception 'read_at cannot be cleared' using errcode = 'check_violation';
+  end if;
+  new.read_at = coalesce(old.read_at, now());
   return new;
 end;
 $$;

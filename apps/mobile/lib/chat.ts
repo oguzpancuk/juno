@@ -22,18 +22,28 @@ export const isSendable = (body: string): boolean => {
   return trimmed.length > 0 && body.length <= MAX_MESSAGE_LENGTH;
 };
 
+/**
+ * Newest slice of a thread, oldest first. Bounded on purpose: PostgREST
+ * caps a response at `max_rows` (1000), and an unbounded ascending query
+ * would hand back the OLDEST 1000 once a thread grows past it, freezing
+ * the screen in the past.
+ */
+export const THREAD_PAGE_SIZE = 200;
+
 export async function fetchMessages(
   matchId: string,
+  limit = THREAD_PAGE_SIZE,
 ): Promise<MessageRow[] | null> {
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .eq('match_id', matchId)
-    .order('created_at', { ascending: true })
-    .order('id', { ascending: true });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit);
   if (error) return null;
   const parsed = z.array(MessageRowSchema).safeParse(data);
-  return parsed.success ? parsed.data : null;
+  return parsed.success ? [...parsed.data].reverse() : null;
 }
 
 /**
@@ -64,13 +74,21 @@ export async function sendMessage(
 export async function markThreadRead(
   matchId: string,
   myId: string,
-): Promise<void> {
-  await supabase
+): Promise<boolean> {
+  // The server stamps the time; the value sent here only satisfies the
+  // column's not-null rule on update.
+  const { error } = await supabase
     .from('messages')
     .update({ read_at: new Date().toISOString() })
     .eq('match_id', matchId)
     .neq('sender_id', myId)
     .is('read_at', null);
+  if (error) {
+    // A silent failure leaves a badge that never clears; make it visible.
+    console.warn('markThreadRead failed', error.message);
+    return false;
+  }
+  return true;
 }
 
 const byTime = (a: MessageRow, b: MessageRow): number =>

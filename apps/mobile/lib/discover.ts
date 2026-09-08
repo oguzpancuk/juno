@@ -114,3 +114,20 @@ export async function updateRadius(
     .eq('id', userId);
   return !error;
 }
+
+/**
+ * Move the profile to a new point. The DB snaps it to a ~1 km grid, so
+ * what lands in the row is a cell, never the exact device fix.
+ */
+export async function updateLocation(
+  userId: string,
+  point: { readonly latitude: number; readonly longitude: number },
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
+    })
+    .eq('id', userId);
+  return !error;
+}

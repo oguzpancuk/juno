@@ -198,10 +198,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       mismatch before the profile is stored.
       — done when: a Vitest against the local stack proves an inconsistent
       `birth_utc` is rejected and a consistent one accepted (battery).
-- [ ] **City search UX.** Word-prefix matching ("york" → New York) and a
+- [x] **City search UX.** Word-prefix matching ("york" → New York) and a
       curated Turkish exonym list (Viyana, Münih, Londra …) in
       `packages/geo`.
-      — done when: Vitest covers both (battery).
+      — done when: Vitest covers both (battery). _Done: tiered search plus
+      53 exonyms, resolved by ascii name + country and guarded by a test._
 - [ ] **Location refresh.** "Konumu güncelle" in settings re-reads device
       location and updates `location`.
       — done when: manual check in Studio shows the point changed.

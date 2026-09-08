@@ -1,7 +1,8 @@
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { RADIUS_OPTIONS, updateRadius } from '@/lib/discover';
+import { RADIUS_OPTIONS, updateLocation, updateRadius } from '@/lib/discover';
+import { deviceLocation } from '@/lib/location';
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -23,6 +24,20 @@ export default function Settings() {
       cancelled = true;
     };
   }, [userId]);
+
+  type LocationState = 'idle' | 'working' | 'done' | 'failed';
+  const [locating, setLocating] = useState<LocationState>('idle');
+
+  const refreshLocation = async () => {
+    if (!userId || locating === 'working') return;
+    setLocating('working');
+    const point = await deviceLocation();
+    if (!point) {
+      setLocating('failed');
+      return;
+    }
+    setLocating((await updateLocation(userId, point)) ? 'done' : 'failed');
+  };
 
   const [saving, setSaving] = useState(false);
   const choose = async (km: number) => {
@@ -63,6 +78,28 @@ export default function Settings() {
       ) : null}
       <Text style={styles.hint}>{t.settings.radiusHint}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Text style={styles.label}>{t.settings.location}</Text>
+      <Pressable
+        testID="refresh-location"
+        style={[styles.button, locating === 'working' && styles.buttonBusy]}
+        disabled={locating === 'working'}
+        onPress={() => void refreshLocation()}
+      >
+        <Text style={styles.buttonText}>
+          {locating === 'working'
+            ? t.settings.locating
+            : t.settings.updateLocation}
+        </Text>
+      </Pressable>
+      {locating === 'done' ? (
+        <Text style={styles.ok} testID="location-updated">
+          {t.settings.locationUpdated}
+        </Text>
+      ) : null}
+      {locating === 'failed' ? (
+        <Text style={styles.error}>{t.settings.locationDenied}</Text>
+      ) : null}
+      <Text style={styles.hint}>{t.settings.locationHint}</Text>
     </View>
   );
 }
@@ -89,4 +126,13 @@ const styles = StyleSheet.create({
   chipText: { color: '#f5f2ff' },
   hint: { color: '#5f5a7a', fontSize: 12 },
   error: { color: '#ff7b7b' },
+  ok: { color: '#8ce0b0', fontSize: 13 },
+  button: {
+    backgroundColor: '#15142a',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  buttonBusy: { opacity: 0.6 },
+  buttonText: { color: '#f5f2ff', fontSize: 15, fontWeight: '600' },
 });

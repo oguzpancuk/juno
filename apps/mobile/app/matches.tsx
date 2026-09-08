@@ -1,5 +1,5 @@
-import { Link, Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Link, Redirect, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,16 +19,21 @@ export default function Matches() {
     'loading',
   );
 
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    void fetchMatches().then((r) => {
-      if (!cancelled) setRows(r);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  // On focus, not on mount: coming back from a thread must refresh the
+  // unread badge and the preview, and expo-router keeps this screen
+  // mounted while the thread is open.
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
+      let cancelled = false;
+      void fetchMatches().then((r) => {
+        if (!cancelled) setRows(r);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [userId]),
+  );
 
   // After every hook: hooks must run in the same order on each render.
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;

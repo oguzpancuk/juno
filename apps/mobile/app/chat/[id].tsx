@@ -35,6 +35,7 @@ export default function ChatScreen() {
   const [row, setRow] = useState<MatchProfileRow | null | 'loading'>('loading');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
   const { messages, send } = useThread(matchId, userId);
 
@@ -103,13 +104,22 @@ export default function ChatScreen() {
   const canSend = isSendable(draft) && !sending;
 
   const onSend = () => {
-    if (!canSend) return;
+    // A ref, not the rendered `sending`: two taps in one frame both read
+    // the old state and would post the message twice.
+    if (!isSendable(draft) || inFlight.current) return;
+    const body = draft;
+    inFlight.current = true;
     setSending(true);
     setFailed(false);
-    void send(draft).then((ok) => {
+    void send(body).then((ok) => {
+      inFlight.current = false;
       setSending(false);
-      if (ok) setDraft('');
-      else setFailed(true);
+      if (!ok) {
+        setFailed(true);
+        return;
+      }
+      // Keep whatever the user typed while the insert was in flight.
+      setDraft((current) => (current === body ? '' : current));
     });
   };
 

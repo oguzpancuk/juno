@@ -150,6 +150,18 @@ describe('search ranking', () => {
     expect(searchCities('İzmir', 1)[0]?.name).toBe('İzmir');
   });
 
+  it('does not let a half-typed exonym outrank a real name', () => {
+    // "is" is a prefix of İskenderiye (Alexandria) and of İstanbul.
+    expect(searchCities('is', 5)[0]?.name).toBe('İstanbul');
+    // "ka" is a prefix of Kahire (Cairo); a name that really starts with
+    // "ka" comes first, ranked by population as usual.
+    const ka = searchCities('ka', 5);
+    expect(ka[0]?.name).not.toBe('Cairo');
+    expect(searchKey(ka[0]?.name ?? '')).toMatch(/^ka/);
+    // A half-typed exonym is still reachable, just later.
+    expect(searchCities('viya', 5).map((c) => c.name)).toContain('Vienna');
+  });
+
   it('returns nothing for an empty or unmatched query', () => {
     expect(searchCities('', 5)).toEqual([]);
     expect(searchCities('   ', 5)).toEqual([]);

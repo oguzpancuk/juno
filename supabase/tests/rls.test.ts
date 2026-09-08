@@ -673,8 +673,10 @@ describe('messages', () => {
 
   it('anon is denied the messages table outright', async () => {
     const { data, error } = await anonClient().from('messages').select('id');
-    expect(data ?? []).toEqual([]);
-    if (error) expect(error.code).toBe(PERMISSION_DENIED);
+    // The grant is revoked, so this is a privilege error, not an empty read:
+    // a future migration that re-grants anon fails here even if RLS holds.
+    expect(error?.code).toBe(PERMISSION_DENIED);
+    expect(data).toBeNull();
   });
 
   it('both members see a message; a third user sees none and cannot write', async () => {
@@ -792,6 +794,63 @@ describe('messages', () => {
     ).find((r) => r.match_id === matchId);
     expect(forJane?.last_body).toBe('Selam Ivan');
     expect(forJane?.unread_count).toBe(0);
+  });
+
+  it('the server owns created_at and read_at on insert', async () => {
+    const future = '2999-01-01T00:00:00Z';
+    const sent = await ivan.client
+      .from('messages')
+      .insert({
+        match_id: matchId,
+        sender_id: ivan.id,
+        body: 'zaman oyunu',
+        created_at: future,
+        read_at: future,
+      })
+      .select('*')
+      .single();
+    expect(sent.error).toBeNull();
+    const row = MessageRows.parse([sent.data])[0];
+    // A chosen created_at would pin this message to the top of the other
+    // person's conversation list for good; a preset read_at would hide it
+    // from their unread count.
+    expect(row?.read_at).toBeNull();
+    expect(new Date(row?.created_at ?? 0).getUTCFullYear()).toBe(
+      new Date().getUTCFullYear(),
+    );
+  });
+
+  it('a read receipt is stamped by the server and cannot be cleared', async () => {
+    const unread = MessageRows.parse(
+      (
+        await jane.client
+          .from('messages')
+          .select('*')
+          .eq('sender_id', ivan.id)
+          .is('read_at', null)
+      ).data,
+    )[0];
+    if (!unread) throw new Error('no unread message to mark');
+
+    const backdated = await jane.client
+      .from('messages')
+      .update({ read_at: '1970-01-01T00:00:00Z' })
+      .eq('id', unread.id)
+      .select('read_at')
+      .single();
+    expect(backdated.error).toBeNull();
+    const stamped = z
+      .object({ read_at: z.string() })
+      .parse(backdated.data).read_at;
+    expect(new Date(stamped).getUTCFullYear()).toBe(
+      new Date().getUTCFullYear(),
+    );
+
+    const cleared = await jane.client
+      .from('messages')
+      .update({ read_at: null })
+      .eq('id', unread.id);
+    expect(cleared.error?.code).toBe(CHECK_VIOLATION);
   });
 
   it('a message needs a match: no match id, no thread', async () => {

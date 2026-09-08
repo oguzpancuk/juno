@@ -1,5 +1,5 @@
 import { isValidCalendarDate, searchCities, type City } from '@stardate/geo';
-import * as Location from 'expo-location';
+import { deviceLocation } from '@/lib/location';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -27,36 +27,6 @@ import { t } from '@/lib/strings';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
-
-const LOCATION_TIMEOUT_MS = 5000;
-
-/**
- * One-shot device position, or undefined when refused, unavailable or slow:
- * the city centre is the documented fallback and submit must never hang.
- */
-async function deviceLocation(): Promise<
-  { latitude: number; longitude: number } | undefined
-> {
-  try {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) return undefined;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<null>((resolve) => {
-      timer = setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS);
-    });
-    const position = await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
-      timeout,
-    ]).finally(() => clearTimeout(timer));
-    if (!position) return undefined;
-    return {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-    };
-  } catch {
-    return undefined;
-  }
-}
 
 export default function Onboarding() {
   const session = useSession();

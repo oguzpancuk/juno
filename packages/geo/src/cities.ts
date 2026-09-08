@@ -146,10 +146,11 @@ export function cityById(id: number): City | undefined {
 }
 
 /**
- * Diacritic-insensitive search, best match first: Turkish exonym, then a
- * whole-name hit, then a name that starts with the query, then a name
- * whose later word does ("york" → New York). Within a tier the list's
- * population order decides. Empty query returns nothing.
+ * Diacritic-insensitive search, best match first: a fully typed Turkish
+ * exonym, then a whole-name hit, then a name that starts with the query,
+ * then a half-typed exonym, then a name whose later word starts with it
+ * ("york" → New York). Within a tier the list's population order decides.
+ * Empty query returns nothing.
  */
 export function searchCities(query: string, limit = 10): City[] {
   const key = searchKey(query);
@@ -164,8 +165,8 @@ export function searchCities(query: string, limit = 10): City[] {
   };
 
   const byExonym = exonymCities();
+  // A typed exonym is an exact hit and outranks everything.
   for (const [typed, city] of byExonym) if (typed === key) push(city);
-  for (const [typed, city] of byExonym) if (typed.startsWith(key)) push(city);
 
   const exact: City[] = [];
   const prefix: City[] = [];
@@ -175,6 +176,10 @@ export function searchCities(query: string, limit = 10): City[] {
     else if (keys.some((k) => k.startsWith(key))) prefix.push(city);
     else if (words.some((w) => w.startsWith(key))) word.push(city);
   }
-  for (const city of [...exact, ...prefix, ...word]) push(city);
+  for (const city of [...exact, ...prefix]) push(city);
+  // Half-typed exonyms come after real name matches: "is" must answer
+  // İstanbul, not İskenderiye's Turkish name.
+  for (const [typed, city] of byExonym) if (typed.startsWith(key)) push(city);
+  for (const city of word) push(city);
   return out;
 }
