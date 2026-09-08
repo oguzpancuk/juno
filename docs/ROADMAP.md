@@ -163,8 +163,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       (CC BY 4.0) and astronomy-engine (MIT).
       — done when: profile insert without `consent_at` is rejected by a
       CHECK constraint (battery) and the URL returns 200 (manual).
-- [~] **Full Turkish content (owner priority, before chat).** _Built and
-  verified; awaiting owner sign-off on the texts._ Professional
+- [~] **Full Turkish content (owner priority, before chat).** _Built,
+  source-verified (`docs/astro-sources.md`); awaiting owner sign-off on
+  the texts._ Professional
   1–2-sentence interpretations for every combination the engine can
   emit, as data in `packages/astro/content/tr/*.json` validated by Zod:
   planet×sign (120) + rising sign (12), planet×house (120), retrograde

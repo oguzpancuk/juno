@@ -10,6 +10,44 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — Content verified against references; geometry–meaning coherence
+
+- Owner asked (a) that every chart text be interpreted correctly and
+  (b) that the geometric match (score, strongest aspect) really agree with
+  the written characters. Method for (a): four researcher passes built a
+  keyword table per key from two independent public references per layer
+  (list and URLs in `docs/astro-sources.md`); four audit passes judged
+  every text for semantic match and direction. Result: signs 132 (4
+  fixed), houses 120 (2), natal aspects 214 (8), synastry 255 (15);
+  commits `00f4f53`, `54bceb8`, `057efc6`, `f4c2cf1`. Reference tables
+  live only in the session scratchpad; the document records sources and
+  method, not the tables.
+- Method for (b): `packages/astro/scripts/content-audit.ts` renders a
+  coherence report for seven sample pairs (fixture user + seeds) plus a
+  lexicon-based sentiment-direction check against ADR nature; an
+  evaluator-qa pass judged it NEEDS_WORK with eight concrete findings, all
+  applied to the texts (not the samples) in `54bceb8`: sign-flavoured
+  aspect texts made sign-neutral, Uranus conjunctions framed as "one shakes
+  the other's patterns", the "high" band no longer promises excitement the
+  aspect list can contradict, house texts reframed to the life area so
+  they stop contradicting the sign text's tempo (Mars Taurus "slow" vs
+  1st house "fast"), duplicate phrases between sign and house removed.
+  Layering rule now written in `docs/astro-sources.md`.
+- Engine: ADR-0003 amendment 1 (`af86641`) — an opposition to the
+  Ascendant is a Descendant conjunction and scores +4, texts rewritten in
+  that framing. Observed but NOT changed (owner call): the tight-orb bonus
+  can rank a 0.3° Venus–Jupiter square above a 4° Venus–Mars conjunction
+  as the headline aspect (Ayse × Deniz); the harmonious preference in
+  `strongestOf` only applies within 10 %.
+- Remaining sentiment-audit flags (3) are lexicon false positives
+  (sun-square-jupiter, venus-square-uranus, uranus-sextile-ascendant).
+- Verified: battery green on each commit; astro 228 tests. Not verified:
+  no new screenshots (UI unchanged); references were read through a fetch
+  summariser, not raw pages — a spot check of any line is cheap before it
+  becomes marketing copy.
+- Still open: owner sign-off on the texts (ROADMAP item stays `[~]`);
+  composite sign+house texts (1,440 keys) deliberately not written.
+
 ## 2026-09-08 — Interpretation content (owner priority)
 
 - Owner asked for professional, 1–2-sentence analysis of every chart and
