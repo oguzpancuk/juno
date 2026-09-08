@@ -17,6 +17,7 @@ import { aspectBetween, type Aspect, type Body } from '../src/compatibility';
 import { CONTENT_FILES, KEY_SPACES, synastryText } from '../src/content';
 import { toPublicChart, type PublicChart } from '../src/public';
 import { natalReading, synastryReading } from '../src/summary';
+import { signOf } from '../src/signs';
 import { BODY_TR, SIGN_TR } from '../src/tr';
 import { resolveBirth } from '../../geo/src/index';
 
@@ -120,7 +121,7 @@ for (const [file, keys] of [
 ] as const) {
   const map = CONTENT_FILES[file];
   for (const key of keys) {
-    const [a, aspect, b] = key.split('-') as [Body, Aspect, Body];
+    const [a, aspect, b] = key.split('-') as [Body, Aspect, Body]; // why: KEY_SPACES only yields well-formed keys
     const text = (map[key] ?? '').toLowerCase();
     const nature = natureOf(a, aspect, b);
     const tense = TENSE.filter((m) => text.includes(m));
@@ -219,7 +220,7 @@ function natalBrief(p: Person): string[] {
     return `  - ${BODY_TR[body]} ${SIGN_TR[c.planets[body].sign]} (${c.planets[body].house}. ev): ${pr?.signText ?? ''} ${pr?.houseText ?? ''}`;
   };
   return [
-    `### ${p.name} — Güneş ${SIGN_TR[c.planets.sun.sign]}, Ay ${SIGN_TR[c.planets.moon.sign]}, Yükselen ${SIGN_TR[r.risingText ? ((['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'] as const)[Math.floor(c.houses.ascendant / 30)] ?? 'aries') : 'aries']}`,
+    `### ${p.name} — Güneş ${SIGN_TR[c.planets.sun.sign]}, Ay ${SIGN_TR[c.planets.moon.sign]}, Yükselen ${SIGN_TR[signOf(c.houses.ascendant)]}`,
     `  - Yükselen: ${r.risingText}`,
     pick('sun'),
     pick('moon'),
@@ -265,7 +266,7 @@ for (const [i, j] of pairs) {
 }
 // sanity: every synastry key resolves
 for (const key of KEY_SPACES.synastry()) {
-  const [a, asp, b] = key.split('-') as [Body, Aspect, Body];
+  const [a, asp, b] = key.split('-') as [Body, Aspect, Body]; // why: KEY_SPACES only yields well-formed keys
   synastryText(a, asp, b);
 }
 const out = resolve(process.argv[2] ?? 'content-audit.md');

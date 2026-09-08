@@ -93,6 +93,36 @@ describe('formatDegree', () => {
 });
 
 describe('describeAspectTr', () => {
+  it('frames an opposition to the Ascendant as a Descendant contact', () => {
+    expect(
+      describeAspectTr({
+        planetA: 'sun',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe("Güneş'in onun Alçalan'ında.");
+    expect(
+      describeAspectTr({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'moon',
+      }),
+    ).toBe("Onun Ay'ı senin Alçalan'ında.");
+    expect(
+      describeAspectTr({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe("Yükselenleriniz birbirinin Alçalan'ında.");
+    expect(
+      describeAspectTr({
+        planetA: 'ascendant',
+        aspect: 'square',
+        planetB: 'moon',
+      }),
+    ).toContain('kare');
+  });
   it('renders the why-line with Turkish suffixes', () => {
     expect(
       describeAspectTr({ planetA: 'moon', aspect: 'trine', planetB: 'venus' }),

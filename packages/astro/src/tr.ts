@@ -112,5 +112,31 @@ const ASPECT_VERB_TR: Readonly<Record<Aspect, string>> = {
 export function describeAspectTr(
   aspect: Pick<InterAspect, 'planetA' | 'aspect' | 'planetB'>,
 ): string {
-  return `${BODY_TR_GENITIVE[aspect.planetA]} onun ${BODY_TR_WITH[aspect.planetB]} ${ASPECT_VERB_TR[aspect.aspect]}.`;
+  const { planetA, planetB } = aspect;
+  if (aspect.aspect === 'opposition') {
+    // ADR-0003 amendment 1: an opposition to the Ascendant is a Descendant
+    // conjunction; the headline must not call a harmonious contact "karşıt".
+    if (planetA === 'ascendant' && planetB === 'ascendant')
+      return "Yükselenleriniz birbirinin Alçalan'ında.";
+    if (planetB === 'ascendant')
+      return `${BODY_TR_GENITIVE[planetA]} onun Alçalan'ında.`;
+    if (planetA === 'ascendant')
+      return `Onun ${BODY_TR_POSSESSIVE[planetB]} senin Alçalan'ında.`;
+  }
+  return `${BODY_TR_GENITIVE[planetA]} onun ${BODY_TR_WITH[planetB]} ${ASPECT_VERB_TR[aspect.aspect]}.`;
 }
+
+/** Third-person possessive: "onun Ay'ı", "onun Venüs'ü". */
+const BODY_TR_POSSESSIVE: Readonly<Record<Body, string>> = {
+  sun: "Güneş'i",
+  moon: "Ay'ı",
+  mercury: "Merkür'ü",
+  venus: "Venüs'ü",
+  mars: "Mars'ı",
+  jupiter: "Jüpiter'i",
+  saturn: "Satürn'ü",
+  uranus: "Uranüs'ü",
+  neptune: "Neptün'ü",
+  pluto: "Plüton'u",
+  ascendant: "Yükselen'i",
+};

@@ -11,6 +11,7 @@ import {
   starterKey,
   strongestOf,
   type ChartForScoring,
+  natalAspects,
 } from './compatibility';
 import { toPublicChart } from './public';
 import { signOf } from './signs';
@@ -110,6 +111,28 @@ describe('aspectBetween (ADR-0003 table)', () => {
       0.7 * 0.8 * 4,
       6,
     );
+    // The amendment applies to natal aspects too: Venus on the own Descendant.
+    const natal = natalAspects(
+      synthetic({
+        sun: 10,
+        moon: 100,
+        mercury: 40,
+        venus: 250,
+        mars: 300,
+        jupiter: 130,
+        saturn: 160,
+        uranus: 200,
+        neptune: 20,
+        pluto: 320,
+        ascendant: 70,
+      }),
+    ).find(
+      (a) =>
+        a.aspect === 'opposition' &&
+        [a.planetA, a.planetB].includes('ascendant') &&
+        [a.planetA, a.planetB].includes('venus'),
+    );
+    expect(natal?.term).toBeGreaterThan(0);
   });
 
   it('returns null outside every orb', () => {
@@ -179,6 +202,8 @@ describe('compatibility', () => {
       uranus: 140,
       neptune: 230,
       pluto: 290,
+      // 50, not 40: at 40 the Ascendant would oppose y.moon (220) exactly and,
+      // scored as a Descendant conjunction (+3.2), break the 2.7 tie under test.
       ascendant: 50,
     });
     const y = synthetic({
