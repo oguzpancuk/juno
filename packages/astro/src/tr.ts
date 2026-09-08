@@ -114,33 +114,3 @@ export function describeAspectTr(
 ): string {
   return `${BODY_TR_GENITIVE[aspect.planetA]} onun ${BODY_TR_WITH[aspect.planetB]} ${ASPECT_VERB_TR[aspect.aspect]}.`;
 }
-
-/**
- * S7 placeholder per aspect type; the ~105 pair-specific starters land in
- * v1 under packages/astro/content/tr. Each ends in a question (PRD-5).
- */
-const ASPECT_STARTER_TR: Readonly<Record<Aspect, string>> = {
-  conjunction:
-    'Aynı frekansı paylaşıyor olabilirsiniz; ilk bakışta tanıdık geldi mi?',
-  sextile: 'Birbirinizi kolayca destekleyen bir bağ; sohbet akar mı sence?',
-  square: 'Sürtüşme de çekim demek; ilk tartışmanız ne hakkında olur sence?',
-  trine: 'Zahmetsiz bir uyum var; sence de öyle mi?',
-  opposition: 'Zıt kutuplar birbirini tamamlar derler; buna inanır mısın?',
-};
-
-/**
- * Conversation starter rendered from a `starter_key`, from the viewer's
- * side: `mine` is the viewer's body, `theirs` the other person's.
- */
-export function starterSentenceTr(
-  key: {
-    readonly planetA: Body;
-    readonly aspect: Aspect;
-    readonly planetB: Body;
-  },
-  viewerIsA: boolean,
-): string {
-  const mine = viewerIsA ? key.planetA : key.planetB;
-  const theirs = viewerIsA ? key.planetB : key.planetA;
-  return `${describeAspectTr({ planetA: mine, aspect: key.aspect, planetB: theirs })} ${ASPECT_STARTER_TR[key.aspect]}`;
-}

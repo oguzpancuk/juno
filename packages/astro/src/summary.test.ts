@@ -64,7 +64,6 @@ describe('synastryReading', () => {
     }
     // Same strongest pair, mirrored headline, identical meaning/question.
     expect(ab.aspects[0]?.meaning).toBe(ba.aspects[0]?.meaning);
-    expect(ab.starter?.endsWith('?')).toBe(true);
   });
 
   it('element lines mention both luminaries', () => {

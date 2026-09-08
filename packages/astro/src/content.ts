@@ -12,17 +12,18 @@ const OUTER_BODIES: ReadonlySet<Body> = new Set([
 const emitted = (a: Body, b: Body): boolean =>
   !(OUTER_BODIES.has(a) && OUTER_BODIES.has(b));
 /**
- * Geometrically impossible in a real chart: Mercury stays within 28° of the
- * Sun, Venus within 48°, and Mercury–Venus within 76°, so only conjunction
- * and sextile can form between them. Such keys are neither emitted nor
- * required in content.
+ * Geometrically impossible in a real chart. Mercury stays within ~28° of
+ * the Sun and Venus within ~48°, so with the engine's orbs (sextile needs
+ * ≥ 56° separation) only a conjunction can form between the Sun and either;
+ * Mercury–Venus can reach 76°, so their sextile is real but square, trine
+ * and opposition are not. Such keys are neither emitted nor required.
  */
 const IMPOSSIBLE = new Set<string>([
-  ...['square', 'trine', 'opposition'].flatMap((asp) => [
+  ...['sextile', 'square', 'trine', 'opposition'].flatMap((asp) => [
     `sun-${asp}-mercury`,
     `sun-${asp}-venus`,
-    `mercury-${asp}-venus`,
   ]),
+  ...['square', 'trine', 'opposition'].map((asp) => `mercury-${asp}-venus`),
 ]);
 import { SIGNS, type Sign } from './signs';
 import type { HouseNumber } from './houses';
@@ -205,6 +206,8 @@ export const KEY_SPACES = {
   },
   bands: (): string[] => [...BANDS],
 } as const;
+
+export const IMPOSSIBLE_KEYS: ReadonlySet<string> = IMPOSSIBLE;
 
 export const CONTENT_FILES = {
   signs,

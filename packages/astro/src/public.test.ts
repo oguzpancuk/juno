@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { PublicChartSchema, bigThree, toPublicChart } from './public';
-import { describeAspectTr, formatDegree, starterSentenceTr } from './tr';
+import { describeAspectTr, formatDegree } from './tr';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
 const chart = computeChart({
@@ -111,24 +111,5 @@ describe('describeAspectTr', () => {
         planetB: 'mars',
       }),
     ).toBe("Satürn'ün onun Mars'ıyla kare açı yapıyor.");
-  });
-});
-
-describe('starterSentenceTr', () => {
-  const key = { planetA: 'sun', aspect: 'trine', planetB: 'venus' } as const;
-
-  it('speaks from the viewer side and ends with a question', () => {
-    const asA = starterSentenceTr(key, true);
-    const asB = starterSentenceTr(key, false);
-    expect(asA.startsWith("Güneş'in onun Venüs'üyle üçgen açı yapıyor.")).toBe(
-      true,
-    );
-    expect(asB.startsWith("Venüs'ün onun Güneş'iyle üçgen açı yapıyor.")).toBe(
-      true,
-    );
-    expect(asA.endsWith('?')).toBe(true);
-    expect(asA.slice(asA.indexOf('.') + 1)).toBe(
-      asB.slice(asB.indexOf('.') + 1),
-    );
   });
 });

@@ -148,7 +148,10 @@ export default function ChartScreen() {
             <Text style={styles.planetName}>
               {BODY_TR[aspect.planetA]} {ASPECT_TR[aspect.aspect]}{' '}
               {BODY_TR[aspect.planetB]}
-              <Text style={styles.orb}> · {formatDegree(aspect.orb)} orb</Text>
+              <Text style={styles.orb}>
+                {' '}
+                · {t.chart.orb(formatDegree(aspect.orb))}
+              </Text>
             </Text>
             <Text style={styles.body}>{text}</Text>
           </View>

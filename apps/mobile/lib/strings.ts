@@ -54,6 +54,7 @@ export const t = {
     house: 'ev',
     retrograde: 'R',
     aspects: 'AÇILAR',
+    orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
     signOut: 'Çıkış yap',

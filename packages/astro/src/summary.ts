@@ -1,4 +1,4 @@
-import type { Planet } from './bodies';
+import { PLANETS, type Planet } from './bodies';
 import {
   compatibility,
   elementOf,
@@ -10,20 +10,22 @@ import {
   type InterAspect,
 } from './compatibility';
 import {
+  IMPOSSIBLE_KEYS,
+  RETRO_PLANETS,
   bandOf,
   bandText,
   elementText,
   houseText,
   natalAspectText,
+  pairKey,
   retrogradeText,
   signText,
   synastryText,
   type Band,
   type RetroPlanet,
 } from './content';
-import { PLANETS } from './bodies';
 import type { PublicChart } from './public';
-import { signOf, type Sign } from './signs';
+import { signOf } from './signs';
 import { describeAspectTr } from './tr';
 
 /**
@@ -49,16 +51,8 @@ export interface NatalReading {
   readonly aspects: readonly NatalAspectReading[];
 }
 
-const RETRO: ReadonlySet<Planet> = new Set([
-  'mercury',
-  'venus',
-  'mars',
-  'jupiter',
-  'saturn',
-  'uranus',
-  'neptune',
-  'pluto',
-]);
+const isRetroPlanet = (planet: Planet): planet is RetroPlanet =>
+  (RETRO_PLANETS as readonly string[]).includes(planet);
 
 export function natalReading(chart: PublicChart, limit = 8): NatalReading {
   const planets = PLANETS.map((planet) => {
@@ -68,31 +62,31 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       signText: signText(planet, p.sign),
       houseText: houseText(planet, p.house),
       retrogradeText:
-        p.retrograde && RETRO.has(planet)
-          ? retrogradeText(planet as RetroPlanet)
-          : null, // why: RETRO membership is exactly the RetroPlanet set
+        p.retrograde && isRetroPlanet(planet) ? retrogradeText(planet) : null,
     };
   });
+  // A tampered profile row could carry a geometrically impossible pair;
+  // such an aspect is dropped rather than crashing the screen.
   const aspects = natalAspects(chart)
+    .filter(
+      (a) => !IMPOSSIBLE_KEYS.has(pairKey(a.planetA, a.aspect, a.planetB)),
+    )
     .slice(0, limit)
     .map((aspect) => ({
       aspect,
       text: natalAspectText(aspect.planetA, aspect.aspect, aspect.planetB),
     }));
   return {
-    risingText: signText('ascendant', risingOf(chart)),
+    risingText: signText('ascendant', signOf(chart.houses.ascendant)),
     planets,
     aspects,
   };
 }
 
-function risingOf(chart: PublicChart): Sign {
-  return signOf(chart.houses.ascendant);
-}
-
 /**
  * Screen-ready synastry from the viewer's side. `viewer` is chart A of the
- * pair; texts use "senin X'in onun Y'si" from that side.
+ * pair; headlines use "senin X'in onun Y'si" from that side, while meaning
+ * and question are shared by both viewers.
  */
 export interface SynastryAspectReading {
   readonly aspect: InterAspect;
@@ -109,8 +103,6 @@ export interface SynastryReading {
   readonly sunElements: string;
   readonly moonElements: string;
   readonly aspects: readonly SynastryAspectReading[];
-  /** Pair-specific opening line: headline + question of the strongest aspect. */
-  readonly starter: string | null;
   readonly match: Compatibility;
 }
 
@@ -124,7 +116,6 @@ export function synastryReading(
     .sort((x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb)
     .slice(0, limit)
     .map((aspect) => readAspect(aspect));
-  const strongest = match.strongest ? readAspect(match.strongest) : null;
   return {
     score: match.score,
     band: bandOf(match.score),
@@ -140,7 +131,6 @@ export function synastryReading(
       elementOf(other.planets.moon.sign),
     ),
     aspects,
-    starter: strongest ? `${strongest.headline} ${strongest.question}` : null,
     match,
   };
 }
@@ -154,7 +144,7 @@ function readAspect(aspect: InterAspect): SynastryAspectReading {
   return { aspect, headline: describeAspectTr(aspect), meaning, question };
 }
 
-/** Opening line for a stored starter key, from the viewer's side. */
+/** Opening line parts for a stored starter key, from the viewer's side. */
 export function starterFromKey(
   key: {
     readonly planetA: Body;

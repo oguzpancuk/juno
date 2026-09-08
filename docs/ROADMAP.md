@@ -168,13 +168,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
   1–2-sentence interpretations for every combination the engine can
   emit, as data in `packages/astro/content/tr/*.json` validated by Zod:
   planet×sign (120) + rising sign (12), planet×house (120), retrograde
-  (8), natal aspects (55 body pairs × 5 = 275), synastry aspects (66
-  pairs × 5 = 330, each with an opening question), element pairs for
+  (8), natal aspects (45 scorable pairs × 5 minus 11 geometrically
+  impossible = 214), synastry aspects (51 pairs × 5 = 255, each with an
+  opening question), element pairs for
   Sun and Moon (20), score bands (5). Engine gains `natalAspects(chart)`
   and a ranked synastry summary. UI: chart screen shows sign + house
   lines per planet and an aspects section; discover card keeps score +
-  one line; match screen and a compatibility-detail screen show the
-  top aspects with meaning and the pair-specific opening question.
+  one line plus an expandable detail; the match screen shows the top
+  aspects with meaning and the pair-specific opening question.
   Authored by Claude, reviewed by the owner.
   — done when: a Vitest asserts every key the engine can emit has a
   non-empty snippet in every content file (battery);

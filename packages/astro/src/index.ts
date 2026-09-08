@@ -91,5 +91,4 @@ export {
   SIGN_TR_LOCATIVE,
   describeAspectTr,
   formatDegree,
-  starterSentenceTr,
 } from './tr';

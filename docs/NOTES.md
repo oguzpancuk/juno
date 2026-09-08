@@ -36,6 +36,21 @@
   `c1-aspects.png`, `c1-synastry.png` on the real user (Ayse / Deniz).
   Not done: owner sign-off on the texts (the done-when's last clause);
   ROADMAP item marked in progress until then.
+- Review (code-reviewer, pass 1 NEEDS_WORK → this commit): Saturn
+  conjunctions to Moon/Venus/Mars score as tension (ADR −4) but the
+  synastry texts sold them as the safest bond — rewritten as heavy-but-
+  binding; `IMPOSSIBLE` now also excludes Sun–Mercury and Sun–Venus
+  sextiles (a sextile needs ≥ 56° separation; max elongations are 28°/48°)
+  so natal texts are 214; the completeness contract is now engine-derived
+  (a test synthesizes every pair at every angle and asserts the emitted
+  aspect resolves to a text), `natalAspects` has a direct fixture test, and
+  a "≥ 4 words per sentence" test enforces the 1–2-full-sentence brief —
+  it caught 139 telegraphic tails, all rewritten; same-body texts no longer
+  claim "same sign" (conjunction is longitude-based); match/discover show
+  the viewer-oriented headline ("Ay'ın onun Satürn'üyle …") instead of a
+  neutral "Ay kare Satürn"; `natalReading` drops a geometrically impossible
+  pair from a tampered row instead of throwing; dead placeholder starter
+  code removed; duplicate question fixed.
 - Gotchas: `exp://` is claimed by both Expo Go and the pati dev build on
   this simulator, so `openurl` sometimes fronts pati and typed text lands
   there — `xcrun simctl launch booted host.exp.Exponent` before typing.
