@@ -51,6 +51,22 @@ t3@stardate.local deniz` wrote Deniz → Ayse (`jupiter-square-venus`,
   failure in six battery runs (name not captured); `vitest.config.ts`
   already serialises files and sets a 60 s hook timeout — watch for it in
   CI, and capture the failing test name if it recurs.
+- evaluator-qa (fresh context, HEAD 6a4636a/3fdc69d): NEEDS_WORK on
+  evidence, PASS on function — battery green on clean HEAD twice, `npm ls`
+  clean, 27/27 RLS tests ×7 (the flake did not reproduce), every
+  screenshot matches its clause and the fixture, live deep-link
+  re-observation of chart/discover/matches/match agreed with the
+  committed images, DB rows as claimed. Gaps and what was done: (1) S7
+  Realtime delivery to the _liked_ side is unobserved (no second client)
+  — ROADMAP S7 now says so and points at the v1 two-simulator check;
+  the liker-side Realtime delivery was observed before the direct
+  `match_profiles` check existed. (2) `s5-chart.png` shows 8 of 10 rows —
+  `s5-chart-2.png` (scrolled) adds Neptün and Plüton. (3) The midnight
+  user's DB row was wiped by a later `db reset`; the observation stands
+  as recorded (`birth_utc 1995-07-13T21:10Z`) but is not re-verifiable
+  without re-onboarding — re-check it in the v1 server-side validation
+  item. (4) Review marker lagged HEAD by one docs commit — final review
+  requested on the closing range.
 - Walking skeleton complete (S0–S7). Skeleton exit items still open:
   remotes + CI never run (no GitHub remote; creating one is outward-facing
   and waits for the owner), code-reviewer on S7, evaluator-qa after this

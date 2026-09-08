@@ -84,7 +84,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       upserted with chart JSON; chart screen lists big three + 10 planets with
       sign/house (placeholder one-line Turkish text per planet-in-sign; full
       texts in v1).
-      — done when: `screenshots/s5-chart.png` shows the chart for fixture #1
+      — done when: `screenshots/s5-chart.png` (+ `s5-chart-2.png`, scrolled) shows the chart for fixture #1
       and the values equal the fixture (screenshot + manual compare), which
       also proves Hermes' `Intl` resolves Europe/Istanbul 1995 like Node's
       ICU (a second manual check at a midnight wall time guards the ICU
@@ -111,17 +111,22 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
 - [x] **S7 — Match + conversation starter (PRD-5).** `starterSentenceTr`
       renders a like's `starter_key` from the viewer's side with a question
       (one placeholder line per aspect type; pair-specific lines are v1
-      content); the match trigger stores the agreed key; the root layout
-      subscribes to `matches` inserts over Realtime (RLS-scoped) and opens
-      `/match/[id]`, which reads `match_profiles` through Zod; a matches list
-      links back to each match; `supabase/scripts/seed-like.ts` makes a
-      seeded user like a tester on the local stack.
+      content); the match trigger stores the agreed key; after a like the
+      client checks `match_profiles` directly and opens `/match/[id]`; the
+      root layout also subscribes to `matches` inserts over Realtime
+      (RLS-scoped) for the other side; `/match/[id]` reads `match_profiles`
+      through Zod; a matches list links back; `supabase/scripts/seed-like.ts`
+      makes a seeded user like a tester on the local stack.
       — done when: Vitest covers starter selection/orientation and the
       sentence for both sides (battery); `seed-like.ts deniz` then Like on
       Deniz in the simulator shows `screenshots/s7-match.png` with the
-      starter within 5 s (observed: immediate) and `s7-matches.png` lists
-      the match; the `matches` row carries the same key both clients
-      computed (manual, psql).
+      starter (observed immediate — at that commit the only path was the
+      Realtime INSERT event, so delivery to a client is evidenced; the direct
+      check was added afterwards) and `s7-matches.png` lists the match; the
+      `matches` row carries the same key both clients computed (manual,
+      psql). NOT evidenced: delivery to the _liked_ user's own device within
+      5 s (PRD-5 "both users") needs a second signed-in simulator — covered
+      by the v1 chat item's two-simulator check.
 
 Skeleton exit: all seven checked, `verify.sh` green on clean HEAD,
 code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
