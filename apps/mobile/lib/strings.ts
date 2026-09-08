@@ -73,7 +73,8 @@ export const t = {
     remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
   },
   match: {
-    kicker: 'Eşleştiniz',
+    // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
+    kicker: 'EŞLEŞTİNİZ',
     title: (name: string) => `${name} ile eşleştin`,
     starterLabel: 'Sohbet başlatıcın',
     noStarter: 'Haritalarınız bir başlangıç cümlesi vermedi; sen bir şey sor.',
