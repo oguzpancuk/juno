@@ -135,6 +135,36 @@ describe('content/tr · layering rules', () => {
     expect(hits).toEqual([]);
   });
 
+  it('sign and house texts of one planet share no 4-word sequence (1,440 pairs)', () => {
+    const grams = (text: string): Set<string> => {
+      const words = text
+        .toLocaleLowerCase('tr')
+        .replace(/[^a-zçğıöşü\s]/gu, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 0);
+      const out = new Set<string>();
+      for (let i = 0; i + 4 <= words.length; i++)
+        out.add(words.slice(i, i + 4).join(' '));
+      return out;
+    };
+    const hits: string[] = [];
+    for (const planet of PLANETS) {
+      const houseGrams = HOUSES.map(
+        (h) =>
+          [h, grams(CONTENT_FILES.houses[`${planet}-${h}`] ?? '')] as const,
+      );
+      for (const sign of SIGNS) {
+        const sg = grams(CONTENT_FILES.signs[`${planet}-${sign}`] ?? '');
+        for (const [h, hg] of houseGrams) {
+          const shared = [...sg].find((g) => hg.has(g));
+          if (shared)
+            hits.push(`${planet}-${sign} × ${planet}-${h}: "${shared}"`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
   it('key spaces cover the pair scan', () => {
     const houseKeys = new Set(KEY_SPACES.houses());
     for (const planet of PLANETS)
