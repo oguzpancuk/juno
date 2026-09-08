@@ -1,5 +1,5 @@
 import { SIGN_TR } from '@stardate/astro';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -36,6 +36,8 @@ export default function Discover() {
     let cancelled = false;
     fetchOwnProfile(userId)
       .then(async (profile) => {
+        if (profile.status === 'missing')
+          return { status: 'missing' as const, me: null };
         if (profile.status !== 'ready')
           return { status: 'error' as const, me: null };
         const next = await fetchCandidates(profile.profile.chart);
@@ -43,6 +45,10 @@ export default function Discover() {
       })
       .then((result) => {
         if (cancelled) return;
+        if (result.status === 'missing') {
+          router.replace('/onboarding');
+          return;
+        }
         setMe(result.me);
         setState(result.status === 'error' ? { status: 'error' } : result);
       })
@@ -91,9 +97,14 @@ export default function Discover() {
           {t.discover.myChart}
         </Link>
         <Text style={styles.title}>{t.discover.title}</Text>
-        <Link href="/settings" style={styles.navLink}>
-          {t.discover.settings}
-        </Link>
+        <View style={styles.navRight}>
+          <Link href="/matches" style={styles.navLink} testID="go-matches">
+            {t.discover.matches}
+          </Link>
+          <Link href="/settings" style={styles.navLink}>
+            {t.discover.settings}
+          </Link>
+        </View>
       </View>
 
       {state.status === 'loading' ? (
@@ -199,6 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   navLink: { color: '#9a94b8', fontSize: 14, padding: 4 },
+  navRight: { flexDirection: 'row', gap: 8 },
   title: { color: '#f5f2ff', fontSize: 18, fontWeight: '700' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   muted: { color: '#9a94b8', textAlign: 'center' },

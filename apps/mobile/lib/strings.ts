@@ -60,6 +60,7 @@ export const t = {
     title: 'Keşfet',
     myChart: 'Haritam',
     settings: 'Ayarlar',
+    matches: 'Eşleşmeler',
     scoreLabel: 'uyum',
     like: 'Beğen',
     pass: 'Geç',
@@ -71,10 +72,24 @@ export const t = {
     noAspectWhy: 'Haritalarınız birbirine değmiyor.',
     remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
   },
+  match: {
+    kicker: 'Eşleştiniz',
+    title: (name: string) => `${name} ile eşleştin`,
+    starterLabel: 'Sohbet başlatıcın',
+    noStarter: 'Haritalarınız bir başlangıç cümlesi vermedi; sen bir şey sor.',
+    chatSoon: 'Sohbet yakında burada; şimdilik başlangıç cümlesi sende.',
+    allMatches: 'Tüm eşleşmeler ›',
+    backToDiscover: '‹ Keşfete dön',
+  },
+  matches: {
+    title: 'Eşleşmeler',
+    empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',
+  },
   settings: {
     title: 'Ayarlar',
     back: '‹ Keşfet',
     radius: 'Keşif yarıçapı',
+    customRadius: (km: number) => `Şu an ${km} km (özel değer).`,
     radiusHint:
       'Bu mesafe içindeki kişiler gösterilir. Konumun başkalarına sadece km olarak görünür.',
   },
