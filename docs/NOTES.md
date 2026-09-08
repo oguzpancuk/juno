@@ -30,6 +30,18 @@
   reformatted template-origin files (.claude/, contracts/, CLAUDE.md), so
   those are now in `.prettierignore` and were reverted. Local Node is 24,
   CI is 22; `.nvmrc` says 22.
+- Review (code-reviewer, 3 passes, final APPROVE on a395291..HEAD):
+  fixed `.js`-suffixed imports (Metro does not remap to `.ts`), lockfile
+  drift (`npm dedupe`; gate is `npm ls` exiting 0 after `npm ci`, not a
+  green battery), `normalizeDegrees`/`signOf` edge cases, explicit 1°
+  tolerance, mobile tsconfig extending the shared base, splash plugin,
+  dev-dependency placement, and the template-expression lint override
+  spelled out in full. Fresh iOS bundle re-verified with curl after the
+  fixes (1295 modules, HTTP 200).
+- For S4: Deno resolves relative imports literally, so a Supabase Edge
+  Function cannot import `packages/astro` source as-is. Either bundle
+  astro for Deno (esbuild) or switch astro to `./x.ts` import suffixes
+  (`allowImportingTsExtensions`; Metro, Vite and Deno all accept them).
 - Not done: no remotes/CI run yet (skeleton exit item); the S0 test is the
   only engine coverage.
 - Next: S1 (planets in signs, 3 astro.com fixtures).
