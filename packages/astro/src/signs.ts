@@ -41,3 +41,9 @@ export function signOf(longitude: number): Sign {
   }
   return sign;
 }
+
+/** Signed angular difference folded into [-180, 180). */
+export function signedDelta(deg: number): number {
+  const d = normalizeDegrees(deg);
+  return d >= 180 ? d - 360 : d;
+}

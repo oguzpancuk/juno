@@ -10,6 +10,27 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S1 planets in signs
+
+- Done: `packages/astro` `computeChart({ utc, latitude, longitude })` →
+  ten placements (longitude, sign, degree, retrograde) via
+  `Ecliptic(GeoVector(body, utc, aberration=true))`, i.e. true ecliptic and
+  equinox of date, which is what the tropical zodiac needs; retrograde is
+  the sign of the 1-hour longitude difference. Zod schema on the input and
+  on the fixtures. `sunLongitude` now delegates to the same path.
+- Reference oracle: astro.com has no fetchable chart API, so the fixtures
+  come from the Swiss Ephemeris itself (pyswisseph 2.10.03, Moshier mode,
+  `scripts/gen-fixtures.py`, dev-only venv, never in the battery). Three
+  charts: Istanbul 1995, Ankara 1990, Helsinki 2001 (60°N, for S2). Each
+  fixture also carries Ascendant, MC and Placidus cusps for S2.
+- Verified: battery green (40 Vitest cases). Max deviation from Swiss
+  Ephemeris across all 30 planet positions: 13.6″ (Saturn, Helsinki);
+  typical < 5″. Retrograde flags agree on all 30.
+- Gotchas: macOS has no `timeout`; earlier "timed out" commands silently
+  never ran. `z.record(enum, …)` in zod 3 makes keys optional — the fixture
+  schema builds an explicit object instead.
+- Next: S2 Ascendant + Placidus (fixtures already hold the reference).
+
 ## 2026-09-08 — S0 walking skeleton: environment boots, battery green
 
 - Done: root npm workspaces (`apps/*`, `packages/*`), `tsconfig.base.json`

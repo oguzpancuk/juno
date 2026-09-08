@@ -23,11 +23,14 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       — done when: `bash .claude/hooks/verify.sh` exits 0 on a clean committed
       HEAD (battery) and `screenshots/s0-boot.png` shows the app on the iOS
       simulator (screenshot).
-- [ ] **S1 — Planets in signs (PRD-2 engine half).** `computeChart(input)`
-      returns ecliptic longitude, sign and degree for Sun–Pluto using
-      `astronomy-engine`; input is UTC instant + lat/lon; Zod schema on input.
-      — done when: Vitest compares 3 reference charts (astro.com printouts
-      stored as JSON fixtures) and every planet is within 1° (battery).
+- [x] **S1 — Planets in signs (PRD-2 engine half).** `computeChart(input)`
+      returns ecliptic longitude, sign, degree-in-sign and retrograde flag for
+      Sun–Pluto using `astronomy-engine`; input is UTC instant + lat/lon with
+      a Zod schema.
+      — done when: Vitest compares 3 reference charts (Swiss Ephemeris via
+      `scripts/gen-fixtures.py`, the same engine astro.com runs, stored as
+      JSON fixtures validated by Zod) and every planet is within 1° with the
+      same sign and retrograde state (battery).
 - [ ] **S2 — Ascendant + Placidus houses (PRD-1/2).** Ascendant, MC and 12
       cusps; each planet gets a house. Birth time is mandatory: the Zod input
       schema has no "unknown time" branch.

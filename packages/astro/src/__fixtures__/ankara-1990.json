@@ -1,0 +1,58 @@
+{
+  "id": "ankara-1990",
+  "note": "Ankara, 1 Jan 1990 12:00 EET (UTC+2)",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "input": {
+    "utc": "1990-01-01T10:00:00Z",
+    "latitude": 39.9334,
+    "longitude": 32.8597
+  },
+  "planets": {
+    "sun": {
+      "longitude": 280.7293,
+      "retrograde": false
+    },
+    "moon": {
+      "longitude": 332.1459,
+      "retrograde": false
+    },
+    "mercury": {
+      "longitude": 295.6967,
+      "retrograde": true
+    },
+    "venus": {
+      "longitude": 306.2325,
+      "retrograde": true
+    },
+    "mars": {
+      "longitude": 249.9414,
+      "retrograde": false
+    },
+    "jupiter": {
+      "longitude": 95.1599,
+      "retrograde": true
+    },
+    "saturn": {
+      "longitude": 285.6477,
+      "retrograde": false
+    },
+    "uranus": {
+      "longitude": 275.7805,
+      "retrograde": false
+    },
+    "neptune": {
+      "longitude": 282.035,
+      "retrograde": false
+    },
+    "pluto": {
+      "longitude": 227.0909,
+      "retrograde": false
+    }
+  },
+  "ascendant": 22.9168,
+  "mc": 282.5671,
+  "cusps": [
+    22.9168, 57.4968, 81.4125, 102.5671, 125.7564, 156.8468, 202.9168, 237.4968,
+    261.4125, 282.5671, 305.7564, 336.8468
+  ]
+}

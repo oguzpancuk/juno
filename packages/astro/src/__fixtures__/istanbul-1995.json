@@ -1,0 +1,58 @@
+{
+  "id": "istanbul-1995",
+  "note": "Istanbul, 14 Jul 1995 03:30 EEST (UTC+3)",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "input": {
+    "utc": "1995-07-14T00:30:00Z",
+    "latitude": 41.0082,
+    "longitude": 28.9784
+  },
+  "planets": {
+    "sun": {
+      "longitude": 111.1354,
+      "retrograde": false
+    },
+    "moon": {
+      "longitude": 313.0799,
+      "retrograde": false
+    },
+    "mercury": {
+      "longitude": 95.7728,
+      "retrograde": false
+    },
+    "venus": {
+      "longitude": 100.7038,
+      "retrograde": false
+    },
+    "mars": {
+      "longitude": 175.7077,
+      "retrograde": false
+    },
+    "jupiter": {
+      "longitude": 246.1188,
+      "retrograde": true
+    },
+    "saturn": {
+      "longitude": 354.7031,
+      "retrograde": true
+    },
+    "uranus": {
+      "longitude": 298.8033,
+      "retrograde": true
+    },
+    "neptune": {
+      "longitude": 294.2488,
+      "retrograde": true
+    },
+    "pluto": {
+      "longitude": 237.9933,
+      "retrograde": true
+    }
+  },
+  "ascendant": 80.497,
+  "mc": 325.6318,
+  "cusps": [
+    80.497, 101.3128, 121.7185, 145.6318, 177.3737, 218.9262, 260.497, 281.3128,
+    301.7185, 325.6318, 357.3737, 38.9262
+  ]
+}

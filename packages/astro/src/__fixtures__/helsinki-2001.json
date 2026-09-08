@@ -1,0 +1,58 @@
+{
+  "id": "helsinki-2001",
+  "note": "Helsinki, 20 Nov 2001 18:45 EET (UTC+2); high latitude for Placidus",
+  "source": "Swiss Ephemeris 2.10.03 via pyswisseph, Moshier mode (FLG_MOSEPH|FLG_SPEED), tropical, apparent geocentric; houses: Placidus",
+  "input": {
+    "utc": "2001-11-20T16:45:00Z",
+    "latitude": 60.1699,
+    "longitude": 24.9384
+  },
+  "planets": {
+    "sun": {
+      "longitude": 238.4319,
+      "retrograde": false
+    },
+    "moon": {
+      "longitude": 303.4739,
+      "retrograde": false
+    },
+    "mercury": {
+      "longitude": 230.364,
+      "retrograde": false
+    },
+    "venus": {
+      "longitude": 225.2168,
+      "retrograde": false
+    },
+    "mars": {
+      "longitude": 316.8283,
+      "retrograde": false
+    },
+    "jupiter": {
+      "longitude": 105.1492,
+      "retrograde": true
+    },
+    "saturn": {
+      "longitude": 72.5219,
+      "retrograde": true
+    },
+    "uranus": {
+      "longitude": 321.0928,
+      "retrograde": false
+    },
+    "neptune": {
+      "longitude": 306.3086,
+      "retrograde": false
+    },
+    "pluto": {
+      "longitude": 254.4754,
+      "retrograde": false
+    }
+  },
+  "ascendant": 109.3006,
+  "mc": 334.0617,
+  "cusps": [
+    109.3006, 120.2092, 133.9553, 154.0617, 188.6566, 246.5533, 289.3006,
+    300.2092, 313.9553, 334.0617, 8.6566, 66.5533
+  ]
+}
