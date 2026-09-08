@@ -5,7 +5,8 @@
   "description": "Star-chart dating app: natal charts, compatibility, chart-based conversation starters.",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "supabase"
   ],
   "engines": {
     "node": ">=22"

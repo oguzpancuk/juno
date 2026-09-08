@@ -1,0 +1,24 @@
+{
+  "name": "@stardate/supabase",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Migrations and Edge Functions live here; this manifest only hosts the RLS test suite that runs against the local stack.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "gen:types": "supabase gen types typescript --local > tests/database.types.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^26.5.0",
+    "eslint": "^9.39.5",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
+    "zod": "^3.25.76"
+  }
+}

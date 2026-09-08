@@ -17,4 +17,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The RLS suite in supabase/tests runs against a real local stack; a
+      # missing stack is a FAIL, never a skip, so CI must start one.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
       - run: bash .claude/hooks/verify.sh
+      - if: always()
+        run: supabase stop

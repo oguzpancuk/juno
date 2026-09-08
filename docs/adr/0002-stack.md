@@ -26,8 +26,11 @@ ADR records the decision so it is a decision, not a guess.
   unit-testable against reference charts in the battery without a device.
   The ephemeris source (Swiss Ephemeris vs. a pure-JS VSOP87 library) is
   decided in its own ADR at skeleton time, after checking licensing.
-- **npm workspaces** (`apps/mobile`, `packages/astro`) — zero extra tooling;
-  `supabase/` is a plain directory, not a workspace.
+- **npm workspaces** (`apps/mobile`, `packages/astro`, `packages/geo`) —
+  zero extra tooling. `supabase/` also carries a workspace manifest, but
+  only so its RLS test suite (Vitest + supabase-js against the local
+  stack) runs inside the same battery; migrations and functions are plain
+  files. (Amended 2026-09-08 at S4.)
 - **Vitest** for tests, **ESLint** (`eslint-config-expo`) + **Prettier** for
   lint/format. UI is verified by simulator screenshots per ROADMAP clause;
   component/e2e tests are added when a feature needs them (Maestro is the
@@ -36,9 +39,9 @@ ADR records the decision so it is a decision, not a guess.
 
 ## Consequences
 
-- Local backend work needs Docker (`supabase start`); the battery does not
-  depend on it — migrations are exercised by tests only once a feature adds
-  them.
+- Local backend work needs Docker (`supabase start`). Since S4 the battery
+  depends on it: the RLS suite fails (does not skip) when the stack is
+  down, and CI starts a stack before running `verify.sh`.
 - Vendor lock-in to Supabase is accepted for v1; the data model stays plain
   Postgres so migration away is possible.
 - Apple review applies to dating apps (age gating, moderation, account

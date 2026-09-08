@@ -10,6 +10,34 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-08 — S4 backend skeleton with RLS
+
+- Done: `supabase init` (CLI 2.117, Postgres 17), migration
+  `20260908000001_skeleton.sql` (see ROADMAP S4 for the schema), empty
+  `seed.sql`, and `supabase/` as a workspace holding the Vitest RLS suite
+  (`tests/local.ts` reads keys from `supabase status -o json`; users are
+  created through the admin API and signed in with supabase-js, so every
+  assertion goes through PostgREST + RLS exactly as the app will).
+  ADR-0002 amended: supabase/ is a workspace for its tests only.
+- Design choices worth knowing: `discover` exposes `chart` (planet and
+  house placements) so the client can score compatibility in S6 —
+  positions reveal roughly the birth date and hour, which the profile's
+  age already half-reveals; the chart column must never contain the
+  engine input (utc, coordinates) and the app strips it before insert.
+  The starter is computed by the liking client and stored on the like;
+  the trigger copies it onto the match (deterministic engine ⇒ both sides
+  agree). Anon is revoked from all tables and the view (permission denied,
+  stronger than "0 rows"). `birth_local` is stored for the v1 server-side
+  re-validation of `birth_utc`.
+- Verified: `npx supabase db reset` applies the migration; 15 RLS tests
+  pass against the local stack; full battery green on clean HEAD. CI now
+  runs `supabase start` before `verify.sh` (not yet exercised — no remote).
+- Gotchas: `npm install -w supabase <pkg>` silently recorded nothing the
+  first time (the workspace had just been added); always check the
+  manifest after an install. `supabase start` was launched before the
+  migration existed, so `db reset` was needed once.
+- Next: S5 sign-in + onboarding + chart screen in the app.
+
 ## 2026-09-08 — S3 birth place → UTC (`packages/geo`)
 
 - Done: new workspace `packages/geo` (config mirrors astro). Data:

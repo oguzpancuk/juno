@@ -46,24 +46,27 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       "Ankara, 1990-01-01 12:00", Helsinki 2001 and Sydney 1988 to the UTC
       instants of the astro fixtures, plus Turkey's 2016 zone change and a
       DST gap/overlap (battery).
-- [ ] **S4 — Backend skeleton with RLS.** `supabase init`; migration 0001:
-      `profiles` (id = auth uid, display_name, birth_date, birth_utc,
-      birth_city, chart jsonb, big_three, gender, interested_in, location
-      geography(point), radius_km default 50), `likes` (from, to, kind),
-      `matches` (a, b, starter, created_at) with a trigger that inserts a match
-      on mutual like; RLS: own profile read/write; other profiles only via a
-      `discover` view that applies mutual gender preference + radius and
-      exposes public columns plus rounded distance, never `location` or
-      `birth_utc`; likes insert-own only; matches read-own only; email OTP
-      auth enabled in `config.toml`.
-      — done when: `npx supabase db reset` succeeds and a Vitest suite in
-      `supabase/tests` (supabase-js against local stack, run only when
-      `SUPABASE_LOCAL=1`) proves: anon reads 0 profiles; A cannot read B's
-      `birth_utc` or `location`; a profile outside A's radius or with a
-      non-matching preference is absent from A's `discover`; A liking B then
-      B liking A yields exactly one match row (battery, gated on local stack;
-      reported as FAIL in CI until the Supabase CLI step is added to
-      `ci.yml`).
+- [x] **S4 — Backend skeleton with RLS.** `supabase init`; migration
+      `20260908000001_skeleton.sql`: `profiles` (id = auth uid, display_name,
+      birth_date with an 18+ CHECK, birth_local, birth_city_id, birth_utc,
+      public `chart` jsonb without engine input, big_three, gender,
+      interested_in, PostGIS `location`, radius_km default 50), `likes`
+      (from, to, kind, starter), `matches` (a < b, starter) filled only by a
+      security-definer trigger on mutual like; RLS: own profile read/insert/
+      update, likes insert-own/read-own, matches read-own; anon revoked from
+      everything; `discover` view (owner-executed) applies radius + mutual
+      gender preference, hides self and already-swiped, exposes id, name,
+      age, gender, big_three, chart and a km-rounded distance — never
+      location, birth_utc or birth_local; email OTP auth is the CLI default.
+      — done when: `npx supabase db reset` succeeds and the Vitest suite in
+      `supabase/tests` (supabase-js against the local stack, a workspace so
+      the battery runs it; a missing stack FAILs) proves: anon is denied;
+      A cannot read B's birth_utc/location; out-of-radius and
+      preference-mismatched profiles are absent from A's `discover`, which
+      exposes only the public columns; A cannot like as B or insert a
+      match; A liking B then B liking A yields exactly one match visible to
+      both and to nobody else (battery; CI starts the stack via
+      supabase/setup-cli).
 - [ ] **S5 — Sign in, birth data, chart screen (PRD-1, PRD-2 UI half).**
       Email OTP sign-in; onboarding form (display name, gender, interested
       in, birth city picker, date, time — all required; birth date < 18 years
