@@ -1,6 +1,6 @@
 import { PLANETS } from './bodies';
 import type { PublicChart } from './public';
-import { normalizeDegrees, signOf, signedDelta, type Sign } from './signs';
+import { signedDelta, type Sign } from './signs';
 
 /**
  * Synastry score per docs/adr/0003-compatibility.md. Every number here is
@@ -196,9 +196,10 @@ export function compatibility(
     if (a.term >= 0) harmony += a.term;
     else tension -= a.term;
   }
-  const sunA = signOf(normalizeDegrees(chartA.planets.sun.longitude));
-  const sunB = signOf(normalizeDegrees(chartB.planets.sun.longitude));
-  if (elementsAgree(sunA, sunB)) harmony += ELEMENT_BONUS;
+  // Stored `sign` is the contract for both luminaries (toPublicChart derives
+  // it from the rounded longitude, so the two cannot disagree).
+  if (elementsAgree(chartA.planets.sun.sign, chartB.planets.sun.sign))
+    harmony += ELEMENT_BONUS;
   if (elementsAgree(chartA.planets.moon.sign, chartB.planets.moon.sign))
     harmony += ELEMENT_BONUS;
 
@@ -215,8 +216,17 @@ export function strongestOf(
   aspects: readonly InterAspect[],
 ): InterAspect | null {
   if (aspects.length === 0) return null;
+  // Last tie-break (sorted body pair, then aspect) makes the choice
+  // deterministic. On an exact tie between mirrored pairs (a.moon–b.venus vs
+  // a.venus–b.moon) strongest(b, a) is not the mirror of strongest(a, b);
+  // that is harmless because starterKey is always computed in a < b order.
+  const pairKey = (a: InterAspect) =>
+    [a.planetA, a.planetB].sort().join('-') + '-' + a.aspect;
   const byMagnitude = [...aspects].sort(
-    (x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb,
+    (x, y) =>
+      Math.abs(y.term) - Math.abs(x.term) ||
+      x.orb - y.orb ||
+      pairKey(x).localeCompare(pairKey(y)),
   );
   const top = byMagnitude[0];
   if (!top) return null;

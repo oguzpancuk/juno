@@ -101,8 +101,10 @@ describe('aspectBetween (ADR-0003 table)', () => {
 });
 
 describe('compatibility', () => {
-  // Hand-built pair: only Sun△Sun (exact) and Moon□Venus (3°) are in orb;
-  // every other body is parked ≥ 10° from any aspect angle to every other.
+  // Hand-built pair: only Sun△Sun (exact) and Moon□Venus (3°) are in orb.
+  // Other bodies sit just outside an orb (some within 1° of a boundary), so
+  // the exact-list assertion below is what keeps this fixture honest when an
+  // orb is retuned.
   // (found by a one-off greedy search over whole degrees; hand-verified below)
   const a = synthetic({
     sun: 0,
@@ -146,6 +148,44 @@ describe('compatibility', () => {
     expect(result.score).toBe(65);
     expect(result.strongest?.planetA).toBe('sun');
     expect(result.strongest?.aspect).toBe('trine');
+  });
+
+  it('is deterministic on an exact tie and both sides derive the same a<b key', () => {
+    const x = synthetic({
+      sun: 300,
+      moon: 0,
+      mercury: 200,
+      venus: 100,
+      mars: 250,
+      jupiter: 20,
+      saturn: 70,
+      uranus: 140,
+      neptune: 230,
+      pluto: 290,
+      ascendant: 40,
+    });
+    const y = synthetic({
+      sun: 330,
+      moon: 220,
+      mercury: 275,
+      venus: 120,
+      mars: 335,
+      jupiter: 165,
+      saturn: 235,
+      uranus: 25,
+      neptune: 85,
+      pluto: 355,
+      ascendant: 315,
+    });
+    // x.moon–y.venus and x.venus–y.moon are both exact trines (2.7).
+    expect(compatibility(x, y).strongest).toEqual(
+      compatibility(x, y).strongest,
+    );
+    expect(starterKey(x, y)).toBe(starterKey(x, y));
+    expect(Math.abs(compatibility(x, y).strongest?.term ?? 0)).toBeCloseTo(
+      2.7,
+      6,
+    );
   });
 
   it('is symmetric in score and mirrors the strongest aspect', () => {

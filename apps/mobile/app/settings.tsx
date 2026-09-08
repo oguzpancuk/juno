@@ -15,17 +15,25 @@ export default function Settings() {
 
   useEffect(() => {
     if (!userId) return;
+    let cancelled = false;
     void fetchOwnProfile(userId).then((p) => {
-      if (p.status === 'ready') setRadius(p.profile.radius_km);
+      if (!cancelled && p.status === 'ready') setRadius(p.profile.radius_km);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
+  const [saving, setSaving] = useState(false);
   const choose = async (km: number) => {
-    if (!userId) return;
+    if (!userId || saving) return; // one request in flight at a time
     setError(null);
+    setSaving(true);
     const previous = radius;
     setRadius(km);
-    if (!(await updateRadius(userId, km))) {
+    const ok = await updateRadius(userId, km);
+    setSaving(false);
+    if (!ok) {
       setRadius(previous);
       setError(t.errors.generic);
     }
@@ -50,6 +58,9 @@ export default function Settings() {
           </Pressable>
         ))}
       </View>
+      {radius !== null && !RADIUS_OPTIONS.some((km) => km === radius) ? (
+        <Text style={styles.hint}>{t.settings.customRadius(radius)}</Text>
+      ) : null}
       <Text style={styles.hint}>{t.settings.radiusHint}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>

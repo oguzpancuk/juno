@@ -153,7 +153,10 @@ export default function Onboarding() {
         <Pressable
           testID="sign-out"
           onPress={() => {
-            void supabase.auth.signOut().then(() => router.replace('/sign-in'));
+            void supabase.auth
+              .signOut()
+              .then(() => router.replace('/sign-in'))
+              .catch(() => setError(t.onboarding.errors.generic));
           }}
         >
           <Text style={styles.switchAccount}>{t.onboarding.switchAccount}</Text>
