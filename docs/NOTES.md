@@ -19,16 +19,32 @@
   created through the admin API and signed in with supabase-js, so every
   assertion goes through PostgREST + RLS exactly as the app will).
   ADR-0002 amended: supabase/ is a workspace for its tests only.
-- Design choices worth knowing: `discover` exposes `chart` (planet and
-  house placements) so the client can score compatibility in S6 —
-  positions reveal roughly the birth date and hour, which the profile's
-  age already half-reveals; the chart column must never contain the
-  engine input (utc, coordinates) and the app strips it before insert.
-  The starter is computed by the liking client and stored on the like;
-  the trigger copies it onto the match (deterministic engine ⇒ both sides
-  agree). Anon is revoked from all tables and the view (permission denied,
-  stronger than "0 rows"). `birth_local` is stored for the v1 server-side
-  re-validation of `birth_utc`.
+- Design choices worth knowing: `discover` and `match_profiles` expose
+  `chart` (planet and house placements) so the client can score
+  compatibility in S6 — positions reveal roughly the birth date and hour,
+  which the profile's age already half-reveals; the chart column is the
+  `PublicChart` shape exported by `@stardate/astro` (`toPublicChart`
+  strips the engine input; a CHECK rejects input keys server-side). The
+  starter is a constrained `starter_key` ("<planet of a>-<aspect>-<planet
+  of b>", a < b by uuid) computed by each liking client; the match trigger
+  requires both keys to agree and clients render the Turkish sentence
+  from the key, so no free text crosses users. Locations snap to a 0.01°
+  grid (≈1 km) because a km-rounded distance from a freely movable caller
+  is otherwise trilaterable. Birth data + chart are immutable after insert
+  (the trigger also binds service_role: a v1 re-onboarding function must
+  delete and reinsert). Anon is revoked from all tables and views.
+  `birth_local` is stored for the v1 server-side re-validation of
+  `birth_utc`. Review (3 passes, PASS): the first version lost a match when
+  two likes raced (fixed with a pair advisory lock, proven with two psql
+  sessions) and copied client free text onto the other user's match.
+- The test-only RPC `profile_location_text` lives in `seed.sql` (local
+  reset only), so the hosted schema carries no coordinate-reading function.
+  `supabase gen types` still lists it locally; the drift test compares
+  against the local DB, which is the intended contract.
+- Auth config only governs the local stack; the hosted project's auth
+  settings and the two `{{ .Token }}` e-mail templates must be applied at
+  first deploy (/deploy-checklist item). `db reset` does not restart Auth:
+  config.toml changes need `supabase stop && supabase start`.
 - Verified: `npx supabase db reset` applies the migration; 15 RLS tests
   pass against the local stack; full battery green on clean HEAD. CI now
   runs `supabase start` before `verify.sh` (not yet exercised — no remote).

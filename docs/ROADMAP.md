@@ -49,24 +49,33 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
 - [x] **S4 — Backend skeleton with RLS.** `supabase init`; migration
       `20260908000001_skeleton.sql`: `profiles` (id = auth uid, display_name,
       birth_date with an 18+ CHECK, birth_local, birth_city_id, birth_utc,
-      public `chart` jsonb without engine input, big_three, gender,
-      interested_in, PostGIS `location`, radius_km default 50), `likes`
-      (from, to, kind, starter), `matches` (a < b, starter) filled only by a
-      security-definer trigger on mutual like; RLS: own profile read/insert/
-      update, likes insert-own/read-own, matches read-own; anon revoked from
-      everything; `discover` view (owner-executed) applies radius + mutual
-      gender preference, hides self and already-swiped, exposes id, name,
-      age, gender, big_three, chart and a km-rounded distance — never
-      location, birth_utc or birth_local; email OTP auth is the CLI default.
+      public `chart` jsonb — CHECK forbids engine-input keys —, big_three,
+      gender, interested_in, PostGIS `location` snapped to a 0.01° grid by
+      trigger, radius_km default 50; birth data and chart immutable after
+      insert), `likes` (from, to, kind, `starter_key` domain — a like needs
+      one, a pass forbids one; a second swipe is a PK violation), `matches`
+      (a < b, starter_key) filled only by a security-definer trigger on
+      mutual like that takes a pair-scoped advisory lock and requires both
+      keys to agree; RLS: own profile read/insert/update, likes
+      insert-own/read-own, matches read-own; anon revoked; TRUNCATE/
+      REFERENCES/TRIGGER revoked; `discover` view (owner-executed) applies
+      radius + mutual gender preference, hides self and already-swiped,
+      exposes id, name, age, gender, big_three, chart and a km-rounded
+      distance; `match_profiles` view exposes the counterpart of each match
+      with the same column list; email OTP with confirmations on and a
+      `{{ .Token }}` template for both magic-link and signup mails.
       — done when: `npx supabase db reset` succeeds and the Vitest suite in
-      `supabase/tests` (supabase-js against the local stack, a workspace so
-      the battery runs it; a missing stack FAILs) proves: anon is denied;
-      A cannot read B's birth_utc/location; out-of-radius and
-      preference-mismatched profiles are absent from A's `discover`, which
-      exposes only the public columns; A cannot like as B or insert a
-      match; A liking B then B liking A yields exactly one match visible to
-      both and to nobody else (battery; CI starts the stack via
-      supabase/setup-cli).
+      `supabase/tests` (supabase-js typed from `gen types`, Zod-parsed rows,
+      a workspace so the battery runs it; a missing stack FAILs) proves:
+      anon is denied; A cannot read B's birth_utc/location nor filter on
+      them; out-of-radius and preference-mismatched profiles are absent from
+      A's `discover`, which exposes only the public columns; a pass hides a
+      visible profile; A cannot like as B, insert a match, or change others'
+      rows; A liking B then B liking A — sequentially or simultaneously —
+      yields exactly one match visible to both and to nobody else; a
+      mismatched reciprocal key is refused; the committed types match
+      `gen types` (battery; CI starts a stack via supabase/setup-cli pinned
+      to the CLI version the tests assert).
 - [ ] **S5 — Sign in, birth data, chart screen (PRD-1, PRD-2 UI half).**
       Email OTP sign-in; onboarding form (display name, gender, interested
       in, birth city picker, date, time — all required; birth date < 18 years

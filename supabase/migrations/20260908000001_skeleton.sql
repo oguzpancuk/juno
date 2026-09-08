@@ -202,6 +202,12 @@ begin
   if not found then
     return new;
   end if;
+  -- Both clients derive the key from the same two charts with the same
+  -- deterministic engine; a mismatch means a client bug or tampering.
+  if reciprocal.starter_key is distinct from new.starter_key then
+    raise exception 'starter_key mismatch: % vs %', new.starter_key, reciprocal.starter_key
+      using errcode = 'check_violation';
+  end if;
   insert into public.matches (a, b, starter_key)
   values (lo, hi, new.starter_key)
   on conflict (a, b) do nothing;
@@ -282,15 +288,3 @@ revoke truncate, references, trigger on all tables in schema public from anon, a
 grant select on public.discover to authenticated;
 grant select on public.match_profiles to authenticated;
 
--- Test helper (service role only): the stored location as WKT, so the
--- snapping trigger can be asserted without exposing coordinates via RLS.
-create or replace function public.profile_location_text(profile_id uuid)
-returns text
-language sql
-security definer
-set search_path = public
-as $$
-  select extensions.st_astext(location::extensions.geometry)
-    from public.profiles where id = profile_id;
-$$;
-revoke all on function public.profile_location_text(uuid) from public, anon, authenticated;

@@ -253,6 +253,11 @@ otp_expiry = 600
 [auth.email.template.magic_link]
 subject = "stardate giriş kodun"
 content_path = "./supabase/templates/magic_link.html"
+# A brand-new address goes through the signup-confirmation template when
+# enable_confirmations is on; it must render the same code.
+[auth.email.template.confirmation]
+subject = "stardate giriş kodun"
+content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

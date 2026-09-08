@@ -493,6 +493,51 @@ describe('likes and matches', () => {
     ).toHaveLength(1);
   });
 
+  it('a reciprocal like with a different starter key is refused', async () => {
+    const ivy = await user('ivy'); // woman, wants men
+    const jack = await user('jack'); // man, wants women
+    await insertProfile(
+      ivy,
+      profileRow({
+        id: ivy.id,
+        display_name: 'Ivy',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await insertProfile(
+      jack,
+      profileRow({
+        id: jack.id,
+        display_name: 'Jack',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    const first = await ivy.client.from('likes').insert({
+      from_id: ivy.id,
+      to_id: jack.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    expect(first.error).toBeNull();
+    const second = await jack.client.from('likes').insert({
+      from_id: jack.id,
+      to_id: ivy.id,
+      kind: 'like',
+      starter_key: 'sun-square-mars',
+    });
+    expect(second.error?.code).toBe(CHECK_VIOLATION);
+    const [a, b] = pair(ivy.id, jack.id);
+    expect(
+      ids(
+        (await admin.from('matches').select('id').eq('a', a).eq('b', b)).data,
+      ),
+    ).toEqual([]);
+  });
+
   it('match_profiles shows each side the other, with public columns only', async () => {
     const forAlice = MatchProfileRows.parse(
       (await alice.client.from('match_profiles').select('*')).data,
