@@ -14,11 +14,13 @@ fi
 
 # Local Supabase: start only if the API is not already answering.
 if ! curl -sf http://127.0.0.1:54321/auth/v1/health >/dev/null 2>&1; then
-  npx supabase start -x studio,imgproxy,logflare,vector >/dev/null
+  # Studio stays on: ROADMAP manual checks read rows there (port 54323).
+  npx supabase start -x imgproxy,logflare,vector >/dev/null
 fi
 curl -sf http://127.0.0.1:54321/auth/v1/health >/dev/null  # smoke: auth up
 
-# Keys come from the running stack; never hard-coded.
+# Keys come from the running stack; never hard-coded. eval is safe here:
+# the input is the local CLI's own KEY="value" lines, filtered to two keys.
 eval "$(npx supabase status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY)=')"
 export EXPO_PUBLIC_SUPABASE_URL="$API_URL"
 export EXPO_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"

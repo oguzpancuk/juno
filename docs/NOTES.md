@@ -47,6 +47,10 @@ t3@stardate.local deniz` wrote Deniz → Ayse (`jupiter-square-venus`,
 - `contracts/init.sh` boots Supabase + Expo (8082) with the local keys;
   from an agent shell run it detached (`bash contracts/init.sh > log &`):
   run inline, the Bash tool waited on Expo's process group for 10 min.
+- S7 review pass 2: PASS. Reviewer saw one unreproduced supabase test
+  failure in six battery runs (name not captured); `vitest.config.ts`
+  already serialises files and sets a 60 s hook timeout — watch for it in
+  CI, and capture the failing test name if it recurs.
 - Walking skeleton complete (S0–S7). Skeleton exit items still open:
   remotes + CI never run (no GitHub remote; creating one is outward-facing
   and waits for the owner), code-reviewer on S7, evaluator-qa after this
