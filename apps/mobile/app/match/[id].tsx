@@ -1,4 +1,4 @@
-import { ASPECT_TR, BODY_TR, SIGN_TR, synastryReading } from '@stardate/astro';
+import { SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -106,10 +106,7 @@ export default function MatchScreen() {
               key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
               style={styles.aspect}
             >
-              <Text style={styles.aspectHead}>
-                {BODY_TR[a.aspect.planetA]} {ASPECT_TR[a.aspect.aspect]}{' '}
-                {BODY_TR[a.aspect.planetB]}
-              </Text>
+              <Text style={styles.aspectHead}>{a.headline}</Text>
               <Text style={styles.body}>{a.meaning}</Text>
             </View>
           ))}

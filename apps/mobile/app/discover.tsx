@@ -1,4 +1,4 @@
-import { ASPECT_TR, BODY_TR, SIGN_TR, synastryReading } from '@stardate/astro';
+import { SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -200,10 +200,7 @@ export default function Discover() {
                   key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
                   style={styles.detailAspect}
                 >
-                  <Text style={styles.detailLabel}>
-                    {BODY_TR[a.aspect.planetA]} {ASPECT_TR[a.aspect.aspect]}{' '}
-                    {BODY_TR[a.aspect.planetB]}
-                  </Text>
+                  <Text style={styles.detailLabel}>{a.headline}</Text>
                   <Text style={styles.detailText}>{a.meaning}</Text>
                 </View>
               ))}

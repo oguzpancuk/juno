@@ -1,7 +1,7 @@
 {
   "sun-conjunction-sun": {
     "meaning": "Güneşleriniz aynı noktada: birbirinizi anında tanır, aynı dili konuşursunuz. Aynı gölgeleri de paylaşırsınız; kimin ayna, kimin ışık olduğunu zaman gösterir.",
-    "question": "Aynı burçtan biriyle daha önce anlaştın mı, yoksa fazla mı benziyorsunuz sence?"
+    "question": "Sana çok benzeyen biriyle anlaşmak kolay mı gelir, yoksa fazla mı tanıdık?"
   },
   "sun-sextile-sun": {
     "meaning": "Kimlikleriniz birbirini destekler; yan yana durmak kolay, rekabet düşük. Sakin ama sağlam bir çekirdek.",
@@ -192,7 +192,7 @@
     "question": "Kızgınken konuşur musun, sessizleşir misin?"
   },
   "moon-trine-mars": {
-    "meaning": "Duygu ve eylem uyumlu; korumacı ve cesur bir bağ.",
+    "meaning": "Duygu ve eylem uyumlu akar; biri hissettiğinde diğeri harekete geçer. Korumacı ve cesur bir bağ kurulur, birbirinizin arkasında durursunuz.",
     "question": "Cesaret sana neyi hatırlatır?"
   },
   "moon-opposition-mars": {
@@ -853,7 +853,7 @@
   },
   "mars-trine-saturn": {
     "meaning": "Kontrollü ve etkili eylem bir arada; yapıcı bir güç paylaşırsınız. Ne zaman durup ne zaman ilerleyeceğinizi bilirsiniz.",
-    "question": "Yapıcı olmak ile hızlı olmak arasında hangisi?"
+    "question": "Bir işi yapıcı yapmak mı daha önemli, hızlı yapmak mı?"
   },
   "mars-opposition-saturn": {
     "meaning": "Eylem ile kurallar karşı karşıya; otorite çatışması yaşanabilir. Sınırı birlikte koyduğunuzda kimse frenlenmiş hissetmez.",

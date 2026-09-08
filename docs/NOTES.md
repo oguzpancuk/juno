@@ -46,9 +46,11 @@
   aspect resolves to a text), `natalAspects` has a direct fixture test, and
   a "≥ 4 words per sentence" test enforces the 1–2-full-sentence brief —
   it caught 139 telegraphic tails, all rewritten; same-body texts no longer
-  claim "same sign" (conjunction is longitude-based); match/discover show
-  the viewer-oriented headline ("Ay'ın onun Satürn'üyle …") instead of a
-  neutral "Ay kare Satürn"; `natalReading` drops a geometrically impossible
+  claim "same sign" (conjunction is longitude-based); match/discover show the viewer-oriented headline ("Ay'ın onun
+  Satürn'üyle …") instead of a neutral "Ay kare Satürn" — landed in the
+  follow-up commit: the first attempt's text replacement had silently
+  missed and an earlier version of this note wrongly claimed it; the
+  reviewer caught it; `natalReading` drops a geometrically impossible
   pair from a tampered row instead of throwing; dead placeholder starter
   code removed; duplicate question fixed.
 - Gotchas: `exp://` is claimed by both Expo Go and the pati dev build on

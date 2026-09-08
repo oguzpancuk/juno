@@ -117,6 +117,14 @@ describe('engine emission matches the key space', () => {
     opposition: 180,
   } as const;
   const PARK = 200;
+  const OUTERS = new Set<Body>([
+    'jupiter',
+    'saturn',
+    'uranus',
+    'neptune',
+    'pluto',
+  ]);
+  const OUTER_PAIR = (a: Body, b: Body) => OUTERS.has(a) && OUTERS.has(b);
 
   it('every natal aspect the engine can emit has a text', () => {
     for (let i = 0; i < BODIES.length; i++) {
@@ -132,7 +140,12 @@ describe('engine emission matches the key space', () => {
           const hit = natalAspects(synthetic(a, 0, b, angle, PARK)).find(
             (x) => x.planetA === a && x.planetB === b,
           );
-          if (!hit) continue; // generational pair: engine skips, key space skips
+          if (OUTER_PAIR(a, b)) {
+            expect(hit, key).toBeUndefined(); // generational pair: engine skips, key space skips
+            continue;
+          }
+          expect(hit, key).toBeDefined(); // a scorable pair must be emitted
+          if (!hit) continue;
           expect(hit.aspect, key).toBe(aspect);
           expect(natalAspectText(a, aspect, b).length, key).toBeGreaterThan(20);
         }
@@ -154,6 +167,11 @@ describe('engine emission matches the key space', () => {
           const hit = compatibility(x, y).aspects.find(
             (h) => h.planetA === a && h.planetB === b,
           );
+          if (OUTER_PAIR(a, b)) {
+            expect(hit).toBeUndefined();
+            continue;
+          }
+          expect(hit, `${a}-${aspect}-${b}`).toBeDefined();
           if (!hit) continue;
           expect(hit.aspect, `${a}-${aspect}-${b}`).toBe(aspect);
           const t = synastryText(a, aspect, b);
