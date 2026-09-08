@@ -10,6 +10,20 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — App name: constraint and shortlist
+
+- Owner ruled out Turkish names: the shipped app name must not be Turkish
+  (the Turkish UI stays; only the product name is affected).
+- `stardate` cannot ship as the product name: stardate.love is a live
+  astrology dating app. It stays as the repo/code name only.
+- Checked and taken: Trine (a synastry match app), Midheaven, Yildizname,
+  Zodya. Synastry is generic and cannot be owned.
+- Shortlist with no App Store hit found: Conjunct (recommended),
+  Luminaries, Perihelion; Syzygy has minor developer-name collisions.
+  Trademark (Turk Patent, USPTO) and domain checks are still not done.
+- Open: owner picks the name, then Expo config, app.json, strings and
+  store metadata are renamed in one commit.
+
 ## 2026-09-09 — Owner sign-off on the interpretation texts
 
 - Owner approved the Turkish content as of `459ce54` ("metinleri
