@@ -1,0 +1,182 @@
+import type { Planet } from './bodies';
+import {
+  compatibility,
+  elementOf,
+  natalAspects,
+  type Aspect,
+  type Body,
+  type ChartForScoring,
+  type Compatibility,
+  type InterAspect,
+} from './compatibility';
+import {
+  bandOf,
+  bandText,
+  elementText,
+  houseText,
+  natalAspectText,
+  retrogradeText,
+  signText,
+  synastryText,
+  type Band,
+  type RetroPlanet,
+} from './content';
+import { PLANETS } from './bodies';
+import type { PublicChart } from './public';
+import { signOf, type Sign } from './signs';
+import { describeAspectTr } from './tr';
+
+/**
+ * Screen-ready interpretation of one chart: what to say for each planet
+ * and for the strongest natal aspects. Pure; the UI only renders.
+ */
+export interface PlanetReading {
+  readonly planet: Planet;
+  readonly signText: string;
+  readonly houseText: string;
+  readonly retrogradeText: string | null;
+}
+
+export interface NatalAspectReading {
+  readonly aspect: InterAspect;
+  readonly text: string;
+}
+
+export interface NatalReading {
+  readonly risingText: string;
+  readonly planets: readonly PlanetReading[];
+  /** Strongest first; `limit` caps the list for the screen. */
+  readonly aspects: readonly NatalAspectReading[];
+}
+
+const RETRO: ReadonlySet<Planet> = new Set([
+  'mercury',
+  'venus',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+  'pluto',
+]);
+
+export function natalReading(chart: PublicChart, limit = 8): NatalReading {
+  const planets = PLANETS.map((planet) => {
+    const p = chart.planets[planet];
+    return {
+      planet,
+      signText: signText(planet, p.sign),
+      houseText: houseText(planet, p.house),
+      retrogradeText:
+        p.retrograde && RETRO.has(planet)
+          ? retrogradeText(planet as RetroPlanet)
+          : null, // why: RETRO membership is exactly the RetroPlanet set
+    };
+  });
+  const aspects = natalAspects(chart)
+    .slice(0, limit)
+    .map((aspect) => ({
+      aspect,
+      text: natalAspectText(aspect.planetA, aspect.aspect, aspect.planetB),
+    }));
+  return {
+    risingText: signText('ascendant', risingOf(chart)),
+    planets,
+    aspects,
+  };
+}
+
+function risingOf(chart: PublicChart): Sign {
+  return signOf(chart.houses.ascendant);
+}
+
+/**
+ * Screen-ready synastry from the viewer's side. `viewer` is chart A of the
+ * pair; texts use "senin X'in onun Y'si" from that side.
+ */
+export interface SynastryAspectReading {
+  readonly aspect: InterAspect;
+  /** "Ay'ın onun Venüs'üyle üçgen açı yapıyor." from the viewer's side. */
+  readonly headline: string;
+  readonly meaning: string;
+  readonly question: string;
+}
+
+export interface SynastryReading {
+  readonly score: number;
+  readonly band: Band;
+  readonly bandText: string;
+  readonly sunElements: string;
+  readonly moonElements: string;
+  readonly aspects: readonly SynastryAspectReading[];
+  /** Pair-specific opening line: headline + question of the strongest aspect. */
+  readonly starter: string | null;
+  readonly match: Compatibility;
+}
+
+export function synastryReading(
+  viewer: ChartForScoring,
+  other: ChartForScoring,
+  limit = 5,
+): SynastryReading {
+  const match = compatibility(viewer, other);
+  const aspects = [...match.aspects]
+    .sort((x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb)
+    .slice(0, limit)
+    .map((aspect) => readAspect(aspect));
+  const strongest = match.strongest ? readAspect(match.strongest) : null;
+  return {
+    score: match.score,
+    band: bandOf(match.score),
+    bandText: bandText(match.score),
+    sunElements: elementText(
+      'sun',
+      elementOf(viewer.planets.sun.sign),
+      elementOf(other.planets.sun.sign),
+    ),
+    moonElements: elementText(
+      'moon',
+      elementOf(viewer.planets.moon.sign),
+      elementOf(other.planets.moon.sign),
+    ),
+    aspects,
+    starter: strongest ? `${strongest.headline} ${strongest.question}` : null,
+    match,
+  };
+}
+
+function readAspect(aspect: InterAspect): SynastryAspectReading {
+  const { meaning, question } = synastryText(
+    aspect.planetA,
+    aspect.aspect,
+    aspect.planetB,
+  );
+  return { aspect, headline: describeAspectTr(aspect), meaning, question };
+}
+
+/** Opening line for a stored starter key, from the viewer's side. */
+export function starterFromKey(
+  key: {
+    readonly planetA: Body;
+    readonly aspect: Aspect;
+    readonly planetB: Body;
+  },
+  viewerIsA: boolean,
+): { headline: string; meaning: string; question: string } {
+  const mine = viewerIsA ? key.planetA : key.planetB;
+  const theirs = viewerIsA ? key.planetB : key.planetA;
+  const { meaning, question } = synastryText(
+    key.planetA,
+    key.aspect,
+    key.planetB,
+  );
+  return {
+    headline: describeAspectTr({
+      planetA: mine,
+      aspect: key.aspect,
+      planetB: theirs,
+    }),
+    meaning,
+    question,
+  };
+}

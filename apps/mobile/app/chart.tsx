@@ -1,6 +1,13 @@
-import { PLANETS, PLANET_TR, SIGN_TR, formatDegree } from '@stardate/astro';
+import {
+  ASPECT_TR,
+  BODY_TR,
+  PLANET_TR,
+  SIGN_TR,
+  formatDegree,
+  natalReading,
+} from '@stardate/astro';
 import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,7 +16,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { placementLine } from '@/lib/chartText';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -18,7 +24,6 @@ import { supabase } from '@/lib/supabase';
 export default function ChartScreen() {
   const session = useSession();
   const [state, setState] = useState<ProfileState>({ status: 'loading' });
-
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const [attempt, setAttempt] = useState(0);
@@ -33,6 +38,12 @@ export default function ChartScreen() {
       cancelled = true;
     };
   }, [userId, attempt]);
+
+  // Interpretation is computed by the engine; the screen only renders it.
+  const reading = useMemo(
+    () => (state.status === 'ready' ? natalReading(state.profile.chart) : null),
+    [state],
+  );
 
   if (state.status === 'error') {
     return (
@@ -50,7 +61,7 @@ export default function ChartScreen() {
       </View>
     );
   }
-  if (state.status !== 'ready') {
+  if (state.status !== 'ready' || !reading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color="#9a94b8" />
@@ -96,30 +107,53 @@ export default function ChartScreen() {
           testID="badge-rising"
         />
       </View>
+      <Text style={styles.body} testID="rising-text">
+        {reading.risingText}
+      </Text>
 
       <Text style={styles.section}>{t.chart.planets}</Text>
-      {PLANETS.map((planet) => {
-        const p = chart.planets[planet];
-        return (
-          <View
-            key={planet}
-            style={styles.planetRow}
-            testID={`planet-${planet}`}
-          >
-            <View style={styles.planetHead}>
-              <Text style={styles.planetName}>{PLANET_TR[planet]}</Text>
-              <Text style={styles.planetPos}>
-                {SIGN_TR[p.sign]} {formatDegree(p.degree)} · {p.house}.{' '}
-                {t.chart.house}
-                {p.retrograde ? ` ${t.chart.retrograde}` : ''}
-              </Text>
+      {reading.planets.map(
+        ({ planet, signText, houseText, retrogradeText }) => {
+          const p = chart.planets[planet];
+          return (
+            <View key={planet} style={styles.card} testID={`planet-${planet}`}>
+              <View style={styles.cardHead}>
+                <Text style={styles.planetName}>{PLANET_TR[planet]}</Text>
+                <Text style={styles.planetPos}>
+                  {SIGN_TR[p.sign]} {formatDegree(p.degree)} · {p.house}.{' '}
+                  {t.chart.house}
+                  {p.retrograde ? ` ${t.chart.retrograde}` : ''}
+                </Text>
+              </View>
+              <Text style={styles.body}>{signText}</Text>
+              <Text style={styles.bodyMuted}>{houseText}</Text>
+              {retrogradeText ? (
+                <Text style={styles.bodyMuted}>{retrogradeText}</Text>
+              ) : null}
             </View>
-            <Text style={styles.planetText}>
-              {placementLine(planet, p.sign)}
+          );
+        },
+      )}
+
+      <Text style={styles.section}>{t.chart.aspects}</Text>
+      {reading.aspects.length === 0 ? (
+        <Text style={styles.bodyMuted}>{t.chart.noAspects}</Text>
+      ) : (
+        reading.aspects.map(({ aspect, text }) => (
+          <View
+            key={`${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
+            style={styles.card}
+            testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
+          >
+            <Text style={styles.planetName}>
+              {BODY_TR[aspect.planetA]} {ASPECT_TR[aspect.aspect]}{' '}
+              {BODY_TR[aspect.planetB]}
+              <Text style={styles.orb}> · {formatDegree(aspect.orb)} orb</Text>
             </Text>
+            <Text style={styles.body}>{text}</Text>
           </View>
-        );
-      })}
+        ))
+      )}
 
       <Pressable
         testID="sign-out"
@@ -169,13 +203,7 @@ const styles = StyleSheet.create({
   navLink: { color: '#c9c4e3', fontSize: 15, paddingTop: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
   subtitle: { color: '#9a94b8', fontSize: 14 },
-  section: {
-    color: '#c9c4e3',
-    fontSize: 13,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginTop: 20,
-  },
+  section: { color: '#c9c4e3', fontSize: 13, letterSpacing: 1, marginTop: 20 },
   row: { flexDirection: 'row', gap: 8 },
   badge: {
     flex: 1,
@@ -191,16 +219,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
-  planetRow: {
-    backgroundColor: '#15142a',
-    borderRadius: 12,
-    padding: 12,
-    gap: 4,
-  },
-  planetHead: { flexDirection: 'row', justifyContent: 'space-between' },
+  card: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 6 },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   planetName: { color: '#f5f2ff', fontSize: 16, fontWeight: '600' },
-  planetPos: { color: '#c9c4e3', fontSize: 14 },
-  planetText: { color: '#9a94b8', fontSize: 13 },
+  planetPos: {
+    color: '#c9c4e3',
+    fontSize: 14,
+    textAlign: 'right',
+    flexShrink: 1,
+  },
+  orb: { color: '#5f5a7a', fontSize: 12, fontWeight: '400' },
+  body: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
+  bodyMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
   signOut: { marginTop: 24, alignItems: 'center', padding: 12 },
   muted: { color: '#9a94b8' },
   link: { color: '#c9c4e3', padding: 12 },

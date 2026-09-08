@@ -72,6 +72,16 @@ export {
   type BigThree,
   type PublicChart,
 } from './public';
+export {
+  natalReading,
+  starterFromKey,
+  synastryReading,
+  type NatalAspectReading,
+  type NatalReading,
+  type PlanetReading,
+  type SynastryAspectReading,
+  type SynastryReading,
+} from './summary';
 export { sunLongitude, sunSign } from './sun';
 export {
   ASPECT_TR,

@@ -61,7 +61,9 @@ export default function Matches() {
                 {row.display_name}, {row.age}
               </Text>
               <Text style={styles.starter} numberOfLines={2}>
-                {userId ? (starterFor(row, userId) ?? t.match.noStarter) : ''}
+                {userId
+                  ? (starterFor(row, userId)?.question ?? t.match.noStarter)
+                  : ''}
               </Text>
             </View>
           </Link>

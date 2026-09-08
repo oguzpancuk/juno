@@ -9,7 +9,21 @@ import { SIGNS, signOf } from './signs';
  * coordinates). Zod-validated both when the app writes it and when any
  * row is read back.
  */
-const HouseNumberSchema = z.number().int().min(1).max(12);
+// A literal union so the parsed type is HouseNumber, not number.
+const HouseNumberSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+  z.literal(10),
+  z.literal(11),
+  z.literal(12),
+]);
 
 export const PublicPlacementSchema = z.object({
   longitude: z.number().min(0).lt(360),

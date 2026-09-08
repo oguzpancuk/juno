@@ -1,6 +1,6 @@
-import { SIGN_TR } from '@stardate/astro';
+import { ASPECT_TR, BODY_TR, SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -31,6 +31,7 @@ export default function Discover() {
 
   // Own profile first (for the chart), then the candidates scored against it.
   // State is set from promise callbacks, never synchronously in the effect.
+
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -94,6 +95,15 @@ export default function Discover() {
   };
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
+  // Id of the card whose detail is open; a new card is therefore collapsed.
+  const [detailFor, setDetailFor] = useState<string | null>(null);
+  // Engine-rendered detail for the visible card; the screen only lays it out.
+  const detail = useMemo(
+    () =>
+      me && current ? synastryReading(me.chart, current.row.chart, 3) : null,
+    [me, current],
+  );
+  const showDetail = current !== undefined && detailFor === current.row.id;
 
   return (
     <View style={styles.screen} testID="discover-screen">
@@ -169,6 +179,36 @@ export default function Discover() {
           <Text style={styles.why} testID="why">
             {current.why ?? t.discover.noAspectWhy}
           </Text>
+          <Pressable
+            testID="toggle-detail"
+            onPress={() =>
+              setDetailFor(showDetail ? null : (current.row.id ?? null))
+            }
+          >
+            <Text style={styles.link}>
+              {showDetail ? t.discover.hideDetail : t.discover.detail}
+            </Text>
+          </Pressable>
+          {showDetail && detail ? (
+            <View style={styles.detail} testID="detail">
+              <Text style={styles.detailText}>{detail.bandText}</Text>
+              <Text style={styles.detailLabel}>{t.discover.elements}</Text>
+              <Text style={styles.detailMuted}>{detail.sunElements}</Text>
+              <Text style={styles.detailMuted}>{detail.moonElements}</Text>
+              {detail.aspects.map((a) => (
+                <View
+                  key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
+                  style={styles.detailAspect}
+                >
+                  <Text style={styles.detailLabel}>
+                    {BODY_TR[a.aspect.planetA]} {ASPECT_TR[a.aspect.aspect]}{' '}
+                    {BODY_TR[a.aspect.planetB]}
+                  </Text>
+                  <Text style={styles.detailText}>{a.meaning}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.actions}>
             <Pressable
@@ -260,4 +300,14 @@ const styles = StyleSheet.create({
   buttonBusy: { opacity: 0.6 },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
   remaining: { color: '#5f5a7a', fontSize: 12, textAlign: 'center' },
+  detail: {
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2945',
+    paddingTop: 10,
+  },
+  detailLabel: { color: '#9a94b8', fontSize: 12, letterSpacing: 0.5 },
+  detailText: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
+  detailMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
+  detailAspect: { gap: 2, marginTop: 4 },
 });

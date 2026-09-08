@@ -1,8 +1,15 @@
-import { SIGN_TR } from '@stardate/astro';
+import { ASPECT_TR, BODY_TR, SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, Redirect, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
+import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 
@@ -12,19 +19,31 @@ export default function MatchScreen() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const [row, setRow] = useState<MatchProfileRow | null | 'loading'>('loading');
+  const [me, setMe] = useState<OwnProfile | null>(null);
 
   useEffect(() => {
     if (!userId || typeof id !== 'string') return;
     let cancelled = false;
-    void fetchMatch(id).then((r) => {
-      if (!cancelled) setRow(r);
-    });
+    void Promise.all([fetchMatch(id), fetchOwnProfile(userId)]).then(
+      ([r, p]) => {
+        if (cancelled) return;
+        setRow(r);
+        setMe(p.status === 'ready' ? p.profile : null);
+      },
+    );
     return () => {
       cancelled = true;
     };
   }, [userId, id]);
 
   // After every hook: hooks must run in the same order on each render.
+  const reading = useMemo(
+    () =>
+      me && row && row !== 'loading'
+        ? synastryReading(me.chart, row.chart, 5)
+        : null,
+    [me, row],
+  );
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
   if (row === 'loading') {
@@ -46,7 +65,11 @@ export default function MatchScreen() {
   }
   const starter = starterFor(row, userId);
   return (
-    <View style={styles.screen} testID="match-screen">
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      testID="match-screen"
+    >
       <Text style={styles.kicker}>{t.match.kicker}</Text>
       <Text style={styles.title}>{t.match.title(row.display_name)}</Text>
       <View style={styles.row}>
@@ -54,10 +77,45 @@ export default function MatchScreen() {
         <Chip label={t.chart.moon} value={SIGN_TR[row.big_three.moon]} />
         <Chip label={t.chart.rising} value={SIGN_TR[row.big_three.rising]} />
       </View>
-      <Text style={styles.starterLabel}>{t.match.starterLabel}</Text>
-      <Text style={styles.starter} testID="starter">
-        {starter ?? t.match.noStarter}
-      </Text>
+
+      <Text style={styles.label}>{t.match.starterLabel}</Text>
+      {starter ? (
+        <View style={styles.starterBox} testID="starter">
+          <Text style={styles.starterHead}>{starter.headline}</Text>
+          <Text style={styles.starterMeaning}>{starter.meaning}</Text>
+          <Text style={styles.starterQuestion}>{starter.question}</Text>
+        </View>
+      ) : (
+        <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
+      )}
+
+      {reading ? (
+        <View style={styles.summary} testID="synastry">
+          <Text style={styles.label}>{t.match.summary}</Text>
+          <Text style={styles.score}>
+            {reading.score}{' '}
+            <Text style={styles.scoreLabel}>{t.discover.scoreLabel}</Text>
+          </Text>
+          <Text style={styles.body}>{reading.bandText}</Text>
+          <Text style={styles.label}>{t.match.elements}</Text>
+          <Text style={styles.bodyMuted}>{reading.sunElements}</Text>
+          <Text style={styles.bodyMuted}>{reading.moonElements}</Text>
+          <Text style={styles.label}>{t.match.aspects}</Text>
+          {reading.aspects.map((a) => (
+            <View
+              key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
+              style={styles.aspect}
+            >
+              <Text style={styles.aspectHead}>
+                {BODY_TR[a.aspect.planetA]} {ASPECT_TR[a.aspect.aspect]}{' '}
+                {BODY_TR[a.aspect.planetB]}
+              </Text>
+              <Text style={styles.body}>{a.meaning}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       <Text style={styles.hint}>{t.match.chatSoon}</Text>
       <Link href="/matches" style={styles.link}>
         {t.match.allMatches}
@@ -65,7 +123,7 @@ export default function MatchScreen() {
       <Link href="/discover" style={styles.link}>
         {t.match.backToDiscover}
       </Link>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -79,13 +137,8 @@ function Chip({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0b0b1a',
-    padding: 24,
-    paddingTop: 96,
-    gap: 14,
-  },
+  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  content: { padding: 24, paddingTop: 80, gap: 12, paddingBottom: 48 },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -95,7 +148,7 @@ const styles = StyleSheet.create({
   },
   kicker: { color: '#7c6cff', fontSize: 14, letterSpacing: 2 },
   title: { color: '#f5f2ff', fontSize: 30, fontWeight: '800' },
-  row: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  row: { flexDirection: 'row', gap: 8, marginTop: 4 },
   chip: {
     flex: 1,
     backgroundColor: '#15142a',
@@ -110,22 +163,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  starterLabel: {
-    color: '#9a94b8',
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginTop: 20,
-  },
-  starter: {
-    color: '#f5f2ff',
-    fontSize: 20,
-    lineHeight: 28,
+  label: { color: '#9a94b8', fontSize: 12, letterSpacing: 1, marginTop: 12 },
+  starterBox: {
     backgroundColor: '#15142a',
     borderRadius: 16,
     padding: 16,
+    gap: 8,
   },
-  hint: { color: '#5f5a7a', fontSize: 12 },
+  starterHead: { color: '#c9c4e3', fontSize: 14 },
+  starterMeaning: { color: '#d9d5ef', fontSize: 15, lineHeight: 22 },
+  starterQuestion: {
+    color: '#f5f2ff',
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: '600',
+  },
+  summary: { gap: 6 },
+  score: { color: '#f5f2ff', fontSize: 34, fontWeight: '800' },
+  scoreLabel: { color: '#9a94b8', fontSize: 14, fontWeight: '400' },
+  body: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
+  bodyMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
+  aspect: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 4 },
+  aspectHead: { color: '#f5f2ff', fontSize: 14, fontWeight: '600' },
+  hint: { color: '#5f5a7a', fontSize: 12, marginTop: 8 },
   muted: { color: '#9a94b8' },
   link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
 });
