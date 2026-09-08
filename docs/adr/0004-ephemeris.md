@@ -3,6 +3,7 @@
 Status: accepted · Date: 2026-09-08
 
 ## Context
+
 ADR-0002 deferred the ephemeris source to its own ADR after a licence
 check. The candidates were Swiss Ephemeris (the de-facto standard in
 astrology software; AGPL, or a paid commercial licence for closed-source
@@ -13,6 +14,7 @@ AGPL is not usable; the paid licence is an avoidable cost for a solo MVP.
 The owner chose `astronomy-engine` when asked (2026-09-08).
 
 ## Decision
+
 - **Planetary positions:** `astronomy-engine` (MIT). Geocentric ecliptic
   longitudes of Sun–Pluto (Moon included) for the birth instant, tropical
   zodiac (the Turkish popular-astrology convention), no sidereal option.
@@ -30,6 +32,7 @@ The owner chose `astronomy-engine` when asked (2026-09-08).
   historical DST rules). The engine takes a UTC instant only.
 
 ## Consequences
+
 - No licence obligations beyond MIT attribution.
 - Accuracy is below Swiss Ephemeris (arcminutes vs. arcseconds) but far
   inside the 1° tolerance a sign/house/aspect product needs; the boundary

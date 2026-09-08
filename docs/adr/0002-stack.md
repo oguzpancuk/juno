@@ -3,6 +3,7 @@
 Status: accepted · Date: 2026-09-08
 
 ## Context
+
 stardate is a mobile-first dating app (swipe deck, profiles, matches,
 realtime chat, photos) plus one unusual piece: natal chart computation and
 compatibility scoring from birth date/time/place. The owner has no stack
@@ -10,6 +11,7 @@ preference and delegated the choice ("whatever such an app needs"); this
 ADR records the decision so it is a decision, not a guess.
 
 ## Decision
+
 - **TypeScript (strict), Node 22** — one language across app, engine and
   Edge Functions.
 - **Expo (React Native) + Expo Router** — a dating app lives on phones; Expo
@@ -33,6 +35,7 @@ ADR records the decision so it is a decision, not a guess.
 - **Deploy**: EAS Build/Submit for the app, hosted Supabase for the backend.
 
 ## Consequences
+
 - Local backend work needs Docker (`supabase start`); the battery does not
   depend on it — migrations are exercised by tests only once a feature adds
   them.

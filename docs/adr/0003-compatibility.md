@@ -3,6 +3,7 @@
 Status: accepted · Date: 2026-09-08
 
 ## Context
+
 The owner asked for "whatever the standard is" (PRD open question 2). A
 research pass (2026-09-08) found no single published standard: astro.com
 shows an inter-aspect grid and refuses to score; Sirius/Kepler and the
@@ -25,19 +26,20 @@ Per-vendor: exact weights, whether hard aspects subtract, and the 0–100
 mapping.
 
 ## Decision
+
 `compatibility(chartA, chartB)` in `packages/astro` implements the
 following. Every number here is the spec; the Vitest fixture pair in
 ROADMAP S6 is hand-computed from this table.
 
 **Bodies and weights** (conventional ordering; values from SolarSage):
 
-| Body | w |
-|---|---|
-| Sun, Moon | 1.0 |
-| Venus | 0.9 |
-| Mars, Ascendant | 0.8 |
-| Jupiter, Saturn | 0.7 |
-| Mercury | 0.6 |
+| Body                   | w   |
+| ---------------------- | --- |
+| Sun, Moon              | 1.0 |
+| Venus                  | 0.9 |
+| Mars, Ascendant        | 0.8 |
+| Jupiter, Saturn        | 0.7 |
+| Mercury                | 0.6 |
 | Uranus, Neptune, Pluto | 0.5 |
 
 Pair weight = wA × wB. Pairs where both bodies are Jupiter–Pluto are
@@ -45,13 +47,13 @@ skipped (generational, near-identical for same-age users).
 
 **Aspects and base values** (major aspects only):
 
-| Aspect | Angle | Max orb | Base |
-|---|---|---|---|
-| Conjunction | 0° | 8° | +4 |
-| Trine | 120° | 6° | +3 |
-| Sextile | 60° | 4° | +2 |
-| Opposition | 180° | 8° | −2 |
-| Square | 90° | 6° | −3 |
+| Aspect      | Angle | Max orb | Base |
+| ----------- | ----- | ------- | ---- |
+| Conjunction | 0°    | 8°      | +4   |
+| Trine       | 120°  | 6°      | +3   |
+| Sextile     | 60°   | 4°      | +2   |
+| Opposition  | 180°  | 8°      | −2   |
+| Square      | 90°   | 6°      | −3   |
 
 Max orb is multiplied by 0.75 when either body is Jupiter–Pluto.
 Override (Cafe Astrology): Saturn in conjunction, square or opposition to
@@ -79,6 +81,7 @@ harmonious preferred over tense when within 10 % of each other. Returned
 as `{ planetA, aspect, planetB, orb, term }`.
 
 ## Consequences
+
 - Deterministic, pure, symmetric, unit-testable; the table can be tuned
   in one place and every fixture flags the change.
 - The +10 damping and the element bonus are our synthesis, not

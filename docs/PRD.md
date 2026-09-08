@@ -4,6 +4,7 @@
      "works when…" clause; nothing ships without one. -->
 
 ## Problem
+
 Dating apps give people nothing to talk about. Profiles are photos plus a
 one-line bio, so the first message is either "hi" or a compliment, and most
 matches die unanswered. Meanwhile astrology is already the small talk of
@@ -13,6 +14,7 @@ is shallow. Nobody computes the actual natal chart, explains it, and turns
 two charts into a concrete, personal reason to talk.
 
 ## User
+
 A 20–35 year old in Istanbul, Ankara or Izmir who reads their horoscope,
 knows their rising sign (or wants to), uses Tinder/Bumble/Hinge and is bored
 of them. Turkish-speaking, iPhone user. They know their birth date and can
@@ -21,8 +23,10 @@ requires it. The single job: **find someone worth talking to, and have a
 first message that isn't "selam".**
 
 ## Core interactions
+
 <!-- Numbered. These are the product. "Works when…" must be checkable by a
      person clicking through the app. -->
+
 1. **Sign up and enter birth data** (place, date, time — all three
    required) — works when: after sign-in with Apple or email OTP and
    entering birth data, the app shows a chart with Sun, Moon and Ascendant
@@ -65,6 +69,7 @@ first message that isn't "selam".**
    to the sign-in screen.
 
 ## Non-goals
+
 - No LLM-generated text. All chart explanations and conversation starters
   are hand-written Turkish templates keyed by placement/aspect. (Revisit
   after v1; the Edge Function boundary keeps the door open.)
@@ -87,6 +92,7 @@ first message that isn't "selam".**
 - No web app.
 
 ## Constraints
+
 - **Platform:** iOS first via Expo + EAS; Expo Router; TypeScript strict.
   Backend is Supabase (Postgres + RLS, Auth, Storage, Realtime, Edge
   Functions). See `docs/adr/0002-stack.md`.
@@ -131,6 +137,7 @@ first message that isn't "selam".**
   work; `docs/ROADMAP.md` holds the walking-skeleton cut.
 
 ## Success signals
+
 - **Engine accuracy:** every reference chart in the Vitest suite matches
   astro.com within 1° for all 10 planets and the Ascendant (0 failures).
 - **Onboarding completion:** ≥ 70 % of users who create an account reach
@@ -144,9 +151,11 @@ first message that isn't "selam".**
   minute; no report goes unreviewed for more than 48 h during TestFlight.
 
 ## Open questions
+
 [Unresolved — owner answers these, agents don't guess them.]
 
 Resolved 2026-09-08 by the owner (kept for the audit trail):
+
 1. Geocoding: offline city list. → Constraints.
 2. Compatibility formula: "whatever the standard is, research and apply
    it". → `docs/adr/0003-compatibility.md`.
@@ -160,6 +169,7 @@ Resolved 2026-09-08 by the owner (kept for the audit trail):
 8. Birth time: required. → Interaction 1, Non-goals.
 
 Still open:
+
 - Does an Apple Developer Program membership exist for oguzpancuk, and is
   the App Store name "stardate" available? Answered in the first deploy
   session; blocks TestFlight only.

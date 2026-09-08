@@ -5,11 +5,13 @@
      Never rewrite old entries — this file is the audit trail. -->
 
 ## Upstream candidates
+
 <!-- Improvements made HERE to template-origin files (.claude/, contracts/,
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
 ## 2026-09-08 — owner answers to PRD open questions
+
 - All 8 answered: offline geocoding; standard synastry method researched
   and fixed as ADR-0003; Claude authors the ~360 Turkish snippets, owner
   reviews; distance filter (radius, default 50 km) replaces same-city;
@@ -27,6 +29,7 @@
   deploy session. Next: S0.
 
 ## 2026-09-08 — /spec + /mvp-scope
+
 - Owner decisions (asked in one batch): Turkey-first, Turkish UI; template
   text, no LLM; `astronomy-engine` (MIT) for ephemeris; MVP loop is
   swipe + mutual like + in-app chat. Recorded in `docs/PRD.md`.
@@ -43,6 +46,7 @@
   then S0 (skeleton boot + battery).
 
 ## 2026-09-08 — instantiated from maya 22e7efe
+
 - Repo created by /new-product. Owner delegated the stack choice (no
   technical preference); recorded as ADR-0002, not a guess.
 - Filled: CLAUDE.md commands + standards + deploy, verify.sh battery,
