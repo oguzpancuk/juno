@@ -1,11 +1,7 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": ["../../tsconfig.base.json", "expo/tsconfig.base"],
   "compilerOptions": {
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./*"]
     }

@@ -25,6 +25,17 @@
     "experiments": {
       "typedRoutes": true
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0b0b1a"
+        }
+      ]
+    ]
   }
 }

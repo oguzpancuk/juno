@@ -1,5 +1,5 @@
 import { SunPosition } from 'astronomy-engine';
-import { signOf, type Sign } from './signs.js';
+import { signOf, type Sign } from './signs';
 
 /** Apparent geocentric ecliptic longitude of the Sun, degrees in [0, 360). */
 export function sunLongitude(utc: Date): number {

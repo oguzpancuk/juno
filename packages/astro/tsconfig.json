@@ -6,5 +6,5 @@
     "types": ["vitest/globals"],
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "vitest.config.ts", "eslint.config.js"]
+  "include": ["src/**/*.ts", "vitest.config.ts"]
 }

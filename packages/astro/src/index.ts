@@ -1,2 +1,2 @@
-export { SIGNS, signOf, normalizeDegrees, type Sign } from './signs.js';
-export { sunLongitude, sunSign } from './sun.js';
+export { SIGNS, signOf, normalizeDegrees, type Sign } from './signs';
+export { sunLongitude, sunSign } from './sun';
