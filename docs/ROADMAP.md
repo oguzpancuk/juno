@@ -91,7 +91,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
       "24" hour quirk); the city index is warmed on screen mount; the profile row exists in local DB with a location (manual:
       Supabase Studio).
 - [x] **S6 — Discover with compatibility (PRD-4).** `compatibility(chartA,
-    chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
+  chartB)` in `packages/astro` implements `docs/adr/0003-compatibility.md`
       and returns 0–100, harmony/tension sums, every inter-aspect and the
       strongest one; `starterKey`/`parseStarterKey` encode the
       `likes.starter_key` contract; `describeAspectTr` renders the why-line.
