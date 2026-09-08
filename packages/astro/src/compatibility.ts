@@ -278,3 +278,33 @@ export function parseStarterKey(
 export function isLesserId(x: string, y: string): boolean {
   return x.toLowerCase() < y.toLowerCase();
 }
+
+/**
+ * Aspects inside one chart (natal), same table and orbs as synastry;
+ * generational outer–outer pairs are skipped for the same reason.
+ * Ordered by |term| desc so the UI can show the strongest first.
+ */
+export function natalAspects(chart: ChartForScoring): InterAspect[] {
+  const found: InterAspect[] = [];
+  for (let i = 0; i < BODIES.length; i++) {
+    for (let j = i + 1; j < BODIES.length; j++) {
+      const a = BODIES[i] ?? 'sun';
+      const b = BODIES[j] ?? 'sun';
+      if (OUTER.has(a) && OUTER.has(b)) continue;
+      const hit = aspectBetween(
+        a,
+        longitudeOf(chart, a),
+        b,
+        longitudeOf(chart, b),
+      );
+      if (hit) found.push(hit);
+    }
+  }
+  return found.sort(
+    (x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb,
+  );
+}
+
+export function elementOf(sign: Sign): 'fire' | 'earth' | 'air' | 'water' {
+  return ELEMENT[sign];
+}

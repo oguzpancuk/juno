@@ -1,0 +1,7 @@
+{
+  "very-low": "Haritalarınız birbirini zorluyor: gerilim açıları uyumdan fazla. Çekim olabilir ama sürdürmek emek ister.",
+  "low": "Ortalama altı bir uyum: ortak noktalar var ama sürtüşme de belirgin. Farklılıkları merak ederseniz iş görür.",
+  "mid": "Dengeli bir tablo: destekleyen açılar ve öğreten gerilimler bir arada. Sağlıklı ilişkilerin çoğu tam burada başlar.",
+  "high": "Güçlü bir uyum: haritalarınız birbirini kolayca destekliyor. Rahatlık gerçek, ama heyecanı siz eklemelisiniz.",
+  "very-high": "Nadir bir uyum: neredeyse her önemli nokta birbirini besliyor. Kolay geldiği için değerini küçümsemeyin."
+}

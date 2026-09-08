@@ -163,14 +163,22 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       (CC BY 4.0) and astronomy-engine (MIT).
       — done when: profile insert without `consent_at` is rejected by a
       CHECK constraint (battery) and the URL returns 200 (manual).
-- [ ] **Full Turkish content.** ~360 snippets in
-      `packages/astro/content/tr/*.json` (120 planet-in-sign, 120
-      planet-in-house, 12 Ascendant signs, ~105 aspect starters), authored by
-      Claude, reviewed by the owner, each keyed and validated by Zod; detail
-      screen per placement; aspects list on the chart screen.
+- [ ] **Full Turkish content (owner priority, before chat).** Professional
+      1–2-sentence interpretations for every combination the engine can
+      emit, as data in `packages/astro/content/tr/*.json` validated by Zod:
+      planet×sign (120) + rising sign (12), planet×house (120), retrograde
+      (8), natal aspects (55 body pairs × 5 = 275), synastry aspects (66
+      pairs × 5 = 330, each with an opening question), element pairs for
+      Sun and Moon (20), score bands (5). Engine gains `natalAspects(chart)`
+      and a ranked synastry summary. UI: chart screen shows sign + house
+      lines per planet and an aspects section; discover card keeps score +
+      one line; match screen and a compatibility-detail screen show the
+      top aspects with meaning and the pair-specific opening question.
+      Authored by Claude, reviewed by the owner.
       — done when: a Vitest asserts every key the engine can emit has a
-      non-empty snippet (battery); `screenshots/v1-placement-detail.png`;
-      owner sign-off recorded in NOTES.
+      non-empty snippet in every content file (battery);
+      `screenshots/c1-chart-texts.png`, `c1-aspects.png`, `c1-synastry.png`
+      show the texts on the real user; owner sign-off recorded in NOTES.
 - [ ] **Session in SecureStore.** The skeleton keeps the Supabase session
       (refresh token) in AsyncStorage, Supabase's documented Expo default but
       plaintext in the sandbox; wrap an AES key in expo-secure-store and

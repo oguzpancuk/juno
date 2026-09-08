@@ -1,0 +1,1022 @@
+{
+  "sun-conjunction-sun": {
+    "meaning": "Aynı burçta iki Güneş: birbirinizi anında tanırsınız, aynı dili konuşursunuz. Aynı gölgeleri de paylaşırsınız; kim ayna, kim ışık?",
+    "question": "Aynı burçtan biriyle daha önce anlaştın mı, yoksa fazla mı benziyorsunuz sence?"
+  },
+  "sun-sextile-sun": {
+    "meaning": "Kimlikleriniz birbirini destekler; yan yana durmak kolay, rekabet düşük. Sakin ama sağlam bir çekirdek.",
+    "question": "Yanında kendin gibi hissettiğin kaç kişi var; buna eklenebilir miyim?"
+  },
+  "sun-square-sun": {
+    "meaning": "İki güçlü irade, farklı yönlerde: gerilim var ama saygı da. Kimse boyun eğmez; müzakere ilişkinin kası olur.",
+    "question": "Haklı olmakla mutlu olmak arasında seçmen gerekse hangisini seçersin?"
+  },
+  "sun-trine-sun": {
+    "meaning": "Aynı elementten iki Güneş: enerjiniz aynı ritimde akar, birbirinizi büyütürsünüz. Kolay gelen bir arkadaşlık temeli.",
+    "question": "Sana en çok enerji veren şey ne; birlikte yapabileceğimiz bir şey mi?"
+  },
+  "sun-opposition-sun": {
+    "meaning": "Karşıt burçlar: eksik parçanız birbirinizde. Çekim güçlü, uzlaşı öğrenilecek şey.",
+    "question": "Zıt kutuplar birbirini çeker derler; sen buna inanır mısın?"
+  },
+  "sun-conjunction-moon": {
+    "meaning": "Klasik uyum açısı: biri ışık, diğeri sıcaklık. Biriniz yön verir, diğeri besler; birbirinizi doğal olarak tamamlarsınız.",
+    "question": "Sence bir ilişkide daha çok yön veren mi olursun, yoksa besleyen mi?"
+  },
+  "sun-sextile-moon": {
+    "meaning": "İrade ve ihtiyaç birbirini kolayca destekler; birlikte olmak rahat ve besleyici.",
+    "question": "Rahat hissettiğin insanları nasıl anlarsın?"
+  },
+  "sun-square-moon": {
+    "meaning": "Birinin isteği diğerinin ihtiyacını zorlar; yanlış anlaşılmalar olabilir. Açıkça söylemek her şeyi çözer.",
+    "question": "Sana ne iyi gelir; bunu söylemek kolay mı senin için?"
+  },
+  "sun-trine-moon": {
+    "meaning": "Kimlik ile duygu aynı dili konuşur; anlaşılmak için çabalamanız gerekmez. Ev gibi bir his.",
+    "question": "Bir insanla ilk anda anlaşmak sana olmuş bir şey mi?"
+  },
+  "sun-opposition-moon": {
+    "meaning": "Biri ne isterse diğeri tersini hisseder; çekim var ama ihtiyaç çevirisi gerekir. Sabır bu bağın anahtarı.",
+    "question": "Karşıtlıkların çekici olduğuna inanır mısın, yoksa yorucu mu bulursun?"
+  },
+  "sun-conjunction-mercury": {
+    "meaning": "Kimlik ile zihin buluşur: biriniz diğerini anında anlar ve anlatır. Sohbet bu bağın kalbi.",
+    "question": "Seninle saatlerce konuşabileceğimi hissediyorum; en sevdiğin sohbet konusu ne?"
+  },
+  "sun-sextile-mercury": {
+    "meaning": "Fikir ve kimlik birbirini destekler; konuşurken birbirinizi büyütürsünüz.",
+    "question": "Seni en çok hangi konuda konuşturmak lazım?"
+  },
+  "sun-square-mercury": {
+    "meaning": "Söz ile öz çelişir; biriniz diğerini yanlış anlayabilir. Niyeti sormak, varsaymaktan iyidir.",
+    "question": "Yanlış anlaşılmak seni ne kadar rahatsız eder?"
+  },
+  "sun-trine-mercury": {
+    "meaning": "Anlatan ve anlayan kolayca buluşur; zihinsel bir rahatlık var.",
+    "question": "Sana bir şey anlattığımda ilk ne düşünürsün: mantığı mı, hissi mi?"
+  },
+  "sun-opposition-mercury": {
+    "meaning": "Fikirler ve kimlik karşı karşıya: tartışma çok, uzlaşı öğrenilecek. Karşı görüş burada bir hediye.",
+    "question": "Birinin fikrini değiştirdiği en son an ne zamandı?"
+  },
+  "sun-conjunction-venus": {
+    "meaning": "Kimlik ile sevgi buluşur: biriniz diğerini olduğu gibi sever. Klasik romantik çekim.",
+    "question": "Bir insanda ilk fark ettiğin şey ne olur?"
+  },
+  "sun-sextile-venus": {
+    "meaning": "Sevgi ve kimlik birbirini destekler; birlikte olmak güzel ve kolay.",
+    "question": "Sana güzel gelen şeyleri nasıl seçersin?"
+  },
+  "sun-square-venus": {
+    "meaning": "Sevgi ile kimlik gerilir; beğeni ile kabul arasında fark. Kendin olmak sevilmekten önce gelir.",
+    "question": "Sevilmek için değişmen gerektiğini hissettiğin oldu mu?"
+  },
+  "sun-trine-venus": {
+    "meaning": "Sevgi kimliğe kolayca akar; birbirinizden hoşlanmanız zahmetsiz.",
+    "question": "Birine hemen ısınmak sana sık olur mu?"
+  },
+  "sun-opposition-venus": {
+    "meaning": "Sevgi ve kimlik karşı kutuplarda; çekim güçlü, beklentiler farklı. Konuşulmayan beklenti bu bağın tek riski.",
+    "question": "Bir ilişkiden beklediğin ilk şey ne?"
+  },
+  "sun-conjunction-mars": {
+    "meaning": "Kimlik ile eylem buluşur: enerjik, cesur, bazen rekabetçi bir bağ. Birlikte çok şey yaparsınız; kimin lider olduğu konuşulmalı.",
+    "question": "Rekabet seni ateşler mi, yorar mı?"
+  },
+  "sun-sextile-mars": {
+    "meaning": "Enerji ve kimlik birbirini destekler; birlikte harekete geçmek kolay.",
+    "question": "Birlikte yapılacak en iyi şey sence ne olurdu?"
+  },
+  "sun-square-mars": {
+    "meaning": "İrade ile eylem çatışır: çekim var ama sürtüşme de. Öfkeyi tutkuya çevirmek ikinizin işi.",
+    "question": "Tartışma sonrası barışmak sana kolay gelir mi?"
+  },
+  "sun-trine-mars": {
+    "meaning": "Enerji kimliği kolayca destekler; cesaret ve hareket ortak dil.",
+    "question": "Seni en son cesaretlendiren şey neydi?"
+  },
+  "sun-opposition-mars": {
+    "meaning": "Kimlik ile eylem karşı kutuplarda: güç mücadelesi ya da güçlü ortaklık. Rakip değil takım olmak seçim.",
+    "question": "Bir takımda kaptan mı olursun, motor mu?"
+  },
+  "sun-conjunction-ascendant": {
+    "meaning": "Biri kimliğiyle diğerinin görünüşüne dokunur: kendini onda görmek gibi. Hızlı ve doğal bir tanışıklık.",
+    "question": "İlk izlenimlerin genellikle doğru çıkar mı?"
+  },
+  "sun-sextile-ascendant": {
+    "meaning": "Kimlik ile görünüş birbirini destekler; ilk andan rahatsınız.",
+    "question": "Beni ilk gördüğünde ne düşündün?"
+  },
+  "sun-square-ascendant": {
+    "meaning": "Biri diğerini olduğundan farklı görür; beklenti ile gerçek arasında fark. Zamanla netleşir.",
+    "question": "İnsanların seni yanlış anladığı bir yönün var mı?"
+  },
+  "sun-trine-ascendant": {
+    "meaning": "Görünüş ve kimlik uyumlu; birbirinizi doğal bulursunuz.",
+    "question": "Doğal olduğunu hissettiğin anlar hangileri?"
+  },
+  "sun-opposition-ascendant": {
+    "meaning": "Biri diğerinin ilişki alanına düşer: partner enerjisi. Aynalama güçlü; kendi ışığını unutma.",
+    "question": "Sence ilişkide insan kendini daha çok mu bulur, daha çok mu kaybeder?"
+  },
+  "moon-conjunction-moon": {
+    "meaning": "Aynı duygusal dil: söylenmeden anlaşırsınız. Aynı gelgitleri yaşamak hem rahatlık hem risk.",
+    "question": "Kötü bir günde ne istersin: konuşmak mı, sessizlik mi?"
+  },
+  "moon-sextile-moon": {
+    "meaning": "Duygusal ihtiyaçlar birbirini destekler; rahat ve şefkatli bir bağ.",
+    "question": "Seni rahatlatan küçük bir alışkanlığın var mı?"
+  },
+  "moon-square-moon": {
+    "meaning": "Duygusal ihtiyaçlar farklı yönlere çeker; biri yakınlık isterken diğeri alan isteyebilir. İhtiyacı söylemek köprü.",
+    "question": "Sana iyi gelen şeyi söylemek mi kolay, tahmin edilmesini beklemek mi?"
+  },
+  "moon-trine-moon": {
+    "meaning": "Aynı elementten iki Ay: duygusal olarak evdesiniz. Kolay bir şefkat.",
+    "question": "Ev gibi hissettiğin bir insan oldu mu daha önce?"
+  },
+  "moon-opposition-moon": {
+    "meaning": "Duygusal ihtiyaçlar karşıt: biri ne isterse diğeri tersini. Çeviri ve sabır gerekir.",
+    "question": "Zıt ihtiyaçları olan iki insanın anlaşabileceğine inanır mısın?"
+  },
+  "moon-conjunction-mercury": {
+    "meaning": "Duygu ile zihin buluşur: biri hisseder, diğeri kelimeye döker. Konuşmak bu bağın şifası.",
+    "question": "Duygularını anlatmak mı kolay, dinlemek mi?"
+  },
+  "moon-sextile-mercury": {
+    "meaning": "Duygu ve düşünce birbirini destekler; konuşarak yakınlaşırsınız.",
+    "question": "En rahat konuştuğun konu ne?"
+  },
+  "moon-square-mercury": {
+    "meaning": "Hissedilen ile söylenen çelişir; yanlış anlaşılma tanıdık olabilir. Yavaş konuşmak hızlı anlaşmaktan iyi.",
+    "question": "Bir şeyi söyleyip pişman olduğun oldu mu?"
+  },
+  "moon-trine-mercury": {
+    "meaning": "Duygular kolayca kelimeye dönüşür; anlaşılmak zahmetsiz.",
+    "question": "Anlaşıldığını hissettiğin son an ne zamandı?"
+  },
+  "moon-opposition-mercury": {
+    "meaning": "Kalp ile akıl karşı kutuplarda; biri hisseder, diğeri analiz eder. İkisi de haklı.",
+    "question": "Sen kalbinle mi karar verirsin, aklınla mı?"
+  },
+  "moon-conjunction-venus": {
+    "meaning": "Şefkat ile sevgi buluşur: yumuşak, sıcak, besleyici bir bağ. Klasik sevgi açılarından biri.",
+    "question": "Birine bakım göstermek senin için nasıl bir şey?"
+  },
+  "moon-sextile-venus": {
+    "meaning": "Duygusal ihtiyaç ve sevgi dili uyumlu; birbirinize iyi bakarsınız.",
+    "question": "Seni en iyi ne besler?"
+  },
+  "moon-square-venus": {
+    "meaning": "İhtiyaç ile istek gerilir; biri güven isterken diğeri keyif isteyebilir. Küçük jestler çözer.",
+    "question": "Sevgiyi nasıl göstermeyi seversin?"
+  },
+  "moon-trine-venus": {
+    "meaning": "Sevgi ve şefkat aynı ritimde; zahmetsiz bir yakınlık.",
+    "question": "Zahmetsiz gelen ilişkilere güvenir misin?"
+  },
+  "moon-opposition-venus": {
+    "meaning": "Sevgi ile ihtiyaç karşı kutuplarda: çekim var, karşılık farklı. Ne istediğini söylemek gerekir.",
+    "question": "Sevgi dilin ne; söz mü, dokunuş mu, zaman mı?"
+  },
+  "moon-conjunction-mars": {
+    "meaning": "Duygu ile arzu buluşur: yoğun, tutkulu, korumacı. Gerilim de hızlı gelir; ateşi yönetmek ikinizin işi.",
+    "question": "Seni en çabuk ne kızdırır, ne yumuşatır?"
+  },
+  "moon-sextile-mars": {
+    "meaning": "Duygu ve enerji birbirini destekler; birbirinizi korursunuz.",
+    "question": "Birini koruduğunu hissettiğin bir an var mı?"
+  },
+  "moon-square-mars": {
+    "meaning": "Duygusal tepkiler ani ve sert; alınganlık ve öfke tanıdık olabilir. Duraklamak kurtarır.",
+    "question": "Kızgınken konuşur musun, sessizleşir misin?"
+  },
+  "moon-trine-mars": {
+    "meaning": "Duygu ve eylem uyumlu; korumacı ve cesur bir bağ.",
+    "question": "Cesaret sana neyi hatırlatır?"
+  },
+  "moon-opposition-mars": {
+    "meaning": "Duygu ile arzu karşı kutuplarda; çekim ve gerilim bir arada. Öfkenin altındaki ihtiyacı bul.",
+    "question": "Tartışmalar seni yakınlaştırır mı, uzaklaştırır mı?"
+  },
+  "moon-conjunction-ascendant": {
+    "meaning": "Duygu ile görünüş buluşur: biri diğerinin yüzünde huzur bulur. Hızlı bir yakınlık.",
+    "question": "Yüzümde ilk ne gördün?"
+  },
+  "moon-sextile-ascendant": {
+    "meaning": "Duygu ve görünüş uyumlu; ilk andan rahat hissedersiniz.",
+    "question": "Rahat hissettiğin ortamı nasıl anlarsın?"
+  },
+  "moon-square-ascendant": {
+    "meaning": "Biri diğerini olduğundan farklı hisseder; ilk izlenim yanıltabilir. Zaman doğruyu gösterir.",
+    "question": "İlk izlenimin seni yanılttığı oldu mu?"
+  },
+  "moon-trine-ascendant": {
+    "meaning": "Duygusal uyum ve doğal rahatlık; şefkat kolay.",
+    "question": "Şefkati göstermek mi kolay, almak mı?"
+  },
+  "moon-opposition-ascendant": {
+    "meaning": "Duygu ilişki alanına düşer: biri diğerinde yuva arar. Bakım ile bağımlılık arasında ince çizgi.",
+    "question": "Bir ilişkide yuva olmak mı istersin, yuva bulmak mı?"
+  },
+  "mercury-conjunction-mercury": {
+    "meaning": "Aynı zihinsel dil: birbirinizin cümlesini tamamlarsınız. Sohbet bitmez; dinlemeyi bilerek eklemek gerekir.",
+    "question": "Sohbetlerin bitmesini istemediğin biri oldu mu?"
+  },
+  "mercury-sextile-mercury": {
+    "meaning": "Zihinler birbirini destekler; fikir alışverişi kolay ve keyifli.",
+    "question": "En son seni düşündüren fikir neydi?"
+  },
+  "mercury-square-mercury": {
+    "meaning": "Farklı düşünce tarzları çatışır; tartışma sık, anlaşma zor. Farklı bakış bir hediye.",
+    "question": "Tartışmayı sever misin, kaçınır mısın?"
+  },
+  "mercury-trine-mercury": {
+    "meaning": "Zihinsel uyum: aynı hızda düşünür, birbirinizi anlarsınız.",
+    "question": "Hızlı düşünen biriyle anlaşmak sana kolay gelir mi?"
+  },
+  "mercury-opposition-mercury": {
+    "meaning": "Zıt düşünce tarzları: biri ayrıntı, diğeri bütün. Birbirinizi tamamlarsınız, önce sinir edersiniz.",
+    "question": "Bir konuyu bütünüyle mi anlarsın, parça parça mı?"
+  },
+  "mercury-conjunction-venus": {
+    "meaning": "Zihin ile sevgi buluşur: konuşmak flörtün kendisi. Kelimeler bu bağda okşar.",
+    "question": "Sana söylenen en güzel söz neydi?"
+  },
+  "mercury-sextile-venus": {
+    "meaning": "Fikir ve sevgi birbirini destekler; nazik ve keyifli bir sohbet.",
+    "question": "Nazik bulduğun bir söz var mı?"
+  },
+  "mercury-square-venus": {
+    "meaning": "Söz ile sevgi gerilir; iltifat yanlış anlaşılabilir. Açıklık zarafetten önce gelir.",
+    "question": "İltifat almak seni rahatlatır mı, utandırır mı?"
+  },
+  "mercury-trine-venus": {
+    "meaning": "Sevgi ve sohbet uyumlu; birbirinizi konuşarak seversiniz.",
+    "question": "Konuşarak yakınlaşmak mı, susarak mı?"
+  },
+  "mercury-opposition-venus": {
+    "meaning": "Fikir ile sevgi karşı kutuplarda; biri anlatmak, diğeri hissetmek ister. İkisini de dinle.",
+    "question": "Sevgiyi anlatmak mı zor, hissetmek mi?"
+  },
+  "mercury-conjunction-mars": {
+    "meaning": "Zihin ile eylem buluşur: hızlı, keskin, tartışmacı. Fikirler kıvılcım çıkarır; dozu ayarlamak gerekir.",
+    "question": "Tartışırken kazanmak mı, anlaşmak mı istersin?"
+  },
+  "mercury-sextile-mars": {
+    "meaning": "Düşünce ve enerji birbirini destekler; planlar hızla harekete geçer.",
+    "question": "Birlikte planlayıp yapabileceğimiz bir şey aklına geliyor mu?"
+  },
+  "mercury-square-mars": {
+    "meaning": "Söz ile eylem çatışır; sert dil ve sabırsızlık. Sözün gücü doz ister.",
+    "question": "Sert bir söz seni ne kadar etkiler?"
+  },
+  "mercury-trine-mars": {
+    "meaning": "Fikir ve eylem uyumlu; birbirinizi harekete geçirirsiniz.",
+    "question": "Seni en son harekete geçiren fikir neydi?"
+  },
+  "mercury-opposition-mars": {
+    "meaning": "Fikirler eylemle karşı karşıya; savunma ve saldırı. Karşı görüş burada strateji.",
+    "question": "Bir fikri savunmak seni yorar mı, canlandırır mı?"
+  },
+  "mercury-conjunction-ascendant": {
+    "meaning": "Zihin ile görünüş buluşur: biri diğerini hemen çözer. Konuşmak kolay, tanışmak hızlı.",
+    "question": "Beni ilk cümlede çözdüğünü söylesem inanır mısın?"
+  },
+  "mercury-sextile-ascendant": {
+    "meaning": "Fikir ve görünüş uyumlu; ilk sohbet rahat akar.",
+    "question": "İlk sohbette neye dikkat edersin?"
+  },
+  "mercury-square-ascendant": {
+    "meaning": "Söz ile izlenim çelişir; yanlış anlaşılma. Niyeti sor.",
+    "question": "Yanlış anlaşıldığını nasıl fark edersin?"
+  },
+  "mercury-trine-ascendant": {
+    "meaning": "Zihinsel rahatlık; birbirinizle konuşmak doğal.",
+    "question": "Doğal gelen sohbetler nadir mi sence?"
+  },
+  "mercury-opposition-ascendant": {
+    "meaning": "Zihin ilişki alanında; biri diğerinin fikirlerini şekillendirir. Kendi düşünceni de koru.",
+    "question": "Fikrini değiştiren insanlara güvenir misin?"
+  },
+  "venus-conjunction-venus": {
+    "meaning": "Aynı sevgi dili: neyi sevdiğinizi, nasıl sevdiğinizi anında anlarsınız. Estetik ve keyif ortak paydanız.",
+    "question": "Sevgi gösterme tarzının seninkine benzediğini hissettiğin biri oldu mu?"
+  },
+  "venus-sextile-venus": {
+    "meaning": "Sevgi dilleri birbirini destekler; zarif ve keyifli bir bağ.",
+    "question": "Sevdiğin şeyleri paylaşmak sana ne hissettirir?"
+  },
+  "venus-square-venus": {
+    "meaning": "Sevgi dilleri farklı; biri jest, diğeri söz ister. Farkı öğrenmek ilişkinin kendisi.",
+    "question": "Sevgi dilin ne; söz mü, jest mi, zaman mı?"
+  },
+  "venus-trine-venus": {
+    "meaning": "Sevgide aynı frekans: birbirinizden hoşlanmak zahmetsiz.",
+    "question": "Zahmetsiz gelen çekim sana şüpheli mi gelir, güzel mi?"
+  },
+  "venus-opposition-venus": {
+    "meaning": "Karşıt sevgi dilleri: çekim güçlü, beklenti farklı. Farkı merak etmek işe yarar.",
+    "question": "Senden çok farklı sevgi gösteren biriyle anlaşabilir misin?"
+  },
+  "venus-conjunction-mars": {
+    "meaning": "Aşk ile arzu buluşur: klasik çekim açısı. Kimya güçlü; ateşi beslemek ikinizin işi.",
+    "question": "Kimya mı önemli, uyum mu?"
+  },
+  "venus-sextile-mars": {
+    "meaning": "Sevgi ve tutku birbirini destekler; sıcak ve dengeli bir çekim.",
+    "question": "Sıcak ve sakin bir çekime inanır mısın?"
+  },
+  "venus-square-mars": {
+    "meaning": "Sevgi ile arzu gerilir: çekim güçlü ama zamanlama farklı. Tutkuyu yönetmek gerekir.",
+    "question": "Tutku mu daha zor, sabır mı?"
+  },
+  "venus-trine-mars": {
+    "meaning": "Aşk ve arzu aynı ritimde; şefkat ve heyecan bir arada.",
+    "question": "Heyecan ve huzur aynı ilişkide olur mu sence?"
+  },
+  "venus-opposition-mars": {
+    "meaning": "Aşk ile arzu karşı kutuplarda: itme ve çekme. Dansı öğrenmek gerekir.",
+    "question": "İtme-çekme oyunlarını sever misin, yorucu mu bulursun?"
+  },
+  "venus-conjunction-ascendant": {
+    "meaning": "Sevgi ile görünüş buluşur: biri diğerini ilk bakışta çekici bulur. Klasik ilk görüş açısı.",
+    "question": "İlk görüşte çekime inanır mısın?"
+  },
+  "venus-sextile-ascendant": {
+    "meaning": "Sevgi ve görünüş uyumlu; birbirinizden hoşlanmak kolay.",
+    "question": "Birinden hoşlandığını nasıl anlarsın?"
+  },
+  "venus-square-ascendant": {
+    "meaning": "Beğeni ile izlenim gerilir; biri diğerini olduğundan farklı bekler. Gerçeği sev.",
+    "question": "Beklentinin gerçekle çeliştiği bir an yaşadın mı?"
+  },
+  "venus-trine-ascendant": {
+    "meaning": "Zarif ve doğal bir çekim; birbirinizi güzel bulursunuz.",
+    "question": "Güzellik senin için ne demek?"
+  },
+  "venus-opposition-ascendant": {
+    "meaning": "Sevgi ilişki alanına düşer: partner enerjisi güçlü. Sevilmek için kendini kaybetme.",
+    "question": "Sence insan sevince değişir mi?"
+  },
+  "mars-conjunction-mars": {
+    "meaning": "Aynı eylem dili: birlikte hızlı ve etkili olursunuz. Rekabet kıvılcım çıkarabilir; takım olmak seçim.",
+    "question": "Rakip mi olurduk, takım mı?"
+  },
+  "mars-sextile-mars": {
+    "meaning": "Enerjiler birbirini destekler; birlikte hareket etmek kolay.",
+    "question": "Birlikte spor yapmak fikri sana nasıl geliyor?"
+  },
+  "mars-square-mars": {
+    "meaning": "Enerjiler çatışır; sabırsızlık ve güç mücadelesi. Öfkeyi hedefe çevir.",
+    "question": "Tartışırken ilk kim pes eder sence?"
+  },
+  "mars-trine-mars": {
+    "meaning": "Enerjide uyum; birbirinizi yormadan harekete geçirirsiniz.",
+    "question": "Enerjini kim yükseltir, kim düşürür?"
+  },
+  "mars-opposition-mars": {
+    "meaning": "Karşıt eylem tarzları: biri hızlı, diğeri stratejik. Rakip değil ortak olmak gerekir.",
+    "question": "Sen hızlı mı karar verirsin, planlı mı?"
+  },
+  "mars-conjunction-ascendant": {
+    "meaning": "Enerji ile görünüş buluşur: biri diğerini harekete geçirir. Cesur ve doğrudan bir tanışma.",
+    "question": "İlk adımı sen mi atarsın, beklersin mi?"
+  },
+  "mars-sextile-ascendant": {
+    "meaning": "Enerji ve görünüş uyumlu; birlikte harekete geçmek kolay.",
+    "question": "Seni harekete geçiren tanışmalar oldu mu?"
+  },
+  "mars-square-ascendant": {
+    "meaning": "İrade ile izlenim çatışır; agresif algılanma. Enerjiyi yumuşat.",
+    "question": "Doğrudanlığı sever misin, yumuşaklığı mı?"
+  },
+  "mars-trine-ascendant": {
+    "meaning": "Enerjik ve rahat bir uyum; doğal bir cesaret.",
+    "question": "Cesaret sana çekici gelir mi?"
+  },
+  "mars-opposition-ascendant": {
+    "meaning": "Eylem ilişki alanında: güç mücadelesi ya da güçlü ortaklık. Rakip değil ortak ara.",
+    "question": "İlişkide güç dengesi sence konuşulur mu, hissedilir mi?"
+  },
+  "ascendant-conjunction-ascendant": {
+    "meaning": "Aynı görünüş dili: birbirinizi ilk anda tanırsınız. Benzer yüzler, benzer maskeler.",
+    "question": "Benzer insanlara mı çekilirsin, farklı olanlara mı?"
+  },
+  "ascendant-sextile-ascendant": {
+    "meaning": "Görünüşler birbirini destekler; ilk izlenim karşılıklı olumlu.",
+    "question": "İlk izlenimin ne kadar önemli sence?"
+  },
+  "ascendant-square-ascendant": {
+    "meaning": "Görünüşler çatışır; ilk izlenim yanıltıcı. Zaman doğruyu gösterir.",
+    "question": "İlk izlenimi düzelttiğin biri oldu mu?"
+  },
+  "ascendant-trine-ascendant": {
+    "meaning": "Doğal bir uyum; aynı ritimde girersiniz ortama.",
+    "question": "Aynı ritimde olduğunu hissettiğin biri var mı?"
+  },
+  "ascendant-opposition-ascendant": {
+    "meaning": "Karşıt yükselenler: biri diğerinin tam ilişki noktası. Klasik partner açısı; eksik parça birbirinizde.",
+    "question": "Eksik parçanı birinde bulmak sana romantik mi gelir, tehlikeli mi?"
+  },
+  "sun-conjunction-jupiter": {
+    "meaning": "Kimlik ile bereket buluşur: biri diğerini büyütür, cesaretlendirir. Birlikteyken hayat daha geniş görünür.",
+    "question": "Seni en son kim büyüttü; bunu fark etmiş miydin?"
+  },
+  "sun-sextile-jupiter": {
+    "meaning": "İyimserlik kimliği destekler; birlikte planlar büyür.",
+    "question": "Büyük bir hayalin var mı; anlatır mısın?"
+  },
+  "sun-square-jupiter": {
+    "meaning": "Fazla vaat ve abartı; biri diğerini şişirebilir. Ölçü ikinizin işi.",
+    "question": "Bir şeyi abarttığın için pişman olduğun oldu mu?"
+  },
+  "sun-trine-jupiter": {
+    "meaning": "Şans ve kimlik uyumlu; yanınızda hayat kolaylaşır.",
+    "question": "Şanslı hissettiğin dönemler oldu mu?"
+  },
+  "sun-opposition-jupiter": {
+    "meaning": "Kimlik ile inanç karşı karşıya; farklı hayat felsefeleri. Merak köprü olur.",
+    "question": "Hayat felsefeni tek cümleyle söylesen ne olurdu?"
+  },
+  "sun-conjunction-saturn": {
+    "meaning": "Kimlik ile yapı buluşur: biri diğerine ciddiyet ve süreklilik verir. Ağır ama kalıcı bir bağ.",
+    "question": "Uzun süreli ilişkiler sana güven mi verir, ağırlık mı?"
+  },
+  "sun-sextile-saturn": {
+    "meaning": "Sorumluluk kimliği destekler; güvenilir bir ortaklık.",
+    "question": "Güvenilir olduğunu düşündüğün şey ne?"
+  },
+  "sun-square-saturn": {
+    "meaning": "Biri diğerini kısıtlar ya da yargılar gibi hissedebilir; sınav teması. Saygı ilişkinin zemini.",
+    "question": "Eleştiri alınca ne yaparsın: savunur musun, dinler misin?"
+  },
+  "sun-trine-saturn": {
+    "meaning": "Yapı ve kimlik uyumlu; birbirinize dayanabilirsiniz.",
+    "question": "Dayanabileceğin insanları nasıl seçersin?"
+  },
+  "sun-opposition-saturn": {
+    "meaning": "Kimlik ile otorite karşı karşıya; güç ve sorumluluk çekişmesi. Eşit ortaklık gerekir.",
+    "question": "İlişkide eşitlik senin için ne demek?"
+  },
+  "sun-conjunction-uranus": {
+    "meaning": "Kimlik ile özgürlük buluşur: heyecan verici, öngörülemez, elektrikli. Sıkıcı olmayacak.",
+    "question": "Sürprizleri sever misin, planları mı?"
+  },
+  "sun-sextile-uranus": {
+    "meaning": "Yenilik kimliği destekler; birbirinizi özgürleştirirsiniz.",
+    "question": "Seni en son ne şaşırttı?"
+  },
+  "sun-square-uranus": {
+    "meaning": "Ani kopuşlar ve huzursuzluk; özgürlük ile bağlılık gerilir. Alan bırakmak gerekir.",
+    "question": "Kişisel alan senin için ne kadar önemli?"
+  },
+  "sun-trine-uranus": {
+    "meaning": "Özgünlük ve kimlik uyumlu; farklı olmak ortak dil.",
+    "question": "Farklı olmak sana çekici gelir mi?"
+  },
+  "sun-opposition-uranus": {
+    "meaning": "Kimlik ile özgürlük karşı karşıya; biri bağ isterken diğeri alan. Mesafeyi konuşarak kur.",
+    "question": "Bağlılık ile özgürlük aynı anda mümkün mü sence?"
+  },
+  "sun-conjunction-neptune": {
+    "meaning": "Kimlik ile hayal buluşur: biri diğerini idealize eder. Büyülü ama bulanık; gerçeği görmek gerekir.",
+    "question": "Birini idealize ettiğini fark ettiğin oldu mu?"
+  },
+  "sun-sextile-neptune": {
+    "meaning": "İlham kimliği destekler; sanat ve şefkat ortak dil.",
+    "question": "Seni en son ne ilhamlandırdı?"
+  },
+  "sun-square-neptune": {
+    "meaning": "Yanılsama ve hayal kırıklığı riski; biri diğerini yanlış görür. Netlik şefkatten önce.",
+    "question": "Gerçeği duymak mı kolay, söylemek mi?"
+  },
+  "sun-trine-neptune": {
+    "meaning": "Sezgi ve kimlik uyumlu; anlaşılmak için konuşmanız gerekmez.",
+    "question": "Söylemeden anlaşılmak sana rahatlık mı verir, tedirginlik mi?"
+  },
+  "sun-opposition-neptune": {
+    "meaning": "Kimlik ile ideal karşı karşıya; biri diğerinde kaybolabilir. Kendi sınırını koru.",
+    "question": "Bir ilişkide kendini kaybettiğin oldu mu?"
+  },
+  "sun-conjunction-pluto": {
+    "meaning": "Kimlik ile güç buluşur: yoğun, dönüştürücü, kaçınılmaz. Bu bağ ikinizi de değiştirir.",
+    "question": "Seni değiştiren bir ilişki oldu mu?"
+  },
+  "sun-sextile-pluto": {
+    "meaning": "Dönüşüm kimliği destekler; birbirinizi güçlendirirsiniz.",
+    "question": "Güçlü hissettiğin anlar hangileri?"
+  },
+  "sun-square-pluto": {
+    "meaning": "Güç mücadelesi ve kontrol; biri diğerini yönetmek isteyebilir. Gücü paylaşmak gerekir.",
+    "question": "Kontrol senin için güvenlik mi, tehlike mi?"
+  },
+  "sun-trine-pluto": {
+    "meaning": "Güç ve kimlik uyumlu; derin ve sadık bir bağ.",
+    "question": "Derinlik sana çekici mi gelir, korkutucu mu?"
+  },
+  "sun-opposition-pluto": {
+    "meaning": "Kimlik ile güç karşı karşıya; manipülasyon ya da dönüşüm. Dürüstlük tek yol.",
+    "question": "Bir ilişkide en çok neyin dürüst olmasını istersin?"
+  },
+  "moon-conjunction-jupiter": {
+    "meaning": "Duygu ile bereket buluşur: biri diğerinin kalbini genişletir. Sıcak, cömert, güvenli.",
+    "question": "Kendini en cömert hissettiğin an ne zamandı?"
+  },
+  "moon-sextile-jupiter": {
+    "meaning": "İyimserlik duyguyu destekler; birlikte iyi hissetmek kolay.",
+    "question": "İyi hissettiren insanları nasıl anlarsın?"
+  },
+  "moon-square-jupiter": {
+    "meaning": "Duygusal abartı ve aşırı beklenti; hayal kırıklığı riski. Ölçülü umut daha uzun sürer.",
+    "question": "Fazla umut ettiğin için kırıldığın oldu mu?"
+  },
+  "moon-trine-jupiter": {
+    "meaning": "Duygusal güven ve bolluk; yanınızda rahat.",
+    "question": "Rahat hissettiren şeyler listesi yapsak ilk ne olurdu?"
+  },
+  "moon-opposition-jupiter": {
+    "meaning": "Duygu ile inanç karşı karşıya; farklı huzur tanımları. Merak köprü.",
+    "question": "Huzur senin için ne demek?"
+  },
+  "moon-conjunction-saturn": {
+    "meaning": "Duygu ile yapı buluşur: biri diğerine sağlamlık verir, diğeri sıcaklık. Ciddi ve sadık; sevgiyi göstermek öğrenilecek.",
+    "question": "Sevgiyi göstermek mi zor, hissetmek mi?"
+  },
+  "moon-sextile-saturn": {
+    "meaning": "Sorumluluk duyguyu destekler; güvenilir bir şefkat.",
+    "question": "Güvenilir şefkat sana neyi hatırlatır?"
+  },
+  "moon-square-saturn": {
+    "meaning": "Duygusal mesafe ve soğukluk hissi; biri diğerini yargılıyor gibi. Şefkat bilerek verilmeli.",
+    "question": "Soğuk davranıldığını hissettiğinde ne yaparsın?"
+  },
+  "moon-trine-saturn": {
+    "meaning": "Duygusal istikrar; birbirinize dayanırsınız.",
+    "question": "İstikrar seni rahatlatır mı, sıkar mı?"
+  },
+  "moon-opposition-saturn": {
+    "meaning": "Duygu ile sorumluluk karşı karşıya; biri ihtiyaç, diğeri görev görür. Dengeyi konuşarak kur.",
+    "question": "İhtiyacını söylemek sana zor gelir mi?"
+  },
+  "moon-conjunction-uranus": {
+    "meaning": "Duygu ile özgürlük buluşur: heyecan verici ama dalgalı. Güvende hissetmek için ritim gerekir.",
+    "question": "Heyecan mı istersin, huzur mu?"
+  },
+  "moon-sextile-uranus": {
+    "meaning": "Özgünlük duyguyu destekler; farklı bir duygusal dil paylaşırsınız.",
+    "question": "Duygularını sıra dışı bulan oldu mu?"
+  },
+  "moon-square-uranus": {
+    "meaning": "Duygusal dalgalanma ve ani kopuşlar; biri diğerini tedirgin edebilir. Alan bırak.",
+    "question": "Ani değişimler seni heyecanlandırır mı, tedirgin mi eder?"
+  },
+  "moon-trine-uranus": {
+    "meaning": "Duygusal özgürlük ve rahatlık; birbirinizi sıkmazsınız.",
+    "question": "Sıkılmamak sence bir ilişkinin ne kadar önemli parçası?"
+  },
+  "moon-opposition-uranus": {
+    "meaning": "Duygu ile özgürlük karşı karşıya; yakınlık ile mesafe çekişir. Ritmi birlikte bulun.",
+    "question": "Yakınlıktan kaçtığın oldu mu?"
+  },
+  "moon-conjunction-neptune": {
+    "meaning": "Duygu ile hayal buluşur: sezgisel, şefkatli, sınırsız. Kimin duygusu kimin, ayırt etmek gerekir.",
+    "question": "Başkasının duygusunu üstlendiğin olur mu?"
+  },
+  "moon-sextile-neptune": {
+    "meaning": "Şefkat duyguyu destekler; ruhsal bir yakınlık.",
+    "question": "Ruhsal yakınlık senin için ne demek?"
+  },
+  "moon-square-neptune": {
+    "meaning": "Duygusal yanılsama ve kaçış; biri diğerini kurtarmak ister. Gerçek ihtiyaç konuşulmalı.",
+    "question": "Birini kurtarmaya çalıştığın oldu mu?"
+  },
+  "moon-trine-neptune": {
+    "meaning": "Derin empati; anlaşılmak zahmetsiz.",
+    "question": "Anlaşıldığını en çok ne zaman hissettin?"
+  },
+  "moon-opposition-neptune": {
+    "meaning": "Duygu ile ideal karşı karşıya; hayal kırıklığı riski. Sınır koy.",
+    "question": "Hayal kırıklığından nasıl toparlanırsın?"
+  },
+  "moon-conjunction-pluto": {
+    "meaning": "Duygu ile güç buluşur: yoğun, sahiplenici, dönüştürücü. Kıskançlık ve derinlik bir arada.",
+    "question": "Kıskançlık sence sevginin parçası mı, düşmanı mı?"
+  },
+  "moon-sextile-pluto": {
+    "meaning": "Dönüşüm duyguyu destekler; duygusal derinlik.",
+    "question": "Derin bir bağ kurduğunu nasıl anlarsın?"
+  },
+  "moon-square-pluto": {
+    "meaning": "Duygusal güç mücadelesi ve takıntı; kontrol arzusu. Bırakmak gerekir.",
+    "question": "Bırakmak sana zor gelir mi?"
+  },
+  "moon-trine-pluto": {
+    "meaning": "Derin ve sadık duygusal bağ; kriz anında birliktesiniz.",
+    "question": "Zor zamanda yanında kimi istersin?"
+  },
+  "moon-opposition-pluto": {
+    "meaning": "Duygu ile güç karşı karşıya; manipülasyon riski. Duygusal özerklik koru.",
+    "question": "Duygusal özgürlük senin için ne demek?"
+  },
+  "mercury-conjunction-jupiter": {
+    "meaning": "Zihin ile bilgelik buluşur: biri diğerinin fikrini büyütür. Uzun, geniş sohbetler.",
+    "question": "En uzun sohbetin ne hakkındaydı?"
+  },
+  "mercury-sextile-jupiter": {
+    "meaning": "Öğrenme ve iyimserlik; fikirler büyür.",
+    "question": "Bana öğretebileceğin bir şey var mı?"
+  },
+  "mercury-square-jupiter": {
+    "meaning": "Aşırı vaat ve abartılı fikir; ayrıntı kaçar. Somut kal.",
+    "question": "Ayrıntı mı önemli, bütün mü?"
+  },
+  "mercury-trine-jupiter": {
+    "meaning": "Zihinsel genişlik; öğretmek ve öğrenmek kolay.",
+    "question": "Öğrenmeyi en çok sevdiğin konu ne?"
+  },
+  "mercury-opposition-jupiter": {
+    "meaning": "Fikir ile inanç karşı karşıya; farklı doğrular. Karşı görüşü merak et.",
+    "question": "İnancının sarsıldığı bir an oldu mu?"
+  },
+  "mercury-conjunction-saturn": {
+    "meaning": "Zihin ile yapı buluşur: ciddi, derin, disiplinli sohbet. Az ama öz.",
+    "question": "Az konuşan insanlara güvenir misin?"
+  },
+  "mercury-sextile-saturn": {
+    "meaning": "Disiplinli düşünce; planlar sağlam.",
+    "question": "Plan yapmayı sever misin?"
+  },
+  "mercury-square-saturn": {
+    "meaning": "Zihinsel çekingenlik ve yargılanma hissi; sözler ağır. Kendi sesini bul.",
+    "question": "Söz söylemekten çekindiğin oldu mu?"
+  },
+  "mercury-trine-saturn": {
+    "meaning": "Yapısal bir zihinsel uyum; güvenilir sözler.",
+    "question": "Verilen sözün tutulması senin için ne kadar önemli?"
+  },
+  "mercury-opposition-saturn": {
+    "meaning": "Fikir ile otorite karşı karşıya; eleştiri teması. Saygıyla dinle.",
+    "question": "Eleştiriyi nasıl alırsın?"
+  },
+  "mercury-conjunction-uranus": {
+    "meaning": "Zihin ile özgünlük buluşur: elektrikli, parlak, ani fikirler. Sohbet hiç sıkıcı olmaz.",
+    "question": "Seni en son şaşırtan fikir neydi?"
+  },
+  "mercury-sextile-uranus": {
+    "meaning": "Yenilikçi düşünce; fikirler uçuşur.",
+    "question": "Yeni bir fikir bulunca ilk kime söylersin?"
+  },
+  "mercury-square-uranus": {
+    "meaning": "Dağınık ve sinirli sohbetler; ani kopuşlar. Odaklan.",
+    "question": "Dağınık sohbetleri sever misin?"
+  },
+  "mercury-trine-uranus": {
+    "meaning": "Zihinsel özgürlük ve parlaklık; birbirinizi uyarırsınız.",
+    "question": "Zihnini en çok ne uyarır?"
+  },
+  "mercury-opposition-uranus": {
+    "meaning": "Fikir ile özgürlük karşı karşıya; inatçı özgünlük. Farklı fikri kucakla.",
+    "question": "Farklı fikirler seni heyecanlandırır mı?"
+  },
+  "mercury-conjunction-neptune": {
+    "meaning": "Zihin ile hayal buluşur: şiirsel, sezgisel sohbet. Yanlış anlaşılma riski var; netleş.",
+    "question": "Şiir sever misin?"
+  },
+  "mercury-sextile-neptune": {
+    "meaning": "İlhamlı düşünce; yaratıcı fikirler.",
+    "question": "Yaratıcı hissettiğin anlar hangileri?"
+  },
+  "mercury-square-neptune": {
+    "meaning": "Bulanık iletişim ve yanılsama; söylenen ile anlaşılan farklı. Yazarak netleştir.",
+    "question": "Yazmak mı kolay, konuşmak mı?"
+  },
+  "mercury-trine-neptune": {
+    "meaning": "Sezgisel anlaşma; kelimeler gereksizleşir.",
+    "question": "Sözsüz anlaşmak sana olur mu?"
+  },
+  "mercury-opposition-neptune": {
+    "meaning": "Fikir ile hayal karşı karşıya; aldanma riski. Bilgiyi doğrula.",
+    "question": "Bir şeyin doğru olduğunu nasıl anlarsın?"
+  },
+  "mercury-conjunction-pluto": {
+    "meaning": "Zihin ile güç buluşur: derin, delici, dönüştürücü sohbet. Sırlar açılır.",
+    "question": "Sırrını söyleyebileceğin insanları nasıl seçersin?"
+  },
+  "mercury-sextile-pluto": {
+    "meaning": "Araştırmacı zihin; derin konular.",
+    "question": "Derin konulara girmek sana kolay gelir mi?"
+  },
+  "mercury-square-pluto": {
+    "meaning": "Sözlü güç mücadelesi ve şüphe; manipülasyon riski. Açık konuş.",
+    "question": "Bir konuşmada manipüle edildiğini hissettin mi hiç?"
+  },
+  "mercury-trine-pluto": {
+    "meaning": "Psikolojik sezgi; birbirinizi okursunuz.",
+    "question": "Okunmak sana rahatlık mı verir, tedirginlik mi?"
+  },
+  "mercury-opposition-pluto": {
+    "meaning": "Fikir ile güç karşı karşıya; ikna savaşı. Hakikati konuş.",
+    "question": "Hakikat mi önemli, huzur mu?"
+  },
+  "venus-conjunction-jupiter": {
+    "meaning": "Sevgi ile bereket buluşur: cömert, keyifli, iyimser bir bağ. Aşırıya kaçmak tek risk.",
+    "question": "Birlikte yapılacak en keyifli şey ne olurdu?"
+  },
+  "venus-sextile-jupiter": {
+    "meaning": "Sevgi ve şans; birlikte olmak güzel.",
+    "question": "Güzel hissettiren anları nasıl biriktirirsin?"
+  },
+  "venus-square-jupiter": {
+    "meaning": "Sevgide abartı ve savurganlık; fazla vaat. Ölçü.",
+    "question": "Fazla vaat eden insanlara güvenir misin?"
+  },
+  "venus-trine-jupiter": {
+    "meaning": "Sevgi ve bolluk uyumlu; birbirinizi şımartırsınız.",
+    "question": "Şımartılmak sana nasıl gelir?"
+  },
+  "venus-opposition-jupiter": {
+    "meaning": "Sevgi ile inanç karşı karşıya; farklı keyif tanımları. Merak.",
+    "question": "Keyif senin için ne demek?"
+  },
+  "venus-conjunction-saturn": {
+    "meaning": "Sevgi ile yapı buluşur: sadık, ciddi, kalıcı. Sevgiyi göstermek öğrenilecek.",
+    "question": "Kalıcı bağlar seni rahatlatır mı?"
+  },
+  "venus-sextile-saturn": {
+    "meaning": "Sevgide güvenilirlik; uzun ömürlü bağ.",
+    "question": "Uzun ömürlü ilişkiyi ne ayakta tutar sence?"
+  },
+  "venus-square-saturn": {
+    "meaning": "Sevgide mesafe ve reddedilme korkusu; biri diğerini soğuk bulabilir. Şefkati bilerek ver.",
+    "question": "Mesafe senin için korunma mı, soğukluk mu?"
+  },
+  "venus-trine-saturn": {
+    "meaning": "Sevgide sağlamlık; birbirinize güvenirsiniz.",
+    "question": "Güvenmek sana kolay gelir mi?"
+  },
+  "venus-opposition-saturn": {
+    "meaning": "Sevgi ile sorumluluk karşı karşıya; yük hissi. Dengeyi konuş.",
+    "question": "Sorumluluk ile sevgi aynı şey mi sence?"
+  },
+  "venus-conjunction-uranus": {
+    "meaning": "Sevgi ile özgürlük buluşur: ani, heyecanlı, elektrikli çekim. Sürdürmek ayrı bir sanat.",
+    "question": "Ani başlayan ilişkilere inanır mısın?"
+  },
+  "venus-sextile-uranus": {
+    "meaning": "Sevgide özgünlük; arkadaşça bir aşk.",
+    "question": "Arkadaşlıkla aşk aynı yerden mi başlar sence?"
+  },
+  "venus-square-uranus": {
+    "meaning": "Ani kopuşlar ve bağlanma korkusu; istikrarsızlık. Alan bırak.",
+    "question": "Bağlanmaktan korktuğun oldu mu?"
+  },
+  "venus-trine-uranus": {
+    "meaning": "Sevgide özgürlük ve heyecan; sıkılmazsınız.",
+    "question": "Sıkıcı olmayan bir ilişki mümkün mü?"
+  },
+  "venus-opposition-uranus": {
+    "meaning": "Sevgi ile özgürlük karşı karşıya; yakınlık ile mesafe çekişir. Ritim.",
+    "question": "Ne kadar yakınlık sana fazla gelir?"
+  },
+  "venus-conjunction-neptune": {
+    "meaning": "Sevgi ile hayal buluşur: romantik, büyülü, idealize. Gerçeği görmek gerekir.",
+    "question": "Romantizm sence gerçeklikle çelişir mi?"
+  },
+  "venus-sextile-neptune": {
+    "meaning": "Sevgide şefkat ve sanat; ruhsal bir çekim.",
+    "question": "Sanat seni etkiler mi?"
+  },
+  "venus-square-neptune": {
+    "meaning": "Yanılsama ve hayal kırıklığı; biri diğerini idealize eder. Gördüğünü sev.",
+    "question": "Birini olduğu gibi sevmek zor mu?"
+  },
+  "venus-trine-neptune": {
+    "meaning": "Sevgide sezgi ve şefkat; zarif bir uyum.",
+    "question": "Zarif bulduğun şeyler ne?"
+  },
+  "venus-opposition-neptune": {
+    "meaning": "Sevgi ile ideal karşı karşıya; aldatılma riski. Gerçeği kabul et.",
+    "question": "Gerçek mi güzel, hayal mi?"
+  },
+  "venus-conjunction-pluto": {
+    "meaning": "Sevgi ile güç buluşur: manyetik, yoğun, dönüştürücü çekim. Kıskançlık gölge.",
+    "question": "Yoğun bir çekim seni korkutur mu?"
+  },
+  "venus-sextile-pluto": {
+    "meaning": "Sevgide derinlik; dönüştürücü bir bağ.",
+    "question": "Seni dönüştüren bir sevgi oldu mu?"
+  },
+  "venus-square-pluto": {
+    "meaning": "Sevgide güç mücadelesi ve takıntı; kontrol. Bırak.",
+    "question": "Sahiplenmek ile sevmek arasındaki farkı nasıl görürsün?"
+  },
+  "venus-trine-pluto": {
+    "meaning": "Derin ve sadık sevgi; tutku ve güven bir arada.",
+    "question": "Tutku ve güven aynı ilişkide olur mu?"
+  },
+  "venus-opposition-pluto": {
+    "meaning": "Sevgi ile güç karşı karşıya; manipülasyon riski. Değerini bil.",
+    "question": "Sevgide güç dengesi konuşulur mu sence?"
+  },
+  "mars-conjunction-jupiter": {
+    "meaning": "Eylem ile bereket buluşur: cesur, girişken, iyimser. Aşırı risk tek gölge.",
+    "question": "Risk almayı sever misin?"
+  },
+  "mars-sextile-jupiter": {
+    "meaning": "Enerjide şans; birlikte girişimler.",
+    "question": "Birlikte bir şey başlatsak ne olurdu?"
+  },
+  "mars-square-jupiter": {
+    "meaning": "Aşırı hırs ve dikkatsizlik; fazla üstlenme. Ölçü.",
+    "question": "Fazla üstlendiğin için yorulduğun oldu mu?"
+  },
+  "mars-trine-jupiter": {
+    "meaning": "Enerji ve inanç uyumlu; doğal cesaret.",
+    "question": "Cesaret sana neyi hatırlatır?"
+  },
+  "mars-opposition-jupiter": {
+    "meaning": "Eylem ile inanç karşı karşıya; farklı hedefler. Kendi yolunu seç.",
+    "question": "Hedeflerin çelişince ne yaparsın?"
+  },
+  "mars-conjunction-saturn": {
+    "meaning": "Eylem ile yapı buluşur: disiplinli, dayanıklı, yavaş ama sağlam. Engellenmişlik hissi gölge.",
+    "question": "Yavaş ilerleyen şeylere sabrın var mı?"
+  },
+  "mars-sextile-saturn": {
+    "meaning": "Disiplinli eylem; uzun soluklu ortaklık.",
+    "question": "Uzun soluklu projeler seni heyecanlandırır mı?"
+  },
+  "mars-square-saturn": {
+    "meaning": "Engellenme ve öfke; biri diğerini frenler. Sabırla güç.",
+    "question": "Frenlendiğini hissettiğinde ne yaparsın?"
+  },
+  "mars-trine-saturn": {
+    "meaning": "Kontrollü ve etkili eylem; yapıcı güç.",
+    "question": "Yapıcı olmak ile hızlı olmak arasında hangisi?"
+  },
+  "mars-opposition-saturn": {
+    "meaning": "Eylem ile kurallar karşı karşıya; otorite çatışması. Sınırı birlikte koy.",
+    "question": "Kurallar seni rahatlatır mı, sıkar mı?"
+  },
+  "mars-conjunction-uranus": {
+    "meaning": "Eylem ile özgürlük buluşur: ani, elektrikli, cesur. Kaza riski gölge.",
+    "question": "Ani kararlar alır mısın?"
+  },
+  "mars-sextile-uranus": {
+    "meaning": "Yenilikçi eylem; cesur değişimler.",
+    "question": "Değişim seni heyecanlandırır mı?"
+  },
+  "mars-square-uranus": {
+    "meaning": "Ani öfke ve sabırsızlık; isyan. Nefes al.",
+    "question": "Sabırsızlık seni nereye götürür?"
+  },
+  "mars-trine-uranus": {
+    "meaning": "Özgün ve cesur eylem; yenilikçi güç.",
+    "question": "Yenilik yapmak sana doğal gelir mi?"
+  },
+  "mars-opposition-uranus": {
+    "meaning": "Eylem ile özgürlük karşı karşıya; ani kopuşlar. Yönlendir.",
+    "question": "Kopuşları nasıl yaşarsın?"
+  },
+  "mars-conjunction-neptune": {
+    "meaning": "Eylem ile hayal buluşur: sezgisel, dalgalı, ilhamlı. Dağınıklık gölge.",
+    "question": "İlhamla mı hareket edersin, planla mı?"
+  },
+  "mars-sextile-neptune": {
+    "meaning": "Sezgisel eylem; sanat ve şifa.",
+    "question": "Şifa senin için ne demek?"
+  },
+  "mars-square-neptune": {
+    "meaning": "Belirsizlik ve kaçış; motivasyon dalgalı. Somut adım.",
+    "question": "Motivasyonun düştüğünde ne yaparsın?"
+  },
+  "mars-trine-neptune": {
+    "meaning": "İlhamlı ve şefkatli eylem; yaratıcı güç.",
+    "question": "Yaratıcılığını en çok ne tetikler?"
+  },
+  "mars-opposition-neptune": {
+    "meaning": "Eylem ile ideal karşı karşıya; yanılsama için savaş. Gerçek hedef.",
+    "question": "Gerçek bir hedef ile hayal arasındaki fark ne?"
+  },
+  "mars-conjunction-pluto": {
+    "meaning": "Eylem ile güç buluşur: yoğun, kararlı, dönüştürücü. Güç arzusu gölge.",
+    "question": "Güç sana çekici gelir mi?"
+  },
+  "mars-sextile-pluto": {
+    "meaning": "Derin ve kararlı eylem; kriz anında güçlüsünüz.",
+    "question": "Krizde nasıl birisin?"
+  },
+  "mars-square-pluto": {
+    "meaning": "Güç mücadelesi ve öfke; kontrol. Yapıcı kullan.",
+    "question": "Öfkeni nasıl yönetirsin?"
+  },
+  "mars-trine-pluto": {
+    "meaning": "Güçlü ve stratejik eylem; dönüştürücü güç.",
+    "question": "Stratejik mi düşünürsün, içgüdüsel mi?"
+  },
+  "mars-opposition-pluto": {
+    "meaning": "Eylem ile güç karşı karşıya; savaş ya da ittifak. Paylaş.",
+    "question": "Rakip mi olalım, müttefik mi?"
+  },
+  "jupiter-conjunction-ascendant": {
+    "meaning": "Bereket ile görünüş buluşur: biri diğerine iyimserlik ve genişlik verir. Cömert bir tanışma.",
+    "question": "İyimser insanlara çekilir misin?"
+  },
+  "jupiter-sextile-ascendant": {
+    "meaning": "İyimserlik görünüşü destekler; ilk izlenim sıcak.",
+    "question": "Sıcak bir ilk izlenim sence ne kadar önemli?"
+  },
+  "jupiter-square-ascendant": {
+    "meaning": "Abartılı beklenti; biri diğerini büyütür ama gerçekçi olmayabilir. Ölçü.",
+    "question": "Beklentilerin ne kadar gerçekçi sence?"
+  },
+  "jupiter-trine-ascendant": {
+    "meaning": "Doğal bir iyimserlik ve bereket; kapılar açılır.",
+    "question": "Sana kapı açan insanları nasıl tanırsın?"
+  },
+  "jupiter-opposition-ascendant": {
+    "meaning": "Bereket ilişki alanında; partner büyütür. Dengeyi kur.",
+    "question": "Bir ilişki seni büyüttü mü hiç?"
+  },
+  "saturn-conjunction-ascendant": {
+    "meaning": "Yapı ile görünüş buluşur: ciddi, güvenilir, mesafeli bir tanışma. Zamanla ısınır.",
+    "question": "Zamanla ısınan insanlara sabrın var mı?"
+  },
+  "saturn-sextile-ascendant": {
+    "meaning": "Sorumluluk görünüşü destekler; güvenilir bir ilk izlenim.",
+    "question": "Güvenilir bulduğun ilk şey ne olur?"
+  },
+  "saturn-square-ascendant": {
+    "meaning": "Kısıtlanma ve yargılanma hissi; soğukluk. Saygı.",
+    "question": "Yargılandığını hissettiğinde ne yaparsın?"
+  },
+  "saturn-trine-ascendant": {
+    "meaning": "Sağlam bir uyum; olgun bir bağ.",
+    "question": "Olgunluk senin için ne demek?"
+  },
+  "saturn-opposition-ascendant": {
+    "meaning": "Yapı ilişki alanında; sorumluluk ve gecikme. Yakınlığa izin ver.",
+    "question": "Geç gelen şeylere değer verir misin?"
+  },
+  "uranus-conjunction-ascendant": {
+    "meaning": "Özgürlük ile görünüş buluşur: sıra dışı, heyecanlı, ani tanışma. Sıkıcı olmayacak.",
+    "question": "Sıra dışı tanışmalar yaşadın mı?"
+  },
+  "uranus-sextile-ascendant": {
+    "meaning": "Özgünlük görünüşü destekler; farklı bir ilk izlenim.",
+    "question": "Farklı olduğunu hissettiğin biriyle karşılaştın mı?"
+  },
+  "uranus-square-ascendant": {
+    "meaning": "Huzursuz ve öngörülemez; kopuşlar. Ritim.",
+    "question": "Öngörülemez insanlar seni heyecanlandırır mı?"
+  },
+  "uranus-trine-ascendant": {
+    "meaning": "Doğal bir özgünlük; yenilik rahat.",
+    "question": "Yeniliği nasıl karşılarsın?"
+  },
+  "uranus-opposition-ascendant": {
+    "meaning": "Özgürlük ilişki alanında; ani kopuşlar. Mesafeyi konuş.",
+    "question": "Mesafe konuşulur mu, yaşanır mı?"
+  },
+  "neptune-conjunction-ascendant": {
+    "meaning": "Hayal ile görünüş buluşur: büyülü, gizemli, idealize tanışma. Netlik gerekir.",
+    "question": "Gizemli insanlara çekilir misin?"
+  },
+  "neptune-sextile-ascendant": {
+    "meaning": "Sezgi görünüşü destekler; şefkatli bir ilk izlenim.",
+    "question": "Şefkati ilk bakışta fark eder misin?"
+  },
+  "neptune-square-ascendant": {
+    "meaning": "Yanlış algılama ve kaçış; yanılsama. Netleş.",
+    "question": "Yanılsamayı gerçekten nasıl ayırırsın?"
+  },
+  "neptune-trine-ascendant": {
+    "meaning": "Doğal bir sezgi ve zarafet; sanatsal bir uyum.",
+    "question": "Sanatsal bir ruhun var mı?"
+  },
+  "neptune-opposition-ascendant": {
+    "meaning": "Hayal ilişki alanında; idealize etme. Gerçeği gör.",
+    "question": "Gerçeği görmek mi, hayali yaşamak mı?"
+  },
+  "pluto-conjunction-ascendant": {
+    "meaning": "Güç ile görünüş buluşur: yoğun, dönüştürücü, unutulmaz tanışma. Kontrol gölge.",
+    "question": "Unutamadığın bir tanışma var mı?"
+  },
+  "pluto-sextile-ascendant": {
+    "meaning": "Güç görünüşü destekler; etkileyici bir ilk izlenim.",
+    "question": "Etkilendiğin ilk şey ne olur?"
+  },
+  "pluto-square-ascendant": {
+    "meaning": "Güç mücadelesi ve yoğunluk; korkutucu olabilir. Yumuşat.",
+    "question": "Yoğunluk seni çeker mi, iter mi?"
+  },
+  "pluto-trine-ascendant": {
+    "meaning": "Doğal bir güç ve derinlik; dönüştürücü bağ.",
+    "question": "Dönüşüm senin için ne demek?"
+  },
+  "pluto-opposition-ascendant": {
+    "meaning": "Güç ilişki alanında; güç dengesi. Paylaş.",
+    "question": "Güç paylaşımı sence nasıl olmalı?"
+  }
+}
