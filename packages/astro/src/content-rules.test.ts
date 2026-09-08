@@ -159,7 +159,7 @@ describe('content/tr · layering rules', () => {
     const grams = (text: string): Set<string> => {
       const words = text
         .toLocaleLowerCase('tr')
-        .replace(/[^a-zçğıöşü\s]/gu, ' ')
+        .replace(new RegExp(`[^${LETTER}\\s]`, 'gu'), ' ')
         .split(/\s+/)
         .filter((w) => w.length > 0);
       const out = new Set<string>();
