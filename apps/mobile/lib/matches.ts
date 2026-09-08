@@ -23,6 +23,11 @@ export const MatchProfileRowSchema = z.object({
   gender: z.enum(GENDERS),
   big_three: BigThreeSchema,
   chart: PublicChartSchema,
+  // Conversation-list columns: null until the thread has a message.
+  last_body: z.string().nullable(),
+  last_at: z.string().nullable(),
+  last_sender_id: z.string().uuid().nullable(),
+  unread_count: z.number().int(),
 });
 
 export type MatchProfileRow = z.infer<typeof MatchProfileRowSchema>;

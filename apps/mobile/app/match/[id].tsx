@@ -113,7 +113,13 @@ export default function MatchScreen() {
         </View>
       ) : null}
 
-      <Text style={styles.hint}>{t.match.chatSoon}</Text>
+      <Link
+        href={{ pathname: '/chat/[id]', params: { id: row.match_id } }}
+        style={styles.chatLink}
+        testID="open-chat"
+      >
+        {t.chat.open}
+      </Link>
       <Link href="/matches" style={styles.link}>
         {t.match.allMatches}
       </Link>
@@ -182,7 +188,18 @@ const styles = StyleSheet.create({
   bodyMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
   aspect: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 4 },
   aspectHead: { color: '#f5f2ff', fontSize: 14, fontWeight: '600' },
-  hint: { color: '#5f5a7a', fontSize: 12, marginTop: 8 },
+  chatLink: {
+    color: '#f5f2ff',
+    fontSize: 16,
+    fontWeight: '600',
+    backgroundColor: '#3b2f7a',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    textAlign: 'center',
+    marginTop: 12,
+    overflow: 'hidden',
+  },
   muted: { color: '#9a94b8' },
   link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
 });

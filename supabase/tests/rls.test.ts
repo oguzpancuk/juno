@@ -43,6 +43,10 @@ const MatchProfileRows = z.array(
       match_id: z.string().uuid(),
       starter_key: z.string(),
       matched_at: z.string(),
+      last_body: z.string().nullable(),
+      last_at: z.string().nullable(),
+      last_sender_id: z.string().uuid().nullable(),
+      unread_count: z.number().int(),
     })
     .strict(),
 );
@@ -601,5 +605,200 @@ describe('likes and matches', () => {
     expect(LikeRows.parse(data)).toEqual([
       { from_id: bob.id, to_id: alice.id },
     ]);
+  });
+});
+
+describe('messages', () => {
+  // A fresh matched pair, made the real way (mutual like → trigger), so the
+  // message tests do not depend on the order of the block above.
+  let ivan: TestUser; // man, wants women, nearby
+  let jane: TestUser; // woman, wants men, nearby
+  let matchId: string;
+
+  const MessageRows = z.array(
+    z
+      .object({
+        id: z.string().uuid(),
+        match_id: z.string().uuid(),
+        sender_id: z.string().uuid(),
+        body: z.string(),
+        read_at: z.string().nullable(),
+        created_at: z.string(),
+      })
+      .strict(),
+  );
+
+  beforeAll(async () => {
+    ivan = await user('ivan');
+    jane = await user('jane');
+    await insertProfile(
+      ivan,
+      profileRow({
+        id: ivan.id,
+        display_name: 'Ivan',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await insertProfile(
+      jane,
+      profileRow({
+        id: jane.id,
+        display_name: 'Jane',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await ivan.client.from('likes').insert({
+      from_id: ivan.id,
+      to_id: jane.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    await jane.client.from('likes').insert({
+      from_id: jane.id,
+      to_id: ivan.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    const rows = MatchProfileRows.parse(
+      (await ivan.client.from('match_profiles').select('*')).data,
+    );
+    const mine = rows.find((r) => r.id === jane.id);
+    if (!mine) throw new Error('setup: ivan and jane are not matched');
+    matchId = mine.match_id;
+  });
+
+  it('anon is denied the messages table outright', async () => {
+    const { data, error } = await anonClient().from('messages').select('id');
+    expect(data ?? []).toEqual([]);
+    if (error) expect(error.code).toBe(PERMISSION_DENIED);
+  });
+
+  it('both members see a message; a third user sees none and cannot write', async () => {
+    const sent = await ivan.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: ivan.id, body: 'Merhaba Jane' })
+      .select('*');
+    expect(sent.error).toBeNull();
+    expect(MessageRows.parse(sent.data)).toHaveLength(1);
+
+    const forJane = MessageRows.parse(
+      (await jane.client.from('messages').select('*')).data,
+    );
+    expect(forJane.map((m) => m.body)).toEqual(['Merhaba Jane']);
+    expect(forJane[0]?.read_at).toBeNull();
+
+    // Carol is in neither side of the match.
+    const forCarol = await carol.client.from('messages').select('*');
+    expect(MessageRows.parse(forCarol.data ?? [])).toEqual([]);
+    const byCarol = await carol.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: carol.id, body: 'sızma' });
+    expect(byCarol.error?.code).toBe(PERMISSION_DENIED);
+  });
+
+  it('a member cannot post as the other member', async () => {
+    const { error } = await ivan.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: jane.id, body: 'sahte' });
+    expect(error?.code).toBe(PERMISSION_DENIED);
+  });
+
+  it('an empty or whitespace-only body is refused', async () => {
+    for (const body of ['', '   ', '\n\t ']) {
+      const { error } = await ivan.client
+        .from('messages')
+        .insert({ match_id: matchId, sender_id: ivan.id, body });
+      expect(error?.code).toBe(CHECK_VIOLATION);
+    }
+  });
+
+  it('only the recipient marks a message read, and no one edits it', async () => {
+    const mine = MessageRows.parse(
+      (await ivan.client.from('messages').select('*')).data,
+    );
+    const first = mine[0];
+    if (!first) throw new Error('no message to mark');
+
+    // The sender marking their own message read matches no row.
+    const bySender = await ivan.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', first.id)
+      .select('id');
+    expect(bySender.error).toBeNull();
+    expect(bySender.data).toEqual([]);
+
+    const byRecipient = await jane.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', first.id)
+      .select('read_at');
+    expect(byRecipient.error).toBeNull();
+    expect(byRecipient.data).toHaveLength(1);
+
+    const edit = await jane.client
+      .from('messages')
+      .update({ body: 'değiştirildi' })
+      .eq('id', first.id);
+    expect(edit.error?.code).toBe(CHECK_VIOLATION);
+
+    const byCarol = await carol.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', first.id)
+      .select('id');
+    expect(byCarol.error).toBeNull();
+    expect(byCarol.data).toEqual([]);
+  });
+
+  it('messages cannot be deleted by either member', async () => {
+    const mine = MessageRows.parse(
+      (await ivan.client.from('messages').select('*')).data,
+    );
+    const first = mine[0];
+    if (!first) throw new Error('no message to delete');
+    const del = await ivan.client
+      .from('messages')
+      .delete()
+      .eq('id', first.id)
+      .select('id');
+    if (del.error) expect(del.error.code).toBe(PERMISSION_DENIED);
+    else expect(del.data).toEqual([]);
+    expect(
+      MessageRows.parse((await ivan.client.from('messages').select('*')).data),
+    ).toHaveLength(1);
+  });
+
+  it('the conversation list carries the last message and the unread count', async () => {
+    const second = await jane.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: jane.id, body: 'Selam Ivan' });
+    expect(second.error).toBeNull();
+
+    const forIvan = MatchProfileRows.parse(
+      (await ivan.client.from('match_profiles').select('*')).data,
+    ).find((r) => r.match_id === matchId);
+    expect(forIvan?.last_body).toBe('Selam Ivan');
+    expect(forIvan?.last_sender_id).toBe(jane.id);
+    expect(forIvan?.unread_count).toBe(1);
+
+    // Jane read Ivan's only message above, and her own never counts.
+    const forJane = MatchProfileRows.parse(
+      (await jane.client.from('match_profiles').select('*')).data,
+    ).find((r) => r.match_id === matchId);
+    expect(forJane?.last_body).toBe('Selam Ivan');
+    expect(forJane?.unread_count).toBe(0);
+  });
+
+  it('a message needs a match: no match id, no thread', async () => {
+    const orphan = '00000000-0000-4000-8000-000000000000';
+    const { error } = await ivan.client
+      .from('messages')
+      .insert({ match_id: orphan, sender_id: ivan.id, body: 'boşluğa' });
+    expect(error?.code).toBe(PERMISSION_DENIED);
   });
 });

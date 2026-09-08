@@ -1,5 +1,4 @@
 import {
-  BODY_TR,
   natalAspectTitleTr,
   PLANET_TR,
   SIGN_TR,

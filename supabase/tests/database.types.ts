@@ -168,6 +168,69 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          match_id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          match_id: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           big_three: Json
@@ -241,14 +304,41 @@ export type Database = {
           display_name: string | null
           gender: Database["public"]["Enums"]["gender"] | null
           id: string | null
+          last_at: string | null
+          last_body: string | null
+          last_sender_id: string | null
           match_id: string | null
           matched_at: string | null
           starter_key: string | null
+          unread_count: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["last_sender_id"]
+            isOneToOne: false
+            referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["last_sender_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["last_sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
+      is_match_member: { Args: { match: string }; Returns: boolean }
       profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {

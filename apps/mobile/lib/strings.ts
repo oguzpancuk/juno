@@ -85,7 +85,6 @@ export const t = {
     title: (name: string) => `${name} ile eşleştin`,
     starterLabel: 'SOHBET BAŞLATICIN',
     noStarter: 'Haritalarınız bir başlangıç cümlesi vermedi; sen bir şey sor.',
-    chatSoon: 'Sohbet yakında burada; şimdilik başlangıç cümlesi sende.',
     why: 'Neden',
     summary: 'UYUM ÖZETİ',
     elements: 'ELEMENTLER',
@@ -96,6 +95,16 @@ export const t = {
   matches: {
     title: 'Eşleşmeler',
     empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',
+    noMessages: 'Henüz mesaj yok; başlangıç sorusu sende.',
+    youPrefix: 'Sen: ',
+  },
+  chat: {
+    backToMatches: '‹ Eşleşmeler',
+    viewMatch: 'Uyum detayı ›',
+    placeholder: 'Bir şeyler yaz…',
+    send: 'Gönder',
+    sendFailed: 'Mesaj gönderilemedi, tekrar dene.',
+    open: 'Sohbeti aç ›',
   },
   settings: {
     title: 'Ayarlar',

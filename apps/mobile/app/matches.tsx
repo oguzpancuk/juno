@@ -50,24 +50,39 @@ export default function Matches() {
       ) : rows.length === 0 ? (
         <Text style={styles.muted}>{t.matches.empty}</Text>
       ) : (
-        rows.map((row) => (
-          <Link
-            key={row.match_id}
-            href={{ pathname: '/match/[id]', params: { id: row.match_id } }}
-            style={styles.card}
-          >
-            <View>
-              <Text style={styles.name}>
-                {row.display_name}, {row.age}
-              </Text>
-              <Text style={styles.starter} numberOfLines={2}>
-                {userId
-                  ? (starterFor(row, userId)?.question ?? t.match.noStarter)
-                  : ''}
-              </Text>
-            </View>
-          </Link>
-        ))
+        [...rows]
+          .sort((x, y) =>
+            (y.last_at ?? y.matched_at).localeCompare(
+              x.last_at ?? x.matched_at,
+            ),
+          )
+          .map((row) => (
+            <Link
+              key={row.match_id}
+              href={{ pathname: '/chat/[id]', params: { id: row.match_id } }}
+              style={styles.card}
+              testID={`conversation-${row.match_id}`}
+            >
+              <View>
+                <View style={styles.cardHead}>
+                  <Text style={styles.name}>
+                    {row.display_name}, {row.age}
+                  </Text>
+                  {row.unread_count > 0 ? (
+                    <Text style={styles.badge} testID="unread-badge">
+                      {row.unread_count}
+                    </Text>
+                  ) : null}
+                </View>
+                <Text style={styles.preview} numberOfLines={2}>
+                  {row.last_body === null
+                    ? ((userId ? starterFor(row, userId)?.question : null) ??
+                      t.matches.noMessages)
+                    : `${row.last_sender_id === userId ? t.matches.youPrefix : ''}${row.last_body}`}
+                </Text>
+              </View>
+            </Link>
+          ))
       )}
     </ScrollView>
   );
@@ -81,5 +96,23 @@ const styles = StyleSheet.create({
   muted: { color: '#9a94b8' },
   card: { backgroundColor: '#15142a', borderRadius: 14, padding: 14 },
   name: { color: '#f5f2ff', fontSize: 18, fontWeight: '600' },
-  starter: { color: '#9a94b8', fontSize: 13, marginTop: 4 },
+  preview: { color: '#9a94b8', fontSize: 13, marginTop: 4 },
+  cardHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  badge: {
+    color: '#f5f2ff',
+    backgroundColor: '#7c6cff',
+    fontSize: 12,
+    fontWeight: '700',
+    minWidth: 22,
+    textAlign: 'center',
+    borderRadius: 11,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    overflow: 'hidden',
+  },
 });
