@@ -1,5 +1,5 @@
 import { SIGN_TR } from '@stardate/astro';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
@@ -23,6 +23,9 @@ export default function MatchScreen() {
       cancelled = true;
     };
   }, [userId, id]);
+
+  // After every hook: hooks must run in the same order on each render.
+  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
   if (row === 'loading') {
     return (

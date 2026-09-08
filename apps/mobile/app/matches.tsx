@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -29,6 +29,9 @@ export default function Matches() {
       cancelled = true;
     };
   }, [userId]);
+
+  // After every hook: hooks must run in the same order on each render.
+  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
   return (
     <ScrollView

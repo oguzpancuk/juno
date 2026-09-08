@@ -28,6 +28,7 @@ export {
   aspectBetween,
   compatibility,
   elementsAgree,
+  isLesserId,
   parseStarterKey,
   scoreFrom,
   starterKey,

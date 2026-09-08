@@ -3,6 +3,7 @@ import {
   PublicChartSchema,
   compatibility,
   describeAspectTr,
+  isLesserId,
   starterKey,
   type Compatibility,
   type PublicChart,
@@ -64,7 +65,7 @@ export async function fetchCandidates(
 }
 
 export type SwipeResult =
-  | { readonly ok: true }
+  | { readonly ok: true; readonly matchId: string | null }
   | { readonly ok: false; readonly reason: 'no-aspect' | 'db' };
 
 /**
@@ -79,10 +80,9 @@ export async function swipe(
 ): Promise<SwipeResult> {
   let starter_key: string | null = null;
   if (kind === 'like') {
-    starter_key =
-      me.id < them.id
-        ? starterKey(me.chart, them.chart)
-        : starterKey(them.chart, me.chart);
+    starter_key = isLesserId(me.id, them.id)
+      ? starterKey(me.chart, them.chart)
+      : starterKey(them.chart, me.chart);
     if (!starter_key) return { ok: false, reason: 'no-aspect' };
   }
   const { error } = await supabase
@@ -90,7 +90,16 @@ export async function swipe(
     .insert({ from_id: me.id, to_id: them.id, kind, starter_key });
   // 23505: already swiped (lost response); treat as done.
   if (error && error.code !== '23505') return { ok: false, reason: 'db' };
-  return { ok: true };
+  if (kind === 'pass') return { ok: true, matchId: null };
+  // The liker learns about a closed match deterministically, without
+  // depending on the Realtime socket being up at this instant.
+  const { data } = await supabase
+    .from('match_profiles')
+    .select('match_id')
+    .eq('id', them.id)
+    .maybeSingle();
+  const parsed = z.object({ match_id: z.string().uuid() }).safeParse(data);
+  return { ok: true, matchId: parsed.success ? parsed.data.match_id : null };
 }
 
 export const RADIUS_OPTIONS = [5, 25, 50, 100, 500] as const;

@@ -1,6 +1,7 @@
 import {
   BigThreeSchema,
   PublicChartSchema,
+  isLesserId,
   parseStarterKey,
   starterSentenceTr,
 } from '@stardate/astro';
@@ -12,7 +13,9 @@ import { supabase } from './supabase';
 /** A row of the `match_profiles` view: my counterpart in one match. */
 export const MatchProfileRowSchema = z.object({
   match_id: z.string().uuid(),
-  starter_key: z.string(),
+  starter_key: z
+    .string()
+    .refine((k) => parseStarterKey(k) !== null, 'malformed starter key'),
   matched_at: z.string(),
   id: z.string().uuid(),
   display_name: z.string(),
@@ -28,7 +31,7 @@ export type MatchProfileRow = z.infer<typeof MatchProfileRowSchema>;
 export function starterFor(row: MatchProfileRow, myId: string): string | null {
   const key = parseStarterKey(row.starter_key);
   if (!key) return null;
-  return starterSentenceTr(key, myId < row.id);
+  return starterSentenceTr(key, isLesserId(myId, row.id));
 }
 
 export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
@@ -76,7 +79,13 @@ export function useMatchListener(
           if (row.success) onMatch(row.data.id);
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        // Realtime is best-effort for the liked side; the liker also checks
+        // match_profiles right after a like. Log so a dead socket is visible.
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(`matches channel ${status}`, err?.message);
+        }
+      });
     return () => {
       void supabase.removeChannel(channel);
     };

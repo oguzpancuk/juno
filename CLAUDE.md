@@ -30,7 +30,7 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 | test | `npm run test --workspaces --if-present` (Vitest) |
 | typecheck | `npm run typecheck --workspaces --if-present` (`tsc --noEmit`) |
 | lint | `npm run lint --workspaces --if-present` (ESLint) + `npx prettier --check .` |
-| dev | `npm run start -w apps/mobile` (Expo dev server; `i` opens the iOS simulator) |
+| dev | `bash contracts/init.sh` (local Supabase + Expo on 8082 with local keys); or `npm run start -w apps/mobile` with `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` set (see `apps/mobile/.env.example`) |
 | local backend | `npx supabase start` / `npx supabase db reset` (needs Docker) |
 | full battery | `bash .claude/hooks/verify.sh` |
 

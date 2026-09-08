@@ -86,6 +86,11 @@ export default function Discover() {
           }
         : s,
     );
+    if (result.matchId)
+      router.navigate({
+        pathname: '/match/[id]',
+        params: { id: result.matchId },
+      });
   };
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;

@@ -122,7 +122,7 @@ export function describeAspectTr(
 const ASPECT_STARTER_TR: Readonly<Record<Aspect, string>> = {
   conjunction:
     'Aynı frekansı paylaşıyor olabilirsiniz; ilk bakışta tanıdık geldi mi?',
-  sextile: 'Birbirinizi kolayca destekleyen bir bağ; sohbet akıyor mu?',
+  sextile: 'Birbirinizi kolayca destekleyen bir bağ; sohbet akar mı sence?',
   square: 'Sürtüşme de çekim demek; ilk tartışmanız ne hakkında olur sence?',
   trine: 'Zahmetsiz bir uyum var; sence de öyle mi?',
   opposition: 'Zıt kutuplar birbirini tamamlar derler; buna inanır mısın?',

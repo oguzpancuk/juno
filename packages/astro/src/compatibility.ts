@@ -216,17 +216,18 @@ export function strongestOf(
   aspects: readonly InterAspect[],
 ): InterAspect | null {
   if (aspects.length === 0) return null;
-  // Last tie-break (sorted body pair, then aspect) makes the choice
-  // deterministic. On an exact tie between mirrored pairs (a.moon–b.venus vs
-  // a.venus–b.moon) strongest(b, a) is not the mirror of strongest(a, b);
-  // that is harmless because starterKey is always computed in a < b order.
-  const pairKey = (a: InterAspect) =>
-    [a.planetA, a.planetB].sort().join('-') + '-' + a.aspect;
+  // Ties: |term| desc, then smaller orb, then the alphabetical (planetA,
+  // planetB, aspect) triple, so the winner depends only on the aspect set,
+  // never on array order. On an exact tie between mirrored pairs
+  // (a.moon–b.venus vs a.venus–b.moon) strongest(b, a) is therefore not the
+  // mirror of strongest(a, b); harmless because starterKey is always
+  // computed in a < b uuid order.
+  const tripleKey = (a: InterAspect) => `${a.planetA}-${a.planetB}-${a.aspect}`;
   const byMagnitude = [...aspects].sort(
     (x, y) =>
       Math.abs(y.term) - Math.abs(x.term) ||
       x.orb - y.orb ||
-      pairKey(x).localeCompare(pairKey(y)),
+      tripleKey(x).localeCompare(tripleKey(y)),
   );
   const top = byMagnitude[0];
   if (!top) return null;
@@ -268,4 +269,12 @@ export function parseStarterKey(
     aspect: m[2] as Aspect,
     planetB: m[3] as Body,
   }; // why: the regex alternation only admits members of BODIES/ASPECTS
+}
+
+/**
+ * Which of two user ids is `a` in the matches table (Postgres orders uuids
+ * bytewise, which equals string order on canonical lowercase hex).
+ */
+export function isLesserId(x: string, y: string): boolean {
+  return x.toLowerCase() < y.toLowerCase();
 }

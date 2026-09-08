@@ -8,7 +8,7 @@
  * non-local API URL.
  */
 import { execFileSync } from 'node:child_process';
-import { PublicChartSchema, starterKey } from '@stardate/astro';
+import { PublicChartSchema, isLesserId, starterKey } from '@stardate/astro';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
@@ -29,7 +29,8 @@ const status = Status.parse(
     }),
   ),
 );
-if (!/127\.0\.0\.1|localhost/.test(status.API_URL)) {
+const host = new URL(status.API_URL).hostname;
+if (host !== '127.0.0.1' && host !== 'localhost') {
   console.error(`refusing to run against ${status.API_URL}`);
   process.exit(1);
 }
@@ -65,8 +66,9 @@ async function main(): Promise<void> {
   const s = parsed.find((r) => r.id === seed.id);
   if (!t || !s) throw new Error('both profiles must exist');
 
-  const key =
-    t.id < s.id ? starterKey(t.chart, s.chart) : starterKey(s.chart, t.chart);
+  const key = isLesserId(t.id, s.id)
+    ? starterKey(t.chart, s.chart)
+    : starterKey(s.chart, t.chart);
   if (!key) throw new Error('no shared aspect between these charts');
   const { error } = await admin
     .from('likes')

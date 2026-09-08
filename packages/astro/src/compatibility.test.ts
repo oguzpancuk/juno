@@ -9,6 +9,7 @@ import {
   parseStarterKey,
   scoreFrom,
   starterKey,
+  strongestOf,
   type ChartForScoring,
 } from './compatibility';
 import { toPublicChart } from './public';
@@ -150,7 +151,7 @@ describe('compatibility', () => {
     expect(result.strongest?.aspect).toBe('trine');
   });
 
-  it('is deterministic on an exact tie and both sides derive the same a<b key', () => {
+  it('breaks an exact tie by the alphabetical (planetA, planetB, aspect) triple, whatever the input order', () => {
     const x = synthetic({
       sun: 300,
       moon: 0,
@@ -177,15 +178,22 @@ describe('compatibility', () => {
       pluto: 355,
       ascendant: 315,
     });
-    // x.moon–y.venus and x.venus–y.moon are both exact trines (2.7).
-    expect(compatibility(x, y).strongest).toEqual(
-      compatibility(x, y).strongest,
-    );
-    expect(starterKey(x, y)).toBe(starterKey(x, y));
-    expect(Math.abs(compatibility(x, y).strongest?.term ?? 0)).toBeCloseTo(
-      2.7,
-      6,
-    );
+    const { aspects, strongest } = compatibility(x, y);
+    // x.moon–y.venus and x.venus–y.moon are both exact trines (2.7): the
+    // alphabetical triple "moon-venus-trine" wins over "venus-moon-trine".
+    expect(strongest).toMatchObject({
+      planetA: 'moon',
+      aspect: 'trine',
+      planetB: 'venus',
+    });
+    expect(Math.abs(strongest?.term ?? 0)).toBeCloseTo(2.7, 6);
+    expect(strongestOf([...aspects].reverse())).toEqual(strongest);
+    expect(strongestOf([...aspects].sort(() => -1))).toEqual(strongest);
+    // The mirrored call picks y.moon–x.venus, i.e. NOT the mirror of the above.
+    expect(compatibility(y, x).strongest).toMatchObject({
+      planetA: 'moon',
+      planetB: 'venus',
+    });
   });
 
   it('is symmetric in score and mirrors the strongest aspect', () => {
