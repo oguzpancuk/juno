@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+package-lock.json
+screenshots/
+contracts/feature_list.json
+# template-origin files (maya): formatting is upstream's concern
+.claude/
+contracts/
+CLAUDE.md
+.mcp.json.example

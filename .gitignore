@@ -25,3 +25,11 @@ supabase/.branches/
 
 # test output
 coverage/
+
+# Expo native folders (prebuild output) and Metro
+apps/mobile/ios/
+apps/mobile/android/
+.kotlin/
+.metro-health-check*
+*.tsbuildinfo
+*.pem

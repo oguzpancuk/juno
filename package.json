@@ -1,0 +1,21 @@
+{
+  "name": "stardate",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Star-chart dating app: natal charts, compatibility, chart-based conversation starters.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "verify": "bash .claude/hooks/verify.sh"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3"
+  }
+}

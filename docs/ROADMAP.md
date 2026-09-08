@@ -15,7 +15,7 @@ tsc, ESLint, Prettier); `screenshot` = iOS simulator screenshot saved under
      other person with a compatibility score → mutual like → chart-based
      conversation starter. Chat itself is v1 (the starter is the value). -->
 
-- [ ] **S0 — Environment boots, battery is born.** Root `package.json` with
+- [x] **S0 — Environment boots, battery is born.** Root `package.json` with
       npm workspaces; `packages/astro` (tsc, Vitest) with ONE real test
       (Sun sign for a known date); `apps/mobile` from `create-expo-app` with
       Expo Router rendering a "stardate" screen; shared `tsconfig` strict,
