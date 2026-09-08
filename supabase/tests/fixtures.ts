@@ -14,9 +14,11 @@ export interface ProfileInput {
 }
 
 export const ISTANBUL: readonly [number, number] = [28.9784, 41.0082];
-/** ~5 km north-east of ISTANBUL. */
+/** ~5 km north-east of ISTANBUL once both snap to 0.01° grid nodes. */
 export const ISTANBUL_NEARBY: readonly [number, number] = [29.03, 41.04];
 export const ANKARA: readonly [number, number] = [32.8597, 39.9334];
+/** A valid starter key (a<b orientation); its content is irrelevant to RLS. */
+export const STARTER = 'moon-trine-venus';
 
 export function profileRow(input: ProfileInput) {
   const [lon, lat] = input.lonLat;
@@ -27,7 +29,7 @@ export function profileRow(input: ProfileInput) {
     birth_local: '1995-07-14T03:30:00',
     birth_city_id: 745044,
     birth_utc: '1995-07-14T00:30:00Z',
-    chart: { planets: {}, houses: {} },
+    chart: { version: 1, planets: {}, houses: {} },
     big_three: { sun: 'cancer', moon: 'aquarius', rising: 'gemini' },
     gender: input.gender,
     interested_in: input.interested_in,

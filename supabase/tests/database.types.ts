@@ -39,21 +39,21 @@ export type Database = {
           created_at: string
           from_id: string
           kind: Database["public"]["Enums"]["like_kind"]
-          starter: string | null
+          starter_key: string | null
           to_id: string
         }
         Insert: {
           created_at?: string
           from_id: string
           kind: Database["public"]["Enums"]["like_kind"]
-          starter?: string | null
+          starter_key?: string | null
           to_id: string
         }
         Update: {
           created_at?: string
           from_id?: string
           kind?: Database["public"]["Enums"]["like_kind"]
-          starter?: string | null
+          starter_key?: string | null
           to_id?: string
         }
         Relationships: [
@@ -68,6 +68,13 @@ export type Database = {
             foreignKeyName: "likes_from_id_fkey"
             columns: ["from_id"]
             isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -76,6 +83,13 @@ export type Database = {
             columns: ["to_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_to_id_fkey"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -93,21 +107,21 @@ export type Database = {
           b: string
           created_at: string
           id: string
-          starter: string
+          starter_key: string
         }
         Insert: {
           a: string
           b: string
           created_at?: string
           id?: string
-          starter?: string
+          starter_key: string
         }
         Update: {
           a?: string
           b?: string
           created_at?: string
           id?: string
-          starter?: string
+          starter_key?: string
         }
         Relationships: [
           {
@@ -115,6 +129,13 @@ export type Database = {
             columns: ["a"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_a_fkey"
+            columns: ["a"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -129,6 +150,13 @@ export type Database = {
             columns: ["b"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_b_fkey"
+            columns: ["b"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -205,9 +233,23 @@ export type Database = {
         }
         Relationships: []
       }
+      match_profiles: {
+        Row: {
+          age: number | null
+          big_three: Json | null
+          chart: Json | null
+          display_name: string | null
+          gender: Database["public"]["Enums"]["gender"] | null
+          id: string | null
+          match_id: string | null
+          matched_at: string | null
+          starter_key: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {
       gender: "woman" | "man" | "unspecified"

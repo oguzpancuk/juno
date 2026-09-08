@@ -21,8 +21,8 @@ jobs:
       # missing stack is a FAIL, never a skip, so CI must start one.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
-      - run: supabase start
+          version: 2.117.0 # keep in step with SUPABASE_CLI_VERSION in supabase/tests/local.ts
+      - run: supabase start -x studio,imgproxy,logflare,vector,edge-runtime,mailpit
       - run: bash .claude/hooks/verify.sh
       - if: always()
         run: supabase stop

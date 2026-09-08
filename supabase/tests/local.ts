@@ -1,4 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import {
+  execFileSync,
+  type ExecFileSyncOptionsWithStringEncoding,
+} from 'node:child_process';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Database } from './database.types';
@@ -24,16 +27,36 @@ export type LocalStack = z.infer<typeof StatusSchema>;
  */
 export type Client = SupabaseClient<Database>;
 
+/** Pinned CLI; CI installs the same version via supabase/setup-cli. */
+export const SUPABASE_CLI_VERSION = '2.117.0';
+
+/**
+ * Prefer a `supabase` binary on PATH (CI's setup-cli); otherwise the
+ * pinned npm package through npx (local dev). Never `supabase@latest`.
+ */
+export function supabaseCli(args: readonly string[]): string {
+  const options: ExecFileSyncOptionsWithStringEncoding = {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  };
+  try {
+    return execFileSync('supabase', [...args], options);
+  } catch {
+    return execFileSync(
+      'npx',
+      [`supabase@${SUPABASE_CLI_VERSION}`, ...args],
+      options,
+    );
+  }
+}
+
 let cached: LocalStack | undefined;
 
 export function localStack(): LocalStack {
   if (cached) return cached;
   let raw: string;
   try {
-    raw = execFileSync('npx', ['supabase', 'status', '-o', 'json'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    raw = supabaseCli(['status', '-o', 'json']);
   } catch (error) {
     throw new Error(
       `local Supabase stack is not running (run: npx supabase start)\n${String(error)}`,
@@ -86,12 +109,16 @@ export async function createUser(
   return { id: data.user.id, email, client };
 }
 
+/** Best-effort cleanup: every user is attempted; failures are reported together. */
 export async function deleteUsers(
   admin: Client,
   users: readonly TestUser[],
 ): Promise<void> {
+  const failures: string[] = [];
   for (const user of users) {
     const { error } = await admin.auth.admin.deleteUser(user.id);
-    if (error) throw new Error(`deleteUser: ${error.message}`);
+    if (error) failures.push(`${user.email}: ${error.message}`);
   }
+  if (failures.length > 0)
+    throw new Error(`deleteUsers:\n${failures.join('\n')}`);
 }
