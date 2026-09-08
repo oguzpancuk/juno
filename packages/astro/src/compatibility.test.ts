@@ -96,6 +96,22 @@ describe('aspectBetween (ADR-0003 table)', () => {
     );
   });
 
+  it('scores an opposition to the Ascendant as a Descendant conjunction (+4 base)', () => {
+    // Sun exactly on the other chart's Descendant: 0.8 · 1 · 4 · 1 = 3.2 harmony.
+    expect(aspectBetween('sun', 0, 'ascendant', 180)?.term).toBeCloseTo(3.2, 6);
+    expect(aspectBetween('ascendant', 0, 'moon', 180)?.aspect).toBe(
+      'opposition',
+    );
+    expect(aspectBetween('ascendant', 0, 'moon', 180)?.term).toBeGreaterThan(0);
+    // An ordinary opposition stays tense.
+    expect(aspectBetween('sun', 0, 'moon', 180)?.term).toBeLessThan(0);
+    // Saturn on the Descendant is not a Saturn-hard override (targets are Moon/Venus/Mars).
+    expect(aspectBetween('saturn', 0, 'ascendant', 180)?.term).toBeCloseTo(
+      0.7 * 0.8 * 4,
+      6,
+    );
+  });
+
   it('returns null outside every orb', () => {
     expect(aspectBetween('sun', 0, 'moon', 45)).toBeNull();
   });
@@ -163,7 +179,7 @@ describe('compatibility', () => {
       uranus: 140,
       neptune: 230,
       pluto: 290,
-      ascendant: 40,
+      ascendant: 50,
     });
     const y = synthetic({
       sun: 330,

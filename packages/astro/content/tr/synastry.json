@@ -116,8 +116,8 @@
     "question": "Doğal olduğunu hissettiğin anlar hangileri?"
   },
   "sun-opposition-ascendant": {
-    "meaning": "Biri diğerinin ilişki alanına düşer: partner enerjisi. Aynalama güçlü; kendi ışığını unutma.",
-    "question": "Sence ilişkide insan kendini daha çok mu bulur, daha çok mu kaybeder?"
+    "meaning": "Biri diğerinin Alçalan'ına, yani ilişki noktasına düşer: klasik partner açısı. Birbirinizi tamamlıyor gibi hissedersiniz; aynalama güçlüdür, kendi ışığınızı da korumak gerekir.",
+    "question": "Seni tamamlayan biriyle karşılaştığını hissettin mi hiç?"
   },
   "moon-conjunction-moon": {
     "meaning": "Aynı duygusal dil: söylenmeden anlaşırsınız. Aynı gelgitleri yaşamak hem rahatlık hem risk.",
@@ -216,7 +216,7 @@
     "question": "Şefkati göstermek mi kolay, almak mı?"
   },
   "moon-opposition-ascendant": {
-    "meaning": "Duygu ilişki alanına düşer: biri diğerinde yuva arar. Bakım ile bağımlılık arasında ince çizgi.",
+    "meaning": "Duygu Alçalan'a düşer: biri diğerinde yuva bulur, yakınlık hızlı ve doğal gelir. Bakım ile bağımlılık arasındaki ince çizgiyi birlikte gözetmek gerekir.",
     "question": "Bir ilişkide yuva olmak mı istersin, yuva bulmak mı?"
   },
   "mercury-conjunction-mercury": {
@@ -296,7 +296,7 @@
     "question": "Doğal gelen sohbetler nadir mi sence?"
   },
   "mercury-opposition-ascendant": {
-    "meaning": "Zihin ilişki alanında; biri diğerinin fikirlerini şekillendirir. Kendi düşünceni de koru.",
+    "meaning": "Zihin Alçalan'a düşer: sohbet bu bağın zemini, biri diğerinin düşüncesini açar. Kendi görüşünü koruyan bu açıdan zenginleşir.",
     "question": "Fikrini değiştiren insanlara güvenir misin?"
   },
   "venus-conjunction-venus": {
@@ -356,7 +356,7 @@
     "question": "Güzellik senin için ne demek?"
   },
   "venus-opposition-ascendant": {
-    "meaning": "Sevgi ilişki alanına düşer: partner enerjisi güçlü. Sevilmek için kendini kaybetme.",
+    "meaning": "Sevgi Alçalan'a düşer: klasik çekim ve partnerlik açısı, sevilmek kolay gelir. Kendini sevgide kaybetmeden vermek bu bağın dersidir.",
     "question": "Sence insan sevince değişir mi?"
   },
   "mars-conjunction-mars": {
@@ -396,8 +396,8 @@
     "question": "Cesaret sana çekici gelir mi?"
   },
   "mars-opposition-ascendant": {
-    "meaning": "Eylem ilişki alanında: güç mücadelesi ya da güçlü ortaklık. Rakip değil ortak ara.",
-    "question": "İlişkide güç dengesi sence konuşulur mu, hissedilir mi?"
+    "meaning": "Enerji Alçalan'a düşer: güçlü bir çekim ve ortaklık, biri diğerini harekete geçirir. Rakip değil takım olduğunuzda bu açı ilişkinin motoru olur.",
+    "question": "Bir takımda kaptan mı olursun, motor mu?"
   },
   "ascendant-conjunction-ascendant": {
     "meaning": "Aynı görünüş dili: birbirinizi ilk anda tanırsınız. Benzer yüzler, benzer maskeler.",
@@ -416,7 +416,7 @@
     "question": "Aynı ritimde olduğunu hissettiğin biri var mı?"
   },
   "ascendant-opposition-ascendant": {
-    "meaning": "Yükseleniniz birbirinin tam karşısında, yani biri diğerinin ilişki noktasında: klasik partner açısı. Eksik parça birbirinizde; dengeyi bilinçle kurmak gerekir.",
+    "meaning": "Yükselenleriniz birbirinin Alçalan'ında: klasik partner ekseni, eksik parça birbirinizde. Biri diğerinin bıraktığı yeri doğal olarak doldurur; dengeyi bilinçle kurduğunuzda bu açı en sağlam ortaklıklardan birini verir.",
     "question": "Eksik parçanı birinde bulmak sana romantik mi gelir, tehlikeli mi?"
   },
   "sun-conjunction-jupiter": {
@@ -936,7 +936,7 @@
     "question": "Sana kapı açan insanları nasıl tanırsın?"
   },
   "jupiter-opposition-ascendant": {
-    "meaning": "Bereket ilişki alanında; partner büyütür ya da abartır. Dengeyi kurduğunuzda her adım bir ufuk olur.",
+    "meaning": "Bereket Alçalan'a düşer: ilişki büyütür, biri diğerine ufuk açar. Cömertlik güçlü, ölçüyü birlikte kurmak gerekir.",
     "question": "Bir ilişki seni büyüttü mü hiç?"
   },
   "saturn-conjunction-ascendant": {
@@ -956,7 +956,7 @@
     "question": "Olgunluk senin için ne demek?"
   },
   "saturn-opposition-ascendant": {
-    "meaning": "Yapı ilişki alanında; sorumluluk ve gecikme temaları taşır. Yakınlığa izin verildiğinde bağ kalıcı olur.",
+    "meaning": "Yapı Alçalan'a düşer: ciddi, kalıcı, sorumluluk taşıyan bir ortaklık. Geç ısınır ama kurulduğunda sarsılmaz; yakınlığa izin vermek gerekir.",
     "question": "Geç gelen şeylere değer verir misin?"
   },
   "uranus-conjunction-ascendant": {
@@ -976,8 +976,8 @@
     "question": "Yeniliği nasıl karşılarsın?"
   },
   "uranus-opposition-ascendant": {
-    "meaning": "Özgürlük ilişki alanında; ani kopuşlar ve mesafe ihtiyacı görülebilir. Mesafe konuşulduğunda kopmak zorunda kalınmaz.",
-    "question": "Mesafe konuşulur mu, yaşanır mı?"
+    "meaning": "Özgürlük Alçalan'a düşer: sıra dışı, uyandırıcı bir partnerlik; biri diğerinin hayatını değiştirir. Yakınlık ile alan arasındaki dengeyi birlikte kurduğunuzda bağ canlı kalır.",
+    "question": "Seni değiştiren bir ilişkiye açık mısın?"
   },
   "neptune-conjunction-ascendant": {
     "meaning": "Hayal ile görünüş buluşur: büyülü, gizemli, idealize bir tanışma. Netlik gerektiğinde büyü bozulmaz, gerçek olur.",
@@ -996,8 +996,8 @@
     "question": "Sanatsal bir ruhun var mı?"
   },
   "neptune-opposition-ascendant": {
-    "meaning": "Hayal ilişki alanında; idealize etme ya da edilme riski taşır. Gerçeği gören bu bağdan zenginleşir.",
-    "question": "Gerçeği görmek mi, hayali yaşamak mı?"
+    "meaning": "Hayal Alçalan'a düşer: romantik, sezgisel, idealize bir partnerlik. Gerçeği gördüğünüzde büyü bozulmaz, kalıcı olur.",
+    "question": "Romantizm sence gerçeklikle çelişir mi?"
   },
   "pluto-conjunction-ascendant": {
     "meaning": "Güç ile görünüş buluşur: yoğun, dönüştürücü, unutulmaz bir tanışma. Kontrol gölge; derinlik ödül.",
@@ -1016,7 +1016,7 @@
     "question": "Dönüşüm senin için ne demek?"
   },
   "pluto-opposition-ascendant": {
-    "meaning": "Güç ilişki alanında; güç dengesi konuşulmalı. Paylaşıldığında ilişki bir savaş değil yeniden doğuş olur.",
+    "meaning": "Güç Alçalan'a düşer: derin, yoğun, dönüştürücü bir partnerlik. Gücü paylaştığınızda ilişki bir savaş değil yeniden doğuş olur.",
     "question": "Güç paylaşımı sence nasıl olmalı?"
   }
 }

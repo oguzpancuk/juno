@@ -80,6 +80,20 @@ the term with the largest absolute value, ties broken by smaller orb;
 harmonious preferred over tense when within 10 % of each other. Returned
 as `{ planetA, aspect, planetB, orb, term }`.
 
+## Amendment 1 (2026-09-08): opposition to the Ascendant
+
+An opposition to the Ascendant is a conjunction to the Descendant, the
+7th-house cusp and the classic partnership point; Cafe Astrology's sheet
+rates Sun or Moon conjunct the Descendant +4, its highest value, and the
+interpretive tradition reads planets on the Descendant as
+relationship-forming. The table above scored it as a generic opposition
+(−2), which contradicted the texts ("klasik partner açısı"). Rule: when
+either body is the Ascendant and the aspect is an opposition, the base is
+the conjunction base (+4); the opposition orb (8°) still applies and the
+Saturn override does not (its targets are Moon, Venus, Mars only). Applies
+to natal aspects as well, where the same geometry means a planet on the
+Descendant.
+
 ## Consequences
 
 - Deterministic, pure, symmetric, unit-testable; the table can be tuned

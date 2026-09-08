@@ -152,7 +152,16 @@ export function aspectBetween(
       HARD.has(aspect) &&
       ((planetA === 'saturn' && SATURN_TARGETS.has(planetB)) ||
         (planetB === 'saturn' && SATURN_TARGETS.has(planetA)));
-    const base = saturnHard ? SATURN_HARD_BASE : spec.base;
+    // Opposition to the Ascendant is a conjunction to the Descendant, the
+    // partnership point: scored like a conjunction (ADR-0003 amendment 1).
+    const descendant =
+      aspect === 'opposition' &&
+      (planetA === 'ascendant' || planetB === 'ascendant');
+    const base = saturnHard
+      ? SATURN_HARD_BASE
+      : descendant
+        ? ASPECT_SPEC.conjunction.base
+        : spec.base;
     let factor = 1 - orb / maxOrb;
     if (orb <= TIGHT_ORB) factor = Math.min(1, factor * TIGHT_BONUS);
     const term = BODY_WEIGHT[planetA] * BODY_WEIGHT[planetB] * base * factor;
