@@ -30,11 +30,18 @@
 - `jsonb_array_length` was the last type-dependent call sitting outside
   the CASE that guards it, which is the argument the rest of that file
   already makes.
-- Known and left: the service role can write `profiles` but cannot read
-  `discover`, `match_profiles` or `my_reports` — those views call
-  `private.is_blocked`, which is granted to `authenticated` only. Nothing
-  server-side reads them today; the next Edge Function that wants to will
-  need the grant.
+- Known and left, two things:
+  - The service role can write `profiles` but cannot read `discover`,
+    `match_profiles` or `my_reports` — those views call
+    `private.is_blocked`, which is granted to `authenticated` only.
+    Nothing server-side reads them today; the next Edge Function that
+    wants to will need the grant.
+  - One band of numbers still answers neither accept nor a clean refusal:
+    an exponent outside `numeric`'s own range (`1e-16384`, `1e131072`)
+    fails when the text becomes jsonb, before any CHECK is reached, so the
+    error names the column type rather than the constraint. It is
+    fail-closed — nothing is stored — and it cannot be fixed in a CHECK,
+    because the value has to parse before a constraint can see it.
 - Verified: battery green on a clean tree; 105 Supabase tests, 12 mobile.
 
 ## 2026-09-10 — Two ways a check can be right and still be wrong

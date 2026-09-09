@@ -1730,6 +1730,7 @@ describe('birth instant', () => {
       /"ascendant":\s*[0-9.]+/,
       '"ascendant": -1e-400',
     );
+    expect(body).toContain('-1e-400');
     const response = await fetch(`${localStack().API_URL}/rest/v1/profiles`, {
       method: 'POST',
       headers: {
@@ -1756,9 +1757,14 @@ describe('birth instant', () => {
       .update({ radius_km: 75 })
       .eq('id', alice.id)
       .select('id, radius_km');
-    expect(error).toBeNull();
-    expect(data).toEqual([{ id: alice.id, radius_km: 75 }]);
-    await admin.from('profiles').update({ radius_km: 50 }).eq('id', alice.id);
+    try {
+      expect(error).toBeNull();
+      expect(data).toEqual([{ id: alice.id, radius_km: 75 }]);
+    } finally {
+      // Restore even on a failure: later tests read alice's radius, and a
+      // cascade of failures hides which one is the cause.
+      await admin.from('profiles').update({ radius_km: 50 }).eq('id', alice.id);
+    }
   });
 
   it('refuses a calendar date that disagrees with the wall clock', async () => {

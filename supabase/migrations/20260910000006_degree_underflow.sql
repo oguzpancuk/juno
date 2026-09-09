@@ -10,8 +10,10 @@
 -- The small-magnitude branch keeps the sign. Collapsing everything tiny
 -- to zero would be a divergence in the dangerous direction: `-1e-321` is
 -- a negative denormal in JavaScript and fails `>= 0` there, so it has to
--- fail here too.
+-- fail here too — as null, the same answer this function already gives
+-- for anything that is not a degree.
 
+/** The double the client will see, or null when it is not one. */
 create or replace function private.as_degree(value jsonb)
 returns double precision
 language sql
@@ -22,10 +24,12 @@ as $$
     when jsonb_typeof(value) <> 'number' then null
     -- Too large to be a double: not a degree, and the cast would raise.
     when abs((value #>> '{}')::numeric) > 1e307 then null
-    -- Too small to be a double: JavaScript reads these as zero, keeping
-    -- the sign, and so does this.
+    -- Too small to be a double: JavaScript reads these as zero. A
+    -- negative one is `-0` there and fails a `>= 0` bound, so it must
+    -- fail here too — as "not a degree" rather than as a magic negative,
+    -- which the next signed field would read as a real value.
     when abs((value #>> '{}')::numeric) < 1e-300
-    then case when (value #>> '{}')::numeric < 0 then -1 else 0 end
+    then case when (value #>> '{}')::numeric < 0 then null else 0 end
     else (value #>> '{}')::numeric::double precision
   end;
 $$;
