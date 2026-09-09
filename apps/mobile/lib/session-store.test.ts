@@ -459,7 +459,10 @@ describe('keychainStore', () => {
       });
     const removing = store.removeItem(NAME);
     keychain.beforeRemove = undefined;
-    // A read that fills the cache, then a write the keychain refuses.
+    // The read is the point: it refills the cache with the session that
+    // is still there, so a counter that counted attempts would let the
+    // refused write below drive the restore.
+    expect(await store.getItem(NAME)).toBe(SESSION);
     keychain.failing = 'set';
     await store.setItem(NAME, 'never-landed');
     keychain.failing = 'none';
@@ -484,16 +487,40 @@ describe('keychainStore', () => {
     await expect(removing).resolves.toBeUndefined();
   });
 
-  it('keeps checking when the marker write fails', async () => {
-    // `marked` must not be set by a write that did not happen, or the
-    // rest of this launch stops wiping a previous install's keys.
-    keychain.entries.set(`${NAME}-user`, 'previous-owner');
+  it('retries the marker after a write that failed', async () => {
+    // `marked` must not be set by a write that did not happen: the marker
+    // would never be retried, and the next launch would wipe the session
+    // this one just signed in with.
     keychain.entries.set(NAME, SESSION);
     legacy.failSet = true;
     const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
     expect(await fresh.getItem(NAME)).toBeNull();
     await fresh.setItem(NAME, 'mine');
-    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
+    expect(legacy.items.get(MARKER)).toBeUndefined();
+
+    legacy.failSet = false;
+    await fresh.setItem(NAME, 'mine again');
+    expect(legacy.items.get(MARKER)).toBe('1');
+  });
+
+  it('does not strand a key when a refused delete races a sign-in', async () => {
+    // Without the counter check on the failure path, every read would
+    // answer null and the next retry would delete the new session.
+    const store = make();
+    await store.setItem(NAME, SESSION);
+    let release: (() => void) | undefined;
+    keychain.beforeRemove = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const removing = store.removeItem(NAME);
+    keychain.beforeRemove = undefined;
+    await store.setItem(NAME, 'signed-in-again');
+    keychain.failing = 'remove';
+    release?.();
+    await removing;
+    keychain.failing = 'none';
+    expect(await store.getItem(NAME)).toBe('signed-in-again');
   });
 
   it('answers null when there is nothing anywhere', async () => {

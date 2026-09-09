@@ -35,8 +35,14 @@
   delete "restore" a session the user had just ended. It counts values
   that actually landed now.
 - Each of the three has a test, and so do the four mechanisms the review's
-  mutation table showed were unpinned — a future edit cannot quietly
-  remove the load-bearing half of a redundancy and stay green.
+  mutation table showed were unpinned. **Two of those tests did not
+  actually bite** — the eighth review reverted each fix and watched them
+  stay green. One never made the read that fills the cache, so it skipped
+  the restore for the wrong reason; the other asserted a consequence that
+  the same commit had just removed. Both are rewritten and checked the
+  only way worth checking: revert the fix, watch the test fail, put it
+  back. A test that cannot fail is worse than no test, because it is
+  counted.
 - Recorded as accepted rather than fixed, in ADR-0008: a key this install
   never touches keeps a previous install's value (only reachable if PKCE
   or a separate user storage is adopted); iOS reports a failed keychain
