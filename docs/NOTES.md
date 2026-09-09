@@ -10,6 +10,35 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Two tests that could not fail, and a rule I broke
+
+- The eighth review reverted each of the previous round's fixes and
+  watched the test suite stay green for two of them. One never made the
+  read that fills the cache, so it skipped the restore for the wrong
+  reason and would have passed against the very bug it was named for; the
+  other asserted a consequence the same commit had just deleted. Both are
+  rewritten and checked the only way that means anything — revert the fix,
+  watch the test fail, put it back — and a third now pins the counter
+  check on the delete's failure path. A test that cannot fail is worse
+  than no test, because it gets counted.
+- ADR-0008 corrected on three points from the same review: the iOS
+  sign-out mitigation holds only when the revoke reached the server, and
+  offline it does not; the unreadable plain store is its own residual,
+  because a launch that cannot read the marker declines to wipe and hands
+  over whatever the keychain holds; and "one key" describes what
+  supabase-js writes, not every name that can reach this store.
+- **A rule I broke:** the entry below was edited in place to admit the two
+  tests did not bite. NOTES is append-only — the header says so — and the
+  audit trail is the point: an entry that claimed coverage it did not have
+  should stay as written, with the correction dated after it. This is that
+  correction. The counts in that entry (53 mobile, 41 store) are also
+  stale; the tree has 54 and 42, which is what ROADMAP says.
+- Nine review rounds on one file, and the ADR still says seven. Left as
+  is: the number in prose is not worth a commit, and this entry records
+  it.
+- Verified: battery green on a clean tree; 54 mobile tests, 42 on this
+  store; pushed to the private repo.
+
 ## 2026-09-10 — Three fixes, then stop: ADR-0008
 
 - The seventh review found that marking on a write had introduced a
