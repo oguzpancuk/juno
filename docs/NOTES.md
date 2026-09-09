@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — v1 safety controls: block, report, delete account
+
+- Schema (`20260909000002_safety.sql`): `blocks` (one row, two-way effect)
+  and `reports` (enum reason plus an optional private note). A block is
+  readable only by the blocker, because "you have been blocked" is not a
+  fact the app hands out; `is_blocked()` and `match_open()` are security
+  definer so the blocked side is shut out without being able to see the
+  row. `match_open` replaced `is_match_member` in the message policies, so
+  one block closes discovery, the match and the thread for both people at
+  once. A report is one-way: it hides the profile from the reporter only.
+- Account deletion is an Edge Function (`supabase/functions/delete-account`)
+  that verifies the caller with their own token and then deletes exactly
+  that auth user with the service-role key; the schema's cascades take the
+  profile, likes, matches, messages, blocks and reports. The service-role
+  key never reaches the app.
+- Verified: battery green; 8 RLS tests (both-way closure, the blocked side
+  seeing nothing, unblock restoring the thread, report stored and hiding
+  the profile, no editing or withdrawing a report, enum enforced) and 3
+  Edge Function tests (401 without a token, 405 on GET, and a delete that
+  leaves the other person intact but match-less).
+- Found by driving the UI: the safety buttons sat under the home indicator
+  on the match screen, the same class of bug as the chat composer earlier
+  today. Both screens now pad by the safe-area inset.
+- NOT verified: the block and report buttons' wiring. Injected taps do not
+  reach a Pressable inside this screen's ScrollView (Links directly above
+  it work, and Pressables in a plain View work with a press-and-hold), so
+  no observed press. The database behaviour behind them is covered by the
+  tests above. Same standing gap as the chat composer's send button.
+- Gotcha: a new Edge Function is copied into the edge-runtime container at
+  `supabase start`; restarting the container is not enough, the stack has
+  to be stopped and started or the endpoint stays 404.
+
 ## 2026-09-09 — Chat review fixes, city search, location refresh
 
 - Chat review (code-reviewer, NEEDS_WORK → fixed in `9ac71ae`): a matched

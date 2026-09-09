@@ -876,3 +876,264 @@ describe('messages', () => {
     expect(error?.code).toBe(PERMISSION_DENIED);
   });
 });
+
+describe('blocks and reports', () => {
+  // A fresh matched pair, so the block tests do not disturb the threads
+  // asserted above.
+  let kemal: TestUser; // man, wants women, nearby
+  let lale: TestUser; // woman, wants men, nearby
+  let matchId: string;
+  let messageId: string;
+
+  const BlockRows = z.array(
+    z.object({
+      blocker_id: z.string().uuid(),
+      blocked_id: z.string().uuid(),
+    }),
+  );
+  const ReportRows = z.array(
+    z.object({
+      id: z.string().uuid(),
+      reporter_id: z.string().uuid(),
+      reported_id: z.string().uuid(),
+      reason: z.string(),
+      note: z.string().nullable(),
+    }),
+  );
+
+  beforeAll(async () => {
+    kemal = await user('kemal');
+    lale = await user('lale');
+    await insertProfile(
+      kemal,
+      profileRow({
+        id: kemal.id,
+        display_name: 'Kemal',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await insertProfile(
+      lale,
+      profileRow({
+        id: lale.id,
+        display_name: 'Lale',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await kemal.client.from('likes').insert({
+      from_id: kemal.id,
+      to_id: lale.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    await lale.client.from('likes').insert({
+      from_id: lale.id,
+      to_id: kemal.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    const rows = MatchProfileRows.parse(
+      (await kemal.client.from('match_profiles').select('*')).data,
+    );
+    const mine = rows.find((r) => r.id === lale.id);
+    if (!mine) throw new Error('setup: kemal and lale are not matched');
+    matchId = mine.match_id;
+    const sent = await kemal.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: kemal.id, body: 'Merhaba Lale' })
+      .select('id')
+      .single();
+    messageId = z.object({ id: z.string().uuid() }).parse(sent.data).id;
+  });
+
+  it('anon is denied blocks and reports outright', async () => {
+    const anon = anonClient();
+    const blocks = await anon.from('blocks').select('blocker_id');
+    expect(blocks.error?.code).toBe(PERMISSION_DENIED);
+    const reports = await anon.from('reports').select('id');
+    expect(reports.error?.code).toBe(PERMISSION_DENIED);
+  });
+
+  it('cannot block or report on someone else behalf, or yourself', async () => {
+    const forOther = await kemal.client
+      .from('blocks')
+      .insert({ blocker_id: lale.id, blocked_id: kemal.id });
+    expect(forOther.error?.code).toBe(PERMISSION_DENIED);
+
+    const self = await kemal.client
+      .from('blocks')
+      .insert({ blocker_id: kemal.id, blocked_id: kemal.id });
+    expect(self.error?.code).toBe(CHECK_VIOLATION);
+
+    const reportForOther = await kemal.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      reason: 'spam',
+    });
+    expect(reportForOther.error?.code).toBe(PERMISSION_DENIED);
+
+    const reportSelf = await kemal.client.from('reports').insert({
+      reporter_id: kemal.id,
+      reported_id: kemal.id,
+      reason: 'spam',
+    });
+    expect(reportSelf.error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('a block closes discovery, the match and the thread on both sides', async () => {
+    // Before: both sides see the match and the message.
+    expect(
+      MatchProfileRows.parse(
+        (await lale.client.from('match_profiles').select('*')).data,
+      ),
+    ).toHaveLength(1);
+
+    const blocked = await lale.client
+      .from('blocks')
+      .insert({ blocker_id: lale.id, blocked_id: kemal.id });
+    expect(blocked.error).toBeNull();
+
+    for (const side of [lale, kemal]) {
+      expect(
+        MatchProfileRows.parse(
+          (await side.client.from('match_profiles').select('*')).data,
+        ).filter((r) => r.match_id === matchId),
+      ).toEqual([]);
+      const messages = await side.client
+        .from('messages')
+        .select('id')
+        .eq('match_id', matchId);
+      expect(ids(messages.data ?? [])).toEqual([]);
+      expect(
+        ids((await side.client.from('discover').select('id')).data),
+      ).not.toContain(side === lale ? kemal.id : lale.id);
+    }
+
+    // Neither side can write into a closed thread.
+    const write = await kemal.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: kemal.id, body: 'hâlâ burada' });
+    expect(write.error?.code).toBe(PERMISSION_DENIED);
+
+    // The read receipt is closed too: no update reaches the row.
+    const receipt = await lale.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', messageId)
+      .select('id');
+    expect(receipt.error).toBeNull();
+    expect(receipt.data).toEqual([]);
+  });
+
+  it('the blocked person cannot see the block', async () => {
+    expect(
+      BlockRows.parse(
+        (await kemal.client.from('blocks').select('blocker_id, blocked_id'))
+          .data,
+      ),
+    ).toEqual([]);
+    expect(
+      BlockRows.parse(
+        (await lale.client.from('blocks').select('blocker_id, blocked_id'))
+          .data,
+      ),
+    ).toEqual([{ blocker_id: lale.id, blocked_id: kemal.id }]);
+  });
+
+  it('unblocking restores the match and the thread', async () => {
+    const removed = await lale.client
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', lale.id)
+      .eq('blocked_id', kemal.id)
+      .select('blocked_id');
+    expect(removed.error).toBeNull();
+    expect(removed.data).toHaveLength(1);
+
+    for (const side of [lale, kemal]) {
+      expect(
+        MatchProfileRows.parse(
+          (await side.client.from('match_profiles').select('*')).data,
+        ).filter((r) => r.match_id === matchId),
+      ).toHaveLength(1);
+      const messages = await side.client
+        .from('messages')
+        .select('id')
+        .eq('match_id', matchId);
+      expect(ids(messages.data ?? [])).toEqual([messageId]);
+    }
+  });
+
+  it('a report is stored and hides the profile from the reporter only', async () => {
+    const filed = await lale.client
+      .from('reports')
+      .insert({
+        reporter_id: lale.id,
+        reported_id: kemal.id,
+        reason: 'harassment',
+        note: 'Rahatsız edici mesajlar',
+      })
+      .select('*')
+      .single();
+    expect(filed.error).toBeNull();
+    const row = ReportRows.parse([filed.data])[0];
+    expect(row?.reason).toBe('harassment');
+    expect(row?.reporter_id).toBe(lale.id);
+
+    expect(
+      ids((await lale.client.from('discover').select('id')).data),
+    ).not.toContain(kemal.id);
+    // One-way: reporting is not blocking, so Kemal's side is untouched.
+    expect(
+      MatchProfileRows.parse(
+        (await kemal.client.from('match_profiles').select('*')).data,
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('a report cannot be edited, withdrawn or read by the reported person', async () => {
+    const mine = ReportRows.parse(
+      (await lale.client.from('reports').select('*')).data,
+    );
+    const first = mine[0];
+    if (!first) throw new Error('no report to test');
+
+    expect(
+      ReportRows.parse((await kemal.client.from('reports').select('*')).data),
+    ).toEqual([]);
+
+    const edit = await lale.client
+      .from('reports')
+      .update({ reason: 'spam' })
+      .eq('id', first.id)
+      .select('id');
+    if (edit.error) expect(edit.error.code).toBe(PERMISSION_DENIED);
+    else expect(edit.data).toEqual([]);
+
+    const withdraw = await lale.client
+      .from('reports')
+      .delete()
+      .eq('id', first.id)
+      .select('id');
+    if (withdraw.error) expect(withdraw.error.code).toBe(PERMISSION_DENIED);
+    else expect(withdraw.data).toEqual([]);
+
+    expect(
+      ReportRows.parse((await lale.client.from('reports').select('*')).data),
+    ).toHaveLength(1);
+  });
+
+  it('a report needs a reason the enum knows', async () => {
+    const { error } = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      // why: deliberately outside the enum; the client type forbids it.
+      reason: 'because-i-say-so' as 'spam',
+    });
+    expect(error).not.toBeNull();
+  });
+});

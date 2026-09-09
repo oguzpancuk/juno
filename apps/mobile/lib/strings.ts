@@ -98,6 +98,25 @@ export const t = {
     noMessages: 'Henüz mesaj yok; başlangıç sorusu sende.',
     youPrefix: 'Sen: ',
   },
+  safety: {
+    title: 'GÜVENLİK',
+    block: 'Engelle',
+    blockConfirmTitle: 'Engellensin mi?',
+    blockConfirm: (name: string) =>
+      `${name} artık seni göremeyecek, eşleşmeniz ve sohbetiniz iki taraftan da kapanacak.`,
+    blocked: 'Engellendi. Bu kişi artık karşına çıkmayacak.',
+    report: 'Şikâyet et',
+    reportTitle: 'Neden şikâyet ediyorsun?',
+    reported: 'Şikâyetin alındı. Bu profili bir daha görmeyeceksin.',
+    cancel: 'Vazgeç',
+    failed: 'İşlem tamamlanamadı, tekrar dene.',
+    deleteAccount: 'Hesabımı sil',
+    deleteTitle: 'Hesabın silinsin mi?',
+    deleteConfirm:
+      'Profilin, haritan, eşleşmelerin ve tüm mesajların kalıcı olarak silinir. Bu işlem geri alınamaz.',
+    deleting: 'Siliniyor…',
+    deleteFailed: 'Hesap silinemedi, tekrar dene.',
+  },
   chat: {
     backToMatches: '‹ Eşleşmeler',
     viewMatch: 'Uyum detayı ›',

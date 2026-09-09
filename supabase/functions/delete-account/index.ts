@@ -1,0 +1,52 @@
+/**
+ * Deletes the caller's account: the auth user, and through the schema's
+ * cascades the profile, likes, matches, messages, blocks and reports.
+ *
+ * The service-role key never leaves this function; the app calls it with
+ * the user's own access token and can only ever delete itself. Deno, not
+ * Node: Edge Functions run on the edge runtime, so this file is outside
+ * the workspace's TypeScript project (see supabase/eslint.config.js).
+ */
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+const json = (status: number, body: Record<string, unknown>): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  });
+
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' });
+
+  const authorization = req.headers.get('Authorization');
+  if (!authorization) return json(401, { error: 'unauthorized' });
+
+  const url = Deno.env.get('SUPABASE_URL');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !anonKey || !serviceKey) {
+    return json(500, { error: 'misconfigured' });
+  }
+
+  // Who is calling: their own token, their own RLS, no elevation.
+  const caller = createClient(url, anonKey, {
+    global: { headers: { Authorization: authorization } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await caller.auth.getUser();
+  if (error || !data.user) return json(401, { error: 'unauthorized' });
+  const userId = data.user.id;
+
+  // Photos: the profile-photos feature stores objects under "<uid>/" and
+  // must delete them here as well. There is no bucket yet, so there is
+  // nothing to remove; the ROADMAP item carries the reminder.
+  const admin = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const deleted = await admin.auth.admin.deleteUser(userId);
+  if (deleted.error) {
+    console.error('delete-account failed', deleted.error.message);
+    return json(500, { error: 'delete_failed' });
+  }
+  return json(200, { deleted: userId });
+});

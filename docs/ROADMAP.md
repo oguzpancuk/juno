@@ -147,16 +147,24 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       a scripted peer (see NOTES 2026-09-09)._
 - [ ] **Profile photos + bio (PRD-3).** Supabase Storage bucket with
       per-user folder policy; 1–6 photos; profile absent from `discover`
-      until ≥ 1 photo.
+      until ≥ 1 photo. Must also extend `delete-account` to remove the
+      user's folder (ADR-free reminder: the function has the comment).
       — done when: Storage policy test proves user A cannot write to B's
       folder (battery); a photo-less seeded profile never appears in discover
       (manual); `screenshots/v1-profile.png`.
-- [ ] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),
+- [x] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),
       delete account (Edge Function with service role deletes auth user +
       storage objects; cascades handle rows).
       — done when: Vitest proves blocked pairs vanish from discover, matches
       and messages both ways and the report row exists (battery); manual
       delete-account run leaves 0 rows and 0 storage objects for that uid.
+      _Done: 8 RLS tests for blocks and reports, 3 for the Edge Function
+      (no token, wrong method, and a delete that clears the profile, likes,
+      match, messages, blocks and reports while the other person survives).
+      No storage bucket exists yet, so "0 storage objects" is trivially
+      true; the photos item must add the folder delete to the function.
+      `screenshots/v1-safety.png` shows the controls; their button wiring
+      is not verified (NOTES 2026-09-09)._
 - [ ] **Sign in with Apple (Apple).** Alongside email OTP.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).

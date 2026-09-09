@@ -1,14 +1,23 @@
 import { SIGN_TR, synastryReading } from '@stardate/astro';
-import { Link, Redirect, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
+import {
+  REPORT_REASONS,
+  blockUser,
+  reportUser,
+  type ReportReason,
+} from '@/lib/safety';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -20,6 +29,12 @@ export default function MatchScreen() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const [row, setRow] = useState<MatchProfileRow | null | 'loading'>('loading');
   const [me, setMe] = useState<OwnProfile | null>(null);
+  // The safety buttons are the last thing on the page; without the inset
+  // they sit under the home indicator and do not take a tap.
+  const insets = useSafeAreaInsets();
+  const [reporting, setReporting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const busy = useRef(false);
 
   useEffect(() => {
     if (!userId || typeof id !== 'string') return;
@@ -64,10 +79,48 @@ export default function MatchScreen() {
     );
   }
   const starter = starterFor(row, userId);
+  const other = row.id;
+  const name = row.display_name;
+
+  const confirmBlock = () => {
+    Alert.alert(t.safety.blockConfirmTitle, t.safety.blockConfirm(name), [
+      { text: t.safety.cancel, style: 'cancel' },
+      {
+        text: t.safety.block,
+        style: 'destructive',
+        onPress: () => {
+          if (busy.current) return;
+          busy.current = true;
+          void blockUser(userId, other).then((ok) => {
+            busy.current = false;
+            if (!ok) {
+              setNotice(t.safety.failed);
+              return;
+            }
+            router.replace('/matches');
+          });
+        },
+      },
+    ]);
+  };
+
+  const file = (reason: ReportReason) => {
+    if (busy.current) return;
+    busy.current = true;
+    void reportUser(userId, other, reason).then((ok) => {
+      busy.current = false;
+      setReporting(false);
+      setNotice(ok ? t.safety.reported : t.safety.failed);
+    });
+  };
+
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: insets.bottom + 32 },
+      ]}
       testID="match-screen"
     >
       <Text style={styles.kicker}>{t.match.kicker}</Text>
@@ -126,6 +179,45 @@ export default function MatchScreen() {
       <Link href="/discover" style={styles.link}>
         {t.match.backToDiscover}
       </Link>
+
+      <Text style={styles.label}>{t.safety.title}</Text>
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      <View style={styles.safetyRow}>
+        <Pressable
+          testID="block"
+          style={styles.safetyButton}
+          onPress={confirmBlock}
+        >
+          <Text style={styles.safetyText}>{t.safety.block}</Text>
+        </Pressable>
+        <Pressable
+          testID="report"
+          style={styles.safetyButton}
+          onPress={() => {
+            setNotice(null);
+            setReporting((open) => !open);
+          }}
+        >
+          <Text style={styles.safetyText}>{t.safety.report}</Text>
+        </Pressable>
+      </View>
+      {reporting ? (
+        <View style={styles.reasons} testID="report-reasons">
+          <Text style={styles.bodyMuted}>{t.safety.reportTitle}</Text>
+          {REPORT_REASONS.map((reason) => (
+            <Pressable
+              key={reason.value}
+              testID={`reason-${reason.value}`}
+              style={styles.reason}
+              onPress={() => {
+                file(reason.value);
+              }}
+            >
+              <Text style={styles.body}>{reason.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -200,6 +292,23 @@ const styles = StyleSheet.create({
     marginTop: 12,
     overflow: 'hidden',
   },
+  safetyRow: { flexDirection: 'row', gap: 8 },
+  safetyButton: {
+    flex: 1,
+    backgroundColor: '#15142a',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  safetyText: { color: '#c9c4e3', fontSize: 14, fontWeight: '600' },
+  reasons: { gap: 6, marginTop: 8 },
+  reason: {
+    backgroundColor: '#15142a',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  notice: { color: '#8ce0b0', fontSize: 13 },
   muted: { color: '#9a94b8' },
   link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
 });

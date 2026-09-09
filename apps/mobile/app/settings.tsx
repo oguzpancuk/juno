@@ -1,9 +1,12 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS_OPTIONS, updateLocation, updateRadius } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { fetchOwnProfile } from '@/lib/profile';
+import { deleteAccount } from '@/lib/safety';
+import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 
@@ -47,6 +50,38 @@ export default function Settings() {
     setLocating(saved ? 'done' : 'failed');
   };
 
+  const insets = useSafeAreaInsets();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deletingNow = useRef(false);
+
+  const confirmDelete = () => {
+    Alert.alert(t.safety.deleteTitle, t.safety.deleteConfirm, [
+      { text: t.safety.cancel, style: 'cancel' },
+      {
+        text: t.safety.deleteAccount,
+        style: 'destructive',
+        onPress: () => {
+          if (deletingNow.current) return;
+          deletingNow.current = true;
+          setDeleting(true);
+          setDeleteError(null);
+          void deleteAccount().then(async (ok) => {
+            if (!ok) {
+              deletingNow.current = false;
+              setDeleting(false);
+              setDeleteError(t.safety.deleteFailed);
+              return;
+            }
+            // The account is gone; the stored session is now worthless.
+            await supabase.auth.signOut();
+            router.replace('/sign-in');
+          });
+        },
+      },
+    ]);
+  };
+
   const [saving, setSaving] = useState(false);
   const choose = async (km: number) => {
     if (!userId || saving) return; // one request in flight at a time
@@ -63,7 +98,10 @@ export default function Settings() {
   };
 
   return (
-    <View style={styles.screen} testID="settings-screen">
+    <View
+      style={[styles.screen, { paddingBottom: insets.bottom + 24 }]}
+      testID="settings-screen"
+    >
       <Link href="/discover" style={styles.back}>
         {t.settings.back}
       </Link>
@@ -111,6 +149,19 @@ export default function Settings() {
         <Text style={styles.error}>{t.settings.locationFailed}</Text>
       ) : null}
       <Text style={styles.hint}>{t.settings.locationHint}</Text>
+
+      <Text style={styles.label}>{t.safety.title}</Text>
+      <Pressable
+        testID="delete-account"
+        style={[styles.button, deleting && styles.buttonBusy]}
+        disabled={deleting}
+        onPress={confirmDelete}
+      >
+        <Text style={styles.danger}>
+          {deleting ? t.safety.deleting : t.safety.deleteAccount}
+        </Text>
+      </Pressable>
+      {deleteError ? <Text style={styles.error}>{deleteError}</Text> : null}
     </View>
   );
 }
@@ -138,6 +189,7 @@ const styles = StyleSheet.create({
   hint: { color: '#5f5a7a', fontSize: 12 },
   error: { color: '#ff7b7b' },
   ok: { color: '#8ce0b0', fontSize: 13 },
+  danger: { color: '#ff7b7b', fontSize: 15, fontWeight: '600' },
   button: {
     backgroundColor: '#15142a',
     borderRadius: 14,
