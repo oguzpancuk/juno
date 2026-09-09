@@ -38,7 +38,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
-  const { messages, send } = useThread(matchId, userId);
+  const { messages, send, loadOlder } = useThread(matchId, userId);
   // Without the inset the send button sits under the home indicator and
   // the bottom of it is not tappable.
   const insets = useSafeAreaInsets();
@@ -153,6 +153,10 @@ export default function ChatScreen() {
         style={styles.list}
         contentContainerStyle={styles.listContent}
         testID="chat-messages"
+        // Inverted: the end of the list is the top of the thread, so this
+        // is "scrolled back far enough, fetch older messages".
+        onEndReached={() => void loadOlder()}
+        onEndReachedThreshold={0.4}
         renderItem={({ item }) => {
           const mine = item.sender_id === userId;
           return (

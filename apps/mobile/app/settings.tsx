@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RADIUS_OPTIONS, updateLocation, updateRadius } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
@@ -25,18 +25,26 @@ export default function Settings() {
     };
   }, [userId]);
 
-  type LocationState = 'idle' | 'working' | 'done' | 'failed';
+  type LocationState = 'idle' | 'working' | 'done' | 'denied' | 'failed';
   const [locating, setLocating] = useState<LocationState>('idle');
 
+  // A ref, not the rendered state: two taps in one frame both read 'idle'
+  // and would fire two permission prompts.
+  const locatingNow = useRef(false);
+
   const refreshLocation = async () => {
-    if (!userId || locating === 'working') return;
+    if (!userId || locatingNow.current) return;
+    locatingNow.current = true;
     setLocating('working');
     const point = await deviceLocation();
     if (!point) {
-      setLocating('failed');
+      locatingNow.current = false;
+      setLocating('denied');
       return;
     }
-    setLocating((await updateLocation(userId, point)) ? 'done' : 'failed');
+    const saved = await updateLocation(userId, point);
+    locatingNow.current = false;
+    setLocating(saved ? 'done' : 'failed');
   };
 
   const [saving, setSaving] = useState(false);
@@ -96,8 +104,11 @@ export default function Settings() {
           {t.settings.locationUpdated}
         </Text>
       ) : null}
-      {locating === 'failed' ? (
+      {locating === 'denied' ? (
         <Text style={styles.error}>{t.settings.locationDenied}</Text>
+      ) : null}
+      {locating === 'failed' ? (
+        <Text style={styles.error}>{t.settings.locationFailed}</Text>
       ) : null}
       <Text style={styles.hint}>{t.settings.locationHint}</Text>
     </View>

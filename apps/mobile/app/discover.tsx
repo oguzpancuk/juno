@@ -1,6 +1,6 @@
 import { SIGN_TR, synastryReading } from '@stardate/astro';
-import { Link, router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { Link, router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -32,34 +32,39 @@ export default function Discover() {
   // Own profile first (for the chart), then the candidates scored against it.
   // State is set from promise callbacks, never synchronously in the effect.
 
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    fetchOwnProfile(userId)
-      .then(async (profile) => {
-        if (profile.status === 'missing')
-          return { status: 'missing' as const, me: null };
-        if (profile.status !== 'ready')
-          return { status: 'error' as const, me: null };
-        const next = await fetchCandidates(profile.profile.chart);
-        return { ...next, me: profile.profile };
-      })
-      .then((result) => {
-        if (cancelled) return;
-        if (result.status === 'missing') {
-          router.replace('/onboarding');
-          return;
-        }
-        setMe(result.me);
-        setState(result.status === 'error' ? { status: 'error' } : result);
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: 'error' });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, attempt]);
+  // On focus, not on mount: settings can change the radius or the stored
+  // location while this screen stays mounted behind it, and the candidate
+  // list is computed from both.
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
+      let cancelled = false;
+      fetchOwnProfile(userId)
+        .then(async (profile) => {
+          if (profile.status === 'missing')
+            return { status: 'missing' as const, me: null };
+          if (profile.status !== 'ready')
+            return { status: 'error' as const, me: null };
+          const next = await fetchCandidates(profile.profile.chart);
+          return { ...next, me: profile.profile };
+        })
+        .then((result) => {
+          if (cancelled) return;
+          if (result.status === 'missing') {
+            router.replace('/onboarding');
+            return;
+          }
+          setMe(result.me);
+          setState(result.status === 'error' ? { status: 'error' } : result);
+        })
+        .catch(() => {
+          if (!cancelled) setState({ status: 'error' });
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [userId, attempt]),
+  );
 
   const act = async (candidate: Candidate, kind: 'like' | 'pass') => {
     if (!me || busy) return;

@@ -832,6 +832,21 @@ describe('messages', () => {
     )[0];
     if (!unread) throw new Error('no unread message to mark');
 
+    // A future value satisfies the CHECK, so only the server's stamp keeps
+    // it honest; a backdated one would fail the CHECK as well.
+    const ahead = await jane.client
+      .from('messages')
+      .update({ read_at: '2999-01-01T00:00:00Z' })
+      .eq('id', unread.id)
+      .select('read_at')
+      .single();
+    expect(ahead.error).toBeNull();
+    expect(
+      new Date(
+        z.object({ read_at: z.string() }).parse(ahead.data).read_at,
+      ).getUTCFullYear(),
+    ).toBe(new Date().getUTCFullYear());
+
     const backdated = await jane.client
       .from('messages')
       .update({ read_at: '1970-01-01T00:00:00Z' })

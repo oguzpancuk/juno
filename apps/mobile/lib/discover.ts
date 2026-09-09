@@ -119,10 +119,19 @@ export async function updateRadius(
  * Move the profile to a new point. The DB snaps it to a ~1 km grid, so
  * what lands in the row is a cell, never the exact device fix.
  */
+/** A sensor read is an external boundary: NaN reaches PostGIS otherwise. */
+const PointSchema = z.object({
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+});
+
 export async function updateLocation(
   userId: string,
-  point: { readonly latitude: number; readonly longitude: number },
+  candidate: { readonly latitude: number; readonly longitude: number },
 ): Promise<boolean> {
+  const parsed = PointSchema.safeParse(candidate);
+  if (!parsed.success) return false;
+  const point = parsed.data;
   const { error } = await supabase
     .from('profiles')
     .update({

@@ -185,7 +185,9 @@ create or replace function public.create_match_on_mutual_like()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+-- Empty, not `public`: a definer function must not resolve identifiers
+-- through a schema someone else could add to. Every name below is qualified.
+set search_path = ''
 as $$
 declare
   reciprocal public.likes%rowtype;

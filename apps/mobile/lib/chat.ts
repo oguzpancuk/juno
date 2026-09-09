@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { supabase } from './supabase';
 
@@ -33,14 +33,24 @@ export const THREAD_PAGE_SIZE = 200;
 export async function fetchMessages(
   matchId: string,
   limit = THREAD_PAGE_SIZE,
+  /** Page backwards from this row (exclusive), oldest known first. */
+  before?: Pick<MessageRow, 'created_at' | 'id'>,
 ): Promise<MessageRow[] | null> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('messages')
     .select('*')
     .eq('match_id', matchId)
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .limit(limit);
+  if (before) {
+    // Tuple comparison on (created_at, id): two messages can share a
+    // timestamp, and a plain `lt` on time would drop one of them.
+    query = query.or(
+      `created_at.lt.${before.created_at},and(created_at.eq.${before.created_at},id.lt.${before.id})`,
+    );
+  }
+  const { data, error } = await query;
   if (error) return null;
   const parsed = z.array(MessageRowSchema).safeParse(data);
   return parsed.success ? [...parsed.data].reverse() : null;
@@ -74,7 +84,7 @@ export async function sendMessage(
 export async function markThreadRead(
   matchId: string,
   myId: string,
-): Promise<boolean> {
+): Promise<void> {
   // The server stamps the time; the value sent here only satisfies the
   // column's not-null rule on update.
   const { error } = await supabase
@@ -83,12 +93,9 @@ export async function markThreadRead(
     .eq('match_id', matchId)
     .neq('sender_id', myId)
     .is('read_at', null);
-  if (error) {
-    // A silent failure leaves a badge that never clears; make it visible.
-    console.warn('markThreadRead failed', error.message);
-    return false;
-  }
-  return true;
+  // A failure leaves the badge up; the next focus retries, so this is a
+  // log rather than a state the screen has to carry.
+  if (error) console.warn('markThreadRead failed', error.message);
 }
 
 const byTime = (a: MessageRow, b: MessageRow): number =>
@@ -105,6 +112,8 @@ function merge(list: readonly MessageRow[], row: MessageRow): MessageRow[] {
 export interface Thread {
   readonly messages: MessageRow[] | null | 'loading';
   readonly send: (body: string) => Promise<boolean>;
+  /** Pull the page before the oldest message held; no-op once exhausted. */
+  readonly loadOlder: () => Promise<void>;
 }
 
 /**
@@ -118,6 +127,19 @@ export function useThread(matchId: string | null, myId: string | null): Thread {
   const [messages, setMessages] = useState<MessageRow[] | null | 'loading'>(
     'loading',
   );
+  // The current list, readable from callbacks without re-creating them.
+  const held = useRef<MessageRow[]>([]);
+  const exhausted = useRef(false);
+  const loadingOlder = useRef(false);
+
+  useEffect(() => {
+    held.current =
+      messages === 'loading' || messages === null ? [] : [...messages];
+  }, [messages]);
+
+  useEffect(() => {
+    exhausted.current = false;
+  }, [matchId]);
 
   useEffect(() => {
     if (!matchId || !myId) return;
@@ -171,5 +193,24 @@ export function useThread(matchId: string | null, myId: string | null): Thread {
     [matchId, myId],
   );
 
-  return { messages, send };
+  const loadOlder = useCallback(async (): Promise<void> => {
+    if (!matchId || exhausted.current || loadingOlder.current) return;
+    const oldest = held.current[0];
+    if (!oldest) return;
+    loadingOlder.current = true;
+    const older = await fetchMessages(matchId, THREAD_PAGE_SIZE, oldest);
+    loadingOlder.current = false;
+    if (!older) return;
+    if (older.length === 0) {
+      exhausted.current = true;
+      return;
+    }
+    if (older.length < THREAD_PAGE_SIZE) exhausted.current = true;
+    setMessages((prev) => {
+      const base = prev === 'loading' || prev === null ? [] : prev;
+      return older.reduce<MessageRow[]>((list, row) => merge(list, row), base);
+    });
+  }, [matchId]);
+
+  return { messages, send, loadOlder };
 }

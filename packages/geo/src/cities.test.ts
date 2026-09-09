@@ -150,6 +150,19 @@ describe('search ranking', () => {
     expect(searchCities('İzmir', 1)[0]?.name).toBe('İzmir');
   });
 
+  it('a fully typed exonym outranks names that merely start with it', () => {
+    // "Şam" folds to "sam", which is also the prefix of Samara, Samarkand…
+    // Without the exact-exonym tier Damascus falls behind all of them.
+    expect(searchCities('sam', 5)[0]?.name).toBe('Damascus');
+  });
+
+  it('a half-typed exonym still beats a mid-name word match', () => {
+    // "napo" is a prefix of Napoli (Naples) and a word inside Cluj-Napoca.
+    const napo = searchCities('napo', 5).map((c) => c.name);
+    expect(napo[0]).toBe('Naples');
+    expect(napo.indexOf('Cluj-Napoca')).toBeGreaterThan(0);
+  });
+
   it('does not let a half-typed exonym outrank a real name', () => {
     // "is" is a prefix of İskenderiye (Alexandria) and of İstanbul.
     expect(searchCities('is', 5)[0]?.name).toBe('İstanbul');

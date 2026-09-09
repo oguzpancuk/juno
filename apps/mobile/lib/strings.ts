@@ -118,7 +118,8 @@ export const t = {
     locating: 'Konum alınıyor…',
     locationUpdated: 'Konumun güncellendi.',
     locationDenied:
-      'Konum alınamadı. İzni açtıysan tekrar dene; kapalıysa doğum şehrin kullanılır.',
+      'Konum alınamadı. Ayarlardan izni açıp tekrar dene; şimdilik kayıtlı konumun değişmedi.',
+    locationFailed: 'Konum kaydedilemedi, tekrar dene.',
     locationHint:
       'Konumun ~1 km’lik bir hücreye yuvarlanarak saklanır; kimse tam yerini görmez.',
   },

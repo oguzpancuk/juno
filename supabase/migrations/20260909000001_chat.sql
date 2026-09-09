@@ -54,7 +54,9 @@ returns trigger
 language plpgsql
 as $$
 begin
-  new.created_at = now();
+  -- clock_timestamp(), not now(): now() is the transaction's start time, so
+  -- two statements in one transaction would share a timestamp.
+  new.created_at = clock_timestamp();
   new.read_at = null;
   return new;
 end;
@@ -83,7 +85,7 @@ begin
   if new.read_at is null then
     raise exception 'read_at cannot be cleared' using errcode = 'check_violation';
   end if;
-  new.read_at = coalesce(old.read_at, now());
+  new.read_at = coalesce(old.read_at, clock_timestamp());
   return new;
 end;
 $$;
