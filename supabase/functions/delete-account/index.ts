@@ -65,35 +65,36 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // policy, but a listing entry with a null id is a folder, and asking
   // Storage to remove one deletes nothing and reports no error — a loop
   // that assumed a flat folder would spin until the worker was killed,
-  // and the account could then never be deleted at all. The step count is
-  // bounded for the same reason: an object that refuses to go must fail
-  // the request, not hang it.
+  // and the account could then never be deleted at all. The loop is
+  // bounded by progress rather than by a step count: a step count turns a
+  // large folder into an undeletable account, which is the same bug.
   const PAGE = 100;
-  const MAX_STEPS = 500;
   const folders: string[] = [userId];
-  let steps = 0;
+  const walked = new Set<string>();
   while (folders.length > 0) {
     const folder = folders.pop();
-    if (folder === undefined) break;
-    for (;;) {
-      if (++steps > MAX_STEPS) {
-        console.error('delete-account photos: step limit', userId);
-        return json(500, { error: 'delete_failed' });
-      }
+    if (folder === undefined || walked.has(folder)) continue;
+    walked.add(folder);
+    for (let offset = 0; ;) {
       const listed = await admin.storage
         .from('photos')
-        .list(folder, { limit: PAGE });
+        .list(folder, { limit: PAGE, offset });
       if (listed.error) {
         console.error('delete-account list failed', listed.error.message);
         return json(500, { error: 'delete_failed' });
       }
       if (listed.data.length === 0) break;
-      // A null id marks a folder; it is walked, not removed.
+      // A null id marks a folder: it is walked, never removed.
       const objects = listed.data.filter((entry) => entry.id !== null);
       for (const entry of listed.data) {
         if (entry.id === null) folders.push(`${folder}/${entry.name}`);
       }
-      if (objects.length === 0) break;
+      if (objects.length === 0) {
+        // Nothing here to delete, so page past these folder entries
+        // instead of asking for the same page again.
+        offset += listed.data.length;
+        continue;
+      }
       const removed = await admin.storage
         .from('photos')
         .remove(objects.map((file) => `${folder}/${file.name}`));
@@ -101,12 +102,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
         console.error('delete-account photos failed', removed.error.message);
         return json(500, { error: 'delete_failed' });
       }
-      // Every object that was listed must be gone, or the next listing
-      // returns the same page for ever.
+      // Every object that was listed must be gone. Without this the next
+      // listing returns the same page and the loop makes no progress.
       if (removed.data.length < objects.length) {
         console.error('delete-account photos: partial remove', userId);
         return json(500, { error: 'delete_failed' });
       }
+      // Removing shrank the folder, so start the next listing at the
+      // folder entries that were skipped, if any.
+      offset = listed.data.length - objects.length;
     }
   }
   const deleted = await admin.auth.admin.deleteUser(userId);

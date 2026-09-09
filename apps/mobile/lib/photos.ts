@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { env } from './env';
 import { supabase } from './supabase';
@@ -61,18 +62,65 @@ export async function photoSources(
 
 /**
  * Frees what `photoSources` allocated. A no-op on native; on the web an
- * object URL pins its blob in memory until it is revoked, so screens call
- * this when they replace or drop a set.
+ * object URL pins its blob in memory until it is revoked.
  */
-export function releasePhotoSources(
-  sources: readonly (PhotoSource | null)[],
-): void {
+function release(sources: readonly (PhotoSource | null)[]): void {
   if (Platform.OS !== 'web') return;
   for (const source of sources) {
     if (source && source.uri.startsWith('blob:')) {
       URL.revokeObjectURL(source.uri);
     }
   }
+}
+
+/** Storage paths cannot contain a null byte, so joining on one is safe. */
+const PATH_SEPARATOR = '\u0000';
+
+/**
+ * Sources for `paths`, aligned by index, kept for as long as the screen
+ * shows them.
+ *
+ * The set is replaced only once the new one has arrived, and the old one
+ * is freed after that: freeing on the way out would revoke URLs the
+ * screen is still rendering, and the card would go blank until the next
+ * fetch landed. Identity of the array does not matter, only its contents,
+ * so a refetch that returns the same paths does not refetch the photos.
+ */
+export function usePhotoSources(
+  paths: readonly string[],
+): (PhotoSource | null)[] {
+  const key = paths.join(PATH_SEPARATOR);
+  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
+  const held = useRef<(PhotoSource | null)[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const wanted = key === '' ? [] : key.split(PATH_SEPARATOR);
+    void photoSources(wanted).then((fetched) => {
+      if (cancelled) {
+        release(fetched);
+        return;
+      }
+      const previous = held.current;
+      held.current = fetched;
+      setSources(fetched);
+      release(previous);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  // Only on unmount: what is held is what the screen is showing.
+  useEffect(
+    () => () => {
+      release(held.current);
+      held.current = [];
+    },
+    [],
+  );
+
+  return sources;
 }
 
 const EXTENSIONS: Readonly<Record<string, string>> = {

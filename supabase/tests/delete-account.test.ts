@@ -5,6 +5,7 @@ import {
   STARTER,
   insertProfileRow,
   profileRow,
+  uploadPhotos,
 } from './fixtures';
 import {
   adminClient,
@@ -120,6 +121,18 @@ beforeAll(async () => {
   aboutMertId = z.object({ id: z.string().uuid() }).parse(nurs.data).id;
   // A photo to leave behind: storage objects do not cascade. The profile
   // fixture already uploaded one.
+  // More than one photo in the profile's own list. Deleting an account
+  // deletes them in one statement, and a per-row trigger that re-checked
+  // the surviving paths made that impossible for anyone with two.
+  await uploadPhotos(mert.client, [`${mert.id}/2.png`, `${mert.id}/3.png`]);
+  const listed = await mert.client
+    .from('profiles')
+    .update({
+      photos: [`${mert.id}/1.png`, `${mert.id}/2.png`, `${mert.id}/3.png`],
+    })
+    .eq('id', mert.id);
+  if (listed.error) throw new Error(`photos: ${listed.error.message}`);
+
   // A nested object, planted with the service role because the policies
   // no longer let a member make one. It used to wedge the delete loop: a
   // folder entry cannot be removed, so the folder never looked empty and

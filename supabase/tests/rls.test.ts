@@ -1572,6 +1572,38 @@ describe('photos', () => {
     ).not.toContain(tolga.id);
   });
 
+  it('an object in a non-uuid folder can still be deleted', async () => {
+    // Only the service role can make one, but the prune trigger casts the
+    // folder name to uuid: unguarded, that object could never be removed
+    // again, through any client.
+    const path = 'not-a-uuid/stray.png';
+    const uploaded = await admin.storage
+      .from('photos')
+      .upload(path, shot(), { contentType: 'image/png', upsert: true });
+    expect(uploaded.error).toBeNull();
+    const removed = await admin.storage.from('photos').remove([path]);
+    expect(removed.error).toBeNull();
+    expect(removed.data?.length).toBe(1);
+  });
+
+  it('a folder cannot grow past the deletable limit', async () => {
+    // An account whose folder cannot be emptied in one invocation cannot
+    // be deleted, so the folder is capped rather than left open.
+    const paths = Array.from(
+      { length: 200 },
+      (_, i) => `${sema.id}/cap-${i}.png`,
+    );
+    const uploads = await Promise.all(
+      paths.map((path) =>
+        sema.client.storage
+          .from('photos')
+          .upload(path, shot(), { contentType: 'image/png' }),
+      ),
+    );
+    expect(uploads.filter((u) => u.error !== null).length).toBeGreaterThan(0);
+    await sema.client.storage.from('photos').remove(paths);
+  }, 60_000);
+
   it('nobody can delete someone else photo', async () => {
     const { data, error } = await tolga.client.storage
       .from('photos')

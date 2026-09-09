@@ -18,13 +18,14 @@ import {
   pickPhoto,
   removePhoto,
   saveBio,
-  photoSources,
-  releasePhotoSources,
-  type PhotoSource,
+  usePhotoSources,
 } from '@/lib/photos';
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+
+/** Stable identity: a new [] on every render would refetch for ever. */
+const EMPTY: readonly string[] = [];
 
 export default function Profile() {
   const session = useSession();
@@ -32,9 +33,9 @@ export default function Profile() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const insets = useSafeAreaInsets();
   const [photos, setPhotos] = useState<string[] | null>(null);
-  // Aligned with `photos` by index; null where the photo could not be
+  // Aligned with `photos` by index; null where a photo could not be
   // fetched, so a missing one never shifts the rest.
-  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
+  const sources = usePhotoSources(photos ?? EMPTY);
   const [bio, setBio] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,25 +54,6 @@ export default function Profile() {
       cancelled = true;
     };
   }, [userId]);
-
-  // Fetched per visit, not stored: the endpoint authorises every request.
-  useEffect(() => {
-    if (photos === null) return;
-    let cancelled = false;
-    let taken: (PhotoSource | null)[] = [];
-    void photoSources(photos).then((fetched) => {
-      if (cancelled) {
-        releasePhotoSources(fetched);
-        return;
-      }
-      taken = fetched;
-      setSources(fetched);
-    });
-    return () => {
-      cancelled = true;
-      releasePhotoSources(taken);
-    };
-  }, [photos]);
 
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 

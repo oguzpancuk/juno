@@ -152,7 +152,7 @@ export const t = {
     radius: 'Keşif yarıçapı',
     customRadius: (km: number) => `Şu an ${km} km (özel değer).`,
     radiusHint:
-      'Bu mesafe içindeki kişiler gösterilir. Konumun başkalarına sadece km olarak görünür.',
+      'Bu mesafe içindeki kişiler sana gösterilir; seni kimlerin göreceğini onların yarıçapı belirler. Konumun başkalarına sadece km olarak görünür.',
     location: 'Konum',
     updateLocation: 'Konumu güncelle',
     locating: 'Konum alınıyor…',
@@ -166,6 +166,7 @@ export const t = {
   legal: {
     open: 'Gizlilik ve lisanslar',
     back: '‹ Ayarlar',
+    backToSignIn: '‹ Giriş',
     title: 'Gizlilik ve lisanslar',
     updated: (date: string) => `Son güncelleme: ${date}`,
   },

@@ -1,6 +1,6 @@
 import { SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,11 +15,7 @@ import {
   type Candidate,
   type DiscoverState,
 } from '@/lib/discover';
-import {
-  photoSources,
-  releasePhotoSources,
-  type PhotoSource,
-} from '@/lib/photos';
+import { usePhotoSources } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -32,39 +28,6 @@ export default function Discover() {
   const [state, setState] = useState<DiscoverState>({ status: 'loading' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // One authorised source per candidate's first photo, keyed by path.
-  // They are fetched per visit rather than stored: the endpoint checks the
-  // block on every request (ADR-0006), so nothing is reusable later.
-  const [cardSources, setCardSources] = useState<Record<string, PhotoSource>>(
-    {},
-  );
-  useEffect(() => {
-    if (state.status !== 'ready') return;
-    const first = state.candidates
-      .map((c) => c.row.photos[0])
-      .filter((p): p is string => typeof p === 'string');
-    if (first.length === 0) return;
-    let cancelled = false;
-    let taken: (PhotoSource | null)[] = [];
-    void photoSources(first).then((sources) => {
-      if (cancelled) {
-        releasePhotoSources(sources);
-        return;
-      }
-      taken = sources;
-      const pairs: Record<string, PhotoSource> = {};
-      first.forEach((path, index) => {
-        const source = sources[index];
-        if (source) pairs[path] = source;
-      });
-      setCardSources(pairs);
-    });
-    return () => {
-      cancelled = true;
-      releasePhotoSources(taken);
-    };
-  }, [state]);
-
   const [attempt, setAttempt] = useState(0);
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -146,6 +109,16 @@ export default function Discover() {
   };
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
+  // Only the visible card's photo, and only while it is visible. Every
+  // request is authorised by the endpoint (ADR-0006), so fetching the
+  // whole deck up front would cost one invocation per candidate on every
+  // swipe and buffer every image at once.
+  const cardPath = current?.row.photos[0];
+  const cardPaths = useMemo(
+    () => (cardPath === undefined ? [] : [cardPath]),
+    [cardPath],
+  );
+  const [cardSource] = usePhotoSources(cardPaths);
   // Id of the card whose detail is open; a new card is therefore collapsed.
   const [detailFor, setDetailFor] = useState<string | null>(null);
   // Engine-rendered detail for the visible card; the screen only lays it out.
@@ -198,8 +171,7 @@ export default function Discover() {
       ) : (
         <View style={styles.card} testID={`card-${current.row.id}`}>
           {(() => {
-            const path = current.row.photos[0];
-            const source = path ? cardSources[path] : undefined;
+            const source = cardSource;
             return source ? (
               <Image
                 source={source}

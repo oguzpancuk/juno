@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
+import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 
 const BULLET = '• ';
@@ -14,6 +15,10 @@ const BULLET = '• ';
  */
 export default function Legal() {
   const insets = useSafeAreaInsets();
+  // Reachable from sign-in as well as from settings, and a signed-out
+  // reader cannot open settings at all.
+  const session = useSession();
+  const signedIn = session.status === 'signed-in';
   return (
     <ScrollView
       style={styles.screen}
@@ -23,8 +28,8 @@ export default function Legal() {
       ]}
       testID="legal-screen"
     >
-      <Link href="/settings" style={styles.back}>
-        {t.legal.back}
+      <Link href={signedIn ? '/settings' : '/sign-in'} style={styles.back}>
+        {signedIn ? t.legal.back : t.legal.backToSignIn}
       </Link>
       <Text style={styles.updated}>{t.legal.updated(LEGAL_UPDATED)}</Text>
       {legalSections.map((section) => (

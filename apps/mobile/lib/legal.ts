@@ -38,9 +38,10 @@ export const legalSections: readonly LegalSection[] = [
   {
     heading: 'İşlenen veriler',
     body: [
-      'Uygulama yalnızca aşağıdaki verileri saklar.',
+      'Uygulama aşağıdaki verileri saklar.',
       'Hesap',
       '• E-posta adresin. Giriş tek kullanımlık kod ile yapılır; parola saklanmaz.',
+      '• Giriş kayıtları: kimlik altyapısı, her oturum için bağlandığın IP adresini ve kullandığın uygulama/tarayıcı bilgisini tutar. Bunlar güvenlik ve kötüye kullanımı önleme amacıyla saklanır.',
       'Profil',
       '• Görünen adın.',
       '• Doğum tarihin, doğum saatin ve doğum şehrin. Bu üçü doğum haritanı hesaplamak için zorunludur; doğum tarihi aynı zamanda 18 yaş sınırını denetler.',
@@ -61,7 +62,7 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'İşleme amaçları ve hukuki sebepler',
     body: [
       '• Doğum haritası ve uyum hesabı. Doğum tarihi, saati ve yeri olmadan ürünün temel işlevi çalışmaz; bu veriler açık rızanla işlenir ve rızanı hesabını silerek geri alabilirsin.',
-      '• Yakındaki kişileri gösterme. Konumun, yalnızca senin belirlediğin yarıçap içindeki profilleri bulmak ve mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
+      '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak ve seni görebilecek kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
       '• Eşleşme ve mesajlaşma. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Güvenlik. Engelleme ve şikâyet kayıtları, hizmetin kötüye kullanımını önlemek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
     ],
@@ -69,7 +70,7 @@ export const legalSections: readonly LegalSection[] = [
   {
     heading: 'Kimlerle paylaşılır',
     body: [
-      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin ve yuvarlanmış konumundan hesaplanan mesafe, arama yarıçapı içindeki kişilere gösterilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin ve aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• Bunların dışında hiçbir üçüncü tarafa aktarılmaz, satılmaz veya pazarlama amacıyla paylaşılmaz. Yasal bir talep hâlinde mevzuatın gerektirdiği ölçüde paylaşım yapılabilir.',
     ],
@@ -78,7 +79,7 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'Saklama süresi',
     body: [
       'Verilerin, hesabın açık kaldığı sürece saklanır. Hesabını uygulama içinden sildiğinde profilin, haritan, fotoğrafların, beğenilerin, eşleşmelerin ve mesajların silinir.',
-      'Bir istisna var: hakkında yapılmış şikâyet kayıtları, kötüye kullanımın hesap silinerek izinin kaybolmaması için bir süre daha tutulur. Bu kayıtta şikâyet edilen kişinin kimliği ve şikâyet metni silinir; yalnızca şikâyetin varlığı, sebebi ve tarihi kalır.',
+      'İki istisna var. Hakkında yapılmış şikâyet kayıtları, kötüye kullanımın hesap silinerek izinin kaybolmaması için bir süre daha tutulur; bu kayıtta şikâyet edilen kişinin kimliği ve şikâyet metni silinir, yalnızca şikâyetin varlığı, sebebi ve tarihi kalır. Ayrıca kimlik altyapısının denetim kayıtları (kayıt olma, giriş, hesap silme olayları) e-posta adresini içerecek şekilde bir süre daha saklanır.',
     ],
   },
   {

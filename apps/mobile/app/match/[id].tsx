@@ -12,11 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
-import {
-  photoSources,
-  releasePhotoSources,
-  type PhotoSource,
-} from '@/lib/photos';
+import { usePhotoSources } from '@/lib/photos';
 import {
   REPORT_REASONS,
   blockUser,
@@ -27,8 +23,8 @@ import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 
-/** Storage paths cannot contain a null byte, so joining on one is safe. */
-const PATH_SEPARATOR = '\u0000';
+/** Stable identity while the row is still loading. */
+const EMPTY: readonly string[] = [];
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -61,30 +57,9 @@ export default function MatchScreen() {
   }, [userId, id]);
 
   // Photos come from an endpoint that authorises every request
-  // (ADR-0006), fetched per visit. The paths travel as one joined string:
-  // a refetch hands back a new array with the same contents, and that must
-  // not refetch the photos.
-  const photoKey =
-    row !== 'loading' && row ? row.photos.join(PATH_SEPARATOR) : null;
-  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
-  useEffect(() => {
-    if (photoKey === null) return;
-    const paths = photoKey === '' ? [] : photoKey.split(PATH_SEPARATOR);
-    let cancelled = false;
-    let taken: (PhotoSource | null)[] = [];
-    void photoSources(paths).then((fetched) => {
-      if (cancelled) {
-        releasePhotoSources(fetched);
-        return;
-      }
-      taken = fetched;
-      setSources(fetched);
-    });
-    return () => {
-      cancelled = true;
-      releasePhotoSources(taken);
-    };
-  }, [photoKey]);
+  // (ADR-0006), so they are fetched per visit and never cached.
+  const photos = row !== 'loading' && row ? row.photos : EMPTY;
+  const sources = usePhotoSources(photos);
 
   // After every hook: hooks must run in the same order on each render.
   const reading = useMemo(

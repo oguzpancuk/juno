@@ -10,6 +10,51 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Third photos review: the fix that made deletion impossible
+
+- The prune trigger from the previous round created a worse version of
+  the bug it was fixing. `storage.remove([a, b])` deletes a batch in one
+  statement and AFTER-row triggers run at the end of it, so pruning `a`
+  updated `profiles.photos` when `b` was already gone — and the existence
+  check on that update then failed on `b`. Every account with two or more
+  photos returned HTTP 500 from `delete-account`, permanently. The header
+  comment claiming the profile trigger was "skipped by construction" was
+  simply wrong: shrinking a list still re-runs the check on what survives.
+- Fixed by checking existence only for paths being _added_. An existing
+  path is history the prune trigger already maintains. The suite gained
+  the case that was missing: an account with three photos in its own
+  list, deleted.
+- Two more ways to make an account undeletable, both closed: the prune
+  trigger cast a folder name to uuid without the guard its sibling read
+  policy has, so one object in a non-uuid folder (Studio placeholders,
+  any service-role write) could never be deleted again; and the step cap
+  added in the previous round turned a large folder into a permanent 500.
+  The loop is bounded by progress instead, and a trigger caps a folder at
+  200 objects — with the owner's profile row locked first, because
+  counting alone is not a limit when inserts arrive in parallel.
+- The deck no longer downloads every candidate's photo. Each request is
+  authorised now, so fetching the whole deck cost one invocation per
+  candidate on every swipe and buffered every image at once; only the
+  visible card's photo is fetched. Object URLs are freed after the
+  replacement set arrives, not on the way out — revoking in the effect
+  cleanup blanked the card the screen was still rendering. Both live in
+  one `usePhotoSources` hook so the three screens cannot drift.
+- Three corrections to the privacy notice, all found by checking it
+  against the running stack rather than against intent:
+  - The identity layer stores an IP address and a user agent per session.
+    The text said "only the following data"; it now lists them.
+  - Auth audit rows outlive a deleted account with the e-mail in them.
+    The text named reports as the single exception; now there are two.
+  - **The radius asymmetry.** `discover` filters on the _viewer's_
+    radius, so a small radius limits who you see, not who sees you. The
+    notice implied the opposite and the settings hint did not correct it.
+    Both now say plainly that anyone whose own radius reaches you can see
+    you. Whether the product should instead require both radii to match
+    is an owner decision, not a bug fix — parked here rather than changed.
+- Verified: battery green on a clean tree; 80 Supabase tests; deck and
+  swipe driven in the browser with one photo request per card and no
+  blank card between swipes.
+
 ## 2026-09-09 — Photos re-review: a move, a wedge, and the oracle closed
 
 - The photos fix commit came back NEEDS_WORK again. Two blockers, both
