@@ -9,6 +9,10 @@ import type { z } from 'zod';
  * is reported rather than swallowed, because the failure that matters is
  * not one bad row, it is every row failing at once, and an empty list
  * with nothing in the log looks exactly like a quiet day.
+ *
+ * The report is a console warning, which means it reaches a developer
+ * watching Metro and nobody else. That is the whole channel until crash
+ * and event reporting lands (ROADMAP: Metrics).
  */
 export function parseRows<T>(
   schema: z.ZodType<T>,

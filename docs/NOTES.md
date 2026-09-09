@@ -10,6 +10,39 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Two ways a check can be right and still be wrong
+
+- **The private-schema move locked the service role out of `profiles`.**
+  A CHECK runs with the writer's privileges — the fact the whole move was
+  built on — and `private` was granted to `authenticated` only. Every
+  service-role write failed with "permission denied for function
+  is_sign": the seed scripts first, and any backfill, moderation write or
+  Edge Function later. Granting the schema and the four helpers to
+  `service_role` costs nothing on the API surface, because PostgREST
+  exposes `public` and `graphql_public` and nothing else. A test now
+  writes a profile as the service role, and `seed-photos.ts` runs again.
+- **The check compared in `numeric` and the app compares in IEEE-754.**
+  `359.99999999999999999` is under 360 as a decimal and becomes exactly
+  360 when `JSON.parse` reads it, so a crafted chart passed the constraint
+  and then failed in the app for ever — that member's own chart screen
+  erroring on every launch, `chart` immutable, account deletion the only
+  exit. The comparisons happen in double precision now, which is the
+  arithmetic the client actually uses, with a magnitude guard so a number
+  too large to be a double is refused rather than raising.
+  That case cannot be written as a TypeScript literal without losing the
+  precision that is the point, so the test sends the row as text.
+- The migration now has the tests it should have shipped with: the four
+  shapes the header names (a placement missing `degree`, missing
+  `retrograde`, `house: 77`, `degree: 44`), an `ascendant` of −999, the
+  decimal case above, and the service-role write.
+- Two claims corrected rather than defended: "field for field" was not
+  literally true — the SQL is stricter in three ways no JS client can
+  reach, which is the safe direction but not the same thing — and the
+  dropped-row warning reaches a developer watching Metro and nobody else,
+  which is the whole channel until crash reporting lands.
+- Verified: battery green on a clean tree; 104 Supabase tests, 12 mobile;
+  `seed-photos.ts` and `make-tester.ts` both run against a fresh reset.
+
 ## 2026-09-10 — Mirroring a schema means mirroring all of it
 
 - The shape check I added claimed to mirror `PublicChartSchema` and did
@@ -28,7 +61,8 @@
   list with nothing in the log, which looks exactly like a quiet day.
   `parseRows` warns with a count, and it is a pure module with its own
   test, because this is the second time the client half of a fix shipped
-  without one.
+  without one. The warning reaches a developer watching Metro and nobody
+  else — there is no field channel until crash reporting lands.
 - The helpers moved to the `private` schema. In `public` they were live
   anon RPC endpoints — `POST /rest/v1/rpc/is_sign` answered, and
   `is_public_chart` chewed through an 8.7 MB payload. Revoking EXECUTE was

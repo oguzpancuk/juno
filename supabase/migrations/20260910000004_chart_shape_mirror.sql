@@ -5,9 +5,12 @@
 -- `ascendant = -999`, was stored and then failed to parse in the app. The
 -- member's own chart screen showed an error for ever — `chart` is
 -- immutable after insert, so the only way out was deleting the account —
--- and every deck quietly dropped their card. Now it is the same rule as
--- `PublicPlacementSchema` and `PublicChartSchema` in packages/astro,
--- field for field.
+-- and every deck quietly dropped their card. It follows
+-- `PublicPlacementSchema` and `PublicChartSchema` in packages/astro field
+-- by field, and is deliberately stricter in three places no JS client can
+-- reach: a `version` of `1.0`, an extra key under `planets` that is not a
+-- placement, and a non-integer house. Refusing more than the client does
+-- is the safe direction; accepting more is what caused this.
 --
 -- The numeric comparisons are also guarded by CASE rather than by an
 -- earlier OR arm: Postgres does not promise the evaluation order of OR,

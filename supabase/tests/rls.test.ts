@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { allCities } from '@stardate/geo';
+import type { Json } from './database.types';
 import {
   ANKARA,
   ISTANBUL,
@@ -16,6 +17,7 @@ import {
   anonClient,
   createUser,
   deleteUsers,
+  localStack,
   type TestUser,
 } from './local';
 
@@ -93,6 +95,13 @@ async function user(tag: string): Promise<TestUser> {
   const u = await createUser(admin, tag);
   users.push(u); // pushed immediately so cleanup covers partial setups
   return u;
+}
+
+async function accessToken(u: TestUser): Promise<string> {
+  const { data } = await u.client.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('no session for the test user');
+  return token;
 }
 
 async function insertProfile(u: TestUser, row: ReturnType<typeof profileRow>) {
@@ -1604,6 +1613,114 @@ describe('birth instant', () => {
     // Nothing was stored, so the neighbouring deck still answers.
     const neighbour = await alice.client.from('discover').select('id');
     expect(neighbour.error).toBeNull();
+  });
+
+  it('refuses a chart that is subtly unreadable', async () => {
+    // These all parse as JSON and all fail the schema the app parses
+    // with. `chart` is immutable after insert, so a stored one would
+    // error on that member's own screen for ever, with account deletion
+    // the only way out.
+    const template = profileRow({
+      id: alice.id,
+      display_name: 'x',
+      gender: 'man',
+      interested_in: 'women',
+      lonLat: ISTANBUL_NEARBY,
+    });
+    const sun = (placement: Json): Json => ({
+      version: 1,
+      planets: {
+        ...(template.chart.planets as Record<string, Json>),
+        sun: placement,
+      },
+      houses: template.chart.houses as Json,
+    });
+    const houses = (over: Json): Json => ({
+      version: 1,
+      planets: template.chart.planets as Json,
+      houses: over,
+    });
+
+    const charts: Json[] = [
+      sun({ longitude: 10, sign: 'aries' }),
+      sun({ longitude: 10, sign: 'aries', degree: 10, house: 1 }),
+      sun({
+        longitude: 10,
+        sign: 'aries',
+        degree: 10,
+        house: 77,
+        retrograde: false,
+      }),
+      sun({
+        longitude: 10,
+        sign: 'aries',
+        degree: 44,
+        house: 1,
+        retrograde: false,
+      }),
+      houses({ ascendant: -999, mc: 10, cusps: Array(12).fill(0) as Json }),
+    ];
+    for (const [index, broken] of charts.entries()) {
+      const subtle = await user(`subtle-${index}`);
+      const { error } = await subtle.client.from('profiles').insert({
+        ...profileRow({
+          id: subtle.id,
+          display_name: 'İnce',
+          gender: 'man',
+          interested_in: 'women',
+          lonLat: ISTANBUL_NEARBY,
+          photos: [],
+        }),
+        chart: broken,
+      });
+      expect(error?.code, String(index)).toBe(CHECK_VIOLATION);
+    }
+  });
+
+  it('refuses a degree that is only under 360 in decimal', async () => {
+    // 359.99999999999999999 is under 360 as a decimal and exactly 360
+    // once JSON.parse reads it, so the row would pass a numeric check and
+    // then fail the client's. It cannot be written as a TypeScript
+    // literal without losing the precision that is the whole point, so
+    // the body goes over the wire as text.
+    const crafted = await user('crafted');
+    const row = {
+      ...profileRow({
+        id: crafted.id,
+        display_name: 'Hassas',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+    };
+    const body = JSON.stringify(row).replace(
+      /"ascendant":\s*[0-9.]+/,
+      '"ascendant": 359.99999999999999999',
+    );
+    expect(body).toContain('359.99999999999999999');
+    const response = await fetch(`${localStack().API_URL}/rest/v1/profiles`, {
+      method: 'POST',
+      headers: {
+        apikey: localStack().ANON_KEY,
+        Authorization: `Bearer ${await accessToken(crafted)}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+    });
+    expect(response.status).toBe(400);
+    expect(await response.text()).toContain('profiles_chart_shape');
+  });
+
+  it('lets the service role write a profile', async () => {
+    // The shape helpers live in `private`, and a CHECK runs with the
+    // writer's privileges: without a grant, every backend write to
+    // profiles fails — the seed scripts, and anything server-side later.
+    const { error } = await admin
+      .from('profiles')
+      .update({ radius_km: 50 })
+      .eq('id', alice.id);
+    expect(error).toBeNull();
   });
 
   it('refuses a calendar date that disagrees with the wall clock', async () => {
