@@ -1238,6 +1238,68 @@ describe('blocks and reports', () => {
     ).toHaveLength(1);
   });
 
+  it('a blocked subject is masked in my_reports, note and all', async () => {
+    // Its own block, filed after it, and removed again: the mask is the
+    // only thing between the reporter and "they blocked me".
+    const blocked = await lale.client
+      .from('blocks')
+      .insert({ blocker_id: lale.id, blocked_id: kemal.id });
+    expect(blocked.error).toBeNull();
+    const filed = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      reason: 'nudity',
+      note: 'Kemal hakkında not',
+    });
+    expect(filed.error).toBeNull();
+
+    const masked = ReportRows.parse(
+      (await lale.client.from('my_reports').select('*')).data,
+    ).find((r) => r.reason === 'nudity');
+    expect(masked).toBeDefined();
+    // Both columns go, or "id null but note present" names the block.
+    expect(masked?.reported_id).toBeNull();
+    expect(masked?.note).toBeNull();
+    // And the filter cannot classify the rows either.
+    const byNote = ReportRows.parse(
+      (
+        await lale.client
+          .from('my_reports')
+          .select('*')
+          .is('reported_id', null)
+          .not('note', 'is', null)
+      ).data,
+    );
+    expect(byNote).toEqual([]);
+
+    await lale.client
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', lale.id)
+      .eq('blocked_id', kemal.id);
+  });
+
+  it('my_reports is read-only', async () => {
+    const anyId = '00000000-0000-4000-8000-000000000000';
+    const edit = await lale.client
+      .from('my_reports')
+      .update({ reason: 'spam' })
+      .neq('id', anyId)
+      .select('id');
+    expect(edit.error?.code).toBe(PERMISSION_DENIED);
+    const withdraw = await lale.client
+      .from('my_reports')
+      .delete()
+      .neq('id', anyId)
+      .select('id');
+    expect(withdraw.error?.code).toBe(PERMISSION_DENIED);
+    // The records are still there for moderation.
+    expect(
+      ReportRows.parse((await lale.client.from('my_reports').select('*')).data)
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
   it('a report needs a reason the enum knows', async () => {
     // A pair with no report yet, so a rejected insert cannot be the
     // pair-and-reason unique index doing the work.
@@ -1277,9 +1339,10 @@ describe('blocks and reports', () => {
           .eq('reported_id', kemal.id)
       ).data,
     );
-    expect(mine.map((r) => r.reason).sort()).toEqual([
-      'harassment',
-      'underage',
-    ]);
+    const reasons = mine.map((r) => r.reason);
+    // The escalation is a new row beside the first complaint, not a
+    // silent no-op on it.
+    expect(reasons).toContain('harassment');
+    expect(reasons).toContain('underage');
   });
 });

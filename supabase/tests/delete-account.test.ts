@@ -25,6 +25,7 @@ let mert: TestUser; // deletes their account
 let nur: TestUser; // stays behind, matched with Mert
 let matchId: string;
 let reportId: string;
+let aboutMertId: string;
 
 async function user(tag: string): Promise<TestUser> {
   const u = await createUser(admin, tag);
@@ -98,6 +99,17 @@ beforeAll(async () => {
     note: 'Mert bunu yazdı',
   });
   if (filed.error) throw new Error(`report: ${filed.error.message}`);
+  // The mirror case: a report ABOUT the account that gets deleted. Its
+  // reported_id and note must go the same way.
+  const aboutMert = await nur.client.from('reports').insert({
+    reporter_id: nur.id,
+    reported_id: mert.id,
+    reason: 'harassment',
+    note: 'Nur bunu yazdı',
+  });
+  if (aboutMert.error) throw new Error(`report: ${aboutMert.error.message}`);
+  const nurs = await nur.client.from('my_reports').select('id').single();
+  aboutMertId = z.object({ id: z.string().uuid() }).parse(nurs.data).id;
   const mine = await mert.client.from('my_reports').select('id').single();
   reportId = z.object({ id: z.string().uuid() }).parse(mine.data).id;
   // Blocking hides the match; the delete must still clear those rows.
@@ -257,6 +269,23 @@ it('deletes the caller and every row that referenced them', async () => {
     })
     .parse(orphaned.data);
   expect(keptReport.reason).toBe('spam');
+
+  // And the report about Mert kept its reporter while losing its subject.
+  const aboutDeleted = await admin
+    .from('reports')
+    .select('reporter_id, reported_id, reason, note')
+    .eq('id', aboutMertId)
+    .single();
+  expect(
+    z
+      .object({
+        reporter_id: z.string().uuid(),
+        reported_id: z.null(),
+        reason: z.literal('harassment'),
+        note: z.null(),
+      })
+      .parse(aboutDeleted.data).reporter_id,
+  ).toBe(nur.id);
   const blocks = await admin
     .from('blocks')
     .select('blocker_id')

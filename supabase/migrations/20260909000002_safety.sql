@@ -48,9 +48,10 @@ create policy "blocks: delete own"
   using (blocker_id = (select auth.uid()));
 
 -- Both ids go null rather than cascading, so the queue keeps what was
--- reported and when after an account goes. What survives names nobody:
--- it is an anonymous audit trail, not a way to recognise a repeat
--- offender who deletes and re-registers. Tying reports to a person across
+-- reported and when after an account goes. A row whose subject and
+-- reporter are both gone names nobody; while one side is still there its
+-- uuid remains, which is what makes the row useful to moderation and
+-- useless for recognising a repeat offender who re-registers. Tying reports to a person across
 -- accounts would need an identifier that outlives the account, which
 -- KVKK makes a decision of its own.
 create table public.reports (
@@ -262,9 +263,9 @@ create policy "likes: insert own open"
   );
 
 -- ------------------------------------------------------------- my_reports
--- The reporter's own history. `reported_id` is masked when that person
--- has blocked them, so the row looks exactly like one whose subject
--- deleted their account.
+-- The reporter's own history, read-only. The subject's id and note are
+-- masked when that person has blocked them, so the row reads the same as
+-- one whose subject deleted their account.
 create view public.my_reports
 with (security_invoker = false)
 as
@@ -276,12 +277,22 @@ select
     else r.reported_id
   end as reported_id,
   r.reason,
-  r.note,
+  -- The note goes with the id. A deleted subject's note is already null
+  -- (the scrub trigger); masking a blocked subject's note keeps the two
+  -- rows identical, or "id null but note present" would name the block.
+  case
+    when r.reported_id is not null and private.is_blocked(r.reported_id)
+      then null
+    else r.note
+  end as note,
   r.created_at
 from public.reports r
 where r.reporter_id = (select auth.uid());
 
-revoke all on public.my_reports from anon;
+-- A single-table view is auto-updatable and runs as its owner, so the
+-- default grants would let a reporter delete their own moderation record
+-- over REST. Read-only, explicitly.
+revoke all on public.my_reports from anon, authenticated;
 grant select on public.my_reports to authenticated;
 
 -- ---------------------------------------------------------------- discover

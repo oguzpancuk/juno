@@ -478,14 +478,14 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string | null
-          note?: string | null
+          note?: never
           reason?: Database["public"]["Enums"]["report_reason"] | null
           reported_id?: never
         }
         Update: {
           created_at?: string | null
           id?: string | null
-          note?: string | null
+          note?: never
           reason?: Database["public"]["Enums"]["report_reason"] | null
           reported_id?: never
         }

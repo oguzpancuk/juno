@@ -51,8 +51,9 @@ const DeletedSchema = z.object({ deleted: z.string().uuid() });
 /**
  * Delete this account. The Edge Function holds the service-role key and
  * only ever deletes its caller; the schema's cascades take the profile,
- * likes, matches, messages and blocks with it. Reports stay, with both
- * ids nulled, as an anonymous record of what was reported.
+ * likes, matches, messages and blocks with it. Reports stay: the caller's
+ * id is nulled and the note cleared, so what is left is the reason, the
+ * time and the other side's id.
  */
 export async function deleteAccount(): Promise<boolean> {
   const { data, error } = await supabase.functions.invoke('delete-account', {

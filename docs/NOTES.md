@@ -10,6 +10,32 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Safety fourth pass: a writable view and a leaking note
+
+- `my_reports` was auto-updatable and ran as its owner, and Supabase's
+  default grants left `authenticated` with insert, update and delete on
+  it. One REST call could rewrite or erase every report an account had
+  ever filed — the record the whole design says survives even an account
+  deletion. The view is explicitly read-only now, with a test.
+- The mask covered `reported_id` but not `note`, so a prober who reports
+  every match with a one-character note could sort a block (id null, note
+  present) from a deletion (both null) with a single filtered GET. The
+  view masks the note the same way.
+- Two more claims corrected: a report row is anonymous only once BOTH
+  sides are gone, and until then it still carries the surviving person's
+  uuid; the client docstring and the ROADMAP said otherwise.
+- The mask itself had no test (deleting it left the suite green, because
+  the reads happened after the unblock) and only the reporter-deleted half
+  of the set-null design was covered. Both sides are pinned now.
+- Deck: only a missing counterpart counts as "gone". A 23503 on the
+  caller's own profile row (account deleted on another device) used to
+  drop cards silently until the deck looked empty; it now falls through to
+  the error path.
+- The Realtime test was flaky on a cold stack — the first
+  postgres_changes binding after a container restart takes seconds, and CI
+  runs exactly that cold path. `beforeAll` now does one full warm round
+  trip and deletes the primer, so the measured crossing is steady-state.
+
 ## 2026-09-09 — Safety third pass: reports and Realtime were reading surfaces
 
 - The third review falsified "no read surface reveals it" again, in two

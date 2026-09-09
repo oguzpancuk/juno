@@ -99,16 +99,7 @@ export default function Discover() {
       );
       return;
     }
-    setState((s) =>
-      s.status === 'ready'
-        ? {
-            status: 'ready',
-            candidates: s.candidates.filter(
-              (c) => c.row.id !== candidate.row.id,
-            ),
-          }
-        : s,
-    );
+    drop();
     if (result.matchId)
       router.navigate({
         pathname: '/match/[id]',

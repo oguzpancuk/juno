@@ -161,7 +161,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       _Done: RLS tests for blocks and reports, and Edge Function tests
       covering the auth paths, CORS and a delete that clears the profile,
       likes, match, messages and blocks while the other person survives and
-      the report stays as an anonymised row.
+      the report stays with the caller's id and
+      note cleared.
       No storage bucket exists yet, so "0 storage objects" is trivially
       true; the photos item must add the folder delete to the function.
       `screenshots/v1-safety.png` shows the controls; their button wiring

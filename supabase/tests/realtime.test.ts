@@ -123,7 +123,21 @@ beforeAll(async () => {
     (await ada.client.from('match_profiles').select('match_id').single()).data,
   );
   matchId = match.match_id;
-}, 30_000);
+
+  // Warm the whole path once. The first postgres_changes subscription
+  // after the containers restart takes seconds to bind, and the budget in
+  // the test below is about steady-state delivery, not a cold connect.
+  const warm = waitForMessage(ada, matchId, 20_000);
+  await warm.ready;
+  const primer = await bora.client
+    .from('messages')
+    .insert({ match_id: matchId, sender_id: bora.id, body: 'ısınma' })
+    .select('id')
+    .single();
+  await warm.got;
+  const primerId = z.object({ id: z.string().uuid() }).parse(primer.data).id;
+  await admin.from('messages').delete().eq('id', primerId);
+}, 45_000);
 
 afterAll(async () => {
   await deleteUsers(admin, users);
