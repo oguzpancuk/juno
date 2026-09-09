@@ -14,6 +14,10 @@
  * version of expo-secure-store stores 16 KB without complaint, so the
  * cipher, the key handling and everything that could go wrong with them
  * were deleted rather than debugged.
+ *
+ * supabase-js writes several keys through here — the session, the user,
+ * a PKCE verifier — and nothing promises which arrives first, so every
+ * rule below is per key rather than "whichever came first".
  */
 
 export interface Keychain {
@@ -33,12 +37,12 @@ export interface KeychainStoreOptions {
   /**
    * Where the session used to live, and — because it goes when the app
    * does — how a fresh install is told apart from an upgrade. Read once
-   * to move an old session across, and cleared whenever the session is
+   * to move an old session across, and cleared whenever a value is
    * written or dropped: an install that upgrades must not leave a live
    * refresh token behind in clear text.
    */
   readonly legacy: Store;
-  /** Marks that this install has run before. See `install()`. */
+  /** Marks that this install has run before. See `freshInstall`. */
   readonly installMarker: string;
 }
 
@@ -53,7 +57,7 @@ export function keychainStore(options: KeychainStoreOptions): Store {
   const { keychain, legacy, installMarker } = options;
 
   /**
-   * The last value this process knows to be stored.
+   * The last value this process knows to be stored, per key.
    *
    * A read that fails is not the same as a read that found nothing, and
    * supabase-js reads the difference as "storage was cleared under us":
@@ -65,6 +69,9 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    */
   const known = new Map<string, string | null>();
 
+  /** Keys whose sign-out could not be completed. See `removeItem`. */
+  const pendingRemoval = new Set<string>();
+
   /**
    * An iOS keychain entry outlives the app that wrote it: delete Juno,
    * reinstall it, and the old session is still there — someone who wiped
@@ -72,30 +79,40 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    * phone, lands inside it without signing in. AsyncStorage does go with
    * the app, so its emptiness is the signal: no marker means this install
    * has never run, and any keychain entry belongs to a previous one.
+   *
+   * The marker is written before anything is dropped. If that write fails
+   * there is no way to record that the check happened, and dropping
+   * anyway would sign the person out on every launch for as long as the
+   * store is unwritable — so a failed write means no wipe this time.
    */
-  let installed: Promise<void> | null = null;
-  const install = async (name: string): Promise<void> => {
+  let freshInstall: Promise<boolean> | null = null;
+  const checkInstall = async (): Promise<boolean> => {
     try {
-      if ((await legacy.getItem(installMarker)) !== null) return;
-      await keychain.remove(name);
+      if ((await legacy.getItem(installMarker)) !== null) return false;
       await legacy.setItem(installMarker, '1');
+      return true;
     } catch {
-      // A marker that cannot be written means the check runs again next
-      // launch, which is harmless; failing the read is not.
+      return false;
     }
   };
-  const ensureInstalled = (name: string): Promise<void> => {
-    installed ??= install(name);
-    return installed;
+
+  /** Every key is dropped on a fresh install, not just the first one. */
+  const wiped = new Set<string>();
+  const ensureInstalled = async (name: string): Promise<void> => {
+    freshInstall ??= checkInstall();
+    if (!(await freshInstall)) return;
+    if (wiped.has(name)) return;
+    wiped.add(name);
+    await keychain.remove(name).catch(() => undefined);
   };
 
-  /** True while a clear-text copy might still exist to clean up. */
-  let legacyMayHold = true;
+  /** Per key: the clear-text copy is gone once, and not chased after. */
+  const legacyCleared = new Set<string>();
   const dropLegacy = async (name: string): Promise<void> => {
-    if (!legacyMayHold) return;
+    if (legacyCleared.has(name)) return;
     try {
       await legacy.removeItem(name);
-      legacyMayHold = false;
+      legacyCleared.add(name);
     } catch {
       // Try again on the next write rather than reporting a failure.
     }
@@ -104,6 +121,15 @@ export function keychainStore(options: KeychainStoreOptions): Store {
   return {
     async getItem(name: string): Promise<string | null> {
       await ensureInstalled(name);
+      // A sign-out that could not delete must still read as signed out,
+      // or a concurrent refresh writes the session straight back.
+      if (pendingRemoval.has(name)) {
+        await keychain
+          .remove(name)
+          .then(() => pendingRemoval.delete(name))
+          .catch(() => undefined);
+        return null;
+      }
       try {
         const stored = await keychain.get(name);
         if (stored !== null) {
@@ -138,6 +164,8 @@ export function keychainStore(options: KeychainStoreOptions): Store {
       try {
         await keychain.set(name, value);
         known.set(name, value);
+        pendingRemoval.delete(name);
+        legacyCleared.delete(name);
         await dropLegacy(name);
       } catch {
         // Leave what is stored where it is: this may be a locked device
@@ -146,10 +174,17 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     },
 
     async removeItem(name: string): Promise<void> {
-      // Both, always: signing out has to clear the old place too.
       known.set(name, null);
-      await keychain.remove(name).catch(() => undefined);
-      legacyMayHold = true;
+      try {
+        await keychain.remove(name);
+        pendingRemoval.delete(name);
+      } catch {
+        // Signed out as far as this app is concerned; the entry itself is
+        // retried on the next read.
+        pendingRemoval.add(name);
+      }
+      // Both places, always: signing out has to clear the old one too.
+      legacyCleared.delete(name);
       await dropLegacy(name);
     },
   };

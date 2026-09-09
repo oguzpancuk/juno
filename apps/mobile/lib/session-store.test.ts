@@ -29,12 +29,14 @@ class FakeKeychain implements Keychain {
 class FakeStore implements Store {
   readonly items = new Map<string, string>();
   failGet = false;
+  failSet = false;
   failRemove = false;
   async getItem(key: string) {
     if (this.failGet) throw new Error('storage unavailable');
     return this.items.get(key) ?? null;
   }
   async setItem(key: string, value: string) {
+    if (this.failSet) throw new Error('storage unavailable');
     this.items.set(key, value);
   }
   async removeItem(key: string) {
@@ -165,6 +167,64 @@ describe('keychainStore', () => {
     await first.setItem(NAME, SESSION);
     const second = keychainStore({ keychain, legacy, installMarker: MARKER });
     expect(await second.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('carries a session across the upgrade that introduces the marker', async () => {
+    // The real upgrade: this build has never run, so there is no marker,
+    // and the old build left a session in the plain store. Treating that
+    // as a fresh install would sign out every existing user at once.
+    legacy.items.set(NAME, SESSION);
+    const store = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    expect(keychain.entries.get(NAME)).toBe(SESSION);
+    expect(legacy.items.has(NAME)).toBe(false);
+    expect(legacy.items.get(MARKER)).toBe('1');
+  });
+
+  it('drops every key a previous install left, not just the first', async () => {
+    // supabase-js writes the session, the user and a PKCE verifier, and
+    // nothing says which one arrives first.
+    keychain.entries.set(NAME, SESSION);
+    keychain.entries.set(`${NAME}-user`, '{"id":"x"}');
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
+    expect(await fresh.getItem(NAME)).toBeNull();
+    expect(keychain.entries.size).toBe(0);
+  });
+
+  it('clears the clear-text copy of every key, not just the first', async () => {
+    // The cleanup used to stop after whichever key was cleaned first,
+    // which left the session's own clear-text copy on disk for ever.
+    legacy.items.set(`${NAME}-user`, '{"id":"x"}');
+    legacy.items.set(NAME, SESSION);
+    const store = make();
+    expect(await store.getItem(`${NAME}-user`)).toBe('{"id":"x"}');
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    expect(legacy.items.has(NAME)).toBe(false);
+    expect(legacy.items.has(`${NAME}-user`)).toBe(false);
+  });
+
+  it('does not wipe when the marker cannot be written', async () => {
+    // Otherwise an unwritable store signs the person out on every launch:
+    // the check can never record that it ran.
+    keychain.entries.set(NAME, SESSION);
+    legacy.failSet = true;
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('reads as signed out when the keychain will not delete', async () => {
+    // A refresh running alongside the sign-out re-reads the store; if it
+    // finds the session it writes rotated tokens back and undoes it.
+    const store = make();
+    await store.setItem(NAME, SESSION);
+    keychain.failing = 'remove';
+    await store.removeItem(NAME);
+    expect(await store.getItem(NAME)).toBeNull();
+    // And it keeps trying: once the keychain answers, the entry goes.
+    keychain.failing = 'none';
+    expect(await store.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
   });
 
   it('answers null when there is nothing anywhere', async () => {

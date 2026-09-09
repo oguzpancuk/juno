@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Order of calls is not a guarantee
+
+- The keychain store worked, and worked for a reason I had not written
+  down: supabase-js happens to read the session key first. Two rules were
+  keyed on "whichever key came first" rather than on the key —
+  the fresh-install wipe and the clear-text cleanup — so under a different
+  flow (`flowType: 'pkce'`, or a separate user storage) the wipe would
+  have missed the session and the clear-text copy of it would have stayed
+  on disk for ever. Both are per key now. A library's internal call order
+  is not a thing to build on, and it was not even documented as an
+  assumption.
+- **The upgrade path had no test at all** — marker absent _and_ a session
+  in the plain store, which is what every existing install hits exactly
+  once. A mutant that signs out every one of them passed the whole suite.
+  It has a test now; that is the second time a review has found the most
+  consequential path uncovered while the corners were well tested.
+- A sign-out the keychain refuses used to report success and leave the
+  entry: a refresh running alongside it re-reads the store, finds the
+  session and writes rotated tokens straight back, undoing the sign-out.
+  The store remembers the attempt, reads as signed out, and retries the
+  delete on the next read.
+- And the marker is written before anything is dropped, not after. If the
+  write fails there is no way to record that the check ran, so dropping
+  anyway would sign the person out on every launch for as long as the
+  store is unwritable.
+- One cost worth stating: an install of the previous build — keychain, no
+  marker — is signed out once by this one, because the marker is new and
+  its absence reads as a fresh install. Nothing is deployed, so this is
+  a development-only cost, but it is the kind of thing that is invisible
+  until it is a support ticket.
+- Verified: battery green on a clean tree; 32 mobile tests.
+
 ## 2026-09-10 — Two ways the keychain surprised me
 
 - Review of the keychain store found two things I had not thought about,
