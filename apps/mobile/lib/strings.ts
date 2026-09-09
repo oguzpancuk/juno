@@ -43,6 +43,8 @@ export const t = {
       underage: 'Juno 18 yaş ve üzeri içindir.',
       birthInstant:
         'Doğum saatin sunucuda hesaplanamadı. Bağlantını kontrol edip tekrar dene.',
+      unknownCity:
+        'Bu şehir şu an kullanılamıyor. Yakınındaki başka bir şehri seç.',
       consent: 'Devam etmek için onay kutusunu işaretle.',
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },

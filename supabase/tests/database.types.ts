@@ -605,8 +605,6 @@ export type Database = {
         Args: { city_id: number; local_time: string }
         Returns: string
       }
-      is_public_chart: { Args: { chart: Json }; Returns: boolean }
-      is_sign: { Args: { name: string }; Returns: boolean }
       profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {

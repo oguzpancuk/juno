@@ -8,6 +8,7 @@ import {
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { GENDERS } from './profile';
+import { parseRows, warnDropped } from './rows';
 import { supabase } from './supabase';
 
 /** A row of the `match_profiles` view: my counterpart in one match. */
@@ -52,11 +53,14 @@ export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
   if (error) return null;
   const rows = z.array(z.unknown()).safeParse(data);
   if (!rows.success) return null;
-  // One unreadable row costs that conversation, not the whole list.
-  return rows.data.flatMap((row) => {
-    const one = MatchProfileRowSchema.safeParse(row);
-    return one.success ? [one.data] : [];
-  });
+  // One unreadable row costs that conversation, not the whole list — but
+  // it is reported, because every row failing at once must not read as
+  // "you have no matches".
+  return parseRows(
+    MatchProfileRowSchema,
+    rows.data,
+    warnDropped('match_profiles'),
+  );
 }
 
 export async function fetchMatch(

@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Mirroring a schema means mirroring all of it
+
+- The shape check I added claimed to mirror `PublicChartSchema` and did
+  not: it required a longitude and a sign and nothing else, so a chart
+  with no `degree`, no `house`, no `retrograde`, or with `house = 77` and
+  `ascendant = -999`, was stored and then failed to parse in the app. That
+  member's own chart screen would have shown an error for ever — `chart`
+  is immutable after insert, so the only way out is deleting the account —
+  and every deck would have quietly dropped their card. It is field for
+  field now, including the ranges, and the numeric comparisons are guarded
+  by CASE rather than by an earlier OR arm, since Postgres does not
+  promise the order of OR.
+- **A dropped row is now reported.** Parsing the deck row by row fixed the
+  outage but changed its shape: a systemic break — a renamed column, a
+  schema change — would render as an empty deck and an empty conversation
+  list with nothing in the log, which looks exactly like a quiet day.
+  `parseRows` warns with a count, and it is a pure module with its own
+  test, because this is the second time the client half of a fix shipped
+  without one.
+- The helpers moved to the `private` schema. In `public` they were live
+  anon RPC endpoints — `POST /rest/v1/rpc/is_sign` answered, and
+  `is_public_chart` chewed through an 8.7 MB payload. Revoking EXECUTE was
+  the obvious fix and it broke every insert: a CHECK is evaluated with the
+  privileges of whoever is inserting, not the table owner. `private` is
+  what keeps them off the API while `authenticated` keeps the grant.
+- Also: an unknown city has its own sentence instead of borrowing "pick a
+  city from the list", which is what the person just did; and the
+  types-drift test has a real timeout, because a cold `gen types` run
+  alongside the other suites was failing at five seconds and reading as
+  schema drift.
+- Verified: battery green on a clean tree; 101 Supabase tests, 12 mobile.
+
 ## 2026-09-10 — The other door into the same outage
 
 - The review of the rename commit found that bounding the birth dates

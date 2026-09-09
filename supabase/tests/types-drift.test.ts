@@ -12,4 +12,7 @@ it('tests/database.types.ts matches `supabase gen types` for the current migrati
     'utf8',
   );
   expect(generated).toBe(committed);
-});
+  // The CLI shells out and talks to the database; five seconds is not
+  // enough for a cold run alongside the other suites, and a flake here
+  // reads as schema drift.
+}, 30_000);

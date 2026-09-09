@@ -10,6 +10,7 @@ import {
 } from '@stardate/astro';
 import { z } from 'zod';
 import { GENDERS } from './profile';
+import { parseRows, warnDropped } from './rows';
 import { supabase } from './supabase';
 
 /** A row of the `discover` view (public columns only), Zod at the boundary. */
@@ -53,10 +54,11 @@ export async function fetchCandidates(
   // Row by row, not the array in one go: the server checks the shape of a
   // chart, but a single row it somehow let through must cost that one
   // card, not the whole deck for everyone in radius.
-  const parsed = rows.data.flatMap((row) => {
-    const one = DiscoverRowSchema.safeParse(row);
-    return one.success ? [one.data] : [];
-  });
+  const parsed = parseRows(
+    DiscoverRowSchema,
+    rows.data,
+    warnDropped('discover'),
+  );
   const candidates = parsed
     .map((row) => {
       const match = compatibility(myChart, row.chart);
