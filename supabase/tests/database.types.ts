@@ -95,6 +95,21 @@ export type Database = {
           },
         ]
       }
+      city_zones: {
+        Row: {
+          id: number
+          time_zone: string
+        }
+        Insert: {
+          id: number
+          time_zone: string
+        }
+        Update: {
+          id?: number
+          time_zone?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string

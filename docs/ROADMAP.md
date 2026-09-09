@@ -236,12 +236,21 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       storing the session directly).
       — done when: the session survives an app restart and the AsyncStorage
       value is ciphertext (manual, simulator).
-- [ ] **Server-side birth_utc validation.** Devices with stale tzdata
-      (Android especially) can compute a wrong `birth_utc`; an Edge Function
-      (Deno, full ICU) recomputes it from city + wall time and rejects a
-      mismatch before the profile is stored.
+- [x] **Server-side birth_utc validation.** Devices with stale tzdata
+      (Android especially) can compute a wrong `birth_utc`; the server
+      recomputes it from city + wall time and rejects a mismatch before the
+      profile is stored.
       — done when: a Vitest against the local stack proves an inconsistent
       `birth_utc` is rejected and a consistent one accepted (battery).
+      _Done as a trigger, not the Edge Function this line first named: the
+      check belongs in the write path, where nothing can go around it, and
+      Postgres carries a full zone database. `city_zones` (6594 cities,
+      generated from `packages/geo`) is closed to clients and read by a
+      security-definer check. An instant is accepted if it renders back to
+      the submitted wall clock in that zone — which takes both readings of
+      a repeated hour — or if it equals what Postgres computes from the
+      wall clock, which is what an hour that never happened resolves to.
+      Four RLS tests, including an unknown city and a one-hour error._
 - [x] **City search UX.** Word-prefix matching ("york" → New York) and a
       curated Turkish exonym list (Viyana, Münih, Londra …) in
       `packages/geo`.

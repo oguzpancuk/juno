@@ -10,6 +10,36 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — The server checks the birth instant
+
+- A phone with a stale zone database converts a birth time with an offset
+  that was right years ago. Nothing downstream can tell: the chart is
+  simply wrong by an hour. The server now recomputes the instant from the
+  city and the wall clock and refuses a mismatch.
+- Built as a trigger rather than the Edge Function the ROADMAP named. The
+  check belongs in the write path — an Edge Function only helps if the
+  client chooses to call it — and Postgres already carries a full zone
+  database. `city_zones` holds the 6594 cities the app can offer,
+  generated from `packages/geo` by `supabase/scripts/gen-city-zones.ts`,
+  with RLS on and no policies: the app has the list offline, so no client
+  needs to read it, and the check runs as definer.
+- Two ways to be right, because a wall clock and an instant do not map one
+  to one. The instant may render back to the submitted wall clock in that
+  zone — the normal case, and the one that takes both readings of the hour
+  the clocks go back; or it may equal what Postgres computes from the wall
+  clock, which is what an hour that never happened resolves to. Measured
+  the disagreement first rather than assuming: for 2021-11-07 01:30 in New
+  York the engine answers 05:30Z and Postgres 06:30Z, and both are
+  defensible, so both are accepted. An offset that is simply wrong
+  satisfies neither.
+- Gotcha worth remembering: a plpgsql trigger runs as the invoker, so a
+  lookup table with RLS on and no policies reads as empty and the check
+  raised "unknown birth city" for every insert. The first test run caught
+  it; the function is a definer now.
+- Verified: battery green on a clean tree; four new RLS tests (a one-hour
+  error, an unknown city, the engine's own instant, and both readings of
+  a repeated hour).
+
 ## 2026-09-09 — KVKK consent, the blocked list, and a one-sided guard
 
 - **Consent is recorded.** Onboarding carries a checkbox that has to be

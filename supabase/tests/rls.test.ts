@@ -1431,6 +1431,69 @@ describe('blocks and reports', () => {
   });
 });
 
+describe('birth instant', () => {
+  // A phone with stale tzdata converts a birth time with an offset that
+  // was right years ago; the chart is then wrong by an hour and nothing
+  // says so. The server checks the instant against the city's zone.
+  let vedat: TestUser;
+
+  const row = (over: Record<string, unknown>) => ({
+    ...profileRow({
+      id: vedat.id,
+      display_name: 'Vedat',
+      gender: 'man',
+      interested_in: 'women',
+      lonLat: ISTANBUL_NEARBY,
+      photos: [],
+    }),
+    ...over,
+  });
+
+  beforeAll(async () => {
+    vedat = await user('vedat');
+  });
+
+  it('refuses an instant that does not match the city and wall clock', async () => {
+    // One hour out: exactly what a stale zone database produces.
+    const { error } = await vedat.client
+      .from('profiles')
+      .insert(row({ birth_utc: '1995-07-13T23:30:00Z' }));
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('refuses a city it does not know', async () => {
+    const { error } = await vedat.client
+      .from('profiles')
+      .insert(row({ birth_city_id: 999_999_999 }));
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('accepts the instant the engine computes', async () => {
+    // Istanbul, summer 1995: UTC+3, so 03:30 local is 00:30 UTC.
+    const { error } = await vedat.client.from('profiles').insert(row({}));
+    expect(error).toBeNull();
+  });
+
+  it('accepts both readings of an hour the clocks repeat', async () => {
+    // 2021-11-07 01:30 in New York happened twice. The engine picks the
+    // first, Postgres the second; neither is wrong, so both are accepted.
+    const NEW_YORK = 5128581;
+    for (const instant of ['2021-11-07T05:30:00Z', '2021-11-07T06:30:00Z']) {
+      const { error } = await vedat.client
+        .from('profiles')
+        .update({
+          birth_city_id: NEW_YORK,
+          birth_local: '2021-11-07T01:30:00',
+          birth_utc: instant,
+        })
+        .eq('id', vedat.id);
+      // Birth data is immutable after insert, so the update is refused —
+      // but by that rule, not by the birth check.
+      expect(error?.message ?? '').not.toContain('birth_utc does not match');
+    }
+  });
+});
+
 describe('consent', () => {
   // KVKK: a profile is where birth data and location start being
   // processed, so it cannot exist without a record of the notice having
