@@ -10,6 +10,29 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Privacy notice at /legal
+
+- Wrote the KVKK notice and licence credits, and rendered them at
+  `/legal`, linked from settings and from the sign-in screen under the
+  consent sentence. Reachable signed out on purpose: someone deciding
+  whether to sign up has to be able to read it first, and on the web
+  client this route is the public URL the App Store listing needs.
+- The text lives in `apps/mobile/lib/legal.ts`, not in `docs/`. It was
+  drafted as a doc first and then moved: two copies of a legal text drift,
+  and this one is shown to users, so the app is the canonical place.
+- Written from the schema rather than from a template, so every claim is
+  checkable: location is rounded to a ~1 km grid before it is stored, the
+  birth date/time/city are never shown to anyone (only the chart computed
+  from them is), and a report about a deleted account keeps only its
+  existence, reason and date.
+- Two placeholders are deliberately unfilled — the data controller's name
+  and a contact e-mail. Both are owner decisions; publishing the owner's
+  personal address is not mine to make.
+- Verified: battery green on a clean tree; `screenshots/v1-legal.png`
+  shows the screen in the simulator.
+- Not done, so the ROADMAP item stays open: `consent_at` is not stored
+  and has no CHECK, and nothing is hosted yet.
+
 ## 2026-09-09 — Photos review: two leaks and a gate that counted strings
 
 - Review of the photos commit (`1dfce01`) returned NEEDS_WORK with two
