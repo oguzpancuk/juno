@@ -10,6 +10,39 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — A fix that made the thing it fixed permanent
+
+- Writing the install marker before the wipe — my answer to "an unwritable
+  store must not sign someone out on every launch" — turned a transient
+  keychain refusal into a permanent one. The marker said the check had
+  run, the key was noted as done, and no launch tried again: a resold
+  phone stayed inside the previous owner's account for the life of the
+  install. The version before my fix recovered on the next launch. The
+  review put both side by side and the regression was plain.
+- The two costs are not the same size, which is what decides it. A wipe
+  that repeats costs a sign-in; a wipe that never happens costs someone
+  else's account. So the wipe runs first and the marker is written only
+  once a delete has actually gone through — and until it does, the key is
+  held as pending, so reads answer null rather than handing back the
+  previous owner's session. The test that encoded the old trade was
+  rewritten to state this one, out loud.
+- Three more from the same review:
+  - The retry-delete could swallow a sign-in that landed while it was in
+    flight: sign out, keychain refuses, sign back in, and the late delete
+    removed the new session. Writes carry a counter now and a delete that
+    is older than the last write loses.
+  - A sign-out whose clear-text delete also failed was undone on the next
+    read: the keychain was empty, so the migration path found the leftover
+    and wrote it back. A key known to be gone is not migrated.
+  - The wipe only ever reached keys the first launch happened to touch. It
+    now covers the ones supabase-js derives from the key it is given —
+    the user blob and the PKCE verifier — which a launch may never read.
+- Verified on the simulator, the path every existing install hits exactly
+  once: marker absent and a clear-text session in the plain store, app
+  opened signed in, the plain store left holding only the marker and no
+  `refresh_token` anywhere.
+- Verified: battery green on a clean tree; 40 mobile tests.
+
 ## 2026-09-10 — Order of calls is not a guarantee
 
 - The keychain store worked, and worked for a reason I had not written

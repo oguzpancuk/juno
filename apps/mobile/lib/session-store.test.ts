@@ -204,13 +204,17 @@ describe('keychainStore', () => {
     expect(legacy.items.has(`${NAME}-user`)).toBe(false);
   });
 
-  it('does not wipe when the marker cannot be written', async () => {
-    // Otherwise an unwritable store signs the person out on every launch:
-    // the check can never record that it ran.
+  it('still wipes when the marker cannot be written', async () => {
+    // The trade, stated: a plain store that cannot be written means the
+    // check runs again on every launch, so this install keeps signing
+    // itself out. That is the right way round — the other way leaves
+    // someone else's account open on a resold phone for ever.
     keychain.entries.set(NAME, SESSION);
     legacy.failSet = true;
     const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
-    expect(await fresh.getItem(NAME)).toBe(SESSION);
+    expect(await fresh.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
+    expect(legacy.items.get(MARKER)).toBeUndefined();
   });
 
   it('reads as signed out when the keychain will not delete', async () => {
@@ -225,6 +229,100 @@ describe('keychainStore', () => {
     keychain.failing = 'none';
     expect(await store.getItem(NAME)).toBeNull();
     expect(keychain.entries.has(NAME)).toBe(false);
+  });
+
+  it('retries a wipe the keychain refused, and reads as signed out meanwhile', async () => {
+    // A transient refusal must not make the wipe permanent: writing the
+    // marker anyway would leave a resold phone inside the old account for
+    // the life of the install.
+    keychain.entries.set(NAME, SESSION);
+    keychain.failing = 'remove';
+    const first = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await first.getItem(NAME)).toBeNull();
+    expect(legacy.items.get(MARKER)).toBeUndefined();
+
+    keychain.failing = 'none';
+    const second = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await second.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
+    expect(legacy.items.get(MARKER)).toBe('1');
+  });
+
+  it('wipes the keys supabase derives from the one it is given', async () => {
+    // The store only hears about a key when it is used, and a launch may
+    // never touch the user blob — but a previous install's copy of it is
+    // still that person's data.
+    keychain.entries.set(NAME, SESSION);
+    keychain.entries.set(`${NAME}-user`, '{"id":"x"}');
+    keychain.entries.set(`${NAME}-code-verifier`, 'v');
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(NAME)).toBeNull();
+    expect(keychain.entries.size).toBe(0);
+  });
+
+  it('keeps a sign-in that lands while a refused delete is retried', async () => {
+    // Sign out, the keychain refuses, sign back in, then a read runs the
+    // retry: the delete is older than the sign-in and must not win.
+    const store = make();
+    await store.setItem(NAME, SESSION);
+    keychain.failing = 'remove';
+    await store.removeItem(NAME);
+    keychain.failing = 'none';
+    await store.setItem(NAME, 'newer-session');
+    expect(await store.getItem(NAME)).toBe('newer-session');
+    expect(keychain.entries.get(NAME)).toBe('newer-session');
+  });
+
+  it('does not read a signed-out session back out of the old store', async () => {
+    // The clear-text copy survived because its delete failed; the
+    // keychain is empty because the sign-out worked. Migrating it back
+    // would undo the sign-out.
+    legacy.items.set(NAME, SESSION);
+    legacy.failRemove = true;
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    await store.removeItem(NAME);
+    expect(await store.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
+  });
+
+  it('remembers a session read from the keychain when a later read fails', async () => {
+    // The launch that reads is the common case; the cache must be filled
+    // there too, not only when this process wrote the value.
+    keychain.entries.set(NAME, SESSION);
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    keychain.failing = 'get';
+    expect(await store.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('remembers a migrated session when a later read fails', async () => {
+    legacy.items.set(NAME, SESSION);
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    keychain.failing = 'get';
+    expect(await store.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('clears a clear-text leftover on a later read', async () => {
+    legacy.items.set(NAME, SESSION);
+    legacy.failRemove = true;
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    expect(legacy.items.has(NAME)).toBe(true);
+    legacy.failRemove = false;
+    await store.getItem(NAME);
+    expect(legacy.items.has(NAME)).toBe(false);
+  });
+
+  it('does not strand a key after a sign-in that follows a refused sign-out', async () => {
+    const store = make();
+    await store.setItem(NAME, SESSION);
+    keychain.failing = 'remove';
+    await store.removeItem(NAME);
+    keychain.failing = 'none';
+    await store.setItem(NAME, 'fresh');
+    expect(await store.getItem(NAME)).toBe('fresh');
   });
 
   it('answers null when there is nothing anywhere', async () => {

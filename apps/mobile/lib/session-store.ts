@@ -15,9 +15,9 @@
  * cipher, the key handling and everything that could go wrong with them
  * were deleted rather than debugged.
  *
- * supabase-js writes several keys through here — the session, the user,
- * a PKCE verifier — and nothing promises which arrives first, so every
- * rule below is per key rather than "whichever came first".
+ * supabase-js writes several keys through here — the session, the user, a
+ * PKCE verifier — and nothing promises which arrives first, so every rule
+ * below is per key rather than "whichever came first".
  */
 
 export interface Keychain {
@@ -42,8 +42,20 @@ export interface KeychainStoreOptions {
    * refresh token behind in clear text.
    */
   readonly legacy: Store;
-  /** Marks that this install has run before. See `freshInstall`. */
+  /** Marks that this install has run before. See `checkInstall`. */
   readonly installMarker: string;
+}
+
+/** The keys supabase-js derives from the one it is given. */
+const RELATED_SUFFIXES = ['-user', '-code-verifier'];
+
+/** Every key a previous install might have left for this one. */
+function relatives(name: string): string[] {
+  const base =
+    RELATED_SUFFIXES.find((suffix) => name.endsWith(suffix)) === undefined
+      ? name
+      : name.slice(0, name.lastIndexOf('-', name.length - 2));
+  return [base, ...RELATED_SUFFIXES.map((suffix) => `${base}${suffix}`)];
 }
 
 /**
@@ -57,7 +69,8 @@ export function keychainStore(options: KeychainStoreOptions): Store {
   const { keychain, legacy, installMarker } = options;
 
   /**
-   * The last value this process knows to be stored, per key.
+   * The last value this process knows to be stored, per key. A null here
+   * is not "unknown", it is "known to be gone".
    *
    * A read that fails is not the same as a read that found nothing, and
    * supabase-js reads the difference as "storage was cleared under us":
@@ -69,8 +82,33 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    */
   const known = new Map<string, string | null>();
 
-  /** Keys whose sign-out could not be completed. See `removeItem`. */
+  /** Bumped by every write, so a slow delete can tell it is stale. */
+  const writes = new Map<string, number>();
+  const bump = (name: string): number => {
+    const next = (writes.get(name) ?? 0) + 1;
+    writes.set(name, next);
+    return next;
+  };
+
+  /** Keys whose deletion has not gone through. Reads answer null. */
   const pendingRemoval = new Set<string>();
+
+  /**
+   * Delete, and if the keychain refuses, remember that this key is meant
+   * to be gone: a read that handed the value back would let a concurrent
+   * refresh write rotated tokens straight back and undo the sign-out.
+   * A write that lands while the delete is in flight wins — it is newer
+   * than the intent to delete.
+   */
+  const forget = async (name: string): Promise<void> => {
+    const at = writes.get(name) ?? 0;
+    try {
+      await keychain.remove(name);
+      if ((writes.get(name) ?? 0) === at) pendingRemoval.delete(name);
+    } catch {
+      if ((writes.get(name) ?? 0) === at) pendingRemoval.add(name);
+    }
+  };
 
   /**
    * An iOS keychain entry outlives the app that wrote it: delete Juno,
@@ -80,30 +118,57 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    * the app, so its emptiness is the signal: no marker means this install
    * has never run, and any keychain entry belongs to a previous one.
    *
-   * The marker is written before anything is dropped. If that write fails
-   * there is no way to record that the check happened, and dropping
-   * anyway would sign the person out on every launch for as long as the
-   * store is unwritable — so a failed write means no wipe this time.
+   * A wipe the keychain refuses must not become permanent, so the marker
+   * is written only once a wipe has actually gone through, and the key
+   * stays pending — reading as signed out — until it does. The cost is
+   * that a device whose plain store cannot be written at all wipes on
+   * every launch; that is the right way round, because the other way
+   * leaves someone else's account open on a resold phone for ever.
    */
   let freshInstall: Promise<boolean> | null = null;
   const checkInstall = async (): Promise<boolean> => {
     try {
-      if ((await legacy.getItem(installMarker)) !== null) return false;
-      await legacy.setItem(installMarker, '1');
-      return true;
+      return (await legacy.getItem(installMarker)) === null;
     } catch {
+      // Cannot tell: do not wipe a session on a guess.
       return false;
     }
   };
 
-  /** Every key is dropped on a fresh install, not just the first one. */
-  const wiped = new Set<string>();
+  let marked = false;
+  const mark = async (): Promise<void> => {
+    if (marked) return;
+    try {
+      await legacy.setItem(installMarker, '1');
+      marked = true;
+    } catch {
+      // Retried on the next call; until then the check runs again.
+    }
+  };
+
+  /** One wipe per key, shared by every caller that arrives during it. */
+  const wipes = new Map<string, Promise<void>>();
+  const wipe = async (name: string): Promise<void> => {
+    for (const key of relatives(name)) {
+      try {
+        await keychain.remove(key);
+      } catch {
+        // Reads answer null until the delete goes through.
+        pendingRemoval.add(key);
+        return;
+      }
+    }
+    await mark();
+  };
   const ensureInstalled = async (name: string): Promise<void> => {
     freshInstall ??= checkInstall();
     if (!(await freshInstall)) return;
-    if (wiped.has(name)) return;
-    wiped.add(name);
-    await keychain.remove(name).catch(() => undefined);
+    let running = wipes.get(name);
+    if (running === undefined) {
+      running = wipe(name);
+      wipes.set(name, running);
+    }
+    await running;
   };
 
   /** Per key: the clear-text copy is gone once, and not chased after. */
@@ -114,21 +179,19 @@ export function keychainStore(options: KeychainStoreOptions): Store {
       await legacy.removeItem(name);
       legacyCleared.add(name);
     } catch {
-      // Try again on the next write rather than reporting a failure.
+      // Try again on the next call rather than reporting a failure.
     }
   };
 
   return {
     async getItem(name: string): Promise<string | null> {
       await ensureInstalled(name);
-      // A sign-out that could not delete must still read as signed out,
-      // or a concurrent refresh writes the session straight back.
       if (pendingRemoval.has(name)) {
-        await keychain
-          .remove(name)
-          .then(() => pendingRemoval.delete(name))
-          .catch(() => undefined);
-        return null;
+        await forget(name);
+        await dropLegacy(name);
+        // A sign-in that landed while the delete was in flight is newer
+        // than the delete, so read it rather than reporting nothing.
+        return pendingRemoval.has(name) ? null : (known.get(name) ?? null);
       }
       try {
         const stored = await keychain.get(name);
@@ -142,6 +205,12 @@ export function keychainStore(options: KeychainStoreOptions): Store {
         // whole point on exactly the platform where the keychain is
         // unreliable.
         return known.get(name) ?? null;
+      }
+      // Known to be gone, not merely absent: a sign-out whose clear-text
+      // delete failed must not be undone by reading the leftover back.
+      if (known.get(name) === null) {
+        await dropLegacy(name);
+        return null;
       }
       // The move: an install that signed in under the old build.
       try {
@@ -161,11 +230,11 @@ export function keychainStore(options: KeychainStoreOptions): Store {
 
     async setItem(name: string, value: string): Promise<void> {
       await ensureInstalled(name);
+      bump(name);
       try {
         await keychain.set(name, value);
         known.set(name, value);
         pendingRemoval.delete(name);
-        legacyCleared.delete(name);
         await dropLegacy(name);
       } catch {
         // Leave what is stored where it is: this may be a locked device
@@ -174,17 +243,10 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     },
 
     async removeItem(name: string): Promise<void> {
+      bump(name);
       known.set(name, null);
-      try {
-        await keychain.remove(name);
-        pendingRemoval.delete(name);
-      } catch {
-        // Signed out as far as this app is concerned; the entry itself is
-        // retried on the next read.
-        pendingRemoval.add(name);
-      }
+      await forget(name);
       // Both places, always: signing out has to clear the old one too.
-      legacyCleared.delete(name);
       await dropLegacy(name);
     },
   };
