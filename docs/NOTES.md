@@ -10,6 +10,33 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The other end of the range
+
+- The magnitude guard caught numbers too large to be a double and not
+  numbers too small: `numeric -> double precision` raises on underflow
+  too, so `1e-400` came back as a type error with the constraint's
+  internals in the message instead of a refusal. JavaScript reads that as
+  zero and accepts it, so a crafted chart got neither an accept nor a
+  clean no.
+- The small-magnitude branch keeps the sign, which matters: `-1e-321` is a
+  negative denormal in JavaScript and fails `>= 0` there, so collapsing
+  everything tiny to zero would have been a divergence in the dangerous
+  direction. Tested through raw text, since `1e-400` is just `0` once
+  TypeScript reads it.
+- The service-role test was anchored on an update that reports no error
+  when it matches nothing — and a zero-row update evaluates no constraint,
+  so it would have passed green with the grant missing. It asserts the
+  returned row now.
+- `jsonb_array_length` was the last type-dependent call sitting outside
+  the CASE that guards it, which is the argument the rest of that file
+  already makes.
+- Known and left: the service role can write `profiles` but cannot read
+  `discover`, `match_profiles` or `my_reports` — those views call
+  `private.is_blocked`, which is granted to `authenticated` only. Nothing
+  server-side reads them today; the next Edge Function that wants to will
+  need the grant.
+- Verified: battery green on a clean tree; 105 Supabase tests, 12 mobile.
+
 ## 2026-09-10 — Two ways a check can be right and still be wrong
 
 - **The private-schema move locked the service role out of `profiles`.**

@@ -1712,15 +1712,53 @@ describe('birth instant', () => {
     expect(await response.text()).toContain('profiles_chart_shape');
   });
 
+  it('refuses a degree too small to be a double', async () => {
+    // The cast raises for values under a double's range as well as over,
+    // and the insert came back as a type error with the constraint's
+    // internals in it rather than a refusal. Text again: `1e-400` is
+    // simply `0` once TypeScript reads it.
+    const tiny = await user('tiny');
+    const row = profileRow({
+      id: tiny.id,
+      display_name: 'Küçük',
+      gender: 'man',
+      interested_in: 'women',
+      lonLat: ISTANBUL_NEARBY,
+      photos: [],
+    });
+    const body = JSON.stringify(row).replace(
+      /"ascendant":\s*[0-9.]+/,
+      '"ascendant": -1e-400',
+    );
+    const response = await fetch(`${localStack().API_URL}/rest/v1/profiles`, {
+      method: 'POST',
+      headers: {
+        apikey: localStack().ANON_KEY,
+        Authorization: `Bearer ${await accessToken(tiny)}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+    });
+    expect(response.status).toBe(400);
+    // The constraint, not a type error leaking the check's internals.
+    expect(await response.text()).toContain('profiles_chart_shape');
+  });
+
   it('lets the service role write a profile', async () => {
     // The shape helpers live in `private`, and a CHECK runs with the
     // writer's privileges: without a grant, every backend write to
     // profiles fails — the seed scripts, and anything server-side later.
-    const { error } = await admin
+    // The returned row is the point: an update that matches nothing
+    // reports no error and evaluates no constraint, so it would pass this
+    // test while the grant was missing.
+    const { data, error } = await admin
       .from('profiles')
-      .update({ radius_km: 50 })
-      .eq('id', alice.id);
+      .update({ radius_km: 75 })
+      .eq('id', alice.id)
+      .select('id, radius_km');
     expect(error).toBeNull();
+    expect(data).toEqual([{ id: alice.id, radius_km: 75 }]);
+    await admin.from('profiles').update({ radius_km: 50 }).eq('id', alice.id);
   });
 
   it('refuses a calendar date that disagrees with the wall clock', async () => {
