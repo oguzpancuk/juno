@@ -103,6 +103,9 @@ export default function Settings() {
       <Link href="/profile" style={styles.link}>
         {t.profile.open}
       </Link>
+      <Link href="/legal" style={styles.link}>
+        {t.legal.open}
+      </Link>
       <Text style={styles.label}>{t.settings.radius}</Text>
       <View style={styles.row}>
         {RADIUS_OPTIONS.map((km) => (

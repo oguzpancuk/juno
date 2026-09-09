@@ -163,6 +163,12 @@ export const t = {
     locationHint:
       'Konumun ~1 km’lik bir hücreye yuvarlanarak saklanır; kimse tam yerini görmez.',
   },
+  legal: {
+    open: 'Gizlilik ve lisanslar',
+    back: '‹ Ayarlar',
+    title: 'Gizlilik ve lisanslar',
+    updated: (date: string) => `Son güncelleme: ${date}`,
+  },
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene' },
   errors: {
     generic: 'Bir şeyler ters gitti, tekrar dene.',

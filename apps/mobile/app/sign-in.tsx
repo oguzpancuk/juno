@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -88,6 +88,9 @@ export default function SignIn() {
             </Text>
           </Pressable>
           <Text style={styles.consent}>{t.signIn.consent}</Text>
+          <Link href="/legal" style={styles.consentLink}>
+            {t.legal.open}
+          </Link>
         </View>
       ) : (
         <View style={styles.form}>
@@ -153,5 +156,6 @@ const styles = StyleSheet.create({
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
   link: { color: '#9a94b8', textAlign: 'center', marginTop: 8 },
   consent: { color: '#5f5a7a', fontSize: 12, marginTop: 8 },
+  consentLink: { color: '#9a94b8', fontSize: 12, marginTop: 4 },
   error: { color: '#ff7b7b', marginTop: 12 },
 });

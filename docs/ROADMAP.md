@@ -192,6 +192,12 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       (CC BY 4.0) and astronomy-engine (MIT).
       — done when: profile insert without `consent_at` is rejected by a
       CHECK constraint (battery) and the URL returns 200 (manual).
+      _Half done: the notice itself is written and rendered at `/legal`,
+      linked from settings and from the sign-in screen, with the GeoNames
+      and astronomy-engine credits (`screenshots/v1-legal.png`). Still
+      open: storing `consent_at` with its CHECK, filling the two
+      placeholders in the notice, and hosting it at a public URL — which
+      the web client's `/legal` route becomes once it is deployed._
 - [x] **Full Turkish content (owner priority, before chat).** _Built,
       source-verified (`docs/astro-sources.md`), owner signed off on the
       texts on 2026-09-09 (NOTES)._ Professional
