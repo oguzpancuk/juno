@@ -1513,13 +1513,63 @@ describe('photos', () => {
     expect(error?.code).toBe(CHECK_VIOLATION);
   });
 
-  it('an upload cannot nest below the owner folder', async () => {
-    // Account deletion lists the folder flat; a nested object would outlive
-    // the account it belongs to.
+  it('nothing can nest below the owner folder', async () => {
+    // Account deletion walks the folder; a nested object used to outlive
+    // the account it belonged to, and the folder row it produced could not
+    // be removed at all. Upload is the obvious way in — move is the one a
+    // review found open.
     const nested = await sema.client.storage
       .from('photos')
       .upload(`${sema.id}/deep/x.png`, shot(), { contentType: 'image/png' });
     expect(nested.error).not.toBeNull();
+
+    const flat = `${sema.id}/movable.png`;
+    const uploaded = await sema.client.storage
+      .from('photos')
+      .upload(flat, shot(), { contentType: 'image/png' });
+    expect(uploaded.error).toBeNull();
+    const moved = await sema.client.storage
+      .from('photos')
+      .move(flat, `${sema.id}/deep/hidden.png`);
+    expect(moved.error).not.toBeNull();
+    const copied = await sema.client.storage
+      .from('photos')
+      .copy(flat, `${sema.id}/deep/copy.png`);
+    expect(copied.error).not.toBeNull();
+    await sema.client.storage.from('photos').remove([flat]);
+  });
+
+  it('deleting the object takes the path out of the profile', async () => {
+    // The list is checked when it is written; without this trigger a
+    // profile could keep a path to an object it had just deleted, and stay
+    // in every nearby deck with a blank card.
+    const path = `${tolga.id}/gate.png`;
+    const uploaded = await tolga.client.storage
+      .from('photos')
+      .upload(path, shot(), { contentType: 'image/png' });
+    expect(uploaded.error).toBeNull();
+    const saved = await tolga.client
+      .from('profiles')
+      .update({ photos: [path] })
+      .eq('id', tolga.id);
+    expect(saved.error).toBeNull();
+    expect(
+      ids((await sema.client.from('discover').select('id')).data),
+    ).toContain(tolga.id);
+
+    await tolga.client.storage.from('photos').remove([path]);
+
+    const after = await tolga.client
+      .from('profiles')
+      .select('photos')
+      .eq('id', tolga.id)
+      .single();
+    expect(z.object({ photos: z.array(z.string()) }).parse(after.data)).toEqual(
+      { photos: [] },
+    );
+    expect(
+      ids((await sema.client.from('discover').select('id')).data),
+    ).not.toContain(tolga.id);
   });
 
   it('nobody can delete someone else photo', async () => {

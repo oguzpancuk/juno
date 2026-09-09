@@ -155,12 +155,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       own-folder triggers, a path with no object behind it, nesting below
       the owner folder, signing another member's photo until a block, the
       photo gate on discover, and the folder going with the account —
-      including a folder larger than one Storage listing page.
+      including a folder larger than one Storage listing page and one
+      with a nested object in it. `photo.test.ts` asserts that a block and
+      a deletion answer identically.
       Verified in the browser: bio saved from the profile screen, the
       photo rendered there and on the discover card, and the chart screen
       nudging a photo-less profile; `screenshots/v1-profile.png` is the
-      same screen in the simulator, its photo fetched through a signed
-      URL. Not automated: the OS file chooser
+      same screen in the simulator. Photos are served by the `photo` Edge
+      Function, which authorises every request (ADR-0006), verified on
+      both clients: the browser fetches the bytes and the simulator sends
+      the token as a header. Not automated: the OS file chooser
       that `expo-image-picker` opens, so the pick step itself is
       unexercised; the upload path underneath it is covered by tests._
 - [x] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),

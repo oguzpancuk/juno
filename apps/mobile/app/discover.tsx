@@ -15,7 +15,11 @@ import {
   type Candidate,
   type DiscoverState,
 } from '@/lib/discover';
-import { signedPhotoUrls } from '@/lib/photos';
+import {
+  photoSources,
+  releasePhotoSources,
+  type PhotoSource,
+} from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -28,9 +32,12 @@ export default function Discover() {
   const [state, setState] = useState<DiscoverState>({ status: 'loading' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // One signed URL per candidate's first photo; they expire, so they are
-  // derived from the rows rather than stored with them.
-  const [cardUrls, setCardUrls] = useState<Record<string, string>>({});
+  // One authorised source per candidate's first photo, keyed by path.
+  // They are fetched per visit rather than stored: the endpoint checks the
+  // block on every request (ADR-0006), so nothing is reusable later.
+  const [cardSources, setCardSources] = useState<Record<string, PhotoSource>>(
+    {},
+  );
   useEffect(() => {
     if (state.status !== 'ready') return;
     const first = state.candidates
@@ -38,17 +45,23 @@ export default function Discover() {
       .filter((p): p is string => typeof p === 'string');
     if (first.length === 0) return;
     let cancelled = false;
-    void signedPhotoUrls(first).then((urls) => {
-      if (cancelled) return;
-      const pairs: Record<string, string> = {};
+    let taken: (PhotoSource | null)[] = [];
+    void photoSources(first).then((sources) => {
+      if (cancelled) {
+        releasePhotoSources(sources);
+        return;
+      }
+      taken = sources;
+      const pairs: Record<string, PhotoSource> = {};
       first.forEach((path, index) => {
-        const url = urls[index];
-        if (url) pairs[path] = url;
+        const source = sources[index];
+        if (source) pairs[path] = source;
       });
-      setCardUrls(pairs);
+      setCardSources(pairs);
     });
     return () => {
       cancelled = true;
+      releasePhotoSources(taken);
     };
   }, [state]);
 
@@ -186,10 +199,10 @@ export default function Discover() {
         <View style={styles.card} testID={`card-${current.row.id}`}>
           {(() => {
             const path = current.row.photos[0];
-            const url = path ? cardUrls[path] : undefined;
-            return url ? (
+            const source = path ? cardSources[path] : undefined;
+            return source ? (
               <Image
-                source={{ uri: url }}
+                source={source}
                 style={styles.cardPhoto}
                 resizeMode="cover"
                 testID="card-photo"

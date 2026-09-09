@@ -10,6 +10,47 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Photos re-review: a move, a wedge, and the oracle closed
+
+- The photos fix commit came back NEEDS_WORK again. Two blockers, both
+  real, both from one root: a guarantee asserted in a comment rather than
+  enforced in every policy that could break it.
+- **`storage.move` walked around the one-folder-level rule.** The rule was
+  added to the insert policy; move goes through the _update_ policy, which
+  still only checked the first segment. One move call created
+  `<uid>/deep/hidden.png`, and from then on the account could never be
+  deleted: a listing returns a folder pseudo-row, removing a folder
+  deletes nothing and reports no error, so the loop spun until the worker
+  was killed and the photo stayed fetchable by any signed-in member. Fixed
+  in `20260909000004`: the update policy carries the same rule, and the
+  delete loop walks folders as well as objects under a step cap, so
+  neither an old nested object nor a stubborn one can wedge it again.
+- **The block-vs-deletion oracle is closed, not narrowed.** Photos are no
+  longer served by signed URL. A signed URL is a bearer token that Storage
+  validates without consulting the block table, so shortening its lifetime
+  only shrinks the window. A new `photo` Edge Function authorises every
+  request; blocked, deleted, never existed and malformed all answer 404
+  with the same body. Recorded as ADR-0006, because it has a real cost —
+  an invocation per photo view and no caching — and the alternative was
+  accepting the leak, which is not mine to accept.
+- On the web the app fetches the bytes and hands `Image` an object URL:
+  `img` cannot send an Authorization header. Screens revoke those URLs
+  when they replace or drop a set.
+- **The photo gate no longer counts stale strings.** A trigger on
+  `storage.objects` prunes a deleted object's path out of
+  `profiles.photos`, so a profile cannot delete its object and stay in the
+  deck with a blank card.
+- Also: the read policy's uuid guard is a CASE rather than two AND terms,
+  since the planner does not promise evaluation order; and
+  `profiles_check_photos` fixes its search path like every other function
+  here.
+- Verified: battery green on a clean tree; the new `photo.test.ts` asserts
+  that a block and a deletion answer identically, body included; the RLS
+  suite proves upload, move and copy all refuse to nest, and that deleting
+  an object drops the path and the profile out of the deck; the
+  delete-account suite plants a nested object with the service role and
+  requires the account to delete anyway.
+
 ## 2026-09-09 — Privacy notice at /legal
 
 - Wrote the KVKK notice and licence credits, and rendered them at
@@ -40,10 +81,12 @@
 - **Account deletion left photos behind.** `list()` answers 100 objects at
   a time and is not recursive, so a folder with 105 flat objects plus one
   nested kept seven of them, and another signed-in member fetched one with
-  HTTP 200 after the account was gone. Fixed twice over: the delete now
-  pages until the folder is empty, and the insert policy accepts exactly
-  one folder level, so a flat listing is complete by construction. A test
-  uploads 105 objects and asserts the folder is empty afterwards.
+  HTTP 200 after the account was gone. Fixed by paging until the folder is
+  empty, plus a one-folder-level rule on uploads. A test uploads 105
+  objects and asserts the folder is empty afterwards. **Corrected later
+  the same day:** the claim that a flat listing was therefore "complete by
+  construction" was false — the rule sat on the insert policy only, and
+  `storage.move` goes through the update policy. See the newer entry.
 - **The photo gate counted strings, not objects.** `profiles.photos` only
   had to look like a path, so one invented string put a photo-less profile
   in every nearby deck. The trigger now requires an object to exist behind

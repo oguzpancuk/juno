@@ -120,6 +120,18 @@ beforeAll(async () => {
   aboutMertId = z.object({ id: z.string().uuid() }).parse(nurs.data).id;
   // A photo to leave behind: storage objects do not cascade. The profile
   // fixture already uploaded one.
+  // A nested object, planted with the service role because the policies
+  // no longer let a member make one. It used to wedge the delete loop: a
+  // folder entry cannot be removed, so the folder never looked empty and
+  // the account became impossible to delete.
+  const nested = await admin.storage
+    .from('photos')
+    .upload(
+      `${mert.id}/deep/hidden.png`,
+      new Blob([new Uint8Array([137, 80])], { type: 'image/png' }),
+      { contentType: 'image/png' },
+    );
+  if (nested.error) throw new Error(`nested: ${nested.error.message}`);
   // More than one listing page: list() answers 100 at a time, and a folder
   // that is emptied one page at a time leaves the rest fetchable by anyone
   // holding the path long after the account is gone.
@@ -330,6 +342,11 @@ it('deletes the caller and every row that referenced them', async () => {
     .list(mert.id, { limit: 200 });
   expect(folder.error).toBeNull();
   expect(folder.data ?? []).toEqual([]);
+  const deep = await admin.storage
+    .from('photos')
+    .list(`${mert.id}/deep`, { limit: 200 });
+  expect(deep.error).toBeNull();
+  expect(deep.data ?? []).toEqual([]);
 
   // The other person keeps their own account and simply loses the match.
   const survivor = await admin.from('profiles').select('id').eq('id', nur.id);

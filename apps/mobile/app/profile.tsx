@@ -18,7 +18,9 @@ import {
   pickPhoto,
   removePhoto,
   saveBio,
-  signedPhotoUrls,
+  photoSources,
+  releasePhotoSources,
+  type PhotoSource,
 } from '@/lib/photos';
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
@@ -30,9 +32,9 @@ export default function Profile() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const insets = useSafeAreaInsets();
   const [photos, setPhotos] = useState<string[] | null>(null);
-  // Aligned with `photos` by index; null where the object could not be
-  // signed, so a missing one never shifts the rest.
-  const [urls, setUrls] = useState<(string | null)[]>([]);
+  // Aligned with `photos` by index; null where the photo could not be
+  // fetched, so a missing one never shifts the rest.
+  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
   const [bio, setBio] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,16 +54,22 @@ export default function Profile() {
     };
   }, [userId]);
 
-  // Signed URLs expire, so they are derived from the paths rather than
-  // stored with them.
+  // Fetched per visit, not stored: the endpoint authorises every request.
   useEffect(() => {
     if (photos === null) return;
     let cancelled = false;
-    void signedPhotoUrls(photos).then((signed) => {
-      if (!cancelled) setUrls(signed);
+    let taken: (PhotoSource | null)[] = [];
+    void photoSources(photos).then((fetched) => {
+      if (cancelled) {
+        releasePhotoSources(fetched);
+        return;
+      }
+      taken = fetched;
+      setSources(fetched);
     });
     return () => {
       cancelled = true;
+      releasePhotoSources(taken);
     };
   }, [photos]);
 
@@ -133,9 +141,9 @@ export default function Profile() {
           <View style={styles.grid}>
             {photos.map((path, index) => (
               <View key={path} style={styles.tile}>
-                {urls[index] ? (
+                {sources[index] ? (
                   <Image
-                    source={{ uri: urls[index] ?? undefined }}
+                    source={sources[index] ?? { uri: '' }}
                     style={styles.photo}
                     resizeMode="cover"
                   />

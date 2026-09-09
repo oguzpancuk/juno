@@ -60,29 +60,54 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Photos live under "<uid>/" in a private bucket. Storage objects are
   // not rows, so nothing cascades: they have to go first, while the user
   // still exists to be listed.
-  // Paged: list() answers 100 at a time, and a folder with more than that
-  // would leave photos of a deleted person fetchable by anyone holding the
-  // path. Uploads are one level deep by policy, so a flat listing is
-  // complete.
+  //
+  // Walks folders as well as objects. Uploads are one level deep by
+  // policy, but a listing entry with a null id is a folder, and asking
+  // Storage to remove one deletes nothing and reports no error — a loop
+  // that assumed a flat folder would spin until the worker was killed,
+  // and the account could then never be deleted at all. The step count is
+  // bounded for the same reason: an object that refuses to go must fail
+  // the request, not hang it.
   const PAGE = 100;
-  for (let offset = 0; ; offset += PAGE) {
-    const listed = await admin.storage
-      .from('photos')
-      .list(userId, { limit: PAGE, offset });
-    if (listed.error) {
-      console.error('delete-account list failed', listed.error.message);
-      return json(500, { error: 'delete_failed' });
+  const MAX_STEPS = 500;
+  const folders: string[] = [userId];
+  let steps = 0;
+  while (folders.length > 0) {
+    const folder = folders.pop();
+    if (folder === undefined) break;
+    for (;;) {
+      if (++steps > MAX_STEPS) {
+        console.error('delete-account photos: step limit', userId);
+        return json(500, { error: 'delete_failed' });
+      }
+      const listed = await admin.storage
+        .from('photos')
+        .list(folder, { limit: PAGE });
+      if (listed.error) {
+        console.error('delete-account list failed', listed.error.message);
+        return json(500, { error: 'delete_failed' });
+      }
+      if (listed.data.length === 0) break;
+      // A null id marks a folder; it is walked, not removed.
+      const objects = listed.data.filter((entry) => entry.id !== null);
+      for (const entry of listed.data) {
+        if (entry.id === null) folders.push(`${folder}/${entry.name}`);
+      }
+      if (objects.length === 0) break;
+      const removed = await admin.storage
+        .from('photos')
+        .remove(objects.map((file) => `${folder}/${file.name}`));
+      if (removed.error) {
+        console.error('delete-account photos failed', removed.error.message);
+        return json(500, { error: 'delete_failed' });
+      }
+      // Every object that was listed must be gone, or the next listing
+      // returns the same page for ever.
+      if (removed.data.length < objects.length) {
+        console.error('delete-account photos: partial remove', userId);
+        return json(500, { error: 'delete_failed' });
+      }
     }
-    if (listed.data.length === 0) break;
-    const removed = await admin.storage
-      .from('photos')
-      .remove(listed.data.map((file) => `${userId}/${file.name}`));
-    if (removed.error) {
-      console.error('delete-account photos failed', removed.error.message);
-      return json(500, { error: 'delete_failed' });
-    }
-    // Removing shrinks the folder, so the next page starts at 0 again.
-    offset = -PAGE;
   }
   const deleted = await admin.auth.admin.deleteUser(userId);
   if (deleted.error) {

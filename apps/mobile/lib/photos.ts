@@ -1,53 +1,78 @@
 import * as ImagePicker from 'expo-image-picker';
-import { z } from 'zod';
+import { Platform } from 'react-native';
+import { env } from './env';
 import { supabase } from './supabase';
 
 /** Mirrors the trigger on `profiles.photos`. */
 export const MAX_PHOTOS = 6;
 const BUCKET = 'photos';
-/**
- * Short on purpose. A signed URL is a bearer token: Storage checks the
- * signature, not the block table, so a URL handed out before a block keeps
- * resolving until it expires while a deleted account's stops at once —
- * a window in which the two are distinguishable. Ten minutes covers a
- * browsing session (screens re-sign on focus) and keeps that window small.
- * Closing it fully needs photos served through a function that authorises
- * every request; recorded in docs/NOTES.md as a v1 residual.
- */
-const SIGNED_URL_TTL_SECONDS = 10 * 60;
-
-const SignedSchema = z.array(
-  z.object({
-    path: z.string().nullable(),
-    signedUrl: z.string().nullable(),
-    error: z.string().nullable().optional(),
-  }),
-);
 
 /**
- * Display URLs for stored paths, aligned with the input: index i is the URL
- * for paths[i], or null when that one path cannot be signed (blocked, or
- * the object is gone). Never compacted — callers pair these with the paths
- * by index, and a shorter array would put one person's photo on another
- * person's card.
+ * What an `Image` needs to show one photo. On native the request carries
+ * the caller's token in a header; on the web the bytes are fetched here
+ * and handed over as an object URL, because `img` cannot send headers.
  */
-export async function signedPhotoUrls(
+export interface PhotoSource {
+  readonly uri: string;
+  readonly headers?: Readonly<Record<string, string>>;
+}
+
+const endpoint = (path: string): string =>
+  `${env.supabaseUrl}/functions/v1/photo?path=${encodeURIComponent(path)}`;
+
+/**
+ * Sources for stored paths, aligned with the input: index i belongs to
+ * paths[i], or is null when that photo cannot be shown. Never compacted —
+ * callers pair these with the paths by index, and a shorter array would
+ * put one person's photo on another person's card.
+ *
+ * Photos come through an Edge Function rather than a signed URL: a signed
+ * URL is a bearer token that outlives a block, and "blocked" must not be
+ * distinguishable from "deleted" (ADR-0006). Every request is authorised,
+ * so nothing here is cached.
+ */
+export async function photoSources(
   paths: readonly string[],
-): Promise<(string | null)[]> {
+): Promise<(PhotoSource | null)[]> {
   if (paths.length === 0) return [];
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrls([...paths], SIGNED_URL_TTL_SECONDS);
-  if (error) return paths.map(() => null);
-  const parsed = SignedSchema.safeParse(data);
-  if (!parsed.success) return paths.map(() => null);
-  const byPath = new Map<string, string>();
-  for (const signed of parsed.data) {
-    if (signed.path !== null && signed.signedUrl !== null) {
-      byPath.set(signed.path, signed.signedUrl);
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (token === undefined) return paths.map(() => null);
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    apikey: env.supabaseAnonKey,
+  };
+  if (Platform.OS !== 'web') {
+    return paths.map((path) => ({ uri: endpoint(path), headers }));
+  }
+  return Promise.all(
+    paths.map(async (path) => {
+      try {
+        const response = await fetch(endpoint(path), { headers });
+        if (!response.ok) return null;
+        const blob = await response.blob();
+        return { uri: URL.createObjectURL(blob) };
+      } catch {
+        return null;
+      }
+    }),
+  );
+}
+
+/**
+ * Frees what `photoSources` allocated. A no-op on native; on the web an
+ * object URL pins its blob in memory until it is revoked, so screens call
+ * this when they replace or drop a set.
+ */
+export function releasePhotoSources(
+  sources: readonly (PhotoSource | null)[],
+): void {
+  if (Platform.OS !== 'web') return;
+  for (const source of sources) {
+    if (source && source.uri.startsWith('blob:')) {
+      URL.revokeObjectURL(source.uri);
     }
   }
-  return paths.map((path) => byPath.get(path) ?? null);
 }
 
 const EXTENSIONS: Readonly<Record<string, string>> = {

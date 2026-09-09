@@ -3,6 +3,7 @@ import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
 import {
+  photoSources,
+  releasePhotoSources,
+  type PhotoSource,
+} from '@/lib/photos';
+import {
   REPORT_REASONS,
   blockUser,
   reportUser,
@@ -20,6 +26,9 @@ import {
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+
+/** Storage paths cannot contain a null byte, so joining on one is safe. */
+const PATH_SEPARATOR = '\u0000';
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,6 +59,32 @@ export default function MatchScreen() {
       cancelled = true;
     };
   }, [userId, id]);
+
+  // Photos come from an endpoint that authorises every request
+  // (ADR-0006), fetched per visit. The paths travel as one joined string:
+  // a refetch hands back a new array with the same contents, and that must
+  // not refetch the photos.
+  const photoKey =
+    row !== 'loading' && row ? row.photos.join(PATH_SEPARATOR) : null;
+  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
+  useEffect(() => {
+    if (photoKey === null) return;
+    const paths = photoKey === '' ? [] : photoKey.split(PATH_SEPARATOR);
+    let cancelled = false;
+    let taken: (PhotoSource | null)[] = [];
+    void photoSources(paths).then((fetched) => {
+      if (cancelled) {
+        releasePhotoSources(fetched);
+        return;
+      }
+      taken = fetched;
+      setSources(fetched);
+    });
+    return () => {
+      cancelled = true;
+      releasePhotoSources(taken);
+    };
+  }, [photoKey]);
 
   // After every hook: hooks must run in the same order on each render.
   const reading = useMemo(
@@ -120,6 +155,26 @@ export default function MatchScreen() {
     >
       <Text style={styles.kicker}>{t.match.kicker}</Text>
       <Text style={styles.title}>{t.match.title(row.display_name)}</Text>
+      {sources.some((source) => source !== null) ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.photoStrip}
+        >
+          {sources.map((source, index) =>
+            source === null ? null : (
+              <Image
+                key={source.uri}
+                testID={`match-photo-${index}`}
+                source={source}
+                style={styles.photo}
+                resizeMode="cover"
+              />
+            ),
+          )}
+        </ScrollView>
+      ) : null}
+      {row.bio ? <Text style={styles.bio}>{row.bio}</Text> : null}
       <View style={styles.row}>
         <Chip label={t.chart.sun} value={SIGN_TR[row.big_three.sun]} />
         <Chip label={t.chart.moon} value={SIGN_TR[row.big_three.moon]} />
@@ -247,6 +302,9 @@ function Chip({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  photoStrip: { gap: 8, paddingVertical: 4 },
+  photo: { width: 132, height: 176, borderRadius: 14 },
+  bio: { color: '#c8c3e0', fontSize: 14, lineHeight: 21 },
   screen: { flex: 1, backgroundColor: '#0b0b1a' },
   content: { padding: 24, paddingTop: 80, gap: 12, paddingBottom: 48 },
   center: {
