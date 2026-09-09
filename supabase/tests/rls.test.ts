@@ -1279,6 +1279,29 @@ describe('blocks and reports', () => {
       .eq('blocked_id', kemal.id);
   });
 
+  it('a missing counterpart is a to_id foreign key error', async () => {
+    // apps/mobile/lib/discover.ts reads this constraint name out of the
+    // message to tell "they deleted their account" from "our own profile
+    // is gone"; PostgREST redacts the column from `details`.
+    const ghost = '00000000-0000-4000-8000-000000000000';
+    const { error } = await lale.client.from('likes').insert({
+      from_id: lale.id,
+      to_id: ghost,
+      kind: 'pass',
+    });
+    expect(error?.code).toBe('23503');
+    expect(error?.message).toContain('likes_to_id_fkey');
+  });
+
+  it('reports keep no write grants beyond the insert', async () => {
+    const del = await lale.client
+      .from('reports')
+      .delete()
+      .neq('id', '00000000-0000-4000-8000-000000000000')
+      .select('id');
+    expect(del.error?.code).toBe(PERMISSION_DENIED);
+  });
+
   it('my_reports is read-only', async () => {
     const anyId = '00000000-0000-4000-8000-000000000000';
     const edit = await lale.client
@@ -1311,6 +1334,18 @@ describe('blocks and reports', () => {
     });
     expect(error?.code).not.toBe(UNIQUE_VIOLATION);
     expect(error?.code).toBe('22P02'); // invalid input value for enum
+  });
+
+  it('my_reports comes back in filing order, not in tuple order', async () => {
+    // Physical order is an oracle: a deletion rewrites the row and moves
+    // it to the end of an unordered scan, a block leaves it in place, so
+    // an unordered read would sort the two fates apart.
+    const rows = ReportRows.parse(
+      (await lale.client.from('my_reports').select('*')).data,
+    );
+    expect(rows.length).toBeGreaterThan(1);
+    const times = rows.map((r) => r.created_at);
+    expect([...times].sort()).toEqual(times);
   });
 
   it('a report must name both sides', async () => {

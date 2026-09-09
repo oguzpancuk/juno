@@ -287,13 +287,20 @@ select
   end as note,
   r.created_at
 from public.reports r
-where r.reporter_id = (select auth.uid());
+where r.reporter_id = (select auth.uid())
+-- Deterministic, because physical row order is itself an oracle: setting
+-- the ids null on a deletion rewrites the tuple and moves it to the end
+-- of an unordered scan, so the untouched rows (a block) come back first.
+order by r.created_at, r.id;
 
 -- A single-table view is auto-updatable and runs as its owner, so the
 -- default grants would let a reporter delete their own moderation record
 -- over REST. Read-only, explicitly.
 revoke all on public.my_reports from anon, authenticated;
 grant select on public.my_reports to authenticated;
+-- The table keeps Supabase's default write grants otherwise; RLS denies
+-- them today, but a later UPDATE policy would find DELETE sitting there.
+revoke update, delete on public.reports from authenticated;
 
 -- ---------------------------------------------------------------- discover
 -- Same as before plus two exclusions: anyone in a block with me, either

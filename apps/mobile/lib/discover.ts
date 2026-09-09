@@ -89,9 +89,13 @@ export async function swipe(
     .from('likes')
     .insert({ from_id: me.id, to_id: them.id, kind, starter_key });
   // 23505: already swiped (lost response); treat as done.
-  // 42501 / 23503: they blocked us or deleted their account while the card
-  // was on screen. Either way this person is no longer swipeable, so the
-  // deck must drop the card instead of refusing every tap on it.
+  // 42501: they blocked us while the card was on screen. 23503 on the
+  // to_id foreign key: they deleted their account. Either way this person
+  // is no longer swipeable, so the deck drops the card instead of refusing
+  // every tap on it. A 23503 on from_id is OUR profile going missing and
+  // must fall through to the error path, and PostgREST redacts the column
+  // from `details`, so the constraint name is the only discriminator —
+  // `likes_to_id_fkey` is pinned by an RLS test.
   const missingCounterpart =
     error?.code === '23503' && /to_id/.test(error.message);
   if (error && (error.code === '42501' || missingCounterpart)) {

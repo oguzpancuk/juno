@@ -124,9 +124,10 @@ beforeAll(async () => {
   );
   matchId = match.match_id;
 
-  // Warm the whole path once. The first postgres_changes subscription
-  // after the containers restart takes seconds to bind, and the budget in
-  // the test below is about steady-state delivery, not a cold connect.
+  // Warm the path. The first postgres_changes binding after the containers
+  // restart reports SUBSCRIBED and then drops its events, so this primer
+  // is expected to be lost; what it buys is a second binding that works.
+  // Nothing is asserted about it — the measurement is the test below.
   const warm = waitForMessage(ada, matchId, 20_000);
   await warm.ready;
   const primer = await bora.client

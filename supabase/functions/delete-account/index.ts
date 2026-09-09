@@ -1,7 +1,8 @@
 /**
  * Deletes the caller's account: the auth user, and through the schema's
- * cascades the profile, likes, matches, messages and blocks. Reports stay
- * with both ids and the note nulled, as an anonymous record.
+ * cascades the profile, likes, matches, messages and blocks. Reports stay:
+ * the caller's id is nulled and the note cleared, so what is left is the
+ * reason, the time and the other side's id.
  *
  * The service-role key never leaves this function; the app calls it with
  * the user's own access token and can only ever delete itself. Deno, not
