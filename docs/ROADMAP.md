@@ -248,6 +248,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       unauthenticated page; the authenticated screens were driven and read
       back in-session. Still open for the hosted project: EXPO_PUBLIC_*
       env for a deployed build and where to host the static output._
+- [ ] **Visual design (Claude Design).** The screens are functional but
+      unstyled beyond a provisional dark palette. `docs/design-brief.md`
+      is the prompt and context for a claude.ai/design project; the
+      owner runs the design there, then the screens are implemented in
+      `apps/mobile` with tokens in one file and shared pieces in
+      `apps/mobile/components`. `/design-sync` is not applicable until
+      that component set exists (2026-09-09: nothing to sync yet).
+      — done when: every screen in the brief matches the accepted design
+      in the simulator (screenshot per screen under `screenshots/design-*`),
+      tokens live in one file, and the battery is green.
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.stardate`, check App Store name availability; hosted

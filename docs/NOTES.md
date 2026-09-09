@@ -10,6 +10,24 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Design brief; /design-sync not applicable yet
+
+- The owner ran `/design-sync` wanting Claude Design to produce the app's
+  UI. That skill goes the other way (it uploads an existing compiled
+  component library so the design agent builds with real components);
+  stardate has no shared components, tokens or Storybook, so there was
+  nothing to sync. No Claude Design project or `.design-sync/` config was
+  created.
+- Wrote `docs/design-brief.md`: the prompt to paste into claude.ai/design
+  plus the full screen inventory with the exact Turkish strings from
+  `apps/mobile/lib/strings.ts`, the current provisional palette, the RN +
+  web constraints, and the component set to extract. Numbers checked
+  against source: 6 photos, 300-character bio, radius presets
+  5/25/50/100/500, the six report reasons.
+- ROADMAP v1 gained "Visual design (Claude Design)" with its done-when.
+  Next: owner runs the design; then implementation with tokens +
+  `apps/mobile/components`; only after that does `/design-sync` apply.
+
 ## 2026-09-09 — v1 profile photos and bio
 
 - Photos live in a private Storage bucket, one folder per user, read
