@@ -53,7 +53,9 @@ account deletion live in every profile and in settings.
    discover is one card; match is one starter. No tabs, no dashboards.
 4. **Calm dark palette.** Current provisional palette (replace freely, but
    keep the mood): background `#0b0b1a`, card `#15142a`, chip `#1c1b33`,
-   text `#f5f2ff`, secondary `#c9c4e3`, muted `#9a94b8`, error `#ff7b7b`.
+   text `#f5f2ff`, secondary `#c9c4e3`, muted `#9a94b8`, error `#ff7b7b`;
+   accent gold `#F2B97E` → rose `#E98FA0` (the mark's gradient, see
+   `apps/mobile/assets/brand/mark.svg`).
 5. **Apple-compliant dating app.** Block and report reachable from every
    profile and chat; account deletion reachable from settings; 18+ gate
    at onboarding.

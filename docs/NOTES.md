@@ -980,3 +980,31 @@ start` command line (the `.env` write was refused by the tool
   dating-app requirements (age gate, moderation, account deletion) as PRD
   constraints.
 - Next: /spec → /mvp-scope → skeleton → remotes/CI.
+
+## 2026-09-09 — The app is called juno; it has a mark
+
+- Owner renamed the product **juno** (Roman goddess of marriage; in
+  astrology the asteroid of partnership and commitment). Only the mark
+  landed this session — the `stardate` → `juno` rename of `app.json`,
+  strings, package scopes and bundle id is parked by owner decision
+  ("şimdilik hayır"). Until it runs, the code, the docs and the App Store
+  name disagree; the rename session should sweep all of them at once and
+  decide the bundle id before the first TestFlight build, since that one
+  is permanent.
+- The mark is the astrological Juno glyph (a star on a sceptre) reduced
+  to its silhouette: two four-pointed stars stacked, the upper one large,
+  the lower one stretched so it reads as the staff and crossbar. Three
+  concepts were drawn (the literal glyph, a chart wheel with an aspect
+  line, a star-dotted j); the owner picked the glyph and asked for it
+  more minimal, which produced this.
+- Source of truth is `apps/mobile/assets/brand/mark.svg`;
+  `apps/mobile/scripts/brand-assets.py` renders every PNG Expo needs
+  (iOS icon, splash, favicon, Android adaptive background / foreground /
+  monochrome) with headless Chrome, so nothing is hand-exported. Re-run
+  it after touching the SVG. The Android adaptive background moved from
+  the template's light blue to the night background.
+- First accent colour in the palette: gold `#F2B97E` → rose `#E98FA0`,
+  used only in the mark so far. Recorded in the design brief; the UI
+  still has no accent.
+- Verified: PNG dimensions and alpha with `sips` (icon opaque, adaptive
+  layers transparent), a contact sheet of every asset at real size.
