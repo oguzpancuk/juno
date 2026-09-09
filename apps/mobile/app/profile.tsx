@@ -33,8 +33,10 @@ export default function Profile() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const insets = useSafeAreaInsets();
   const [photos, setPhotos] = useState<string[] | null>(null);
-  // Aligned with `photos` by index; null where a photo could not be
-  // fetched, so a missing one never shifts the rest.
+  // Aligned with `photos` by index, always the same length: null while a
+  // set is being fetched and where a photo cannot be shown, so a missing
+  // one never shifts the rest and a removed one never lingers in the
+  // wrong tile.
   const sources = usePhotoSources(photos ?? EMPTY);
   const [bio, setBio] = useState('');
   const [notice, setNotice] = useState<string | null>(null);

@@ -1588,21 +1588,50 @@ describe('photos', () => {
 
   it('a folder cannot grow past the deletable limit', async () => {
     // An account whose folder cannot be emptied in one invocation cannot
-    // be deleted, so the folder is capped rather than left open.
+    // be deleted, so the folder is capped. The account under test has no
+    // profile row: nothing requires one before uploading, and the first
+    // version of this cap skipped exactly that case — which is the
+    // account most likely to be filled on purpose.
+    const stranger = await user('stranger');
     const paths = Array.from(
-      { length: 200 },
-      (_, i) => `${sema.id}/cap-${i}.png`,
+      { length: 240 },
+      (_, i) => `${stranger.id}/cap-${i}.png`,
     );
     const uploads = await Promise.all(
       paths.map((path) =>
-        sema.client.storage
+        stranger.client.storage
           .from('photos')
           .upload(path, shot(), { contentType: 'image/png' }),
       ),
     );
     expect(uploads.filter((u) => u.error !== null).length).toBeGreaterThan(0);
-    await sema.client.storage.from('photos').remove(paths);
-  }, 60_000);
+    const left = await admin.storage
+      .from('photos')
+      .list(stranger.id, { limit: 400 });
+    expect(left.data?.length ?? 0).toBeLessThanOrEqual(200);
+    await stranger.client.storage.from('photos').remove(paths);
+  }, 120_000);
+
+  it('a photo cannot be renamed out from under the profile', async () => {
+    // A move fires no delete, so the prune trigger never runs and the old
+    // path stays in profiles.photos with nothing behind it — enough to
+    // keep a profile in every nearby deck for ever.
+    const path = `${sema.id}/rename-me.png`;
+    const uploaded = await sema.client.storage
+      .from('photos')
+      .upload(path, shot(), { contentType: 'image/png' });
+    expect(uploaded.error).toBeNull();
+    const moved = await sema.client.storage
+      .from('photos')
+      .move(path, `${sema.id}/renamed.png`);
+    expect(moved.error).not.toBeNull();
+    // The original is still there, so nothing was stranded either way.
+    const still = await sema.client.storage
+      .from('photos')
+      .list(sema.id, { limit: 200 });
+    expect(still.data?.some((f) => f.name === 'rename-me.png')).toBe(true);
+    await sema.client.storage.from('photos').remove([path]);
+  });
 
   it('nobody can delete someone else photo', async () => {
     const { data, error } = await tolga.client.storage

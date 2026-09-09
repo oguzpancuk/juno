@@ -16,9 +16,10 @@ const BULLET = '• ';
 export default function Legal() {
   const insets = useSafeAreaInsets();
   // Reachable from sign-in as well as from settings, and a signed-out
-  // reader cannot open settings at all.
+  // reader cannot open settings at all. While the stored session is still
+  // being read there is no honest answer, so no link is shown rather than
+  // one that points at the wrong place and then changes.
   const session = useSession();
-  const signedIn = session.status === 'signed-in';
   return (
     <ScrollView
       style={styles.screen}
@@ -28,9 +29,15 @@ export default function Legal() {
       ]}
       testID="legal-screen"
     >
-      <Link href={signedIn ? '/settings' : '/sign-in'} style={styles.back}>
-        {signedIn ? t.legal.back : t.legal.backToSignIn}
-      </Link>
+      {session.status === 'signed-in' ? (
+        <Link href="/settings" style={styles.back}>
+          {t.legal.back}
+        </Link>
+      ) : session.status === 'signed-out' ? (
+        <Link href="/sign-in" style={styles.back}>
+          {t.legal.backToSignIn}
+        </Link>
+      ) : null}
       <Text style={styles.updated}>{t.legal.updated(LEGAL_UPDATED)}</Text>
       {legalSections.map((section) => (
         <View key={section.heading} style={styles.section}>

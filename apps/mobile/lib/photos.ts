@@ -1,6 +1,13 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import {
+  PATH_SEPARATOR,
+  photoKey,
+  sourcesFor,
+  type FetchedSources,
+  type PhotoSource,
+} from './photo-alignment';
 import { env } from './env';
 import { supabase } from './supabase';
 
@@ -9,14 +16,11 @@ export const MAX_PHOTOS = 6;
 const BUCKET = 'photos';
 
 /**
- * What an `Image` needs to show one photo. On native the request carries
- * the caller's token in a header; on the web the bytes are fetched here
- * and handed over as an object URL, because `img` cannot send headers.
+ * On native the request carries the caller's token in a header; on the
+ * web the bytes are fetched here and handed over as an object URL,
+ * because `img` cannot send headers.
  */
-export interface PhotoSource {
-  readonly uri: string;
-  readonly headers?: Readonly<Record<string, string>>;
-}
+export type { PhotoSource } from './photo-alignment';
 
 const endpoint = (path: string): string =>
   `${env.supabaseUrl}/functions/v1/photo?path=${encodeURIComponent(path)}`;
@@ -73,37 +77,41 @@ function release(sources: readonly (PhotoSource | null)[]): void {
   }
 }
 
-/** Storage paths cannot contain a null byte, so joining on one is safe. */
-const PATH_SEPARATOR = '\u0000';
-
 /**
- * Sources for `paths`, aligned by index, kept for as long as the screen
- * shows them.
+ * Sources for `paths`, aligned by index, for as long as the screen shows
+ * them. Entries are null while a set is still being fetched and where a
+ * photo cannot be shown, so index i always belongs to paths[i]; the rule
+ * itself is `sourcesFor`, which has its own test.
  *
- * The set is replaced only once the new one has arrived, and the old one
- * is freed after that: freeing on the way out would revoke URLs the
- * screen is still rendering, and the card would go blank until the next
- * fetch landed. Identity of the array does not matter, only its contents,
- * so a refetch that returns the same paths does not refetch the photos.
+ * Identity of the array does not matter, only its contents, so a refetch
+ * that returns the same paths does not refetch the photos. The previous
+ * set is freed once the new one has arrived, never on the way out: an
+ * object URL revoked while the screen still points at it leaves a blank
+ * image.
  */
 export function usePhotoSources(
   paths: readonly string[],
 ): (PhotoSource | null)[] {
-  const key = paths.join(PATH_SEPARATOR);
-  const [sources, setSources] = useState<(PhotoSource | null)[]>([]);
-  const held = useRef<(PhotoSource | null)[]>([]);
+  const key = photoKey(paths);
+  // An empty key is also the key of an empty path list, which is
+  // harmless: both answer with an empty array.
+  const [fetched, setFetched] = useState<FetchedSources>({
+    key: '',
+    sources: [],
+  });
+  const held = useRef<readonly (PhotoSource | null)[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const wanted = key === '' ? [] : key.split(PATH_SEPARATOR);
-    void photoSources(wanted).then((fetched) => {
+    void photoSources(wanted).then((next) => {
       if (cancelled) {
-        release(fetched);
+        release(next);
         return;
       }
       const previous = held.current;
-      held.current = fetched;
-      setSources(fetched);
+      held.current = next;
+      setFetched({ key, sources: next });
       release(previous);
     });
     return () => {
@@ -120,7 +128,7 @@ export function usePhotoSources(
     [],
   );
 
-  return sources;
+  return sourcesFor(paths, fetched);
 }
 
 const EXTENSIONS: Readonly<Record<string, string>> = {
@@ -183,7 +191,40 @@ export async function addPhoto(
     await supabase.storage.from(BUCKET).remove([path]);
     return null;
   }
+  await sweepOrphans(userId, photos);
   return photos;
+}
+
+/** An object older than this is nobody's upload in progress. */
+const ORPHAN_AGE_MS = 60 * 60 * 1000;
+
+/**
+ * Delete objects in the caller's folder that the profile does not list.
+ * They come from an upload whose profile update failed, or a removal
+ * whose storage delete did. Nothing shows them, but the folder is capped,
+ * and a folder full of invisible files would eventually refuse every new
+ * photo. Only old ones: another device may have just uploaded something
+ * it is about to list.
+ */
+async function sweepOrphans(
+  userId: string,
+  keep: readonly string[],
+): Promise<void> {
+  const listed = await supabase.storage
+    .from(BUCKET)
+    .list(userId, { limit: 200 });
+  if (listed.error || !listed.data) return;
+  const cutoff = Date.now() - ORPHAN_AGE_MS;
+  const stale = listed.data
+    .filter((entry) => entry.id !== null)
+    .filter((entry) => !keep.includes(`${userId}/${entry.name}`))
+    .filter((entry) => {
+      // A listing without a timestamp is not old enough to judge.
+      const created = entry.created_at;
+      return created !== null && Date.parse(created) < cutoff;
+    })
+    .map((entry) => `${userId}/${entry.name}`);
+  if (stale.length > 0) await supabase.storage.from(BUCKET).remove(stale);
 }
 
 /** Remove one photo from the profile and then from storage. */

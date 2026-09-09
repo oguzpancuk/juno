@@ -10,6 +10,46 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Fourth photos review: the cap that skipped the risky accounts
+
+- The 200-object folder cap was keyed on the owner's profile row, and it
+  returned early when there was none. Nothing requires a profile before
+  uploading, so an account that signs up and never finishes onboarding
+  had no limit at all — the review filled one with 1200 objects. That is
+  the same "undeletable account" the cap exists to prevent, aimed at the
+  account most likely to be abusive. The lock is now an advisory lock on
+  the folder name, which exists whether the profile does or not; it also
+  stops one member's upload burst from serialising on a row other queries
+  want. The test now fills a profile-less account.
+- **`storage.move` could strand a path for ever.** A move fires no delete,
+  so the prune trigger never runs and `profiles.photos` keeps the old
+  name; since the existence check now only looks at paths being added,
+  nothing failed and nothing repaired it, and the profile stayed in every
+  nearby deck with nothing behind its photo. Renaming is refused outright
+  — the app never renames a photo. Replacing one in place still works.
+- **The deck showed the previous candidate's face.** Holding the old
+  sources until the new ones arrive is right on the profile screen and
+  wrong in the deck: a swipe replaces the name, age and chart at once, so
+  for one round trip the photo belonged to the person just swiped past.
+  The rule is now "sources belong to the paths they were fetched for, or
+  they are not shown", and it lives in `lib/photo-alignment.ts` as a pure
+  function with a test — this class of bug has now appeared twice (first
+  compacting the array, then holding it over), so it gets a test rather
+  than another comment. `apps/mobile` therefore has a test script, and
+  the battery runs it.
+- Smaller: `addPhoto` sweeps objects in the caller's folder that the
+  profile does not list and that are over an hour old, so a folder cannot
+  silently fill with invisible files until it refuses new photos; the
+  legal text no longer implies a retention period for reports and auth
+  audit rows that no job enforces (there is none — it says so); and the
+  `/legal` back link is hidden until the session is known instead of
+  pointing at the wrong screen and then changing.
+- Verified: battery green on a clean tree, now including one mobile test
+  file; 81 Supabase tests; deck driven in the browser at 800×900 with the
+  swipe landing on the next card's own photo.
+- Still open from this review, deliberately: nothing. The radius
+  asymmetry stays an owner decision, recorded in the entry below.
+
 ## 2026-09-09 — Third photos review: the fix that made deletion impossible
 
 - The prune trigger from the previous round created a worse version of
