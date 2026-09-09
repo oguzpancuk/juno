@@ -1029,6 +1029,81 @@ describe('blocks and reports', () => {
     expect(receipt.data).toEqual([]);
   });
 
+  it('a block hides the match row itself, not just the profile view', async () => {
+    // `matches` present while `match_profiles` is empty would say "you were
+    // blocked" as loudly as the block row does; a deleted account takes its
+    // match with it, so both cases have to look the same.
+    for (const side of [lale, kemal]) {
+      const rows = await side.client.from('matches').select('id');
+      expect(ids(rows.data ?? [])).not.toContain(matchId);
+    }
+  });
+
+  it('a block and a report reach discover on their own, without a like', async () => {
+    // Oya and Polat never swipe each other, so the like filter cannot
+    // stand in for the block and report filters being there.
+    const oya = await user('oya');
+    const polat = await user('polat');
+    await insertProfile(
+      oya,
+      profileRow({
+        id: oya.id,
+        display_name: 'Oya',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await insertProfile(
+      polat,
+      profileRow({
+        id: polat.id,
+        display_name: 'Polat',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    expect(
+      ids((await oya.client.from('discover').select('id')).data),
+    ).toContain(polat.id);
+    expect(
+      ids((await polat.client.from('discover').select('id')).data),
+    ).toContain(oya.id);
+
+    const blocked = await oya.client
+      .from('blocks')
+      .insert({ blocker_id: oya.id, blocked_id: polat.id });
+    expect(blocked.error).toBeNull();
+    expect(
+      ids((await oya.client.from('discover').select('id')).data),
+    ).not.toContain(polat.id);
+    expect(
+      ids((await polat.client.from('discover').select('id')).data),
+    ).not.toContain(oya.id);
+
+    await oya.client
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', oya.id)
+      .eq('blocked_id', polat.id);
+    expect(
+      ids((await oya.client.from('discover').select('id')).data),
+    ).toContain(polat.id);
+
+    const filed = await oya.client
+      .from('reports')
+      .insert({ reporter_id: oya.id, reported_id: polat.id, reason: 'spam' });
+    expect(filed.error).toBeNull();
+    expect(
+      ids((await oya.client.from('discover').select('id')).data),
+    ).not.toContain(polat.id);
+    // Reporting is one-way: Polat's deck is untouched.
+    expect(
+      ids((await polat.client.from('discover').select('id')).data),
+    ).toContain(oya.id);
+  });
+
   it('the blocked person cannot see the block', async () => {
     expect(
       BlockRows.parse(
@@ -1093,6 +1168,15 @@ describe('blocks and reports', () => {
         (await kemal.client.from('match_profiles').select('*')).data,
       ),
     ).toHaveLength(1);
+  });
+
+  it('the same pair cannot be reported twice', async () => {
+    const second = await lale.client
+      .from('reports')
+      .insert({ reporter_id: lale.id, reported_id: kemal.id, reason: 'spam' });
+    // The pair was reported in the test above; a second tap is the same
+    // complaint, and the client treats the conflict as "already filed".
+    expect(second.error?.code).toBe(UNIQUE_VIOLATION);
   });
 
   it('a report cannot be edited, withdrawn or read by the reported person', async () => {

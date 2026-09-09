@@ -18,6 +18,8 @@ import {
 
 const admin = adminClient();
 const users: TestUser[] = [];
+/** Accounts the tests delete on purpose; cleanup must skip them. */
+const deleted = new Set<string>();
 
 let mert: TestUser; // deletes their account
 let nur: TestUser; // stays behind, matched with Mert
@@ -97,16 +99,76 @@ beforeAll(async () => {
 }, 30_000);
 
 afterAll(async () => {
-  // Mert is already gone if the test passed; deleteUsers reports the rest.
+  // The accounts the tests deleted are already gone; deleteUsers reports
+  // any failure on the rest.
   await deleteUsers(
     admin,
-    users.filter((u) => u.id !== mert.id),
+    users.filter((u) => !deleted.has(u.id)),
   );
 });
 
 it('refuses a call without a token', async () => {
   const response = await fetch(endpoint(), { method: 'POST' });
   expect(response.status).toBe(401);
+});
+
+it('refuses an anon or service-role key used as a bearer token', async () => {
+  const stack = localStack();
+  for (const key of [stack.ANON_KEY, stack.SERVICE_ROLE_KEY]) {
+    const response = await fetch(endpoint(), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, apikey: stack.ANON_KEY },
+    });
+    expect(response.status).toBe(401);
+  }
+});
+
+it('ignores a body naming someone else and deletes only the caller', async () => {
+  const victim = await user('victim');
+  const { error } = await victim.client.from('profiles').insert(
+    profileRow({
+      id: victim.id,
+      display_name: 'Victim',
+      gender: 'woman',
+      interested_in: 'everyone',
+      lonLat: ISTANBUL_NEARBY,
+    }),
+  );
+  expect(error).toBeNull();
+
+  const attacker = await user('attacker');
+  const response = await fetch(endpoint(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${await accessToken(attacker)}`,
+      apikey: localStack().ANON_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ user_id: victim.id, id: victim.id }),
+  });
+  expect(response.status).toBe(200);
+  expect(
+    z.object({ deleted: z.string() }).parse(await response.json()),
+  ).toEqual({ deleted: attacker.id });
+  deleted.add(attacker.id);
+  const stillThere = await admin
+    .from('profiles')
+    .select('id')
+    .eq('id', victim.id);
+  expect(stillThere.data ?? []).toHaveLength(1);
+});
+
+it('answers a browser preflight so the web client can call it', async () => {
+  const response = await fetch(endpoint(), {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'https://stardate.example',
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization, apikey',
+    },
+  });
+  expect(response.status).toBeLessThan(300);
+  expect(response.headers.get('access-control-allow-origin')).not.toBeNull();
 });
 
 it('refuses a GET', async () => {
@@ -135,6 +197,7 @@ it('deletes the caller and every row that referenced them', async () => {
   expect(
     z.object({ deleted: z.string() }).parse(await response.json()),
   ).toEqual({ deleted: mert.id });
+  deleted.add(mert.id);
 
   // The auth user is gone.
   const authUser = await admin.auth.admin.getUserById(mert.id);

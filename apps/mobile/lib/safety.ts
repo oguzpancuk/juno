@@ -28,33 +28,21 @@ export async function blockUser(
   return !error || error.code === '23505';
 }
 
-export async function unblockUser(
-  myId: string,
-  otherId: string,
-): Promise<boolean> {
-  const { error } = await supabase
-    .from('blocks')
-    .delete()
-    .eq('blocker_id', myId)
-    .eq('blocked_id', otherId);
-  return !error;
-}
-
-/** File a report. The reported profile disappears from the reporter's deck. */
+/**
+ * File a report. The reported profile disappears from the reporter's deck;
+ * the match and the thread stay, so the copy tells the user to block if
+ * they want the contact closed.
+ */
 export async function reportUser(
   myId: string,
   otherId: string,
   reason: ReportReason,
-  note?: string,
 ): Promise<boolean> {
-  const trimmed = note?.trim();
-  const { error } = await supabase.from('reports').insert({
-    reporter_id: myId,
-    reported_id: otherId,
-    reason,
-    note: trimmed && trimmed.length > 0 ? trimmed.slice(0, 500) : null,
-  });
-  return !error;
+  const { error } = await supabase
+    .from('reports')
+    .insert({ reporter_id: myId, reported_id: otherId, reason });
+  // One report per pair: a second tap is the same complaint, already filed.
+  return !error || error.code === '23505';
 }
 
 const DeletedSchema = z.object({ deleted: z.string().uuid() });

@@ -9,13 +9,24 @@
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+// The web client (ADR-0005) calls this cross-origin, and supabase-js
+// sends authorization plus apikey, which always triggers a preflight.
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization, apikey, content-type',
+  'access-control-allow-methods': 'POST, OPTIONS',
+};
+
 const json = (status: number, body: Record<string, unknown>): Response =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { ...CORS, 'content-type': 'application/json' },
   });
 
 Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
+  }
   if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   const authorization = req.headers.get('Authorization');

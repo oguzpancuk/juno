@@ -104,10 +104,10 @@ export const t = {
     blockConfirmTitle: 'Engellensin mi?',
     blockConfirm: (name: string) =>
       `${name} artık seni göremeyecek, eşleşmeniz ve sohbetiniz iki taraftan da kapanacak.`,
-    blocked: 'Engellendi. Bu kişi artık karşına çıkmayacak.',
     report: 'Şikâyet et',
     reportTitle: 'Neden şikâyet ediyorsun?',
-    reported: 'Şikâyetin alındı. Bu profili bir daha görmeyeceksin.',
+    reported:
+      'Şikâyetin alındı ve incelenecek. Bu kişi artık keşfette karşına çıkmaz; mesajlaşmayı da kesmek istersen Engelle.',
     cancel: 'Vazgeç',
     failed: 'İşlem tamamlanamadı, tekrar dene.',
     deleteAccount: 'Hesabımı sil',

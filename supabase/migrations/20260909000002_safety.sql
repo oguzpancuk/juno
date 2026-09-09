@@ -47,18 +47,34 @@ create policy "blocks: delete own"
   to authenticated
   using (blocker_id = (select auth.uid()));
 
+-- Both ids go null rather than cascading: a report has to outlive the
+-- account it is about, or a repeat offender clears their record by
+-- deleting and re-registering. What survives is the reason, the note and
+-- the timestamp; the identities go with the accounts, which is also what
+-- KVKK asks for.
 create table public.reports (
   id uuid primary key default gen_random_uuid(),
-  reporter_id uuid not null references public.profiles (id) on delete cascade,
-  reported_id uuid not null references public.profiles (id) on delete cascade,
+  reporter_id uuid references public.profiles (id) on delete set null,
+  reported_id uuid references public.profiles (id) on delete set null,
   reason public.report_reason not null,
   -- Optional free text from the reporter; never shown to anyone else.
   note text check (note is null or char_length(note) between 1 and 500),
   created_at timestamptz not null default now(),
-  check (reporter_id <> reported_id)
+  -- Both ids can end up null once both accounts are gone; the constraint
+  -- only has to stop a self-report while they are still there.
+  check (
+    reporter_id is null
+    or reported_id is null
+    or reporter_id <> reported_id
+  )
 );
 
 create index reports_reported_idx on public.reports (reported_id);
+-- One standing report per pair: a second tap is the same complaint, not a
+-- second case for whoever reads the queue.
+create unique index reports_pair_idx
+  on public.reports (reporter_id, reported_id)
+  where reporter_id is not null and reported_id is not null;
 
 alter table public.reports enable row level security;
 
@@ -75,12 +91,19 @@ create policy "reports: insert own"
 -- No update or delete: a report is a record, not a draft. Moderation reads
 -- it with the service role.
 
+-- Policy helpers live outside the API-exposed schemas. In `public` they
+-- are also RPC endpoints, and `rpc/is_blocked` would answer the one
+-- question a block must never answer: "did that person block me?".
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+
 /**
  * True when either side of the pair has blocked the other. Security
  * definer because the blocked side cannot read `blocks` and still has to
  * be shut out.
  */
-create or replace function public.is_blocked(other uuid)
+create or replace function private.is_blocked(other uuid)
 returns boolean
 language sql
 stable
@@ -94,15 +117,15 @@ as $$
   );
 $$;
 
-revoke all on function public.is_blocked(uuid) from public, anon;
-grant execute on function public.is_blocked(uuid) to authenticated;
+revoke all on function private.is_blocked(uuid) from public, anon;
+grant execute on function private.is_blocked(uuid) to authenticated;
 
 /**
  * Membership in a match that is still open: both `is_match_member` and
  * "neither side has blocked the other". Replaces `is_match_member` in the
  * message policies, so a block closes the thread for both people at once.
  */
-create or replace function public.match_open(match uuid)
+create or replace function private.match_open(match uuid)
 returns boolean
 language sql
 stable
@@ -121,8 +144,8 @@ as $$
   );
 $$;
 
-revoke all on function public.match_open(uuid) from public, anon;
-grant execute on function public.match_open(uuid) to authenticated;
+revoke all on function private.match_open(uuid) from public, anon;
+grant execute on function private.match_open(uuid) to authenticated;
 
 drop policy "messages: read own matches" on public.messages;
 drop policy "messages: insert own" on public.messages;
@@ -131,29 +154,43 @@ drop policy "messages: recipient marks read" on public.messages;
 create policy "messages: read own open matches"
   on public.messages for select
   to authenticated
-  using (public.match_open(match_id));
+  using (private.match_open(match_id));
 
 create policy "messages: insert own"
   on public.messages for insert
   to authenticated
   with check (
     sender_id = (select auth.uid())
-    and public.match_open(match_id)
+    and private.match_open(match_id)
   );
 
 create policy "messages: recipient marks read"
   on public.messages for update
   to authenticated
   using (
-    public.match_open(match_id)
+    private.match_open(match_id)
     and sender_id <> (select auth.uid())
   )
   with check (
-    public.match_open(match_id)
+    private.match_open(match_id)
     and sender_id <> (select auth.uid())
   );
 
 drop function public.is_match_member(uuid);
+
+-- The match row itself was the second oracle: `match_profiles` hid the
+-- pair but `matches` still listed it, and "row present, profile missing"
+-- has exactly one cause. A deleted account takes its matches with it, so
+-- both cases now look the same from the outside.
+drop policy "matches: read own" on public.matches;
+
+create policy "matches: read own open"
+  on public.matches for select
+  to authenticated
+  using (
+    (select auth.uid()) in (a, b)
+    and not private.is_blocked(case when a = (select auth.uid()) then b else a end)
+  );
 
 -- ---------------------------------------------------------------- discover
 -- Same as before plus two exclusions: anyone in a block with me, either
@@ -188,7 +225,7 @@ where p.id <> me.id
     select 1 from public.likes l
      where l.from_id = me.id and l.to_id = p.id
   )
-  and not public.is_blocked(p.id)
+  and not private.is_blocked(p.id)
   and not exists (
     select 1 from public.reports r
      where r.reporter_id = me.id and r.reported_id = p.id
@@ -232,7 +269,7 @@ left join lateral (
      and msg.read_at is null
 ) unread on true
 where (select auth.uid()) in (m.a, m.b)
-  and not public.is_blocked(p.id);
+  and not private.is_blocked(p.id);
 
 revoke all on public.blocks from anon;
 revoke all on public.reports from anon;

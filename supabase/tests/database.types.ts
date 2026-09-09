@@ -349,24 +349,24 @@ export type Database = {
           id: string
           note: string | null
           reason: Database["public"]["Enums"]["report_reason"]
-          reported_id: string
-          reporter_id: string
+          reported_id: string | null
+          reporter_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           note?: string | null
           reason: Database["public"]["Enums"]["report_reason"]
-          reported_id: string
-          reporter_id: string
+          reported_id?: string | null
+          reporter_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           note?: string | null
           reason?: Database["public"]["Enums"]["report_reason"]
-          reported_id?: string
-          reporter_id?: string
+          reported_id?: string | null
+          reporter_id?: string | null
         }
         Relationships: [
           {
@@ -469,8 +469,6 @@ export type Database = {
       }
     }
     Functions: {
-      is_blocked: { Args: { other: string }; Returns: boolean }
-      match_open: { Args: { match: string }; Returns: boolean }
       profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {

@@ -10,6 +10,44 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Safety review: two block oracles closed
+
+- Review found that the block was announced by two surfaces even though
+  the `blocks` row itself was hidden. Both are closed:
+  1. `is_blocked` and `match_open` sat in `public`, so PostgREST served
+     them as RPC and the blocked person could ask
+     `rpc/is_blocked(<uuid>)` and get `true`. They now live in a `private`
+     schema, which is not in `config.toml`'s exposed `schemas`, with
+     usage and execute granted to `authenticated` only.
+  2. `match_profiles` hid the pair but the raw `matches` row stayed
+     readable, and "match row present, profile row missing" has one cause.
+     The `matches` select policy now carries the same block check, so a
+     block looks exactly like the other person deleting their account.
+- The discover block and report filters were unpinned: the pair in the
+  test had liked each other, so the like filter satisfied the assertions
+  and both clauses could be deleted with the suite green. A new test uses
+  a pair that never swiped.
+- Reports now survive the accounts they are about (`on delete set null`
+  on both ids) so a repeat offender cannot clear their record by deleting
+  and re-registering; what is kept is reason, note and timestamp. A
+  partial unique index makes one report per pair, and the client treats
+  the conflict as "already filed". The self-report CHECK had to be
+  rewritten for nulls: with both accounts gone the row is (null, null)
+  and `is distinct from` was rejecting the second delete with GoTrue's
+  "Database error deleting user".
+- The report confirmation used to promise "you will never see this
+  profile again", which is false on the match screen: reporting is
+  one-way and leaves the match and the thread open. It now says the deck
+  is cleared and points to Engelle for cutting contact.
+- The Edge Function answers a preflight with CORS headers; ADR-0005 makes
+  a browser the first reachable client and `functions.invoke` always
+  preflights. New tests cover the preflight, an anon or service-role key
+  used as a bearer token, and a body naming someone else (ignored; the
+  caller is deleted, the named account survives).
+- Not done: `deno` is not installed on this machine, so the Edge Function
+  is still outside the battery's typecheck and lint. Worth a `deno check`
+  step once Deno is available.
+
 ## 2026-09-09 — v1 safety controls: block, report, delete account
 
 - Schema (`20260909000002_safety.sql`): `blocks` (one row, two-way effect)
