@@ -10,6 +10,36 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The marker belongs to a write, not to a wipe
+
+- The fresh-install wipe still rested on something unwritten: it marked
+  the install as soon as _any_ key's wipe went through, so the guarantee
+  depended on which key supabase-js happens to touch first. A launch that
+  only saw a PKCE verifier would mark the install while the previous
+  owner's session sat untouched — the resold-phone case again, through a
+  third door. It is not reachable today (the client is on the implicit
+  flow, so only one key exists) and that is exactly why it was worth
+  closing: the safety lived in a library's init order, not in this file.
+- The marker is written when this install first _stores_ something — a
+  sign-in, or a session migrated out of the old plain store, both of
+  which are this install's own. Until then every key is cleared the first
+  time it is used, in any order. An install where nobody signs in checks
+  again next launch, which costs nothing.
+- A real race closed on the way: a sign-out delete already in flight when
+  a token refresh writes would remove the new value, and the person was
+  signed out by something they could not see. The delete now notices a
+  newer write and puts it back.
+- Three tests the last review named as missing are in: a non-session key
+  first touch must not mark the install, a migrated session must be
+  remembered even when the keychain refuses it, and the write counter's
+  one job. That review's remaining point — that a key nobody ever touches
+  keeps a previous install's value — is answered by the rule change
+  rather than argued: nothing is marked until this install owns something.
+- Verified: battery green on a clean tree; 48 mobile tests, 36 on this
+  store; and the simulator sequence again end to end — clear-text session
+  planted with no marker, app opened signed in, plain store left holding
+  only the marker, quit and reopened, still signed in.
+
 ## 2026-09-10 — Guessing key names was the wrong idea
 
 - To make the fresh-install wipe reach keys a launch might never touch, I

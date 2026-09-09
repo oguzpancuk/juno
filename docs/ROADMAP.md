@@ -258,7 +258,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       whatever the keychain kept from a previous one — an iOS keychain
       entry outlives the app, so without that a reinstall (or the next
       owner of a resold phone) lands inside the old account; verified on
-      the simulator as well. 32 tests cover the move (including the
+      the simulator as well. 36 tests cover the move (including the
       upgrade that introduces the marker itself, driven on the simulator
       too), both-places sign-out, an unreadable keychain never falling
       back to the clear-text copy, a failed write leaving a good session

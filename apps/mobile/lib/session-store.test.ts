@@ -20,7 +20,9 @@ class FakeKeychain implements Keychain {
     if (this.failing === 'set') throw new Error('device locked');
     this.entries.set(name, value);
   }
+  beforeRemove: (() => Promise<void>) | undefined;
   async remove(name: string) {
+    if (this.beforeRemove) await this.beforeRemove();
     if (this.failing === 'remove') throw new Error('device locked');
     this.entries.delete(name);
   }
@@ -158,7 +160,10 @@ describe('keychainStore', () => {
     const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
     expect(await fresh.getItem(NAME)).toBeNull();
     expect(keychain.entries.has(NAME)).toBe(false);
-    // And the install is marked, so the next launch keeps its session.
+    // Not marked yet: the install owns nothing until it stores something,
+    // and marking on a read would depend on which key came first.
+    expect(legacy.items.get(MARKER)).toBeUndefined();
+    await fresh.setItem(NAME, SESSION);
     expect(legacy.items.get(MARKER)).toBe('1');
   });
 
@@ -204,6 +209,57 @@ describe('keychainStore', () => {
     expect(legacy.items.has(`${NAME}-user`)).toBe(false);
   });
 
+  it('does not mark the install from a wipe, whichever key came first', async () => {
+    // Marking on a wipe made the guarantee depend on which key
+    // supabase-js touched first: a launch that only saw a PKCE verifier
+    // marked the install while the previous session sat untouched.
+    keychain.entries.set(NAME, SESSION);
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(`${NAME}-code-verifier`)).toBeNull();
+    expect(legacy.items.get(MARKER)).toBeUndefined();
+    expect(await fresh.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
+  });
+
+  it('marks the install when a migrated session is stored', async () => {
+    // A migrated session is this install's own; without the mark the next
+    // launch would wipe it as a previous install's.
+    legacy.items.set(NAME, SESSION);
+    const store = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    expect(legacy.items.get(MARKER)).toBe('1');
+    const next = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await next.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('remembers a migrated session even when the keychain will not take it', async () => {
+    // Losing the cache here would make a later failing read answer null,
+    // which is the sign-out this cache exists to prevent.
+    legacy.items.set(NAME, SESSION);
+    keychain.failing = 'set';
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    keychain.failing = 'get';
+    expect(await store.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('lets a write that lands during a delete win', async () => {
+    // The counter's one job: a delete already in flight must not re-arm
+    // the pending state after a newer write.
+    const store = make();
+    let release: (() => void) | undefined;
+    keychain.beforeRemove = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const removing = store.removeItem(NAME);
+    keychain.beforeRemove = undefined;
+    await store.setItem(NAME, 'newer');
+    release?.();
+    await removing;
+    expect(await store.getItem(NAME)).toBe('newer');
+  });
+
   it('still wipes when the marker cannot be written', async () => {
     // The trade, stated: a plain store that cannot be written means the
     // check runs again on every launch, so this install keeps signing
@@ -245,7 +301,6 @@ describe('keychainStore', () => {
     const second = keychainStore({ keychain, legacy, installMarker: MARKER });
     expect(await second.getItem(NAME)).toBeNull();
     expect(keychain.entries.has(NAME)).toBe(false);
-    expect(legacy.items.get(MARKER)).toBe('1');
   });
 
   it('wipes each key on its first touch, not the ones it guesses', async () => {

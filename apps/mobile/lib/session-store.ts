@@ -92,9 +92,20 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     const at = writes.get(name) ?? 0;
     try {
       await keychain.remove(name);
-      if ((writes.get(name) ?? 0) === at) pendingRemoval.delete(name);
     } catch {
       if ((writes.get(name) ?? 0) === at) pendingRemoval.add(name);
+      return;
+    }
+    if ((writes.get(name) ?? 0) === at) {
+      pendingRemoval.delete(name);
+      return;
+    }
+    // A write landed while this delete was in flight, and the delete
+    // removed it. Put it back rather than leaving the person signed out
+    // by a race they cannot see.
+    const newer = known.get(name);
+    if (typeof newer === 'string') {
+      await keychain.set(name, newer).catch(() => undefined);
     }
   };
 
@@ -106,12 +117,14 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    * the app, so its emptiness is the signal: no marker means this install
    * has never run, and any keychain entry belongs to a previous one.
    *
-   * A wipe the keychain refuses must not become permanent, so the marker
-   * is written only once a wipe has actually gone through, and the key
-   * stays pending — reading as signed out — until it does. The cost is
-   * that a device whose plain store cannot be written at all wipes on
-   * every launch; that is the right way round, because the other way
-   * leaves someone else's account open on a resold phone for ever.
+   * The marker is written when this install first stores something of its
+   * own — a sign-in — not when a wipe succeeds. Marking on a wipe made
+   * the whole guarantee depend on which key supabase-js happens to touch
+   * first: a launch that only touched, say, a PKCE verifier would mark
+   * the install while the previous owner's session sat untouched. Until
+   * this install has written something, every key is cleared the first
+   * time it is used, whatever the order. The cost is that an install
+   * where nobody signs in checks again next launch, which costs nothing.
    */
   let freshInstall: Promise<boolean> | null = null;
   const checkInstall = async (): Promise<boolean> => {
@@ -139,12 +152,9 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    *
    * Only the key being asked for: an earlier version guessed the other
    * keys supabase-js derives from it, parsed one of them wrongly, and
-   * ended up deleting this install's own session. Every key this launch
-   * touches is cleared on its first touch, which is what matters — a key
-   * a launch never touches holds no session, and it is cleared the first
-   * time it is used. The marker only records the check for later
-   * launches; within this process the wipe keeps applying to keys it has
-   * not seen yet.
+   * ended up deleting this install's own session. Every key is cleared
+   * the first time this install uses it, in any order, until the install
+   * marks itself by storing something.
    */
   const wipes = new Map<string, Promise<void>>();
   const wipe = async (name: string): Promise<void> => {
@@ -153,11 +163,12 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     } catch {
       // Reads answer null until the delete goes through.
       pendingRemoval.add(name);
-      return;
     }
-    await mark();
   };
   const ensureInstalled = async (name: string): Promise<void> => {
+    // Once this install has stored something, nothing here is a previous
+    // install's.
+    if (marked) return;
     freshInstall ??= checkInstall();
     if (!(await freshInstall)) return;
     let running = wipes.get(name);
@@ -185,9 +196,6 @@ export function keychainStore(options: KeychainStoreOptions): Store {
       await ensureInstalled(name);
       if (pendingRemoval.has(name)) {
         await forget(name);
-        // A wipe that finally goes through records the install, so the
-        // next launch does not wipe a session signed in meanwhile.
-        if (!pendingRemoval.has(name)) await mark();
         await dropLegacy(name);
         // Nothing to hand back: a write would have cleared the pending
         // state, so reaching here means the value is meant to be gone.
@@ -222,6 +230,10 @@ export function keychainStore(options: KeychainStoreOptions): Store {
         try {
           await keychain.set(name, old);
           known.set(name, old);
+          // A migrated session came from this install's own store, so it
+          // is ours: mark, or the next launch would wipe it as if it
+          // belonged to a previous install.
+          await mark();
           await dropLegacy(name);
         } catch {
           // The move failed, but the session is real and the next launch
@@ -242,6 +254,9 @@ export function keychainStore(options: KeychainStoreOptions): Store {
         await keychain.set(name, value);
         known.set(name, value);
         pendingRemoval.delete(name);
+        // This install now owns what is stored, so the wipe stops here
+        // and does not run again on the next launch.
+        await mark();
         await dropLegacy(name);
       } catch {
         // Leave what is stored where it is: this may be a locked device
