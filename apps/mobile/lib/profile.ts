@@ -13,6 +13,7 @@ import {
 } from '@stardate/geo';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { LEGAL_VERSION } from './legal';
 import { supabase } from './supabase';
 
 export const GENDERS = ['woman', 'man', 'unspecified'] as const;
@@ -143,6 +144,10 @@ export async function createProfile(
     gender: input.gender,
     interested_in: input.interestedIn,
     location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
+    // Which version of the privacy notice was accepted. The column has no
+    // default, so a profile cannot be created without one; the timestamp
+    // is stamped by the server.
+    consent_version: LEGAL_VERSION,
   });
   if (error) {
     // A lost response after a committed insert: the profile exists, move on.

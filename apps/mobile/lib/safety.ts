@@ -28,6 +28,44 @@ export async function blockUser(
   return !error || error.code === '23505';
 }
 
+const BlockedSchema = z.array(
+  z.object({
+    blocked_id: z.string().uuid(),
+    display_name: z.string(),
+    created_at: z.string(),
+  }),
+);
+
+export type BlockedPerson = z.infer<typeof BlockedSchema>[number];
+
+/**
+ * Everyone the caller has blocked. Reads the owner-executed `my_blocks`
+ * view: `profiles` is not readable across accounts, and the list needs a
+ * name to be of any use. Returns null when the read failed, which the
+ * screen shows as an error rather than an empty list.
+ */
+export async function fetchBlocked(): Promise<BlockedPerson[] | null> {
+  const { data, error } = await supabase
+    .from('my_blocks')
+    .select('blocked_id, display_name, created_at');
+  if (error) return null;
+  const parsed = BlockedSchema.safeParse(data);
+  return parsed.success ? parsed.data : null;
+}
+
+/** Undo a block. Discovery and the thread reopen on both sides. */
+export async function unblockUser(
+  myId: string,
+  otherId: string,
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('blocks')
+    .delete()
+    .eq('blocker_id', myId)
+    .eq('blocked_id', otherId);
+  return !error;
+}
+
 /**
  * File a report. The reported profile disappears from the reporter's deck;
  * the match and the thread stay, so the copy tells the user to block if

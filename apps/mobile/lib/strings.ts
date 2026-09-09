@@ -26,6 +26,9 @@ export const t = {
     },
     interest: 'Kiminle tanışmak istersin?',
     interests: { women: 'Kadınlar', men: 'Erkekler', everyone: 'Herkes' },
+    consent:
+      'Doğum bilgilerimin ve konumumun uyum hesaplamak için işlenmesini kabul ediyorum.',
+    consentLink: 'Gizlilik metnini oku',
     city: 'Doğum yerin',
     cityPlaceholder: 'Şehir ara…',
     date: 'Doğum tarihin (gün / ay / yıl)',
@@ -38,6 +41,7 @@ export const t = {
       date: 'Geçerli bir tarih gir.',
       time: 'Doğum saatin gerekli (00:00–23:59).',
       underage: 'stardate 18 yaş ve üzeri içindir.',
+      consent: 'Devam etmek için onay kutusunu işaretle.',
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },
     switchAccount: 'Farklı bir hesapla gir',
@@ -162,6 +166,14 @@ export const t = {
     locationFailed: 'Konum kaydedilemedi, tekrar dene.',
     locationHint:
       'Konumun ~1 km’lik bir hücreye yuvarlanarak saklanır; kimse tam yerini görmez.',
+  },
+  blocked: {
+    open: 'Engellediklerin',
+    back: '‹ Ayarlar',
+    title: 'Engellediklerin',
+    hint: 'Engeli kaldırırsan yeniden eşleşebilir ve yazışabilirsiniz.',
+    empty: 'Kimseyi engellemedin.',
+    undo: 'Engeli kaldır',
   },
   legal: {
     open: 'Gizlilik ve lisanslar',

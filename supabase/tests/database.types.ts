@@ -301,6 +301,8 @@ export type Database = {
           birth_local: string
           birth_utc: string
           chart: Json
+          consent_at: string
+          consent_version: string
           created_at: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
@@ -319,6 +321,8 @@ export type Database = {
           birth_local: string
           birth_utc: string
           chart: Json
+          consent_at?: string
+          consent_version: string
           created_at?: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
@@ -337,6 +341,8 @@ export type Database = {
           birth_local?: string
           birth_utc?: string
           chart?: Json
+          consent_at?: string
+          consent_version?: string
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"]
@@ -471,6 +477,36 @@ export type Database = {
           {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["last_sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_blocks: {
+        Row: {
+          blocked_id: string | null
+          created_at: string | null
+          display_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

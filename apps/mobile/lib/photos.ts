@@ -93,10 +93,8 @@ export function usePhotoSources(
   paths: readonly string[],
 ): (PhotoSource | null)[] {
   const key = photoKey(paths);
-  // An empty key is also the key of an empty path list, which is
-  // harmless: both answer with an empty array.
   const [fetched, setFetched] = useState<FetchedSources>({
-    key: '',
+    paths: [],
     sources: [],
   });
   const held = useRef<readonly (PhotoSource | null)[]>([]);
@@ -111,7 +109,7 @@ export function usePhotoSources(
       }
       const previous = held.current;
       held.current = next;
-      setFetched({ key, sources: next });
+      setFetched({ paths: wanted, sources: next });
       release(previous);
     });
     return () => {
@@ -177,9 +175,18 @@ export async function addPhoto(
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const path = `${userId}/${name}.${extension}`;
   const body = await (await fetch(file.uri)).blob();
-  const uploaded = await supabase.storage
-    .from(BUCKET)
-    .upload(path, body, { contentType: file.mimeType });
+  const upload = () =>
+    supabase.storage.from(BUCKET).upload(path, body, {
+      contentType: file.mimeType,
+    });
+  let uploaded = await upload();
+  if (uploaded.error) {
+    // The folder may be full of objects the profile does not list, and
+    // the sweep below only runs after a successful upload — so a folder
+    // in that state could never be emptied through the app.
+    await sweepOrphans(userId, current);
+    uploaded = await upload();
+  }
   if (uploaded.error) return null;
   const photos = [...current, path];
   const { error } = await supabase
@@ -195,16 +202,25 @@ export async function addPhoto(
   return photos;
 }
 
-/** An object older than this is nobody's upload in progress. */
-const ORPHAN_AGE_MS = 60 * 60 * 1000;
+/**
+ * An object older than this, that the profile does not list, is not an
+ * upload in progress.
+ */
+const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Sweeping starts only once a folder is drifting toward the cap. Deleting
+ * an unlisted object is destructive — a second device may have listed it
+ * in a write this one has not seen — so a folder holding a normal handful
+ * of photos is left alone entirely.
+ */
+const SWEEP_THRESHOLD = 50;
 
 /**
  * Delete objects in the caller's folder that the profile does not list.
- * They come from an upload whose profile update failed, or a removal
- * whose storage delete did. Nothing shows them, but the folder is capped,
- * and a folder full of invisible files would eventually refuse every new
- * photo. Only old ones: another device may have just uploaded something
- * it is about to list.
+ * They come from an upload whose profile update failed, or a removal whose
+ * storage delete did. Nothing shows them, but the folder is capped, and a
+ * folder full of invisible files would eventually refuse every new photo.
  */
 async function sweepOrphans(
   userId: string,
@@ -214,6 +230,7 @@ async function sweepOrphans(
     .from(BUCKET)
     .list(userId, { limit: 200 });
   if (listed.error || !listed.data) return;
+  if (listed.data.length < SWEEP_THRESHOLD) return;
   const cutoff = Date.now() - ORPHAN_AGE_MS;
   const stale = listed.data
     .filter((entry) => entry.id !== null)
@@ -241,6 +258,7 @@ export async function removePhoto(
   if (error) return null;
   // Best effort: a leftover object is invisible, a leftover path is not.
   await supabase.storage.from(BUCKET).remove([path]);
+  await sweepOrphans(userId, photos);
   return photos;
 }
 

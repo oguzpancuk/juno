@@ -103,6 +103,9 @@ export default function Settings() {
       <Link href="/profile" style={styles.link}>
         {t.profile.open}
       </Link>
+      <Link href="/blocked" style={styles.link}>
+        {t.blocked.open}
+      </Link>
       <Link href="/legal" style={styles.link}>
         {t.legal.open}
       </Link>

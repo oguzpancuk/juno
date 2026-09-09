@@ -10,6 +10,52 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — KVKK consent, the blocked list, and a one-sided guard
+
+- **Consent is recorded.** Onboarding carries a checkbox that has to be
+  ticked, and the profile stores `consent_version` — no default, so a
+  profile cannot be created without one — plus a `consent_at` the server
+  stamps, since a client must not be able to claim consent at a time of
+  its choosing. The version is a date that mirrors `LEGAL_VERSION` in
+  `apps/mobile/lib/legal.ts`; bump both together. Driven end to end in
+  the browser: submitting unticked refuses with the copy, ticking creates
+  the profile, and the row carries the version and a server timestamp.
+- **The blocked list exists.** `my_blocks` is an owner-executed view, so
+  it can carry the blocked person's name — `profiles` is not readable
+  across accounts, and a list of uuids is no use. `/blocked` shows it with
+  an unblock; the other side still sees nothing. Verified in the browser
+  including the unblock reaching the database.
+- **A one-sided guard, found by review.** The no-rename trigger tested
+  only the _destination_ bucket, so an object could be carried _out_ of
+  the photos bucket: no delete fires, so the path stayed in
+  `profiles.photos` with nothing behind it. Only the service role can do
+  it today, and only because the single UPDATE policy on the bucket
+  demands `bucket_id = 'photos'` — but RLS policies OR together, so the
+  first other bucket with an "own folder" update policy would have opened
+  it for everyone, in a migration that would never mention photos. Both
+  directions are guarded now, with a test that moves an object into a
+  throwaway bucket.
+- Also from that review: at exactly 200 objects the cap refused an upsert
+  too, because a BEFORE INSERT trigger runs before the conflict is
+  resolved — so a full folder could not be emptied through the app at all,
+  since the sweep only runs after a successful upload. An upsert of an
+  existing name now skips the count, `addPhoto` sweeps and retries once
+  when an upload is refused, and `removePhoto` sweeps as well.
+- The sweep is deliberately conservative: it only runs once a folder holds
+  50 objects or more, and only deletes what the profile does not list and
+  what is over a day old. Deleting an unlisted object destroys bytes a
+  second device may have just written, so a folder with a normal handful
+  of photos is left alone entirely.
+- `usePhotoSources` now matches a source to its _path_ rather than its
+  position. A path carries the owner's id, so the deck still cannot show
+  the previous candidate's face; but removing one photo of six no longer
+  blanks the other five while they are refetched. Two more tests.
+- `vitest` is now a declared dependency of `apps/mobile` instead of being
+  borrowed from the hoisted root copy, and the two new storage assertions
+  check what actually refused the write instead of accepting any error.
+- Verified: battery green on a clean tree; 86 Supabase tests, 7 mobile
+  tests; consent and the blocked list driven in the browser.
+
 ## 2026-09-09 — Fourth photos review: the cap that skipped the risky accounts
 
 - The 200-object folder cap was keyed on the owner's profile row, and it
@@ -47,8 +93,10 @@
 - Verified: battery green on a clean tree, now including one mobile test
   file; 81 Supabase tests; deck driven in the browser at 800×900 with the
   swipe landing on the next card's own photo.
-- Still open from this review, deliberately: nothing. The radius
-  asymmetry stays an owner decision, recorded in the entry below.
+- Still open from this review, deliberately: nothing — but the next
+  review found two things this round had left open, so read the entry
+  above rather than trusting that line. The radius asymmetry stays an
+  owner decision, recorded in the entry below.
 
 ## 2026-09-09 — Third photos review: the fix that made deletion impossible
 

@@ -76,6 +76,7 @@ const LikeRows = z.array(
 const PERMISSION_DENIED = '42501';
 const UNDEFINED_COLUMN = '42703';
 const UNIQUE_VIOLATION = '23505';
+const NOT_NULL_VIOLATION = '23502';
 const CHECK_VIOLATION = '23514';
 
 let alice: TestUser; // woman, wants men, Istanbul
@@ -1047,6 +1048,40 @@ describe('blocks and reports', () => {
     expect(receipt.data).toEqual([]);
   });
 
+  it('the blocked list names who you blocked, and nobody else', async () => {
+    // Lale blocked Kemal in the test above. The list has to carry a name:
+    // profiles are not readable across accounts, so without the view the
+    // screen could only show a uuid.
+    const Rows = z.array(
+      z
+        .object({
+          blocked_id: z.string().uuid(),
+          display_name: z.string(),
+          created_at: z.string(),
+        })
+        .strict(),
+    );
+    const mine = Rows.parse(
+      (await lale.client.from('my_blocks').select('*')).data,
+    );
+    expect(mine.map((r) => r.blocked_id)).toEqual([kemal.id]);
+    expect(mine[0]?.display_name).toBe('Kemal');
+
+    // The other side sees nothing: being blocked is not a fact the app
+    // hands out.
+    const theirs = Rows.parse(
+      (await kemal.client.from('my_blocks').select('*')).data,
+    );
+    expect(theirs).toEqual([]);
+
+    // And nobody can write through the view.
+    const written = await lale.client
+      .from('my_blocks')
+      .delete()
+      .eq('blocked_id', kemal.id);
+    expect(written.error).not.toBeNull();
+  });
+
   it('a block hides the match row itself, not just the profile view', async () => {
     // `matches` present while `match_profiles` is empty would say "you were
     // blocked" as loudly as the block row does; a deleted account takes its
@@ -1396,6 +1431,95 @@ describe('blocks and reports', () => {
   });
 });
 
+describe('consent', () => {
+  // KVKK: a profile is where birth data and location start being
+  // processed, so it cannot exist without a record of the notice having
+  // been accepted, and the time of it is the server's to state.
+  let umut: TestUser;
+
+  beforeAll(async () => {
+    umut = await user('umut');
+  });
+
+  it('refuses a profile with no accepted version', async () => {
+    const complete = profileRow({
+      id: umut.id,
+      display_name: 'Umut',
+      gender: 'man',
+      interested_in: 'women',
+      lonLat: ISTANBUL_NEARBY,
+      photos: [],
+    });
+    const withoutConsent = Object.fromEntries(
+      Object.entries(complete).filter(([key]) => key !== 'consent_version'),
+    );
+    const { error } = await umut.client
+      .from('profiles')
+      // @ts-expect-error why: this is exactly the payload the generated
+      // types forbid — a client that never sends the column. The server
+      // has to refuse it on its own.
+      .insert(withoutConsent);
+    expect(error?.code).toBe(NOT_NULL_VIOLATION);
+  });
+
+  it('refuses a version that is not a date', async () => {
+    const { error } = await umut.client.from('profiles').insert({
+      ...profileRow({
+        id: umut.id,
+        display_name: 'Umut',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+      consent_version: 'kabul',
+    });
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('stamps the time itself and ignores what the client claims', async () => {
+    const backdated = '2001-01-01T00:00:00Z';
+    const { error } = await umut.client.from('profiles').insert({
+      ...profileRow({
+        id: umut.id,
+        display_name: 'Umut',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+      consent_at: backdated,
+    });
+    expect(error).toBeNull();
+
+    const stored = await umut.client
+      .from('profiles')
+      .select('consent_at, consent_version')
+      .eq('id', umut.id)
+      .single();
+    const row = z
+      .object({ consent_at: z.string(), consent_version: z.string() })
+      .parse(stored.data);
+    expect(row.consent_version).toBe('2026-09-09');
+    expect(Date.parse(row.consent_at)).toBeGreaterThan(Date.parse(backdated));
+
+    // Re-accepting moves the stamp; it can never be moved backwards.
+    const first = Date.parse(row.consent_at);
+    const again = await umut.client
+      .from('profiles')
+      .update({ consent_version: '2026-10-01', consent_at: backdated })
+      .eq('id', umut.id);
+    expect(again.error).toBeNull();
+    const after = await umut.client
+      .from('profiles')
+      .select('consent_at')
+      .eq('id', umut.id)
+      .single();
+    const stamp = z.object({ consent_at: z.string() }).parse(after.data);
+    expect(Date.parse(stamp.consent_at)).toBeGreaterThanOrEqual(first);
+  });
+});
+
 describe('photos', () => {
   let sema: TestUser; // has a photo
   let tolga: TestUser; // starts without one
@@ -1604,13 +1728,57 @@ describe('photos', () => {
           .upload(path, shot(), { contentType: 'image/png' }),
       ),
     );
-    expect(uploads.filter((u) => u.error !== null).length).toBeGreaterThan(0);
+    // Some refusals must be the cap itself, not transport noise.
+    const refusals = uploads
+      .map((u) => u.error?.message ?? '')
+      .filter((message) => message.includes('database error'));
+    expect(refusals.length).toBeGreaterThan(0);
     const left = await admin.storage
       .from('photos')
       .list(stranger.id, { limit: 400 });
     expect(left.data?.length ?? 0).toBeLessThanOrEqual(200);
+
+    // At the cap, replacing an object in place still works: it does not
+    // grow the folder, and refusing it would leave a full folder with no
+    // way back — the client sweeps orphans only after a successful write.
+    const existing = left.data?.[0]?.name;
+    expect(existing).toBeDefined();
+    const replaced = await stranger.client.storage
+      .from('photos')
+      .upload(`${stranger.id}/${existing ?? ''}`, shot(), {
+        contentType: 'image/png',
+        upsert: true,
+      });
+    expect(replaced.error).toBeNull();
+
     await stranger.client.storage.from('photos').remove(paths);
   }, 120_000);
+
+  it('a photo cannot be carried into another bucket either', async () => {
+    // The rename guard used to test only the destination bucket, so
+    // moving an object *out* of photos fired no delete and left the path
+    // in the profile with nothing behind it.
+    const other = `probe-${Date.now()}`;
+    const made = await admin.storage.createBucket(other, { public: false });
+    expect(made.error).toBeNull();
+    const path = `${sema.id}/carry.png`;
+    const uploaded = await admin.storage
+      .from('photos')
+      .upload(path, shot(), { contentType: 'image/png', upsert: true });
+    expect(uploaded.error).toBeNull();
+
+    const carried = await admin.storage
+      .from('photos')
+      .move(path, path, { destinationBucket: other });
+    expect(carried.error).not.toBeNull();
+    const still = await admin.storage
+      .from('photos')
+      .list(sema.id, { limit: 200 });
+    expect(still.data?.some((f) => f.name === 'carry.png')).toBe(true);
+
+    await admin.storage.from('photos').remove([path]);
+    await admin.storage.deleteBucket(other);
+  });
 
   it('a photo cannot be renamed out from under the profile', async () => {
     // A move fires no delete, so the prune trigger never runs and the old
@@ -1624,7 +1792,8 @@ describe('photos', () => {
     const moved = await sema.client.storage
       .from('photos')
       .move(path, `${sema.id}/renamed.png`);
-    expect(moved.error).not.toBeNull();
+    // The trigger, not a missing object: assert what refused it.
+    expect(moved.error?.message).toContain('database error');
     // The original is still there, so nothing was stranded either way.
     const still = await sema.client.storage
       .from('photos')

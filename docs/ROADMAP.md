@@ -182,11 +182,17 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       true; the photos item must add the folder delete to the function.
       `screenshots/v1-safety.png` shows the controls; their button wiring
       is not verified (NOTES 2026-09-09)._
-- [ ] **Blocked list in settings.** The server already allows an unblock
+- [x] **Blocked list in settings.** The server already allows an unblock
       (`blocks: delete own`, covered by an RLS test); the app has no screen
       for it, so a misfired block is permanent for the user.
       — done when: settings lists blocked people and an unblock restores
       the match, verified in the simulator against the database.
+      _Done: an owner-executed `my_blocks` view carries the name (profiles
+      are not readable across accounts), `/blocked` lists it with an
+      unblock, and an RLS test proves the other side sees nothing and that
+      the view is read-only. Verified in the browser rather than the
+      simulator — the block was listed, unblocking emptied the screen and
+      the row was gone from the database._
 - [ ] **Sign in with Apple (Apple).** Alongside email OTP.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).
@@ -196,12 +202,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       (CC BY 4.0) and astronomy-engine (MIT).
       — done when: profile insert without `consent_at` is rejected by a
       CHECK constraint (battery) and the URL returns 200 (manual).
-      _Half done: the notice itself is written and rendered at `/legal`,
-      linked from settings and from the sign-in screen, with the GeoNames
-      and astronomy-engine credits (`screenshots/v1-legal.png`). Still
-      open: storing `consent_at` with its CHECK, filling the two
-      placeholders in the notice, and hosting it at a public URL — which
-      the web client's `/legal` route becomes once it is deployed._
+      _Built: the notice is rendered at `/legal`, linked from settings and
+      from sign-in, with the GeoNames and astronomy-engine credits
+      (`screenshots/v1-legal.png`); onboarding carries a checkbox that
+      must be ticked, and the profile stores `consent_version` (no
+      default, so a profile cannot be created without it) plus a
+      server-stamped `consent_at`. Still open, both outside the code: the
+      two owner placeholders in the notice, and hosting it at a public URL
+      — which the web client's `/legal` route becomes once deployed._
 - [x] **Full Turkish content (owner priority, before chat).** _Built,
       source-verified (`docs/astro-sources.md`), owner signed off on the
       texts on 2026-09-09 (NOTES)._ Professional

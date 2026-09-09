@@ -1,6 +1,6 @@
 import { isValidCalendarDate, searchCities, type City } from '@stardate/geo';
 import { deviceLocation } from '@/lib/location';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -53,6 +53,11 @@ export default function Onboarding() {
     [city, cityQuery],
   );
 
+  // KVKK: the profile is the point at which birth data and location start
+  // being processed, so consent is taken here and stored with the version
+  // of the notice that was on screen.
+  const [consented, setConsented] = useState(false);
+
   const submit = async () => {
     setError(null);
     const name = displayName.trim();
@@ -79,6 +84,7 @@ export default function Onboarding() {
       return setError(t.onboarding.errors.time);
     const local = { year: y, month: m, day: d, hour: h, minute: mi };
     if (!isAtLeast18(local)) return setError(t.onboarding.errors.underage);
+    if (!consented) return setError(t.onboarding.errors.consent);
     if (session.status !== 'signed-in')
       return setError(t.onboarding.errors.generic);
 
@@ -257,6 +263,22 @@ export default function Onboarding() {
         </View>
 
         <Text style={styles.hint}>{t.onboarding.locationHint}</Text>
+
+        <Pressable
+          testID="consent"
+          style={styles.consentRow}
+          onPress={() => {
+            setConsented((on) => !on);
+          }}
+        >
+          <View style={[styles.box, consented && styles.boxOn]}>
+            {consented ? <Text style={styles.tick}>✓</Text> : null}
+          </View>
+          <Text style={styles.consentText}>{t.onboarding.consent}</Text>
+        </Pressable>
+        <Link href="/legal" style={styles.consentLink}>
+          {t.onboarding.consentLink}
+        </Link>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Pressable
           testID="submit"
@@ -277,6 +299,25 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#0b0b1a' },
   content: { padding: 24, paddingTop: 64, gap: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 16,
+  },
+  box: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#4b4770',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boxOn: { backgroundColor: '#6c5ce7', borderColor: '#6c5ce7' },
+  tick: { color: '#ffffff', fontSize: 14, lineHeight: 18 },
+  consentText: { color: '#c9c4e3', fontSize: 13, flex: 1, lineHeight: 19 },
+  consentLink: { color: '#9a94b8', fontSize: 12, marginTop: 6 },
   subtitle: { color: '#9a94b8', fontSize: 14, marginBottom: 4 },
   switchAccount: { color: '#5f5a7a', fontSize: 12, marginBottom: 12 },
   label: { color: '#c9c4e3', fontSize: 14, marginTop: 10 },

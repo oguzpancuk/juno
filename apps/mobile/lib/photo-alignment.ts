@@ -23,21 +23,27 @@ export const photoKey = (paths: readonly string[]): string =>
   paths.join(PATH_SEPARATOR);
 
 export interface FetchedSources {
-  /** The key of the paths these sources were fetched for. */
-  readonly key: string;
+  /** The paths these sources were fetched for, in their own order. */
+  readonly paths: readonly string[];
   readonly sources: readonly (PhotoSource | null)[];
 }
 
 /**
  * Sources for `paths`, always the same length and aligned by index.
- * Sources fetched for a different set are not shown at all: a screen that
- * has moved on to another person must show nothing rather than the
- * previous person's photo.
+ *
+ * A source is matched by its own path, never by position: a path carries
+ * the owner's id, so a set fetched for another person can never match and
+ * the deck cannot show the previous candidate's face under the new
+ * candidate's name. On a screen where the same person's list changes —
+ * removing one photo of six — the five that stayed keep their sources
+ * instead of the whole grid blanking for a round trip.
  */
 export function sourcesFor(
   paths: readonly string[],
   fetched: FetchedSources,
 ): (PhotoSource | null)[] {
-  if (fetched.key !== photoKey(paths)) return paths.map(() => null);
-  return paths.map((_, index) => fetched.sources[index] ?? null);
+  return paths.map((path) => {
+    const at = fetched.paths.indexOf(path);
+    return at === -1 ? null : (fetched.sources[at] ?? null);
+  });
 }

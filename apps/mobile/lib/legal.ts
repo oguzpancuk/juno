@@ -19,7 +19,15 @@ export interface LegalSection {
   readonly body: readonly string[];
 }
 
+/** Shown to the reader. */
 export const LEGAL_UPDATED = '9 Eylül 2026';
+
+/**
+ * The same date, machine-readable: it is stored on the profile as the
+ * version of the notice the member accepted, so a later version can be
+ * told apart from this one. Bump both together.
+ */
+export const LEGAL_VERSION = '2026-09-09';
 
 export const legalSections: readonly LegalSection[] = [
   {
