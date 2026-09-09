@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { z } from 'zod';
-import { ISTANBUL_NEARBY, STARTER, profileRow } from './fixtures';
+import {
+  ISTANBUL_NEARBY,
+  STARTER,
+  insertProfileRow,
+  profileRow,
+} from './fixtures';
 import {
   adminClient,
   createUser,
@@ -40,6 +45,9 @@ async function accessToken(u: TestUser): Promise<string> {
   return token;
 }
 
+/** One object past the 100-row Storage listing page. */
+const PAGE_CROSSING = 104;
+
 const endpoint = (): string =>
   `${localStack().API_URL}/functions/v1/delete-account`;
 
@@ -50,7 +58,8 @@ beforeAll(async () => {
     [mert, 'Mert', 'man', 'women'],
     [nur, 'Nur', 'woman', 'men'],
   ] as const) {
-    const { error } = await u.client.from('profiles').insert(
+    await insertProfileRow(
+      u.client,
       profileRow({
         id: u.id,
         display_name: name,
@@ -59,7 +68,6 @@ beforeAll(async () => {
         lonLat: ISTANBUL_NEARBY,
       }),
     );
-    if (error) throw new Error(`insert ${name}: ${error.message}`);
   }
   await mert.client.from('likes').insert({
     from_id: mert.id,
@@ -110,14 +118,22 @@ beforeAll(async () => {
   if (aboutMert.error) throw new Error(`report: ${aboutMert.error.message}`);
   const nurs = await nur.client.from('my_reports').select('id').single();
   aboutMertId = z.object({ id: z.string().uuid() }).parse(nurs.data).id;
-  // A photo to leave behind: storage objects do not cascade.
-  const photo = await mert.client.storage
-    .from('photos')
-    .upload(
-      `${mert.id}/1.png`,
-      new Blob([new Uint8Array([137, 80])], { type: 'image/png' }),
-    );
-  if (photo.error) throw new Error(`photo: ${photo.error.message}`);
+  // A photo to leave behind: storage objects do not cascade. The profile
+  // fixture already uploaded one.
+  // More than one listing page: list() answers 100 at a time, and a folder
+  // that is emptied one page at a time leaves the rest fetchable by anyone
+  // holding the path long after the account is gone.
+  await Promise.all(
+    Array.from({ length: PAGE_CROSSING }, async (_, i) => {
+      const extra = await mert.client.storage
+        .from('photos')
+        .upload(
+          `${mert.id}/bulk-${i}.png`,
+          new Blob([new Uint8Array([137, 80])], { type: 'image/png' }),
+        );
+      if (extra.error) throw new Error(`bulk photo: ${extra.error.message}`);
+    }),
+  );
 
   const mine = await mert.client.from('my_reports').select('id').single();
   reportId = z.object({ id: z.string().uuid() }).parse(mine.data).id;
@@ -161,7 +177,8 @@ it('refuses an anon or service-role key used as a bearer token', async () => {
 
 it('ignores a body naming someone else and deletes only the caller', async () => {
   const victim = await user('victim');
-  const { error } = await victim.client.from('profiles').insert(
+  await insertProfileRow(
+    victim.client,
     profileRow({
       id: victim.id,
       display_name: 'Victim',
@@ -170,7 +187,6 @@ it('ignores a body naming someone else and deletes only the caller', async () =>
       lonLat: ISTANBUL_NEARBY,
     }),
   );
-  expect(error).toBeNull();
 
   const attacker = await user('attacker');
   const response = await fetch(endpoint(), {
@@ -309,7 +325,9 @@ it('deletes the caller and every row that referenced them', async () => {
   expect(messages.data ?? []).toEqual([]);
 
   // The photo folder went too; nothing cascades to storage.
-  const folder = await admin.storage.from('photos').list(mert.id);
+  const folder = await admin.storage
+    .from('photos')
+    .list(mert.id, { limit: 200 });
   expect(folder.error).toBeNull();
   expect(folder.data ?? []).toEqual([]);
 

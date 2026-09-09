@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { z } from 'zod';
-import { ANKARA, ISTANBUL_NEARBY, STARTER, profileRow } from './fixtures';
+import {
+  ANKARA,
+  ISTANBUL_NEARBY,
+  STARTER,
+  insertProfileRow,
+  profileRow,
+} from './fixtures';
 import { adminClient, createUser, deleteUsers, type TestUser } from './local';
 
 /**
@@ -104,8 +110,7 @@ beforeAll(async () => {
   for (const [i, row] of rows.entries()) {
     const client = clients[i];
     if (!client) throw new Error('setup: client missing');
-    const { error } = await client.client.from('profiles').insert(row);
-    if (error) throw new Error(`insert ${row.display_name}: ${error.message}`);
+    await insertProfileRow(client.client, row);
   }
   await ada.client.from('likes').insert({
     from_id: ada.id,

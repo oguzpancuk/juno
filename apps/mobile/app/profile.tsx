@@ -30,7 +30,9 @@ export default function Profile() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const insets = useSafeAreaInsets();
   const [photos, setPhotos] = useState<string[] | null>(null);
-  const [urls, setUrls] = useState<string[]>([]);
+  // Aligned with `photos` by index; null where the object could not be
+  // signed, so a missing one never shifts the rest.
+  const [urls, setUrls] = useState<(string | null)[]>([]);
   const [bio, setBio] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +135,7 @@ export default function Profile() {
               <View key={path} style={styles.tile}>
                 {urls[index] ? (
                   <Image
-                    source={{ uri: urls[index] }}
+                    source={{ uri: urls[index] ?? undefined }}
                     style={styles.photo}
                     resizeMode="cover"
                   />

@@ -149,13 +149,18 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       per-user folder policy; 1–6 photos; profile absent from `discover`
       until ≥ 1 photo; `delete-account` removes the folder.
       — done when: Storage policy test proves user A cannot write to B's
-      folder (battery); a photo-less profile never appears in discover.
+      folder (battery); a photo-less profile never appears in discover;
+      `screenshots/v1-profile.png` shows the profile screen (screenshot).
       _Done: RLS tests cover the folder rule, the six-photo and
-      own-folder triggers, signing another member's photo until a block,
-      the photo gate on discover, and the folder going with the account.
+      own-folder triggers, a path with no object behind it, nesting below
+      the owner folder, signing another member's photo until a block, the
+      photo gate on discover, and the folder going with the account —
+      including a folder larger than one Storage listing page.
       Verified in the browser: bio saved from the profile screen, the
       photo rendered there and on the discover card, and the chart screen
-      nudging a photo-less profile. Not automated: the OS file chooser
+      nudging a photo-less profile; `screenshots/v1-profile.png` is the
+      same screen in the simulator, its photo fetched through a signed
+      URL. Not automated: the OS file chooser
       that `expo-image-picker` opens, so the pick step itself is
       unexercised; the upload path underneath it is covered by tests._
 - [x] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),

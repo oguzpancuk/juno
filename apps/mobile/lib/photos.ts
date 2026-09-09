@@ -5,38 +5,56 @@ import { supabase } from './supabase';
 /** Mirrors the trigger on `profiles.photos`. */
 export const MAX_PHOTOS = 6;
 const BUCKET = 'photos';
-/** Long enough for a browsing session; the bucket itself stays private. */
-const SIGNED_URL_TTL_SECONDS = 60 * 60;
+/**
+ * Short on purpose. A signed URL is a bearer token: Storage checks the
+ * signature, not the block table, so a URL handed out before a block keeps
+ * resolving until it expires while a deleted account's stops at once —
+ * a window in which the two are distinguishable. Ten minutes covers a
+ * browsing session (screens re-sign on focus) and keeps that window small.
+ * Closing it fully needs photos served through a function that authorises
+ * every request; recorded in docs/NOTES.md as a v1 residual.
+ */
+const SIGNED_URL_TTL_SECONDS = 10 * 60;
 
 const SignedSchema = z.array(
-  z.object({ path: z.string().nullable(), signedUrl: z.string() }),
+  z.object({
+    path: z.string().nullable(),
+    signedUrl: z.string().nullable(),
+    error: z.string().nullable().optional(),
+  }),
 );
 
 /**
- * Display URLs for stored paths, in the same order. A path that cannot be
- * signed (blocked, or the object is gone) is dropped rather than shown as
- * a broken image.
+ * Display URLs for stored paths, aligned with the input: index i is the URL
+ * for paths[i], or null when that one path cannot be signed (blocked, or
+ * the object is gone). Never compacted — callers pair these with the paths
+ * by index, and a shorter array would put one person's photo on another
+ * person's card.
  */
 export async function signedPhotoUrls(
   paths: readonly string[],
-): Promise<string[]> {
+): Promise<(string | null)[]> {
   if (paths.length === 0) return [];
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .createSignedUrls([...paths], SIGNED_URL_TTL_SECONDS);
-  if (error) return [];
+  if (error) return paths.map(() => null);
   const parsed = SignedSchema.safeParse(data);
-  if (!parsed.success) return [];
-  const byPath = new Map(
-    parsed.data
-      .filter((s) => s.path !== null)
-      .map((s) => [s.path, s.signedUrl]),
-  );
-  return paths.flatMap((path) => {
-    const url = byPath.get(path);
-    return url ? [url] : [];
-  });
+  if (!parsed.success) return paths.map(() => null);
+  const byPath = new Map<string, string>();
+  for (const signed of parsed.data) {
+    if (signed.path !== null && signed.signedUrl !== null) {
+      byPath.set(signed.path, signed.signedUrl);
+    }
+  }
+  return paths.map((path) => byPath.get(path) ?? null);
 }
+
+const EXTENSIONS: Readonly<Record<string, string>> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 
 /** Opens the library. Returns the picked file, or null if cancelled. */
 export async function pickPhoto(): Promise<{
@@ -53,14 +71,12 @@ export async function pickPhoto(): Promise<{
   });
   const asset = picked.assets?.[0];
   if (picked.canceled || !asset) return null;
-  return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' };
+  // The bucket accepts three types; anything else is rejected here rather
+  // than uploaded under a guessed extension.
+  const mimeType = asset.mimeType ?? 'image/jpeg';
+  if (!(mimeType in EXTENSIONS)) return null;
+  return { uri: asset.uri, mimeType };
 }
-
-const EXTENSIONS: Readonly<Record<string, string>> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 
 /**
  * Upload one photo into the caller's own folder and append it to the
@@ -73,8 +89,12 @@ export async function addPhoto(
   file: { uri: string; mimeType: string },
 ): Promise<string[] | null> {
   if (current.length >= MAX_PHOTOS) return null;
-  const extension = EXTENSIONS[file.mimeType] ?? 'jpg';
-  const path = `${userId}/${Date.now()}.${extension}`;
+  const extension = EXTENSIONS[file.mimeType];
+  if (!extension) return null;
+  // Random suffix: two uploads in the same millisecond would otherwise
+  // overwrite each other and leave two profile entries on one object.
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const path = `${userId}/${name}.${extension}`;
   const body = await (await fetch(file.uri)).blob();
   const uploaded = await supabase.storage
     .from(BUCKET)

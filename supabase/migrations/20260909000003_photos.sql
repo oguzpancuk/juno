@@ -39,10 +39,22 @@ begin
   end if;
   if exists (
     select 1 from unnest(new.photos) as path
-     where path not like new.id::text || '/%'
+     where path !~ ('^' || new.id::text || '/[^/]+$')
   ) then
     raise exception 'photos must live in the owner folder'
       using errcode = 'check_violation';
+  end if;
+  -- The path must name an object that exists. Without this the discover
+  -- gate counts strings: one made-up path puts a blank card in every
+  -- nearby deck.
+  if exists (
+    select 1 from unnest(new.photos) as path
+     where not exists (
+       select 1 from storage.objects o
+        where o.bucket_id = 'photos' and o.name = path
+     )
+  ) then
+    raise exception 'photo does not exist' using errcode = 'check_violation';
   end if;
   return new;
 end;
@@ -60,6 +72,9 @@ create policy "photos: write own folder"
   with check (
     bucket_id = 'photos'
     and (storage.foldername(name))[1] = (select auth.uid())::text
+    -- Exactly one folder level: a nested object survives the flat listing
+    -- that account deletion uses, and would outlive the account.
+    and array_length(storage.foldername(name), 1) = 1
   );
 
 create policy "photos: replace own"
@@ -91,6 +106,10 @@ create policy "photos: read unless blocked"
   to authenticated
   using (
     bucket_id = 'photos'
+    -- Guarded cast: one object whose folder is not a uuid would otherwise
+    -- make every list() in this bucket fail for everyone.
+    and (storage.foldername(name))[1] ~
+      '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     and not private.is_blocked(((storage.foldername(name))[1])::uuid)
   );
 

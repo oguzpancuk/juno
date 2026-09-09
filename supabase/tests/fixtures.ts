@@ -1,3 +1,5 @@
+import type { Client } from './local';
+
 /** Minimal profile rows for RLS tests. Charts are placeholders: RLS does not care. */
 export type Gender = 'woman' | 'man' | 'unspecified';
 export type Interest = 'women' | 'men' | 'everyone';
@@ -43,4 +45,37 @@ export function profileRow(input: ProfileInput) {
     // read the object itself.
     photos: [...(input.photos ?? [`${input.id}/1.png`])],
   };
+}
+
+/**
+ * The smallest valid PNG. `profiles.photos` now has to name an object that
+ * exists, so a fixture profile needs a real upload behind its path.
+ */
+const PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+/** Uploads a placeholder object for every path the row claims. */
+export async function uploadPhotos(
+  client: Client,
+  paths: readonly string[],
+): Promise<void> {
+  for (const path of paths) {
+    const { error } = await client.storage
+      .from('photos')
+      .upload(path, PIXEL_PNG, { contentType: 'image/png', upsert: true });
+    if (error) throw new Error(`upload ${path}: ${error.message}`);
+  }
+}
+
+/** Uploads the row's photos, then inserts it as that user. */
+export async function insertProfileRow(
+  client: Client,
+  row: ReturnType<typeof profileRow>,
+): Promise<void> {
+  await uploadPhotos(client, row.photos);
+  const { error } = await client.from('profiles').insert(row);
+  if (error)
+    throw new Error(`insert profile for ${row.display_name}: ${error.message}`);
 }

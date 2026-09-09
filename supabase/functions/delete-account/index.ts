@@ -60,12 +60,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Photos live under "<uid>/" in a private bucket. Storage objects are
   // not rows, so nothing cascades: they have to go first, while the user
   // still exists to be listed.
-  const listed = await admin.storage.from('photos').list(userId);
-  if (listed.error) {
-    console.error('delete-account list failed', listed.error.message);
-    return json(500, { error: 'delete_failed' });
-  }
-  if (listed.data.length > 0) {
+  // Paged: list() answers 100 at a time, and a folder with more than that
+  // would leave photos of a deleted person fetchable by anyone holding the
+  // path. Uploads are one level deep by policy, so a flat listing is
+  // complete.
+  const PAGE = 100;
+  for (let offset = 0; ; offset += PAGE) {
+    const listed = await admin.storage
+      .from('photos')
+      .list(userId, { limit: PAGE, offset });
+    if (listed.error) {
+      console.error('delete-account list failed', listed.error.message);
+      return json(500, { error: 'delete_failed' });
+    }
+    if (listed.data.length === 0) break;
     const removed = await admin.storage
       .from('photos')
       .remove(listed.data.map((file) => `${userId}/${file.name}`));
@@ -73,6 +81,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       console.error('delete-account photos failed', removed.error.message);
       return json(500, { error: 'delete_failed' });
     }
+    // Removing shrinks the folder, so the next page starts at 0 again.
+    offset = -PAGE;
   }
   const deleted = await admin.auth.admin.deleteUser(userId);
   if (deleted.error) {

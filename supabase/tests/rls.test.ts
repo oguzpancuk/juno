@@ -6,7 +6,9 @@ import {
   ISTANBUL_NEARBY,
   NOWHERE,
   STARTER,
+  insertProfileRow,
   profileRow,
+  uploadPhotos,
 } from './fixtures';
 import {
   adminClient,
@@ -91,9 +93,7 @@ async function user(tag: string): Promise<TestUser> {
 }
 
 async function insertProfile(u: TestUser, row: ReturnType<typeof profileRow>) {
-  const { error } = await u.client.from('profiles').insert(row);
-  if (error)
-    throw new Error(`insert profile for ${row.display_name}: ${error.message}`);
+  await insertProfileRow(u.client, row);
 }
 
 beforeAll(async () => {
@@ -239,6 +239,9 @@ describe('profiles', () => {
         gender: 'woman',
         interested_in: 'everyone',
         lonLat: ISTANBUL,
+        // The photo trigger runs before the CHECK, so this row carries
+        // none: the assertion is about the age rule.
+        photos: [],
         birth_date: '2015-01-01',
       }),
     );
@@ -1430,6 +1433,7 @@ describe('photos', () => {
       ids((await sema.client.from('discover').select('id')).data),
     ).not.toContain(tolga.id);
 
+    await uploadPhotos(tolga.client, [`${tolga.id}/1.png`]);
     const { error } = await tolga.client
       .from('profiles')
       .update({ photos: [`${tolga.id}/1.png`] })
@@ -1497,6 +1501,25 @@ describe('photos', () => {
       .delete()
       .eq('blocker_id', sema.id)
       .eq('blocked_id', tolga.id);
+  });
+
+  it('a photo path with no object behind it is refused', async () => {
+    // Otherwise the discover gate counts strings, and an empty profile with
+    // one invented path appears in every nearby deck.
+    const { error } = await tolga.client
+      .from('profiles')
+      .update({ photos: [`${tolga.id}/invented.png`] })
+      .eq('id', tolga.id);
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('an upload cannot nest below the owner folder', async () => {
+    // Account deletion lists the folder flat; a nested object would outlive
+    // the account it belongs to.
+    const nested = await sema.client.storage
+      .from('photos')
+      .upload(`${sema.id}/deep/x.png`, shot(), { contentType: 'image/png' });
+    expect(nested.error).not.toBeNull();
   });
 
   it('nobody can delete someone else photo', async () => {

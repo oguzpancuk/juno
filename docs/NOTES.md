@@ -10,6 +10,54 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Photos review: two leaks and a gate that counted strings
+
+- Review of the photos commit (`1dfce01`) returned NEEDS_WORK with two
+  blockers, both proven by probe, both fixed here.
+- **Account deletion left photos behind.** `list()` answers 100 objects at
+  a time and is not recursive, so a folder with 105 flat objects plus one
+  nested kept seven of them, and another signed-in member fetched one with
+  HTTP 200 after the account was gone. Fixed twice over: the delete now
+  pages until the folder is empty, and the insert policy accepts exactly
+  one folder level, so a flat listing is complete by construction. A test
+  uploads 105 objects and asserts the folder is empty afterwards.
+- **The photo gate counted strings, not objects.** `profiles.photos` only
+  had to look like a path, so one invented string put a photo-less profile
+  in every nearby deck. The trigger now requires an object to exist behind
+  every path. Consequence for tests: a fixture profile has to upload
+  before it inserts (`insertProfileRow` in `supabase/tests/fixtures.ts`),
+  and the age-rule test carries no photos because the trigger runs before
+  the CHECK constraint and would otherwise mask what it asserts.
+- **Signed URLs are bearer tokens.** Storage validates the signature, not
+  the block table, so a URL handed out before a block keeps resolving
+  while a deleted account's stops at once — the two are distinguishable
+  inside that window. Not closable with a policy: the TTL dropped from an
+  hour to ten minutes, and it is recorded here as a v1 residual. Closing
+  it properly means serving photos through a function that authorises
+  every request, which is a v1.1 item, not a migration.
+- `signedPhotoUrls` no longer compacts its result. One unsignable path
+  used to blank the whole batch or, worse, shift the array so one person's
+  photo appeared on another person's card. It now returns `null` in place
+  and callers pair by index safely.
+- Smaller: the read policy's `::uuid` cast is guarded (one non-uuid folder
+  name would have broken every `list()` in the bucket for everyone); an
+  unknown mime type is refused at the picker rather than uploaded as
+  `.jpg`; upload names carry a random suffix so two uploads in the same
+  millisecond cannot overwrite each other.
+- New tool: `supabase/scripts/plant-session.ts` writes a real session into
+  Expo Go's AsyncStorage on the booted simulator, so a screen behind the
+  sign-in gate can be screenshotted without typing an OTP (text injection
+  into a React Native TextInput still does not work here).
+- Verified: battery green on a clean tree; 71 Supabase tests including the
+  page-crossing delete, the missing-object path and the nesting refusal;
+  `screenshots/v1-profile.png` shows the profile screen in the simulator
+  with its photo fetched through a signed URL.
+- Gotcha: Expo must be started with `EXPO_PUBLIC_SUPABASE_URL` and
+  `_ANON_KEY` in the environment (`contracts/init.sh` does this). Started
+  bare, the app boots to a red Zod error from `env.ts`.
+- Next: the remaining v1 items — Sign in with Apple, KVKK consent, the
+  `birth_utc` validation function, blocked-list screen.
+
 ## 2026-09-09 — Design brief; /design-sync not applicable yet
 
 - The owner ran `/design-sync` wanting Claude Design to produce the app's
