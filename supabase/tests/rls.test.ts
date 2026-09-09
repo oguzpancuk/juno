@@ -1761,8 +1761,9 @@ describe('birth instant', () => {
       expect(error).toBeNull();
       expect(data).toEqual([{ id: alice.id, radius_km: 75 }]);
     } finally {
-      // Restore even on a failure: later tests read alice's radius, and a
-      // cascade of failures hides which one is the cause.
+      // Restore even on a failure, so this test leaves the row as it
+      // found it — the same discipline as the radius test earlier in the
+      // file, which does read alice's radius.
       await admin.from('profiles').update({ radius_km: 50 }).eq('id', alice.id);
     }
   });
