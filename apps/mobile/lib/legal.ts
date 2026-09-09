@@ -58,6 +58,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Konumun. Yaklaşık 1 kilometrelik bir ızgaraya yuvarlanarak saklanır: başkalarına gösterilen mesafe bu yuvarlanmış noktadan hesaplanır, tam konumun veritabanına hiç yazılmaz.',
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
+      '• Onay kaydın: bu metnin hangi sürümünü kabul ettiğin ve kabul anının zamanı. Rızanın kanıtı budur ve hesabınla birlikte silinir.',
       'Kullanım',
       '• Beğenilerin, geçtiklerin ve eşleşmelerin.',
       '• Eşleşmelerinle yazıştığın mesajlar ve okunma bilgileri.',

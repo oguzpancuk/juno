@@ -34,8 +34,15 @@ export default function Blocked() {
       let cancelled = false;
       void fetchBlocked().then((list) => {
         if (cancelled) return;
-        if (list === null) setError(t.errors.generic);
-        else setPeople(list);
+        if (list === null) {
+          // An empty list, not a spinner: a failed read used to leave the
+          // screen loading for ever with an error underneath it.
+          setError(t.errors.generic);
+          setPeople([]);
+        } else {
+          setError(null);
+          setPeople(list);
+        }
       });
       return () => {
         cancelled = true;

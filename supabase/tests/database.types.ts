@@ -37,16 +37,19 @@ export type Database = {
       blocks: {
         Row: {
           blocked_id: string
+          blocked_name: string
           blocker_id: string
           created_at: string
         }
         Insert: {
           blocked_id: string
+          blocked_name?: string
           blocker_id: string
           created_at?: string
         }
         Update: {
           blocked_id?: string
+          blocked_name?: string
           blocker_id?: string
           created_at?: string
         }
@@ -498,11 +501,55 @@ export type Database = {
           },
         ]
       }
+      metrics_conversations: {
+        Row: {
+          silent: number | null
+          two_sided: number | null
+          two_sided_three_each: number | null
+        }
+        Relationships: []
+      }
+      metrics_matches: {
+        Row: {
+          first_match: string | null
+          last_match: string | null
+          matches: number | null
+          matches_with_a_message: number | null
+        }
+        Relationships: []
+      }
+      metrics_onboarding: {
+        Row: {
+          accounts: number | null
+          completion_percent: number | null
+          profiles: number | null
+        }
+        Relationships: []
+      }
+      metrics_reports: {
+        Row: {
+          about_a_live_account: number | null
+          oldest: string | null
+          oldest_hours: number | null
+          reports: number | null
+        }
+        Relationships: []
+      }
       my_blocks: {
         Row: {
           blocked_id: string | null
           created_at: string | null
           display_name: string | null
+        }
+        Insert: {
+          blocked_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
+        }
+        Update: {
+          blocked_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
         }
         Relationships: [
           {

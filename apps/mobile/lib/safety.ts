@@ -53,17 +53,25 @@ export async function fetchBlocked(): Promise<BlockedPerson[] | null> {
   return parsed.success ? parsed.data : null;
 }
 
-/** Undo a block. Discovery and the thread reopen on both sides. */
+/**
+ * Undo a block. Discovery, the match and the thread reopen on both sides
+ * — including the messages from before the block (ADR-0007).
+ *
+ * A delete that matched nothing is not a success: PostgREST reports no
+ * error for it, and the screen would then show the block as lifted while
+ * it still stands.
+ */
 export async function unblockUser(
   myId: string,
   otherId: string,
 ): Promise<boolean> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('blocks')
     .delete()
     .eq('blocker_id', myId)
-    .eq('blocked_id', otherId);
-  return !error;
+    .eq('blocked_id', otherId)
+    .select('blocked_id');
+  return !error && (data?.length ?? 0) > 0;
 }
 
 /**

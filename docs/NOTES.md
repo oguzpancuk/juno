@@ -10,6 +10,49 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Consent review: a live profile read and a forgeable stamp
+
+- Two blockers in the consent/blocked-list commit, both found by probing
+  rather than reading.
+- **The blocked list was a profile lookup.** `my_blocks` joined `profiles`
+  as its owner, and inserting a block needs nothing but your own id as the
+  blocker — so one row opened a live read on any profile id you had ever
+  seen: their current display name, every rename, and whether the account
+  still existed. Worse, it worked from the side that had already been
+  blocked. The name is now snapshotted onto the block row by a trigger and
+  the view reads the snapshot: a record of what you blocked, not a window
+  on who they are now. A test renames the blocked person and asserts the
+  list does not follow.
+- **`consent_at` was client-writable.** The stamping trigger fires only on
+  an update that names `consent_version`, and `profiles: update own` came
+  with a table-wide UPDATE grant, so one REST call could set the KVKK
+  timestamp to any value — the one field the whole record rests on. The
+  grant is now a column list: display name, gender, interest, location,
+  radius, bio, photos and the consent version. Everything else, including
+  the birth columns, is refused by privilege before any trigger runs.
+  Revoking the single column would have done nothing while the table-wide
+  grant stood — that is the part I got wrong the first time.
+- `consent_version` is a `date` now, not text with a regex: the regex
+  accepted `9999-99-99`, which would also have compared as newer than
+  every real version for ever. A CHECK keeps it out of the future.
+- **ADR-0007** records the one place the block/deletion indistinguishability
+  is deliberately traded: undoing a block restores the match and the
+  thread, so lifting one tells the other side they had been blocked. The
+  alternative is an irreversible block, which makes a mistap
+  unrecoverable. The screen now says what will happen in as many words.
+- Also from the review: the consent checkbox named only the compatibility
+  purpose while the notice bases location on proximity, so the sentence
+  names both; the notice lists the consent record itself as data; a failed
+  read on the blocked screen no longer leaves a spinner under an error;
+  and an unblock that matched no row is no longer reported as success.
+- **Metrics views** landed alongside: onboarding completion, matches,
+  two-sided conversations with the ≥ 3 each threshold, and the report
+  queue. Aggregates only, and closed to every client — a view carries no
+  policies, so the grant is the boundary, and a test proves a member and
+  anon are both refused. Sentry stays parked.
+- Verified: battery green on a clean tree; 94 Supabase tests;
+  `screenshots/v1-blocked.png` shows the screen in the simulator.
+
 ## 2026-09-09 — The server checks the birth instant
 
 - A phone with a stale zone database converts a birth time with an offset

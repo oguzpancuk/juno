@@ -187,12 +187,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       for it, so a misfired block is permanent for the user.
       — done when: settings lists blocked people and an unblock restores
       the match, verified in the simulator against the database.
-      _Done: an owner-executed `my_blocks` view carries the name (profiles
-      are not readable across accounts), `/blocked` lists it with an
-      unblock, and an RLS test proves the other side sees nothing and that
-      the view is read-only. Verified in the browser rather than the
-      simulator — the block was listed, unblocking emptied the screen and
-      the row was gone from the database._
+      _Done: `my_blocks` reads a name snapshotted onto the block row when
+      it is written — the first version joined `profiles` live, which
+      turned one insert into a read on any profile id (closed in
+      `20260909000012`). `/blocked` lists it with an unblock, and RLS
+      tests prove the other side sees nothing, the view is read-only, and
+      the name does not follow a rename. Verified in the browser (listing,
+      unblock, and the row gone from the database) and
+      `screenshots/v1-blocked.png` shows the screen in the simulator.
+      Undoing a block restores the thread on both sides, which is a
+      recorded trade: ADR-0007._
 - [ ] **Sign in with Apple (Apple).** Alongside email OTP.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).
@@ -267,6 +271,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `@sentry/react-native`).
       — done when: the views return the PRD success-signal numbers on the seed
       data (manual, Supabase Studio); a forced test crash appears in Sentry.
+      _Views built (`20260909000011`): onboarding completion, matches and
+      how many carried a message, two-sided conversations with the ≥ 3
+      each threshold, and the report queue with the age of the oldest.
+      Aggregates only, and closed to every client — a view has no policies,
+      so the grant is the boundary, and a test proves a member and anon
+      are both refused. Read on the seed data through psql rather than
+      Studio. Sentry is parked: it needs an account, and the owner takes
+      third-party sign-ups at the step that needs them._
 - [x] **Web client (ADR-0005).** Expo Router web output of the same
       screens, so people can use the product without the App Store, as
       `pati` does.

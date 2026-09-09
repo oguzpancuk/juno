@@ -81,6 +81,9 @@ async function main(): Promise<void> {
     interested_in: 'men',
     location: 'SRID=4326;POINT(29.02 41.03)',
     radius_km: 50,
+    // Mirrors LEGAL_VERSION in apps/mobile/lib/legal.ts; a profile cannot
+    // exist without a record of the notice having been accepted.
+    consent_version: '2026-09-09',
   });
   if (error) throw error;
   console.log(`tester ${testerEmail} (${name}) ready: ${id}`);

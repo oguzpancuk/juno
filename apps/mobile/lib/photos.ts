@@ -213,6 +213,11 @@ const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
  * an unlisted object is destructive — a second device may have listed it
  * in a write this one has not seen — so a folder holding a normal handful
  * of photos is left alone entirely.
+ *
+ * The age cutoff means a folder filled to the cap with objects younger
+ * than a day cannot be swept: adding a photo stays refused until they age
+ * out. That is the narrow residue of a folder that could not be emptied
+ * at all, and it is bounded and self-inflicted.
  */
 const SWEEP_THRESHOLD = 50;
 

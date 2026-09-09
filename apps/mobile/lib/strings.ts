@@ -27,7 +27,7 @@ export const t = {
     interest: 'Kiminle tanışmak istersin?',
     interests: { women: 'Kadınlar', men: 'Erkekler', everyone: 'Herkes' },
     consent:
-      'Doğum bilgilerimin ve konumumun uyum hesaplamak için işlenmesini kabul ediyorum.',
+      'Doğum bilgilerimin uyum hesaplamak, konumumun ise yakındaki kişileri göstermek için işlenmesini kabul ediyorum.',
     consentLink: 'Gizlilik metnini oku',
     city: 'Doğum yerin',
     cityPlaceholder: 'Şehir ara…',
@@ -171,7 +171,7 @@ export const t = {
     open: 'Engellediklerin',
     back: '‹ Ayarlar',
     title: 'Engellediklerin',
-    hint: 'Engeli kaldırırsan yeniden eşleşebilir ve yazışabilirsiniz.',
+    hint: 'Engeli kaldırırsan eşleşmeniz ve eski yazışmanız iki tarafta da geri gelir.',
     empty: 'Kimseyi engellemedin.',
     undo: 'Engeli kaldır',
   },

@@ -77,6 +77,7 @@ const PERMISSION_DENIED = '42501';
 const UNDEFINED_COLUMN = '42703';
 const UNIQUE_VIOLATION = '23505';
 const NOT_NULL_VIOLATION = '23502';
+const INVALID_DATE = '22007';
 const CHECK_VIOLATION = '23514';
 
 let alice: TestUser; // woman, wants men, Istanbul
@@ -281,7 +282,10 @@ describe('profiles', () => {
       .from('profiles')
       .update({ birth_utc: '1996-01-01T00:00:00Z' })
       .eq('id', alice.id);
-    expect(error?.code).toBe(CHECK_VIOLATION);
+    // Refused by the column grant before the immutability trigger is
+    // reached: members hold UPDATE only on the columns they may change.
+    // The trigger stays as the guard for anything running as the owner.
+    expect(error?.code).toBe(PERMISSION_DENIED);
     const ok = await alice.client
       .from('profiles')
       .update({ display_name: 'Alice' })
@@ -1082,6 +1086,28 @@ describe('blocks and reports', () => {
     expect(written.error).not.toBeNull();
   });
 
+  it('the list holds the name as it was, not a live read', async () => {
+    // One insert into `blocks` used to open a live join on `profiles`:
+    // block any id you have seen and you could read that person's current
+    // name, every rename, and whether the account still existed — from
+    // the side they had blocked. The name is a snapshot now.
+    const renamed = await kemal.client
+      .from('profiles')
+      .update({ display_name: 'Kemal Yeni' })
+      .eq('id', kemal.id);
+    expect(renamed.error).toBeNull();
+
+    const rows = z
+      .array(z.object({ display_name: z.string() }))
+      .parse((await lale.client.from('my_blocks').select('display_name')).data);
+    expect(rows[0]?.display_name).toBe('Kemal');
+
+    await kemal.client
+      .from('profiles')
+      .update({ display_name: 'Kemal' })
+      .eq('id', kemal.id);
+  });
+
   it('a block hides the match row itself, not just the profile view', async () => {
     // `matches` present while `match_profiles` is empty would say "you were
     // blocked" as loudly as the block row does; a deleted account takes its
@@ -1494,6 +1520,55 @@ describe('birth instant', () => {
   });
 });
 
+describe('metrics', () => {
+  // Aggregates for the owner's dashboard. A view has no policies of its
+  // own, so the grant is the whole boundary: if a member can read these,
+  // they can count the people around them.
+  const VIEWS = [
+    'metrics_onboarding',
+    'metrics_matches',
+    'metrics_conversations',
+    'metrics_reports',
+  ] as const;
+
+  it('are readable by nobody but the service role', async () => {
+    for (const view of VIEWS) {
+      const asMember = await alice.client.from(view).select('*');
+      expect(asMember.error, view).not.toBeNull();
+      const asAnon = await anonClient().from(view).select('*');
+      expect(asAnon.error, view).not.toBeNull();
+      const asOwner = await admin.from(view).select('*');
+      expect(asOwner.error, view).toBeNull();
+    }
+  });
+
+  it('count what the PRD asks about', async () => {
+    const onboarding = z
+      .array(
+        z.object({
+          accounts: z.number(),
+          profiles: z.number(),
+          completion_percent: z.number().nullable(),
+        }),
+      )
+      .parse((await admin.from('metrics_onboarding').select('*')).data);
+    expect(onboarding[0]?.accounts).toBeGreaterThan(0);
+    expect(onboarding[0]?.profiles).toBeGreaterThan(0);
+
+    const conversations = z
+      .array(
+        z.object({
+          two_sided: z.number(),
+          two_sided_three_each: z.number(),
+          silent: z.number(),
+        }),
+      )
+      .parse((await admin.from('metrics_conversations').select('*')).data);
+    // The suite creates matches with a message or two, never three each.
+    expect(conversations[0]?.two_sided_three_each).toBe(0);
+  });
+});
+
 describe('consent', () => {
   // KVKK: a profile is where birth data and location start being
   // processed, so it cannot exist without a record of the notice having
@@ -1537,10 +1612,30 @@ describe('consent', () => {
       }),
       consent_version: 'kabul',
     });
-    expect(error?.code).toBe(CHECK_VIOLATION);
+    // The column is a date, so the type refuses it before any CHECK does.
+    expect(error?.code).toBe(INVALID_DATE);
   });
 
-  it('stamps the time itself and ignores what the client claims', async () => {
+  it('refuses a version that is not a real date', async () => {
+    // A regex over text accepted 9999-99-99, which would also compare as
+    // newer than every real version for ever.
+    for (const version of ['9999-99-99', '0000-00-00', '2999-01-01']) {
+      const { error } = await umut.client.from('profiles').insert({
+        ...profileRow({
+          id: umut.id,
+          display_name: 'Umut',
+          gender: 'man',
+          interested_in: 'women',
+          lonLat: ISTANBUL_NEARBY,
+          photos: [],
+        }),
+        consent_version: version,
+      });
+      expect(error, version).not.toBeNull();
+    }
+  });
+
+  it('will not let a client write the timestamp at all', async () => {
     const backdated = '2001-01-01T00:00:00Z';
     const { error } = await umut.client.from('profiles').insert({
       ...profileRow({
@@ -1566,11 +1661,21 @@ describe('consent', () => {
     expect(row.consent_version).toBe('2026-09-09');
     expect(Date.parse(row.consent_at)).toBeGreaterThan(Date.parse(backdated));
 
-    // Re-accepting moves the stamp; it can never be moved backwards.
+    // The stamping trigger only fires on an update that names the
+    // version, so the column itself is taken away from clients: without
+    // that, one REST call sets the KVKK timestamp to anything.
     const first = Date.parse(row.consent_at);
+    const forged = await umut.client
+      .from('profiles')
+      .update({ consent_at: backdated })
+      .eq('id', umut.id);
+    expect(forged.error?.code).toBe(PERMISSION_DENIED);
+
+    // Re-accepting a newer notice moves the stamp forward, and only the
+    // server decides where to.
     const again = await umut.client
       .from('profiles')
-      .update({ consent_version: '2026-10-01', consent_at: backdated })
+      .update({ consent_version: '2026-09-09' })
       .eq('id', umut.id);
     expect(again.error).toBeNull();
     const after = await umut.client
