@@ -244,6 +244,22 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       storing the session directly).
       — done when: the session survives an app restart and the AsyncStorage
       value is ciphertext (manual, simulator).
+      _Built: the session is sealed with XChaCha20-Poly1305 and the key
+      lives in the keychain (`lib/session-crypto.ts`, `lib/session-store.ts`,
+      bound to the platform in `lib/session-storage.ts`); the web keeps the
+      browser's own storage, since a key beside the ciphertext in one
+      origin protects nothing. 17 tests cover sealing, opening, a lost key,
+      a tampered value, a key of the wrong size, and a fresh store instance
+      opening what the previous one wrote — which is what an app restart
+      is. Sign-in and a full reload verified in the browser. **The clause
+      stays open on purpose:** the device path — the real keychain, the
+      real AsyncStorage file — cannot be driven here, because signing in
+      needs an OTP typed into a React Native TextInput and text injection
+      does not work in this simulator (NOTES 2026-09-09). The owner's
+      check: sign in on the simulator, quit and reopen Expo Go, confirm you
+      are still signed in, then look at
+      `…/ExponentExperienceData/@anonymous/<slug>/RCTAsyncLocalStorage` —
+      the value must start `1.` and contain no `refresh_token`._
 - [x] **Server-side birth_utc validation.** Devices with stale tzdata
       (Android especially) can compute a wrong `birth_utc`; the server
       recomputes it from city + wall time and rejects a mismatch before the

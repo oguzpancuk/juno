@@ -10,6 +10,46 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The session is sealed, and what that cost
+
+- The refresh token sat in AsyncStorage in clear text — Supabase's
+  documented Expo default, and a plain SQLite file in the app sandbox.
+  Fine against another app, useless against anyone holding the file
+  system. It is sealed now with XChaCha20-Poly1305 and the key lives in
+  the keychain; the session itself cannot go there, because SecureStore
+  caps a value at 2 KB and a session is larger.
+- XChaCha rather than AES-GCM: a 24-byte random nonce can be drawn for
+  ever without the birthday problem that makes a 12-byte GCM nonce a
+  footgun, and both are authenticated, so a tampered value fails to open
+  instead of decrypting to rubbish.
+- The web keeps the browser's own storage untouched. There is no keychain
+  there, and a key beside the ciphertext in the same origin protects
+  nothing; pretending otherwise would be theatre.
+- Nothing in the path throws. supabase-js calls it on every launch and
+  every refresh, and a session that cannot be read or written has to mean
+  "sign in again", never a crash — so a lost keychain entry, a tampered
+  value, a key of the wrong size and a keychain that refuses to write all
+  answer null or store nothing.
+- Structure: the sealing is pure (`session-crypto.ts`), the store logic
+  takes its keychain, store and randomness as arguments
+  (`session-store.ts`), and only the binding touches the platform
+  (`session-storage.ts`). 17 tests, including a fresh store instance
+  opening what the previous one wrote — which is what an app restart is.
+- **What this cost:** session injection is dead. `plant-session.ts` wrote
+  a plaintext session into Expo Go's AsyncStorage, and that is how every
+  authed simulator screenshot in this repo was taken. The app now refuses
+  to open it, and the script cannot seal one because the key is in a
+  keychain it cannot read. Authed screens are verified in the browser from
+  here on; the device path needs a person to sign in once, which is why
+  the ROADMAP clause stays open with the owner's check written out rather
+  than ticked.
+- Dependencies added, both justified: `expo-secure-store` for the keychain
+  and `@noble/ciphers` because the React Native runtime has no cipher at
+  all — no WebCrypto `subtle`, and `expo-crypto` gives digests and random
+  bytes only.
+- Verified: battery green on a clean tree; 29 mobile tests; sign-in and a
+  full page reload driven in the browser under the new adapter.
+
 ## 2026-09-10 — The other end of the range
 
 - The magnitude guard caught numbers too large to be a double and not
@@ -18,11 +58,15 @@
   internals in the message instead of a refusal. JavaScript reads that as
   zero and accepts it, so a crafted chart got neither an accept nor a
   clean no.
-- The small-magnitude branch keeps the sign, which matters: `-1e-321` is a
-  negative denormal in JavaScript and fails `>= 0` there, so collapsing
-  everything tiny to zero would have been a divergence in the dangerous
-  direction. Tested through raw text, since `1e-400` is just `0` once
-  TypeScript reads it.
+- The small-magnitude branch does not collapse everything to zero:
+  `-1e-321` is a real negative denormal and the client refuses it, so
+  accepting it here would have been a divergence in the dangerous
+  direction. It answers null — and that also refuses the narrower band the
+  client would accept as `-0`, since `-0 >= 0` is true in JavaScript. It
+  was `-1` at first; a later review pointed out that a future signed field
+  would read that as a real value, so it is null, the same answer the
+  function gives for anything that is not a degree. Tested through raw
+  text, since `1e-400` is just `0` once TypeScript reads it.
 - The service-role test was anchored on an update that reports no error
   when it matches nothing — and a zero-row update evaluates no constraint,
   so it would have passed green with the grant missing. It asserts the
@@ -36,12 +80,16 @@
     `private.is_blocked`, which is granted to `authenticated` only.
     Nothing server-side reads them today; the next Edge Function that
     wants to will need the grant.
-  - One band of numbers still answers neither accept nor a clean refusal:
-    an exponent outside `numeric`'s own range (`1e-16384`, `1e131072`)
-    fails when the text becomes jsonb, before any CHECK is reached, so the
-    error names the column type rather than the constraint. It is
-    fail-closed — nothing is stored — and it cannot be fixed in a CHECK,
-    because the value has to parse before a constraint can see it.
+  - Two bands where the server and the client do not agree, both
+    fail-closed. A number too extreme for `numeric` itself (`1e-16384`,
+    and scale-dependent neighbours like `9.9999e-16383`) fails when the
+    text becomes jsonb, before any CHECK is reached, so the error names
+    `numeric` rather than the constraint; it cannot be fixed in a CHECK,
+    because a value has to parse before a constraint can see it. And a
+    negative small enough to be `-0` in JavaScript is accepted by the
+    client (`-0 >= 0` is true) and refused here. Refusing more than the
+    client does is the safe direction; nothing the engine emits is
+    anywhere near either band.
 - Verified: battery green on a clean tree; 105 Supabase tests, 12 mobile.
 
 ## 2026-09-10 — Two ways a check can be right and still be wrong
