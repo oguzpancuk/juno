@@ -165,6 +165,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       true; the photos item must add the folder delete to the function.
       `screenshots/v1-safety.png` shows the controls; their button wiring
       is not verified (NOTES 2026-09-09)._
+- [ ] **Blocked list in settings.** The server already allows an unblock
+      (`blocks: delete own`, covered by an RLS test); the app has no screen
+      for it, so a misfired block is permanent for the user.
+      — done when: settings lists blocked people and an unblock restores
+      the match, verified in the simulator against the database.
 - [ ] **Sign in with Apple (Apple).** Alongside email OTP.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).

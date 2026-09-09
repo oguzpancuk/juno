@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Safety re-review: the third oracle, and honest claims
+
+- The re-review falsified the previous entry's claim. `likes` still told
+  the blocked person what happened: their own like row for the blocker
+  survived a block but vanished when an account was deleted, so two REST
+  calls named the block. The read policy now hides it and the insert
+  policy refuses a like at a blocked person. What is left is a write-code
+  difference (42501 for a block, 23503 for a deletion); closing that would
+  need a tombstone model, so the claim is now "no read surface reveals
+  it", not "indistinguishable".
+- `reports.reported_id` had lost its NOT NULL for the set-null path, which
+  let any caller insert unbounded rows naming nobody. A before-insert
+  trigger requires both sides; nulls can now only come from the FK.
+- The unique index was per pair, so a user reporting the same person for
+  something worse got "received and will be reviewed" while the row still
+  read the old reason. It is now per pair AND reason, so an escalation is
+  a new record.
+- The preflight test measured the local gateway, not the function: with
+  the CORS code deleted it still passed. It now asserts the function's own
+  headers on a POST, and the allow-list gained `x-client-info`, which
+  supabase-js always sends and whose absence would have broken account
+  deletion in the browser the ADR makes the first client.
+- Corrected claims: the surviving report row names nobody, so it is an
+  anonymous audit trail and not a way to recognise a re-registering
+  offender; the migration comment and this file said otherwise.
+- Tracked rather than fixed: `unblockUser` stays out of the client until
+  there is a screen for it, and the ROADMAP now carries "Blocked list in
+  settings". Also unverified: whether Realtime filters DELETE events on
+  `matches` by RLS — the shipped client only subscribes to INSERT, but a
+  modified one could learn a deletion happened and infer a block from its
+  absence.
+
 ## 2026-09-09 — Safety review: two block oracles closed
 
 - Review found that the block was announced by two surfaces even though

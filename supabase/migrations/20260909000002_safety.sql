@@ -47,11 +47,12 @@ create policy "blocks: delete own"
   to authenticated
   using (blocker_id = (select auth.uid()));
 
--- Both ids go null rather than cascading: a report has to outlive the
--- account it is about, or a repeat offender clears their record by
--- deleting and re-registering. What survives is the reason, the note and
--- the timestamp; the identities go with the accounts, which is also what
--- KVKK asks for.
+-- Both ids go null rather than cascading, so the queue keeps what was
+-- reported and when after an account goes. What survives names nobody:
+-- it is an anonymous audit trail, not a way to recognise a repeat
+-- offender who deletes and re-registers. Tying reports to a person across
+-- accounts would need an identifier that outlives the account, which
+-- KVKK makes a decision of its own.
 create table public.reports (
   id uuid primary key default gen_random_uuid(),
   reporter_id uuid references public.profiles (id) on delete set null,
@@ -70,11 +71,31 @@ create table public.reports (
 );
 
 create index reports_reported_idx on public.reports (reported_id);
--- One standing report per pair: a second tap is the same complaint, not a
--- second case for whoever reads the queue.
-create unique index reports_pair_idx
-  on public.reports (reporter_id, reported_id)
+-- One report per pair and reason: a second tap on the same reason is the
+-- same complaint, but reporting the same person for something new is a
+-- new record, or the app would swallow an escalation.
+create unique index reports_pair_reason_idx
+  on public.reports (reporter_id, reported_id, reason)
   where reporter_id is not null and reported_id is not null;
+
+-- The columns are nullable only so the FK can null them when an account
+-- goes; an INSERT still has to name both sides, or one caller could write
+-- unbounded target-less rows into the moderation queue.
+create or replace function public.reports_name_both_sides()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.reporter_id is null or new.reported_id is null then
+    raise exception 'a report names both sides' using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger reports_name_both_sides
+  before insert on public.reports
+  for each row execute function public.reports_name_both_sides();
 
 alter table public.reports enable row level security;
 
@@ -190,6 +211,31 @@ create policy "matches: read own open"
   using (
     (select auth.uid()) in (a, b)
     and not private.is_blocked(case when a = (select auth.uid()) then b else a end)
+  );
+
+-- `likes` was the third oracle: the blocked person still read their own
+-- like row for the blocker, while a deleted account took its like rows
+-- with it. Hiding the row closes the reading surface; a prober who
+-- compares error codes on a write can still tell a block (42501) from a
+-- deletion (23503), and closing that would need a tombstone model. Not
+-- worth it for v1, but do not claim the two are indistinguishable.
+drop policy "likes: read own" on public.likes;
+drop policy "likes: insert own" on public.likes;
+
+create policy "likes: read own open"
+  on public.likes for select
+  to authenticated
+  using (
+    from_id = (select auth.uid())
+    and not private.is_blocked(to_id)
+  );
+
+create policy "likes: insert own open"
+  on public.likes for insert
+  to authenticated
+  with check (
+    from_id = (select auth.uid())
+    and not private.is_blocked(to_id)
   );
 
 -- ---------------------------------------------------------------- discover

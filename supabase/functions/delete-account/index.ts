@@ -13,7 +13,10 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 // sends authorization plus apikey, which always triggers a preflight.
 const CORS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-headers': 'authorization, apikey, content-type',
+  // x-client-info is in supabase-js's default headers, so a browser
+  // preflight lists it; leaving it out fails the request in the browser.
+  'access-control-allow-headers':
+    'authorization, apikey, content-type, x-client-info',
   'access-control-allow-methods': 'POST, OPTIONS',
 };
 

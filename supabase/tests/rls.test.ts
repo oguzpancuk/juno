@@ -1104,6 +1104,23 @@ describe('blocks and reports', () => {
     ).toContain(oya.id);
   });
 
+  it('a block hides the like row that would give it away', async () => {
+    // The blocked person's own like row for the blocker used to survive a
+    // block and vanish on a deletion, which named the block outright.
+    const forKemal = LikeRows.parse(
+      (await kemal.client.from('likes').select('from_id, to_id')).data,
+    );
+    expect(forKemal.map((l) => l.to_id)).not.toContain(lale.id);
+    // And they cannot like again to test the water.
+    const relike = await kemal.client.from('likes').insert({
+      from_id: kemal.id,
+      to_id: lale.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    expect(relike.error?.code).toBe(PERMISSION_DENIED);
+  });
+
   it('the blocked person cannot see the block', async () => {
     expect(
       BlockRows.parse(
@@ -1170,10 +1187,12 @@ describe('blocks and reports', () => {
     ).toHaveLength(1);
   });
 
-  it('the same pair cannot be reported twice', async () => {
-    const second = await lale.client
-      .from('reports')
-      .insert({ reporter_id: lale.id, reported_id: kemal.id, reason: 'spam' });
+  it('the same pair and reason cannot be reported twice', async () => {
+    const second = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      reason: 'harassment',
+    });
     // The pair was reported in the test above; a second tap is the same
     // complaint, and the client treats the conflict as "already filed".
     expect(second.error?.code).toBe(UNIQUE_VIOLATION);
@@ -1212,12 +1231,47 @@ describe('blocks and reports', () => {
   });
 
   it('a report needs a reason the enum knows', async () => {
+    // A pair with no report yet, so a rejected insert cannot be the
+    // pair-and-reason unique index doing the work.
     const { error } = await lale.client.from('reports').insert({
       reporter_id: lale.id,
-      reported_id: kemal.id,
+      reported_id: carol.id,
       // why: deliberately outside the enum; the client type forbids it.
       reason: 'because-i-say-so' as 'spam',
     });
-    expect(error).not.toBeNull();
+    expect(error?.code).not.toBe(UNIQUE_VIOLATION);
+    expect(error?.code).toBe('22P02'); // invalid input value for enum
+  });
+
+  it('a report must name both sides', async () => {
+    const { error } = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      // why: the column is nullable only so the FK can null it later; the
+      // client type still requires a uuid.
+      reported_id: null as unknown as string,
+      reason: 'spam',
+    });
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('a second reason about the same person is a new report', async () => {
+    const escalation = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      reason: 'underage',
+    });
+    expect(escalation.error).toBeNull();
+    const mine = ReportRows.parse(
+      (
+        await lale.client
+          .from('reports')
+          .select('*')
+          .eq('reported_id', kemal.id)
+      ).data,
+    );
+    expect(mine.map((r) => r.reason).sort()).toEqual([
+      'harassment',
+      'underage',
+    ]);
   });
 });

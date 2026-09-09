@@ -108,7 +108,12 @@ afterAll(async () => {
 });
 
 it('refuses a call without a token', async () => {
-  const response = await fetch(endpoint(), { method: 'POST' });
+  // The apikey gets past the gateway; the missing Authorization is what
+  // the function itself answers, and its answer carries the headers.
+  const response = await fetch(endpoint(), {
+    method: 'POST',
+    headers: { apikey: localStack().ANON_KEY },
+  });
   expect(response.status).toBe(401);
 });
 
@@ -158,17 +163,23 @@ it('ignores a body naming someone else and deletes only the caller', async () =>
   expect(stillThere.data ?? []).toHaveLength(1);
 });
 
-it('answers a browser preflight so the web client can call it', async () => {
+it('sends the CORS headers the browser client needs', async () => {
+  // Asserted on a POST, not on OPTIONS: the local gateway answers the
+  // preflight itself, so an OPTIONS test would pass with no CORS code in
+  // the function at all.
+  // The apikey gets past the gateway; the missing Authorization is what
+  // the function itself answers, and its answer carries the headers.
   const response = await fetch(endpoint(), {
-    method: 'OPTIONS',
-    headers: {
-      Origin: 'https://stardate.example',
-      'Access-Control-Request-Method': 'POST',
-      'Access-Control-Request-Headers': 'authorization, apikey',
-    },
+    method: 'POST',
+    headers: { apikey: localStack().ANON_KEY },
   });
-  expect(response.status).toBeLessThan(300);
-  expect(response.headers.get('access-control-allow-origin')).not.toBeNull();
+  expect(response.status).toBe(401);
+  expect(response.headers.get('access-control-allow-origin')).toBe('*');
+  const allowed = response.headers.get('access-control-allow-headers') ?? '';
+  // supabase-js sends x-client-info by default, so the preflight lists it.
+  for (const header of ['authorization', 'apikey', 'x-client-info']) {
+    expect(allowed).toContain(header);
+  }
 });
 
 it('refuses a GET', async () => {
