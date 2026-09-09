@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Guessing key names was the wrong idea
+
+- To make the fresh-install wipe reach keys a launch might never touch, I
+  derived the other names supabase-js builds from the storage key. The
+  review took the parser apart: for `…-auth-token-code-verifier` it
+  strips the wrong dash, so the list it produced contained neither the
+  session key nor the verifier — and because a wipe that "succeeded"
+  recorded the install as clean, a launch whose first key was the
+  verifier marked the install while deleting nothing. The previous
+  owner's session then survived on a resold phone, which is the exact
+  case the wipe exists for, reopened through a different door.
+- Worse, the derived list included the base key, so touching a second key
+  after signing in deleted the session that had just been created.
+- The guessing is gone. Each key is wiped on its first touch in the
+  process, and the marker only records the check for later launches — so
+  a key this launch never touches is cleared the first time it is used
+  instead. A key nobody ever touches holds no session; that is the whole
+  claim, and it does not need a parser.
+- Also from that review: a retried delete that finally goes through now
+  records the install, so a keychain that refuses once no longer costs an
+  extra sign-in later; a migration whose keychain write fails answers with
+  the session rather than signing the person out (the next launch retries,
+  and the clear-text copy stays one launch longer, which is the cheaper
+  of the two); and the pending-removal branch no longer pretends it might
+  have a value to hand back — a write clears the pending state, so
+  reaching that branch means the value is meant to be gone.
+- The counter on writes stays for the one thing it actually does: a
+  delete already in flight cannot re-arm the pending state after a newer
+  write landed. NOTES said it did more than that; corrected above.
+- Verified: battery green on a clean tree; 44 mobile tests, 32 of them on
+  this store.
+
 ## 2026-09-10 — A fix that made the thing it fixed permanent
 
 - Writing the install marker before the wipe — my answer to "an unwritable
@@ -29,8 +61,8 @@
 - Three more from the same review:
   - The retry-delete could swallow a sign-in that landed while it was in
     flight: sign out, keychain refuses, sign back in, and the late delete
-    removed the new session. Writes carry a counter now and a delete that
-    is older than the last write loses.
+    removed the new session. A write clears the pending state, and a
+    delete already in flight carries a counter so it cannot re-arm it.
   - A sign-out whose clear-text delete also failed was undone on the next
     read: the keychain was empty, so the migration path found the leftover
     and wrote it back. A key known to be gone is not migrated.

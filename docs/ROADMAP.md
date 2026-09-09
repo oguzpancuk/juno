@@ -258,14 +258,15 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       whatever the keychain kept from a previous one — an iOS keychain
       entry outlives the app, so without that a reinstall (or the next
       owner of a resold phone) lands inside the old account; verified on
-      the simulator as well. 28 tests cover the move (including the
+      the simulator as well. 32 tests cover the move (including the
       upgrade that introduces the marker itself, driven on the simulator
       too), both-places sign-out, an unreadable keychain never falling
       back to the clear-text copy, a failed write leaving a good session
-      alone, the fresh-install wipe reaching the derived keys and being
-      retried until it goes through, a sign-out the keychain refused still
-      reading as signed out, and a sign-in that lands while that delete is
-      being retried surviving it._
+      alone, the wipe applying per key and being retried until it goes
+      through, a session signed in on a fresh install surviving a later
+      key's first touch, a sign-out the keychain refused still reading as
+      signed out, and a sign-in that lands while that delete is retried
+      surviving it._
 - [x] **Server-side birth_utc validation.** Devices with stale tzdata
       (Android especially) can compute a wrong `birth_utc`; the server
       recomputes it from city + wall time and rejects a mismatch before the

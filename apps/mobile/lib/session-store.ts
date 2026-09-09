@@ -46,18 +46,6 @@ export interface KeychainStoreOptions {
   readonly installMarker: string;
 }
 
-/** The keys supabase-js derives from the one it is given. */
-const RELATED_SUFFIXES = ['-user', '-code-verifier'];
-
-/** Every key a previous install might have left for this one. */
-function relatives(name: string): string[] {
-  const base =
-    RELATED_SUFFIXES.find((suffix) => name.endsWith(suffix)) === undefined
-      ? name
-      : name.slice(0, name.lastIndexOf('-', name.length - 2));
-  return [base, ...RELATED_SUFFIXES.map((suffix) => `${base}${suffix}`)];
-}
-
 /**
  * Nothing here throws. supabase-js calls this on every launch and every
  * token refresh, and a session that cannot be read is a sign-in, never a
@@ -146,17 +134,26 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     }
   };
 
-  /** One wipe per key, shared by every caller that arrives during it. */
+  /**
+   * One wipe per key, shared by every caller that arrives during it.
+   *
+   * Only the key being asked for: an earlier version guessed the other
+   * keys supabase-js derives from it, parsed one of them wrongly, and
+   * ended up deleting this install's own session. Every key this launch
+   * touches is cleared on its first touch, which is what matters — a key
+   * a launch never touches holds no session, and it is cleared the first
+   * time it is used. The marker only records the check for later
+   * launches; within this process the wipe keeps applying to keys it has
+   * not seen yet.
+   */
   const wipes = new Map<string, Promise<void>>();
   const wipe = async (name: string): Promise<void> => {
-    for (const key of relatives(name)) {
-      try {
-        await keychain.remove(key);
-      } catch {
-        // Reads answer null until the delete goes through.
-        pendingRemoval.add(key);
-        return;
-      }
+    try {
+      await keychain.remove(name);
+    } catch {
+      // Reads answer null until the delete goes through.
+      pendingRemoval.add(name);
+      return;
     }
     await mark();
   };
@@ -188,10 +185,13 @@ export function keychainStore(options: KeychainStoreOptions): Store {
       await ensureInstalled(name);
       if (pendingRemoval.has(name)) {
         await forget(name);
+        // A wipe that finally goes through records the install, so the
+        // next launch does not wipe a session signed in meanwhile.
+        if (!pendingRemoval.has(name)) await mark();
         await dropLegacy(name);
-        // A sign-in that landed while the delete was in flight is newer
-        // than the delete, so read it rather than reporting nothing.
-        return pendingRemoval.has(name) ? null : (known.get(name) ?? null);
+        // Nothing to hand back: a write would have cleared the pending
+        // state, so reaching here means the value is meant to be gone.
+        return null;
       }
       try {
         const stored = await keychain.get(name);
@@ -219,9 +219,16 @@ export function keychainStore(options: KeychainStoreOptions): Store {
           known.set(name, null);
           return null;
         }
-        await keychain.set(name, old);
-        known.set(name, old);
-        await dropLegacy(name);
+        try {
+          await keychain.set(name, old);
+          known.set(name, old);
+          await dropLegacy(name);
+        } catch {
+          // The move failed, but the session is real and the next launch
+          // will try again. Signing the person out here would be a worse
+          // answer than leaving the clear-text copy one launch longer.
+          known.set(name, old);
+        }
         return old;
       } catch {
         return known.get(name) ?? null;

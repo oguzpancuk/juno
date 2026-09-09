@@ -248,16 +248,54 @@ describe('keychainStore', () => {
     expect(legacy.items.get(MARKER)).toBe('1');
   });
 
-  it('wipes the keys supabase derives from the one it is given', async () => {
-    // The store only hears about a key when it is used, and a launch may
-    // never touch the user blob — but a previous install's copy of it is
-    // still that person's data.
+  it('wipes each key on its first touch, not the ones it guesses', async () => {
+    // An earlier version tried to derive the other keys supabase-js
+    // writes, parsed one of them wrongly, and deleted this install's own
+    // session. Each key is cleared when it is first used instead.
     keychain.entries.set(NAME, SESSION);
     keychain.entries.set(`${NAME}-user`, '{"id":"x"}');
-    keychain.entries.set(`${NAME}-code-verifier`, 'v');
     const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
     expect(await fresh.getItem(NAME)).toBeNull();
     expect(keychain.entries.size).toBe(0);
+  });
+
+  it('does not wipe a session this install just signed in with', async () => {
+    // The wipe is per key, and a key already seen is not wiped again —
+    // otherwise touching a second key later deletes the live session.
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(NAME)).toBeNull();
+    await fresh.setItem(NAME, SESSION);
+    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
+    expect(await fresh.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('wipes a previous install session behind an unrelated first key', async () => {
+    // The first key a launch touches may not be the session key.
+    keychain.entries.set(NAME, SESSION);
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(`${NAME}-code-verifier`)).toBeNull();
+    expect(await fresh.getItem(NAME)).toBeNull();
+    expect(keychain.entries.has(NAME)).toBe(false);
+  });
+
+  it('does not wipe when it cannot tell whether the install is fresh', async () => {
+    // An unreadable plain store is not evidence of a new install, and
+    // wiping on a guess is a mass sign-out.
+    keychain.entries.set(NAME, SESSION);
+    legacy.failGet = true;
+    const store = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await store.getItem(NAME)).toBe(SESSION);
+    expect(keychain.entries.get(NAME)).toBe(SESSION);
+  });
+
+  it('keeps the migrated session when the keychain will not take it', async () => {
+    // The move failed; the session is still real and the next launch
+    // retries. Signing the person out here would be the worse answer.
+    legacy.items.set(NAME, SESSION);
+    keychain.failing = 'set';
+    const store = make();
+    expect(await store.getItem(NAME)).toBe(SESSION);
   });
 
   it('keeps a sign-in that lands while a refused delete is retried', async () => {
