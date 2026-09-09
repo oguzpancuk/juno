@@ -6,8 +6,8 @@ import { sessionStorage } from './session-storage';
 
 export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
   auth: {
-    // Sealed on a device, with the key in the keychain; the browser's own
-    // storage on the web. See lib/session-storage.ts.
+    // The keychain on a device, the browser's own storage on the web.
+    // See lib/session-storage.ts.
     storage: sessionStorage,
     autoRefreshToken: true,
     persistSession: true,

@@ -28,6 +28,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
@@ -41,8 +47,7 @@
         {
           "locationWhenInUsePermission": "Juno, yakınındaki kişileri göstermek için konumunu bir kez okur. Konum sadece mesafe olarak paylaşılır, koordinatın kimseye gösterilmez."
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "web": {
       "bundler": "metro",

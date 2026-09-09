@@ -10,6 +10,45 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Two ways the keychain surprised me
+
+- Review of the keychain store found two things I had not thought about,
+  both of them the kind that only show up in someone's hands.
+- **Returning null when the keychain cannot be read signs people out.**
+  supabase-js re-reads the store after rotating a refresh token and reads
+  a null as "storage was cleared under us", so it throws the _new_ tokens
+  away and keeps the one the server has already consumed. Lock the phone
+  mid-refresh and the next launch fails with a revoked token. The store
+  answers with the last value it knows to be stored instead — and never
+  with the clear-text copy, which would undo the whole change on exactly
+  the platform where the keychain is unreliable. There is a test for that
+  distinction now, because the suite could not tell the two apart.
+- **An iOS keychain entry outlives the app that wrote it.** Delete Juno,
+  reinstall it, and the old session is still there: someone who wiped the
+  app to get out of an account, or the next owner of a resold phone,
+  lands inside it without signing in. AsyncStorage does go with the app,
+  so its emptiness is the signal — no marker means this install has never
+  run, and any keychain entry belongs to a previous one and is dropped.
+  Verified on the simulator: with the marker absent the app opened signed
+  out and the entry was gone; with it present, a planted clear-text
+  session migrated, the plain store came back holding only the marker,
+  and a restart kept the session.
+- Smaller, same review: a successful migration reported null if the
+  clear-text delete failed — a spurious sign-out on the one launch that
+  matters; the delete on the old store now runs once rather than on every
+  read; and `expo-secure-store`'s plugin was shipping an English Face ID
+  purpose string for a prompt this app never triggers.
+- Known and left, both Android and both invisible from the code:
+  `keychainAccessible` is an iOS option — what keeps the session out of an
+  Android backup is the config plugin's backup rules, which also narrow
+  Auto Backup for the whole app. And AsyncStorage on Android is one SQLite
+  file, so deleting the migrated row frees the page without zeroing it:
+  the token stays recoverable from the free list until it is overwritten.
+  Against the threat this change names, the Android migration removes the
+  row, not the bytes.
+- Verified: battery green on a clean tree; 27 mobile tests; the three
+  simulator sequences above.
+
 ## 2026-09-10 — The cipher was answering a limit that does not exist
 
 - **The entry below describes a design that lasted two hours.** It is left

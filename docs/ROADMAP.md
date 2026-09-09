@@ -254,9 +254,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       clear-text session planted in Expo Go's AsyncStorage, the app opened
       (signed in), `manifest.json` back to `{}` with no `refresh_token`
       anywhere in the store, then Expo Go quit and reopened — still signed
-      in, so the session is read from the keychain. 10 tests cover the
-      move, both-places sign-out, an unreadable keychain, and a failed
-      write leaving a good session alone._
+      in, so the session is read from the keychain. A fresh install drops
+      whatever the keychain kept from a previous one — an iOS keychain
+      entry outlives the app, so without that a reinstall (or the next
+      owner of a resold phone) lands inside the old account; verified on
+      the simulator as well. 15 tests cover the move, both-places
+      sign-out, an unreadable keychain never falling back to the
+      clear-text copy, a failed write leaving a good session alone, and
+      the fresh-install wipe._
 - [x] **Server-side birth_utc validation.** Devices with stale tzdata
       (Android especially) can compute a wrong `birth_utc`; the server
       recomputes it from city + wall time and rejects a mismatch before the
