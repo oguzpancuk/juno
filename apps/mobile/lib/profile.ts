@@ -110,6 +110,27 @@ export type CreateProfileResult =
       readonly error: PostgrestError;
     };
 
+/**
+ * Ask the server what instant a wall clock in a city refers to. Falls
+ * back to what this device computed: a failed round trip must not stop
+ * someone signing up, and the server tolerates the difference.
+ */
+async function serverBirthInstant(
+  cityId: number,
+  birthLocal: string,
+  fallback: Date,
+): Promise<Date> {
+  const { data, error } = await supabase.rpc('birth_instant', {
+    city_id: cityId,
+    local_time: birthLocal,
+  });
+  if (error) return fallback;
+  const parsed = z.string().safeParse(data);
+  if (!parsed.success) return fallback;
+  const instant = new Date(parsed.data);
+  return Number.isNaN(instant.getTime()) ? fallback : instant;
+}
+
 export async function createProfile(
   input: OnboardingInput,
 ): Promise<CreateProfileResult> {
@@ -120,9 +141,18 @@ export async function createProfile(
   }
   if (!isAtLeast18(input.local)) return { ok: false, reason: 'underage' };
   const birth = resolveBirth({ cityId: input.cityId, local: input.local });
+  const { local } = input;
+  const birthLocal = `${local.year}-${pad(local.month)}-${pad(local.day)}T${pad(local.hour)}:${pad(local.minute)}:00`;
+  // The server's own conversion, not this device's. A phone's zone
+  // database can be years old, and historical offsets are where the two
+  // disagree — sometimes by a whole hour. Asking once means the chart and
+  // the stored instant are the ones the server would compute, so nothing
+  // downstream has to reconcile two answers. Offline or on an error the
+  // device's answer stands; the server accepts it within a minute.
+  const utc = await serverBirthInstant(input.cityId, birthLocal, birth.utc);
   const chart = toPublicChart(
     computeChart({
-      utc: birth.utc,
+      utc,
       latitude: birth.latitude,
       longitude: birth.longitude,
     }),
@@ -131,14 +161,13 @@ export async function createProfile(
     latitude: birth.latitude,
     longitude: birth.longitude,
   };
-  const { local } = input;
   const { error } = await supabase.from('profiles').insert({
     id: input.userId,
     display_name: input.displayName,
     birth_date: `${local.year}-${pad(local.month)}-${pad(local.day)}`,
-    birth_local: `${local.year}-${pad(local.month)}-${pad(local.day)}T${pad(local.hour)}:${pad(local.minute)}:00`,
+    birth_local: birthLocal,
     birth_city_id: input.cityId,
-    birth_utc: birth.utc.toISOString(),
+    birth_utc: utc.toISOString(),
     chart,
     big_three: bigThree(chart),
     gender: input.gender,

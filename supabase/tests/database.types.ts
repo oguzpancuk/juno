@@ -601,6 +601,10 @@ export type Database = {
       }
     }
     Functions: {
+      birth_instant: {
+        Args: { city_id: number; local_time: string }
+        Returns: string
+      }
       profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {
