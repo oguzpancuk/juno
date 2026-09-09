@@ -10,6 +10,56 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The cipher was answering a limit that does not exist
+
+- **The entry below describes a design that lasted two hours.** It is left
+  as written, because the reason it was wrong is the useful part.
+- It sealed the session with XChaCha20-Poly1305 and kept only the key in
+  the keychain, on the premise — stated in the ROADMAP since the skeleton
+  — that SecureStore caps a value at 2 KB. A review asked whether that was
+  still true. It is not: there is no size check anywhere in
+  `expo-secure-store@57`, and a throwaway screen on the simulator stored
+  1 KB, 2 KB, 4 KB, 8 KB and 16 KB and read every one of them back.
+- So the session goes into the keychain whole and the cipher is gone. With
+  it went the key cache and its race, the nonce handling, a duplicated
+  base64 pair, `@noble/ciphers`, `expo-crypto`, and four of the review's
+  findings — none of them fixed, all of them deleted. The measurement cost
+  ten minutes and retired more risk than any of the fixes would have.
+- What the same review caught that still mattered, and is now handled:
+  - **The clear-text session was never removed.** Failing to open a value
+    left it in place, and supabase-js only clears a value that parsed, so
+    an upgraded install kept a live refresh token on disk indefinitely.
+    The store now moves an old session into the keychain on first read and
+    deletes the clear-text copy — and clears it on every write and every
+    sign-out too.
+  - **`WHEN_UNLOCKED` is carried into an encrypted backup**, so restoring
+    one onto another device hands over the token — one of the three
+    threats the code names. It is `WHEN_UNLOCKED_THIS_DEVICE_ONLY` now;
+    the cost is a sign-in after a legitimate device migration, which is
+    the right way round for a credential.
+  - **A failed write no longer deletes a good session.** A locked device
+    is not a bad value, and the old code could not tell them apart.
+  - `expo-crypto`'s `getRandomBytes` falls back to `Math.random()` in a
+    dev build on the bridgeless runtime — so the one hand-check planned
+    for the feature would have exercised a non-cryptographic key. Moot
+    now, and a good argument for having deleted the randomness.
+- **Correction to the entry below:** it says the change was "verified in
+  the browser". It was not — the web branch uses the browser's own storage
+  and never touches the new path. What the browser run actually showed was
+  that nothing regressed on web. The device path is verified now, properly:
+  a clear-text session planted in Expo Go's AsyncStorage, the app opened
+  signed in, `manifest.json` back to `{}` with no `refresh_token` left in
+  the store, then Expo Go quit and reopened — still signed in, which it
+  can only be from the keychain. The simulator's keychain file is
+  encrypted at rest, so I did not read the entry itself; there is nowhere
+  else the session could have come from.
+- `supabase/scripts/plant-session.ts` is deleted. It planted a clear-text
+  session, which the app now migrates and erases on first read — so it
+  would work exactly once and only until the migration is retired, which
+  is worse than not having it.
+- Verified: battery green on a clean tree; 21 mobile tests; the simulator
+  sequence above.
+
 ## 2026-09-10 — The session is sealed, and what that cost
 
 - The refresh token sat in AsyncStorage in clear text — Supabase's

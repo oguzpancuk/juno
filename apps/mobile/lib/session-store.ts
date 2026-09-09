@@ -1,14 +1,25 @@
-import { KEY_BYTES, NONCE_BYTES, open, seal } from './session-crypto';
-
 /**
- * The storage logic, with the platform pieces injected so it can be
- * tested without a device. `session-storage.ts` is the thin binding that
- * supplies the real keychain, the real store and the real randomness.
+ * Where the Supabase session lives, with the platform pieces injected so
+ * the logic can be tested without a device.
+ *
+ * The session is a refresh token: whoever reads it is signed in as that
+ * person until it is revoked. React Native's AsyncStorage — Supabase's
+ * documented Expo default — is a plain SQLite file in the app sandbox, so
+ * the token sits there in clear text: fine against another app, useless
+ * against anyone who reaches the file system.
+ *
+ * It goes in the keychain instead, whole. An earlier version of this file
+ * sealed it with a cipher and kept only the key there, on the premise
+ * that SecureStore caps a value at 2 KB. Measured on the simulator, this
+ * version of expo-secure-store stores 16 KB without complaint, so the
+ * cipher, the key handling and everything that could go wrong with them
+ * were deleted rather than debugged.
  */
 
 export interface Keychain {
   get(name: string): Promise<string | null>;
   set(name: string, value: string): Promise<void>;
+  remove(name: string): Promise<void>;
 }
 
 export interface Store {
@@ -17,76 +28,65 @@ export interface Store {
   removeItem(key: string): Promise<void>;
 }
 
-export interface SealedStoreOptions {
+export interface KeychainStoreOptions {
   readonly keychain: Keychain;
-  readonly store: Store;
-  readonly randomBytes: (size: number) => Uint8Array;
-  /** The keychain entry holding the key. */
-  readonly keyName: string;
+  /**
+   * Where the session used to live. Read once to move it, and cleared
+   * whenever the session is written or dropped: an install that upgrades
+   * must not leave a live refresh token behind in clear text.
+   */
+  readonly legacy: Store;
 }
 
-export const toBase64 = (bytes: Uint8Array): string => {
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return globalThis.btoa(binary);
-};
-
-export const fromBase64 = (value: string): Uint8Array => {
-  const binary = globalThis.atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-};
-
 /**
- * A store that seals what it keeps, with the key in the keychain.
- *
- * Nothing here throws: supabase-js calls this on every launch and on
- * every token refresh, and a session that cannot be read or written is a
- * sign-in, not a crash.
+ * Nothing here throws. supabase-js calls this on every launch and every
+ * token refresh, and a session that cannot be read is a sign-in, never a
+ * crash — but a session that cannot be *written* leaves what is already
+ * stored alone, because a keychain that is briefly unavailable must not
+ * cost someone their session.
  */
-export function sealedStore(options: SealedStoreOptions): Store {
-  const { keychain, store, randomBytes, keyName } = options;
-  let cached: Uint8Array | null = null;
-
-  const key = async (): Promise<Uint8Array> => {
-    if (cached) return cached;
-    const stored = await keychain.get(keyName);
-    if (stored !== null) {
-      const bytes = fromBase64(stored);
-      // A value of the wrong size was not written by this version; making
-      // a new one costs a sign-in, keeping it costs every read for ever.
-      if (bytes.length === KEY_BYTES) {
-        cached = bytes;
-        return bytes;
-      }
-    }
-    const fresh = randomBytes(KEY_BYTES);
-    await keychain.set(keyName, toBase64(fresh));
-    cached = fresh;
-    return fresh;
-  };
+export function keychainStore(options: KeychainStoreOptions): Store {
+  const { keychain, legacy } = options;
 
   return {
     async getItem(name: string): Promise<string | null> {
       try {
-        const stored = await store.getItem(name);
-        return stored === null ? null : open(await key(), stored);
+        const stored = await keychain.get(name);
+        if (stored !== null) {
+          // A leftover from before the move is dead weight and a live
+          // token; drop it the moment the keychain has the real one.
+          await legacy.removeItem(name).catch(() => undefined);
+          return stored;
+        }
+      } catch {
+        return null;
+      }
+      // The move: an install that signed in under the old build.
+      try {
+        const old = await legacy.getItem(name);
+        if (old === null) return null;
+        await keychain.set(name, old);
+        await legacy.removeItem(name);
+        return old;
       } catch {
         return null;
       }
     },
+
     async setItem(name: string, value: string): Promise<void> {
       try {
-        const nonce = randomBytes(NONCE_BYTES);
-        await store.setItem(name, seal(await key(), nonce, value));
+        await keychain.set(name, value);
+        await legacy.removeItem(name).catch(() => undefined);
       } catch {
-        // Better signed out than holding something that cannot be opened.
-        await store.removeItem(name).catch(() => undefined);
+        // Leave what is stored where it is: this may be a locked device
+        // rather than a bad value.
       }
     },
+
     async removeItem(name: string): Promise<void> {
-      await store.removeItem(name);
+      // Both, always: signing out has to clear the old place too.
+      await keychain.remove(name).catch(() => undefined);
+      await legacy.removeItem(name).catch(() => undefined);
     },
   };
 }

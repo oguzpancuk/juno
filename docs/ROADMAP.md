@@ -237,29 +237,26 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       non-empty snippet in every content file (battery);
       `screenshots/c1-chart-texts.png`, `c1-aspects.png`, `c1-synastry.png`
       show the texts on the real user; owner sign-off recorded in NOTES.
-- [ ] **Session in SecureStore.** The skeleton keeps the Supabase session
+- [x] **Session in SecureStore.** The skeleton keeps the Supabase session
       (refresh token) in AsyncStorage, Supabase's documented Expo default but
-      plaintext in the sandbox; wrap an AES key in expo-secure-store and
-      encrypt the AsyncStorage value (SecureStore's 2 KB limit rules out
-      storing the session directly).
+      plaintext in the sandbox.
       — done when: the session survives an app restart and the AsyncStorage
       value is ciphertext (manual, simulator).
-      _Built: the session is sealed with XChaCha20-Poly1305 and the key
-      lives in the keychain (`lib/session-crypto.ts`, `lib/session-store.ts`,
-      bound to the platform in `lib/session-storage.ts`); the web keeps the
-      browser's own storage, since a key beside the ciphertext in one
-      origin protects nothing. 17 tests cover sealing, opening, a lost key,
-      a tampered value, a key of the wrong size, and a fresh store instance
-      opening what the previous one wrote — which is what an app restart
-      is. Sign-in and a full reload verified in the browser. **The clause
-      stays open on purpose:** the device path — the real keychain, the
-      real AsyncStorage file — cannot be driven here, because signing in
-      needs an OTP typed into a React Native TextInput and text injection
-      does not work in this simulator (NOTES 2026-09-09). The owner's
-      check: sign in on the simulator, quit and reopen Expo Go, confirm you
-      are still signed in, then look at
-      `…/ExponentExperienceData/@anonymous/<slug>/RCTAsyncLocalStorage` —
-      the value must start `1.` and contain no `refresh_token`._
+      _Done, by a simpler route than the clause imagined: the session goes
+      into the keychain whole, so there is no ciphertext in AsyncStorage —
+      there is nothing in AsyncStorage. The clause assumed SecureStore
+      caps a value at 2 KB; measured on the simulator, this version stores
+      16 KB, so the cipher and key handling a first attempt introduced
+      were deleted. A session left by an older build is moved into the
+      keychain on first read and the clear-text copy removed.
+      `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, so an encrypted backup restored
+      onto another device does not carry it. Verified on the simulator: a
+      clear-text session planted in Expo Go's AsyncStorage, the app opened
+      (signed in), `manifest.json` back to `{}` with no `refresh_token`
+      anywhere in the store, then Expo Go quit and reopened — still signed
+      in, so the session is read from the keychain. 10 tests cover the
+      move, both-places sign-out, an unreadable keychain, and a failed
+      write leaving a good session alone._
 - [x] **Server-side birth_utc validation.** Devices with stale tzdata
       (Android especially) can compute a wrong `birth_utc`; the server
       recomputes it from city + wall time and rejects a mismatch before the
