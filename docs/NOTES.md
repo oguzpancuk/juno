@@ -10,6 +10,34 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Web client, and what it immediately caught
+
+- `expo install react-dom react-native-web @expo/metro-runtime` plus a
+  `web` block in `app.json` (metro bundler, single output) is the whole
+  setup; `npx expo start --web --port 8083` serves the same screens. Run it
+  with `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` from `supabase status`: a
+  browser on this machine reaches the local stack, so the hosted project
+  is not needed to try it.
+- Verified in the browser, end to end, as a new user: sign-in with the
+  emailed code, onboarding (city search offered İstanbul first for
+  "ista"), chart with the interpretation texts, discover with two passes
+  and a like, the mutual like opening the match screen, sending a message
+  from the composer and receiving the reply, filing a report, and
+  blocking — which redirected to an empty match list.
+- The web client immediately paid for itself twice. First, it closed the
+  two verification gaps the simulator left open: the chat composer's send
+  path and the block/report buttons had never been exercised. Second, it
+  found a real bug: `Alert.alert` is a no-op in react-native-web, so on
+  the web the block confirmation and "Hesabımı sil" did nothing at all.
+  Both are in-page confirmations now, which is also better on iOS.
+- Reordering ADR-0005 (web before the hosted project) was the right call
+  for verification: browser automation drives this app reliably, while the
+  simulator dropped synthetic taps on Pressables inside ScrollViews and
+  sent typed text to another app.
+- Note for the hosted step: nothing here proves the web build works
+  against a remote project (CORS on the Edge Function is written for it
+  but untested), and there is no static hosting yet.
+
 ## 2026-09-09 — Safety fourth pass: a writable view and a leaking note
 
 - `my_reports` was auto-updatable and ran as its owner, and Supabase's

@@ -229,13 +229,19 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `@sentry/react-native`).
       — done when: the views return the PRD success-signal numbers on the seed
       data (manual, Supabase Studio); a forced test crash appears in Sentry.
-- [ ] **Web client (ADR-0005).** Expo Router web output of the same
+- [x] **Web client (ADR-0005).** Expo Router web output of the same
       screens, so people can use the product without the App Store, as
-      `pati` does. Hosted Supabase project (EU) first, since a browser
-      cannot reach the local stack.
+      `pati` does.
       — done when: the web build serves sign-in, onboarding, chart,
-      discover, matches and chat against the hosted project, verified with
-      a browser screenshot per screen.
+      discover, matches and chat, verified in a browser.
+      _Done against the LOCAL stack (a browser on this machine reaches it,
+      so the hosted project was not needed yet): sign-in with an emailed
+      code, onboarding including city search, chart, discover with swipe,
+      a mutual like producing a match, sending and receiving a message,
+      filing a report and blocking. `screenshots/web-sign-in.png` is the
+      unauthenticated page; the authenticated screens were driven and read
+      back in-session. Still open for the hosted project: EXPO_PUBLIC_*
+      env for a deployed build and where to host the static output._
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.stardate`, check App Store name availability; hosted

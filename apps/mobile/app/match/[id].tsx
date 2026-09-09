@@ -3,7 +3,6 @@ import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -33,6 +32,7 @@ export default function MatchScreen() {
   // they sit under the home indicator and do not take a tap.
   const insets = useSafeAreaInsets();
   const [reporting, setReporting] = useState(false);
+  const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = useRef(false);
 
@@ -82,26 +82,21 @@ export default function MatchScreen() {
   const other = row.id;
   const name = row.display_name;
 
-  const confirmBlock = () => {
-    Alert.alert(t.safety.blockConfirmTitle, t.safety.blockConfirm(name), [
-      { text: t.safety.cancel, style: 'cancel' },
-      {
-        text: t.safety.block,
-        style: 'destructive',
-        onPress: () => {
-          if (busy.current) return;
-          busy.current = true;
-          void blockUser(userId, other).then((ok) => {
-            busy.current = false;
-            if (!ok) {
-              setNotice(t.safety.failed);
-              return;
-            }
-            router.replace('/matches');
-          });
-        },
-      },
-    ]);
+  // An in-page confirmation rather than Alert.alert: react-native-web
+  // renders Alert as a no-op, so on the web client the block simply never
+  // happened. This works on both.
+  const doBlock = () => {
+    if (busy.current) return;
+    busy.current = true;
+    void blockUser(userId, other).then((ok) => {
+      busy.current = false;
+      setConfirmingBlock(false);
+      if (!ok) {
+        setNotice(t.safety.failed);
+        return;
+      }
+      router.replace('/matches');
+    });
   };
 
   const file = (reason: ReportReason) => {
@@ -186,7 +181,11 @@ export default function MatchScreen() {
         <Pressable
           testID="block"
           style={styles.safetyButton}
-          onPress={confirmBlock}
+          onPress={() => {
+            setNotice(null);
+            setReporting(false);
+            setConfirmingBlock((open) => !open);
+          }}
         >
           <Text style={styles.safetyText}>{t.safety.block}</Text>
         </Pressable>
@@ -201,6 +200,22 @@ export default function MatchScreen() {
           <Text style={styles.safetyText}>{t.safety.report}</Text>
         </Pressable>
       </View>
+      {confirmingBlock ? (
+        <View style={styles.reasons} testID="block-confirm">
+          <Text style={styles.bodyMuted}>{t.safety.blockConfirm(name)}</Text>
+          <Pressable testID="block-yes" style={styles.danger} onPress={doBlock}>
+            <Text style={styles.dangerText}>{t.safety.blockConfirmTitle}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.reason}
+            onPress={() => {
+              setConfirmingBlock(false);
+            }}
+          >
+            <Text style={styles.body}>{t.safety.cancel}</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {reporting ? (
         <View style={styles.reasons} testID="report-reasons">
           <Text style={styles.bodyMuted}>{t.safety.reportTitle}</Text>
@@ -308,6 +323,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
+  danger: {
+    backgroundColor: '#3a1620',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  dangerText: { color: '#ff9a9a', fontSize: 15, fontWeight: '600' },
   notice: { color: '#8ce0b0', fontSize: 13 },
   muted: { color: '#9a94b8' },
   link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },

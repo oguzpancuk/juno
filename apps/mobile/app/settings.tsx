@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS_OPTIONS, updateLocation, updateRadius } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
@@ -52,34 +52,28 @@ export default function Settings() {
 
   const insets = useSafeAreaInsets();
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deletingNow = useRef(false);
 
-  const confirmDelete = () => {
-    Alert.alert(t.safety.deleteTitle, t.safety.deleteConfirm, [
-      { text: t.safety.cancel, style: 'cancel' },
-      {
-        text: t.safety.deleteAccount,
-        style: 'destructive',
-        onPress: () => {
-          if (deletingNow.current) return;
-          deletingNow.current = true;
-          setDeleting(true);
-          setDeleteError(null);
-          void deleteAccount().then(async (ok) => {
-            if (!ok) {
-              deletingNow.current = false;
-              setDeleting(false);
-              setDeleteError(t.safety.deleteFailed);
-              return;
-            }
-            // The account is gone; the stored session is now worthless.
-            await supabase.auth.signOut();
-            router.replace('/sign-in');
-          });
-        },
-      },
-    ]);
+  // In-page confirmation, not Alert.alert: react-native-web renders Alert
+  // as a no-op, so on the web client the delete never happened.
+  const doDelete = () => {
+    if (deletingNow.current) return;
+    deletingNow.current = true;
+    setDeleting(true);
+    setDeleteError(null);
+    void deleteAccount().then(async (ok) => {
+      if (!ok) {
+        deletingNow.current = false;
+        setDeleting(false);
+        setDeleteError(t.safety.deleteFailed);
+        return;
+      }
+      // The account is gone; the stored session is now worthless.
+      await supabase.auth.signOut();
+      router.replace('/sign-in');
+    });
   };
 
   const [saving, setSaving] = useState(false);
@@ -155,12 +149,35 @@ export default function Settings() {
         testID="delete-account"
         style={[styles.button, deleting && styles.buttonBusy]}
         disabled={deleting}
-        onPress={confirmDelete}
+        onPress={() => {
+          setDeleteError(null);
+          setConfirmingDelete((open) => !open);
+        }}
       >
         <Text style={styles.danger}>
           {deleting ? t.safety.deleting : t.safety.deleteAccount}
         </Text>
       </Pressable>
+      {confirmingDelete && !deleting ? (
+        <View style={styles.confirm} testID="delete-confirm">
+          <Text style={styles.hint}>{t.safety.deleteConfirm}</Text>
+          <Pressable
+            testID="delete-yes"
+            style={styles.confirmDanger}
+            onPress={doDelete}
+          >
+            <Text style={styles.danger}>{t.safety.deleteTitle}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              setConfirmingDelete(false);
+            }}
+          >
+            <Text style={styles.buttonText}>{t.safety.cancel}</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {deleteError ? <Text style={styles.error}>{deleteError}</Text> : null}
     </View>
   );
@@ -190,6 +207,13 @@ const styles = StyleSheet.create({
   error: { color: '#ff7b7b' },
   ok: { color: '#8ce0b0', fontSize: 13 },
   danger: { color: '#ff7b7b', fontSize: 15, fontWeight: '600' },
+  confirm: { gap: 8 },
+  confirmDanger: {
+    backgroundColor: '#3a1620',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
   button: {
     backgroundColor: '#15142a',
     borderRadius: 14,

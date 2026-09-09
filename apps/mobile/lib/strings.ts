@@ -101,7 +101,7 @@ export const t = {
   safety: {
     title: 'GÜVENLİK',
     block: 'Engelle',
-    blockConfirmTitle: 'Engellensin mi?',
+    blockConfirmTitle: 'Evet, engelle',
     blockConfirm: (name: string) =>
       `${name} artık seni göremeyecek, eşleşmeniz ve sohbetiniz iki taraftan da kapanacak.`,
     report: 'Şikâyet et',
@@ -111,7 +111,7 @@ export const t = {
     cancel: 'Vazgeç',
     failed: 'İşlem tamamlanamadı, tekrar dene.',
     deleteAccount: 'Hesabımı sil',
-    deleteTitle: 'Hesabın silinsin mi?',
+    deleteTitle: 'Evet, hesabımı sil',
     deleteConfirm:
       'Profilin, haritan, eşleşmelerin ve tüm mesajların kalıcı olarak silinir. Bu işlem geri alınamaz.',
     deleting: 'Siliniyor…',
