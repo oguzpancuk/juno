@@ -1,4 +1,8 @@
-# stardate — Roadmap
+# Juno — Roadmap
+
+<!-- `stardate` is the repo and code name; the product ships as Juno.
+     Historical entries below keep the old name where it describes what was
+     on screen at the time. -->
 
 <!-- Written via /mvp-scope from the PRD. Every item has a done-when clause
      naming its verification. Status moves only with evidence. -->
@@ -304,7 +308,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       tokens live in one file, and the battery is green.
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
-      `com.oguzpancuk.stardate`, check App Store name availability; hosted
+      `com.oguzpancuk.juno`, check App Store name availability; hosted
       Supabase project (EU), EAS project, first `eas build` + `eas submit`;
       refs recorded in `docs/NOTES.md`.
       — done when: `/deploy-checklist` passes and an external tester installs

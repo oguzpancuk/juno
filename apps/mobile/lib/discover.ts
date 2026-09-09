@@ -48,9 +48,16 @@ export async function fetchCandidates(
 ): Promise<DiscoverState> {
   const { data, error } = await supabase.from('discover').select('*');
   if (error) return { status: 'error' };
-  const parsed = z.array(DiscoverRowSchema).safeParse(data);
-  if (!parsed.success) return { status: 'error' };
-  const candidates = parsed.data
+  const rows = z.array(z.unknown()).safeParse(data);
+  if (!rows.success) return { status: 'error' };
+  // Row by row, not the array in one go: the server checks the shape of a
+  // chart, but a single row it somehow let through must cost that one
+  // card, not the whole deck for everyone in radius.
+  const parsed = rows.data.flatMap((row) => {
+    const one = DiscoverRowSchema.safeParse(row);
+    return one.success ? [one.data] : [];
+  });
+  const candidates = parsed
     .map((row) => {
       const match = compatibility(myChart, row.chart);
       return {

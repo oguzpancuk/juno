@@ -1,4 +1,4 @@
-# stardate — design brief for Claude Design
+# Juno — design brief for Claude Design
 
 Paste the "Prompt" section into a new Claude Design project, then feed the
 rest of this file as context. Everything below is derived from
@@ -8,7 +8,7 @@ the app is Turkish-only and every string is already reviewed.
 
 ## Prompt
 
-> Design the complete mobile UI for **stardate**, a Turkish dating app
+> Design the complete mobile UI for **Juno**, a Turkish dating app
 > whose whole point is astrology done properly: users enter birth place,
 > date and time; the app computes their real natal chart, explains it,
 > shows a compatibility score with every profile, and gives matched pairs
@@ -115,7 +115,7 @@ disabled until all fields validate.
 - Submit **Haritamı çıkar** (loading **Hesaplanıyor…**)
 - Inline errors: _Adını yaz (en fazla 40 karakter)._ / _Listeden bir şehir
   seç._ / _Geçerli bir tarih gir._ / _Doğum saatin gerekli (00:00–23:59)._
-  / _stardate 18 yaş ve üzeri içindir._
+  / _Juno 18 yaş ve üzeri içindir._
 - Footer link **Farklı bir hesapla gir**
 
 ### 3. Natal chart (`chart`)

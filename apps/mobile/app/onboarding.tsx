@@ -109,6 +109,8 @@ export default function Onboarding() {
         setError(t.onboarding.errors.date);
       else if (result.reason === 'birth-instant')
         setError(t.onboarding.errors.birthInstant);
+      else if (result.reason === 'unknown-city')
+        setError(t.onboarding.errors.city);
       else if (result.reason === 'db') setError(dbErrorText(result.error));
     } catch {
       setError(t.onboarding.errors.generic);

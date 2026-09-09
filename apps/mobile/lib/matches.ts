@@ -50,8 +50,13 @@ export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
     .select('*')
     .order('matched_at', { ascending: false });
   if (error) return null;
-  const parsed = z.array(MatchProfileRowSchema).safeParse(data);
-  return parsed.success ? parsed.data : null;
+  const rows = z.array(z.unknown()).safeParse(data);
+  if (!rows.success) return null;
+  // One unreadable row costs that conversation, not the whole list.
+  return rows.data.flatMap((row) => {
+    const one = MatchProfileRowSchema.safeParse(row);
+    return one.success ? [one.data] : [];
+  });
 }
 
 export async function fetchMatch(

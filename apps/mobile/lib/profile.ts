@@ -102,7 +102,12 @@ export type CreateProfileResult =
   | { readonly ok: true; readonly chart: PublicChart }
   | {
       readonly ok: false;
-      readonly reason: 'underage' | 'exists' | 'invalid-date' | 'birth-instant';
+      readonly reason:
+        | 'underage'
+        | 'exists'
+        | 'invalid-date'
+        | 'birth-instant'
+        | 'unknown-city';
     }
   | {
       readonly ok: false;
@@ -127,7 +132,7 @@ const BIRTH_INSTANT_TIMEOUT_MS = 8000;
 async function serverBirthInstant(
   cityId: number,
   birthLocal: string,
-): Promise<Date | null> {
+): Promise<Date | 'unknown-city' | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const { data, error } = await supabase
       .rpc('birth_instant', { city_id: cityId, local_time: birthLocal })
@@ -139,8 +144,17 @@ async function serverBirthInstant(
       const instant = parsed.success ? new Date(parsed.data) : null;
       if (instant && !Number.isNaN(instant.getTime())) return instant;
     }
-    // A city the server does not know is not worth retrying.
-    if (error?.code === '23514') return null;
+    // A city the server does not know is not worth retrying, and telling
+    // the person to check their connection would be a lie: it happens
+    // when the app ships a city list the database has not caught up with.
+    if (error?.code === '23514') return 'unknown-city';
+    // Neither is a missing function or an expired token: retrying burns a
+    // round trip and reports a connection problem that does not exist.
+    if (error?.code === '42883' || error?.code === 'PGRST202') return null;
+    if (error?.code === 'PGRST301') return null;
+    // A moment before trying again: an instant retry usually lands while
+    // whatever failed is still failing.
+    if (attempt === 0) await new Promise((wake) => setTimeout(wake, 400));
   }
   return null;
 }
@@ -159,6 +173,7 @@ export async function createProfile(
   const birthLocal = `${local.year}-${pad(local.month)}-${pad(local.day)}T${pad(local.hour)}:${pad(local.minute)}:00`;
   // The server's own conversion, not this device's: see the helper.
   const utc = await serverBirthInstant(input.cityId, birthLocal);
+  if (utc === 'unknown-city') return { ok: false, reason: 'unknown-city' };
   if (utc === null) return { ok: false, reason: 'birth-instant' };
   const chart = toPublicChart(
     computeChart({

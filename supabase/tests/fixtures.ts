@@ -26,6 +26,45 @@ export const NOWHERE: readonly [number, number] = [-30.0, -20.0];
 /** A valid starter key (a<b orientation); its content is irrelevant to RLS. */
 export const STARTER = 'moon-trine-venus';
 
+const PLANETS = [
+  'sun',
+  'moon',
+  'mercury',
+  'venus',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+  'pluto',
+] as const;
+
+/**
+ * A chart with the right shape and meaningless values. RLS does not care
+ * what it says, but the server checks the shape now: a row the app cannot
+ * parse used to blank the deck for every viewer in radius.
+ */
+const PLACEHOLDER_CHART = {
+  version: 1,
+  planets: Object.fromEntries(
+    PLANETS.map((name, index) => [
+      name,
+      {
+        longitude: index * 30,
+        sign: 'aries',
+        degree: 0,
+        house: 1,
+        retrograde: false,
+      },
+    ]),
+  ),
+  houses: {
+    ascendant: 0,
+    mc: 270,
+    cusps: Array.from({ length: 12 }, (_, index) => index * 30),
+  },
+};
+
 export function profileRow(input: ProfileInput) {
   const [lon, lat] = input.lonLat;
   return {
@@ -35,7 +74,7 @@ export function profileRow(input: ProfileInput) {
     birth_local: '1995-07-14T03:30:00',
     birth_city_id: 745044,
     birth_utc: '1995-07-14T00:30:00Z',
-    chart: { version: 1, planets: {}, houses: {} },
+    chart: PLACEHOLDER_CHART,
     big_three: { sun: 'cancer', moon: 'aquarius', rising: 'gemini' },
     gender: input.gender,
     interested_in: input.interested_in,

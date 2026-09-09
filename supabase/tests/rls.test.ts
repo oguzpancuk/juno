@@ -1573,8 +1573,35 @@ describe('birth instant', () => {
       birth_utc: '-infinity',
     });
     expect(error?.code).toBe(CHECK_VIOLATION);
+  });
 
-    // And the deck still answers for a neighbour.
+  it('refuses a chart the app could not read', async () => {
+    // The other way to blank everyone's deck: the row parses as JSON but
+    // not as a chart, and the client parses the deck as one array, so one
+    // such profile turns the whole deck into an error for every viewer in
+    // radius.
+    const shapes: Record<string, unknown>[] = [
+      { chart: { version: 1, planets: {}, houses: {} } },
+      { big_three: {} },
+      { big_three: { sun: 'aries', moon: 'aries', rising: 'yengeç' } },
+    ];
+    for (const shape of shapes) {
+      const broken = await user('broken');
+      const { error } = await broken.client.from('profiles').insert({
+        ...profileRow({
+          id: broken.id,
+          display_name: 'Bozuk',
+          gender: 'man',
+          interested_in: 'women',
+          lonLat: ISTANBUL_NEARBY,
+          photos: [],
+        }),
+        ...shape,
+      });
+      expect(error?.code, JSON.stringify(shape)).toBe(CHECK_VIOLATION);
+    }
+
+    // Nothing was stored, so the neighbouring deck still answers.
     const neighbour = await alice.client.from('discover').select('id');
     expect(neighbour.error).toBeNull();
   });

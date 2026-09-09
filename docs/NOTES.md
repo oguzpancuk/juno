@@ -10,6 +10,39 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The other door into the same outage
+
+- The review of the rename commit found that bounding the birth dates
+  closed only one of two ways for a single member to blank the deck for
+  everyone near them. The other: `chart` was checked for the presence of
+  three keys and `big_three` was not checked at all, so an insert could
+  carry `{"version":1,"planets":{},"houses":[]}` and `{}`. The row is
+  valid JSON and unreadable to the app — and the client parsed the deck as
+  one array, so one such profile turned the whole deck into an error state
+  for every viewer in radius.
+- Closed from both sides. The server now checks the shape it expects: ten
+  planets with a sign and a longitude in range, twelve cusps, three real
+  signs, mirroring `PublicChartSchema` and `BigThreeSchema`. And the
+  client parses row by row, so a row that somehow gets through costs that
+  one card rather than the deck.
+- **A CHECK that evaluates to null is a pass.** The first version of the
+  constraint accepted `big_three = {}` because `->>` on a missing key is
+  null, `null in (...)` is null, and the whole expression was null. Both
+  helpers coalesce to false now. The test caught it, which is the only
+  reason I know.
+- Smaller, all from the same review: an unknown city no longer tells the
+  person to check a working connection (that happens when the app ships a
+  city list the database has not caught up with); the retry waits 400 ms
+  and does not retry a missing function or an expired token; `birth_date`
+  has the upper bound its migration header claimed; and the three birth
+  floors agree instead of carving a one-day hole that reported as bad
+  data. The old name is out of the ROADMAP's bundle id — the deploy
+  checklist would have reserved `com.oguzpancuk.stardate` against an
+  app.json that says juno — and out of the design brief.
+- Verified: battery green on a clean tree; 101 Supabase tests, including
+  three degenerate charts refused and the neighbouring deck still
+  answering.
+
 ## 2026-09-10 — The product is Juno, and two ways to break it are closed
 
 - **Name.** The owner chose Juno. Everything a person reads says Juno now:
