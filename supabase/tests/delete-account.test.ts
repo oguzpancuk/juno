@@ -110,6 +110,15 @@ beforeAll(async () => {
   if (aboutMert.error) throw new Error(`report: ${aboutMert.error.message}`);
   const nurs = await nur.client.from('my_reports').select('id').single();
   aboutMertId = z.object({ id: z.string().uuid() }).parse(nurs.data).id;
+  // A photo to leave behind: storage objects do not cascade.
+  const photo = await mert.client.storage
+    .from('photos')
+    .upload(
+      `${mert.id}/1.png`,
+      new Blob([new Uint8Array([137, 80])], { type: 'image/png' }),
+    );
+  if (photo.error) throw new Error(`photo: ${photo.error.message}`);
+
   const mine = await mert.client.from('my_reports').select('id').single();
   reportId = z.object({ id: z.string().uuid() }).parse(mine.data).id;
   // Blocking hides the match; the delete must still clear those rows.
@@ -298,6 +307,11 @@ it('deletes the caller and every row that referenced them', async () => {
     .select('id')
     .eq('match_id', matchId);
   expect(messages.data ?? []).toEqual([]);
+
+  // The photo folder went too; nothing cascades to storage.
+  const folder = await admin.storage.from('photos').list(mert.id);
+  expect(folder.error).toBeNull();
+  expect(folder.data ?? []).toEqual([]);
 
   // The other person keeps their own account and simply loses the match.
   const survivor = await admin.from('profiles').select('id').eq('id', nur.id);

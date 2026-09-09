@@ -33,8 +33,18 @@ const PublicProfile = {
   chart: z.record(z.unknown()),
 };
 // strict: an extra column (location, birth_utc…) fails the parse
+const Presentation = {
+  bio: z.string().nullable(),
+  photos: z.array(z.string()),
+};
 const DiscoverRows = z.array(
-  z.object({ ...PublicProfile, distance_km: z.number().int() }).strict(),
+  z
+    .object({
+      ...PublicProfile,
+      ...Presentation,
+      distance_km: z.number().int(),
+    })
+    .strict(),
 );
 const MatchProfileRows = z.array(
   z
@@ -47,6 +57,7 @@ const MatchProfileRows = z.array(
       last_at: z.string().nullable(),
       last_sender_id: z.string().uuid().nullable(),
       unread_count: z.number().int(),
+      ...Presentation,
     })
     .strict(),
 );
@@ -1379,5 +1390,125 @@ describe('blocks and reports', () => {
     // silent no-op on it.
     expect(reasons).toContain('harassment');
     expect(reasons).toContain('underage');
+  });
+});
+
+describe('photos', () => {
+  let sema: TestUser; // has a photo
+  let tolga: TestUser; // starts without one
+  const shot = () =>
+    new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' });
+
+  beforeAll(async () => {
+    sema = await user('sema');
+    tolga = await user('tolga');
+    await insertProfile(
+      sema,
+      profileRow({
+        id: sema.id,
+        display_name: 'Sema',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+      }),
+    );
+    await insertProfile(
+      tolga,
+      profileRow({
+        id: tolga.id,
+        display_name: 'Tolga',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+    );
+  });
+
+  it('a profile without a photo is shown to nobody', async () => {
+    expect(
+      ids((await sema.client.from('discover').select('id')).data),
+    ).not.toContain(tolga.id);
+
+    const { error } = await tolga.client
+      .from('profiles')
+      .update({ photos: [`${tolga.id}/1.png`] })
+      .eq('id', tolga.id);
+    expect(error).toBeNull();
+    expect(
+      ids((await sema.client.from('discover').select('id')).data),
+    ).toContain(tolga.id);
+  });
+
+  it('a photo list cannot point at someone else folder', async () => {
+    const { error } = await tolga.client
+      .from('profiles')
+      .update({ photos: [`${sema.id}/1.png`] })
+      .eq('id', tolga.id);
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('at most six photos', async () => {
+    const seven = Array.from({ length: 7 }, (_, i) => `${tolga.id}/${i}.png`);
+    const { error } = await tolga.client
+      .from('profiles')
+      .update({ photos: seven })
+      .eq('id', tolga.id);
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('uploads land in your own folder and nowhere else', async () => {
+    const own = await sema.client.storage
+      .from('photos')
+      .upload(`${sema.id}/own.png`, shot(), { contentType: 'image/png' });
+    expect(own.error).toBeNull();
+
+    const theirs = await sema.client.storage
+      .from('photos')
+      .upload(`${tolga.id}/sneaky.png`, shot(), { contentType: 'image/png' });
+    expect(theirs.error).not.toBeNull();
+
+    const outside = await sema.client.storage
+      .from('photos')
+      .upload('loose.png', shot(), { contentType: 'image/png' });
+    expect(outside.error).not.toBeNull();
+  });
+
+  it('another member can sign a URL until a block', async () => {
+    const path = `${sema.id}/own.png`;
+    const before = await tolga.client.storage
+      .from('photos')
+      .createSignedUrl(path, 60);
+    expect(before.error).toBeNull();
+    expect(before.data?.signedUrl).toContain('/photos/');
+
+    const blocked = await sema.client
+      .from('blocks')
+      .insert({ blocker_id: sema.id, blocked_id: tolga.id });
+    expect(blocked.error).toBeNull();
+
+    const after = await tolga.client.storage
+      .from('photos')
+      .createSignedUrl(path, 60);
+    expect(after.error).not.toBeNull();
+
+    await sema.client
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', sema.id)
+      .eq('blocked_id', tolga.id);
+  });
+
+  it('nobody can delete someone else photo', async () => {
+    const { data, error } = await tolga.client.storage
+      .from('photos')
+      .remove([`${sema.id}/own.png`]);
+    // Storage answers a refused delete with an empty result, not an error.
+    if (error) expect(error).not.toBeNull();
+    else expect(data).toEqual([]);
+    const still = await sema.client.storage
+      .from('photos')
+      .createSignedUrl(`${sema.id}/own.png`, 60);
+    expect(still.error).toBeNull();
   });
 });

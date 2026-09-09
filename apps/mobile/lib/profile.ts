@@ -31,6 +31,8 @@ export const OwnProfileSchema = z.object({
   gender: z.enum(GENDERS),
   interested_in: z.enum(INTERESTS),
   radius_km: z.number().int(),
+  bio: z.string().nullable(),
+  photos: z.array(z.string()),
 });
 
 export type OwnProfile = z.infer<typeof OwnProfileSchema>;
@@ -45,7 +47,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km',
+      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, bio, photos',
     )
     .eq('id', userId)
     .maybeSingle();

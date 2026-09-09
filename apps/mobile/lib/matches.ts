@@ -28,6 +28,8 @@ export const MatchProfileRowSchema = z.object({
   last_at: z.string().nullable(),
   last_sender_id: z.string().uuid().nullable(),
   unread_count: z.number().int(),
+  bio: z.string().nullable(),
+  photos: z.array(z.string()),
 });
 
 export type MatchProfileRow = z.infer<typeof MatchProfileRowSchema>;

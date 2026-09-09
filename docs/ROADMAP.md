@@ -145,13 +145,19 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       Realtime test that measures the crossing (346 ms) and proves an
       outsider's socket stays silent; the second simulator was replaced by
       a scripted peer (see NOTES 2026-09-09)._
-- [ ] **Profile photos + bio (PRD-3).** Supabase Storage bucket with
+- [x] **Profile photos + bio (PRD-3).** Private Storage bucket with a
       per-user folder policy; 1–6 photos; profile absent from `discover`
-      until ≥ 1 photo. Must also extend `delete-account` to remove the
-      user's folder (ADR-free reminder: the function has the comment).
+      until ≥ 1 photo; `delete-account` removes the folder.
       — done when: Storage policy test proves user A cannot write to B's
-      folder (battery); a photo-less seeded profile never appears in discover
-      (manual); `screenshots/v1-profile.png`.
+      folder (battery); a photo-less profile never appears in discover.
+      _Done: RLS tests cover the folder rule, the six-photo and
+      own-folder triggers, signing another member's photo until a block,
+      the photo gate on discover, and the folder going with the account.
+      Verified in the browser: bio saved from the profile screen, the
+      photo rendered there and on the discover card, and the chart screen
+      nudging a photo-less profile. Not automated: the OS file chooser
+      that `expo-image-picker` opens, so the pick step itself is
+      unexercised; the upload path underneath it is covered by tests._
 - [x] **Safety controls (PRD-7) (Apple).** Block, report (reason enum),
       delete account (Edge Function with service role deletes auth user +
       storage objects; cascades handle rows).

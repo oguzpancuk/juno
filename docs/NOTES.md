@@ -10,6 +10,33 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — v1 profile photos and bio
+
+- Photos live in a private Storage bucket, one folder per user, read
+  through signed URLs. Private on purpose: with a public bucket any URL
+  that ever leaks keeps working, which is the wrong default here.
+- Storage policies: write, replace and delete only inside `<uid>/`; read
+  for any signed-in user except across a block, keyed on the folder name
+  through `private.is_blocked`. `profiles.photos` denormalises the ordered
+  path list so discover can filter on it, and a trigger keeps every path
+  inside the owner's folder and the list at six or fewer.
+- `discover` now hides a profile with no photo. The RLS fixtures gained a
+  default photo, or every existing discover test would have broken.
+- `delete-account` lists and removes the folder before deleting the user:
+  storage objects are not rows and nothing cascades to them.
+- App: a `/profile` screen for photos and bio, a link from settings, a
+  nudge on the chart screen while the profile has no photo, and the photo
+  plus bio on the discover card.
+- Verified in the browser: bio saved and read back, the photo rendered on
+  the profile screen and on a discover card through a signed URL, the
+  nudge appearing and disappearing. Not automated: the OS file chooser
+  `expo-image-picker` opens; the upload underneath is covered by tests.
+- Dev-loop gotcha: `npx supabase db reset` wipes the storage objects, so
+  every seeded profile silently drops out of discover until
+  `npx tsx supabase/scripts/seed-photos.ts` runs again. The script
+  generates a solid-colour PNG per profile with zlib, so no image files
+  are committed. Run it from the repo root, not from `apps/mobile`.
+
 ## 2026-09-09 — Web client, and what it immediately caught
 
 - `expo install react-dom react-native-web @expo/metro-runtime` plus a

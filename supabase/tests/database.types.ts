@@ -295,6 +295,7 @@ export type Database = {
       profiles: {
         Row: {
           big_three: Json
+          bio: string | null
           birth_city_id: number
           birth_date: string
           birth_local: string
@@ -306,11 +307,13 @@ export type Database = {
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
           location: unknown
+          photos: string[]
           radius_km: number
           updated_at: string
         }
         Insert: {
           big_three: Json
+          bio?: string | null
           birth_city_id: number
           birth_date: string
           birth_local: string
@@ -322,11 +325,13 @@ export type Database = {
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
           location: unknown
+          photos?: string[]
           radius_km?: number
           updated_at?: string
         }
         Update: {
           big_three?: Json
+          bio?: string | null
           birth_city_id?: number
           birth_date?: string
           birth_local?: string
@@ -338,6 +343,7 @@ export type Database = {
           id?: string
           interested_in?: Database["public"]["Enums"]["interest"]
           location?: unknown
+          photos?: string[]
           radius_km?: number
           updated_at?: string
         }
@@ -419,11 +425,13 @@ export type Database = {
         Row: {
           age: number | null
           big_three: Json | null
+          bio: string | null
           chart: Json | null
           display_name: string | null
           distance_km: number | null
           gender: Database["public"]["Enums"]["gender"] | null
           id: string | null
+          photos: string[] | null
         }
         Relationships: []
       }
@@ -431,6 +439,7 @@ export type Database = {
         Row: {
           age: number | null
           big_three: Json | null
+          bio: string | null
           chart: Json | null
           display_name: string | null
           gender: Database["public"]["Enums"]["gender"] | null
@@ -440,6 +449,7 @@ export type Database = {
           last_sender_id: string | null
           match_id: string | null
           matched_at: string | null
+          photos: string[] | null
           starter_key: string | null
           unread_count: number | null
         }

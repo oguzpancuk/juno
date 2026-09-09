@@ -82,6 +82,11 @@ export default function ChartScreen() {
         <View>
           <Text style={styles.title}>{t.chart.title}</Text>
           <Text style={styles.subtitle}>{profile.display_name}</Text>
+          {profile.photos.length === 0 ? (
+            <Link href="/profile" style={styles.nudge} testID="add-photo-nudge">
+              {t.discover.completeProfile}
+            </Link>
+          ) : null}
         </View>
         <Link href="/discover" style={styles.navLink} testID="go-discover">
           {t.chart.discover}
@@ -203,6 +208,7 @@ const styles = StyleSheet.create({
   },
   navLink: { color: '#c9c4e3', fontSize: 15, paddingTop: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
+  nudge: { color: '#7c6cff', fontSize: 14, paddingVertical: 6 },
   subtitle: { color: '#9a94b8', fontSize: 14 },
   section: { color: '#c9c4e3', fontSize: 13, letterSpacing: 1, marginTop: 20 },
   row: { flexDirection: 'row', gap: 8 },

@@ -61,6 +61,7 @@ export const t = {
     discover: 'Keşfet ›',
   },
   discover: {
+    completeProfile: 'Keşfette görünmek için bir fotoğraf ekle ›',
     title: 'Keşfet',
     myChart: 'Haritam',
     settings: 'Ayarlar',
@@ -97,6 +98,26 @@ export const t = {
     empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',
     noMessages: 'Henüz mesaj yok; başlangıç sorusu sende.',
     youPrefix: 'Sen: ',
+  },
+  profile: {
+    title: 'Profilin',
+    back: '‹ Ayarlar',
+    photos: 'FOTOĞRAFLAR',
+    photosHint: (max: number) =>
+      `En fazla ${max} fotoğraf. İlk fotoğrafın kartında görünür.`,
+    addPhoto: 'Fotoğraf ekle',
+    adding: 'Yükleniyor…',
+    remove: 'Kaldır',
+    noPhotos:
+      'Henüz fotoğrafın yok. En az bir tane eklemeden keşfette görünmezsin.',
+    bio: 'HAKKINDA',
+    bioPlaceholder: 'Birkaç cümle yaz…',
+    bioHint: (max: number) => `${max} karaktere kadar.`,
+    save: 'Kaydet',
+    saved: 'Kaydedildi.',
+    failed: 'Kaydedilemedi, tekrar dene.',
+    photoFailed: 'Fotoğraf yüklenemedi, tekrar dene.',
+    open: 'Profilini düzenle ›',
   },
   safety: {
     title: 'GÜVENLİK',

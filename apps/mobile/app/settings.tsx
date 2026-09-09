@@ -100,6 +100,9 @@ export default function Settings() {
         {t.settings.back}
       </Link>
       <Text style={styles.title}>{t.settings.title}</Text>
+      <Link href="/profile" style={styles.link}>
+        {t.profile.open}
+      </Link>
       <Text style={styles.label}>{t.settings.radius}</Text>
       <View style={styles.row}>
         {RADIUS_OPTIONS.map((km) => (
@@ -192,6 +195,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   back: { color: '#9a94b8', fontSize: 14 },
+  link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
   title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
   label: { color: '#c9c4e3', fontSize: 14, marginTop: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

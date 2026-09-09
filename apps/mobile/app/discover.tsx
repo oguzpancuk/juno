@@ -1,8 +1,9 @@
 import { SIGN_TR, synastryReading } from '@stardate/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import {
   type Candidate,
   type DiscoverState,
 } from '@/lib/discover';
+import { signedPhotoUrls } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -26,6 +28,29 @@ export default function Discover() {
   const [state, setState] = useState<DiscoverState>({ status: 'loading' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // One signed URL per candidate's first photo; they expire, so they are
+  // derived from the rows rather than stored with them.
+  const [cardUrls, setCardUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (state.status !== 'ready') return;
+    const first = state.candidates
+      .map((c) => c.row.photos[0])
+      .filter((p): p is string => typeof p === 'string');
+    if (first.length === 0) return;
+    let cancelled = false;
+    void signedPhotoUrls(first).then((urls) => {
+      if (cancelled) return;
+      const pairs: Record<string, string> = {};
+      first.forEach((path, index) => {
+        const url = urls[index];
+        if (url) pairs[path] = url;
+      });
+      setCardUrls(pairs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state]);
 
   const [attempt, setAttempt] = useState(0);
 
@@ -159,6 +184,25 @@ export default function Discover() {
         </View>
       ) : (
         <View style={styles.card} testID={`card-${current.row.id}`}>
+          {(() => {
+            const path = current.row.photos[0];
+            const url = path ? cardUrls[path] : undefined;
+            return url ? (
+              <Image
+                source={{ uri: url }}
+                style={styles.cardPhoto}
+                resizeMode="cover"
+                testID="card-photo"
+              />
+            ) : (
+              <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
+            );
+          })()}
+          {current.row.bio ? (
+            <Text style={styles.bio} numberOfLines={3}>
+              {current.row.bio}
+            </Text>
+          ) : null}
           <View style={styles.cardHead}>
             <Text style={styles.name}>
               {current.row.display_name}, {current.row.age}
@@ -276,6 +320,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'baseline',
   },
+  cardPhoto: {
+    width: '100%',
+    height: 280,
+    borderRadius: 14,
+    marginBottom: 12,
+  },
+  cardPhotoEmpty: { backgroundColor: '#15142a' },
+  bio: { color: '#d9d5ef', fontSize: 14, lineHeight: 20, marginBottom: 8 },
   name: { color: '#f5f2ff', fontSize: 24, fontWeight: '700' },
   distance: { color: '#9a94b8', fontSize: 14 },
   row: { flexDirection: 'row', gap: 8 },

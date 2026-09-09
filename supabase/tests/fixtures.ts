@@ -11,6 +11,8 @@ export interface ProfileInput {
   readonly lonLat: readonly [number, number];
   readonly radius_km?: number;
   readonly birth_date?: string;
+  /** Discover hides a profile without one, so the default is one photo. */
+  readonly photos?: readonly string[];
 }
 
 export const ISTANBUL: readonly [number, number] = [28.9784, 41.0082];
@@ -37,5 +39,8 @@ export function profileRow(input: ProfileInput) {
     interested_in: input.interested_in,
     location: `SRID=4326;POINT(${lon} ${lat})`,
     radius_km: input.radius_km ?? 50,
+    // The path only has to be inside the owner's folder; these tests never
+    // read the object itself.
+    photos: [...(input.photos ?? [`${input.id}/1.png`])],
   };
 }

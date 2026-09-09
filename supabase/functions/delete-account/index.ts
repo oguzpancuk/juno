@@ -53,12 +53,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (error || !data.user) return json(401, { error: 'unauthorized' });
   const userId = data.user.id;
 
-  // Photos: the profile-photos feature stores objects under "<uid>/" and
-  // must delete them here as well. There is no bucket yet, so there is
-  // nothing to remove; the ROADMAP item carries the reminder.
   const admin = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // Photos live under "<uid>/" in a private bucket. Storage objects are
+  // not rows, so nothing cascades: they have to go first, while the user
+  // still exists to be listed.
+  const listed = await admin.storage.from('photos').list(userId);
+  if (listed.error) {
+    console.error('delete-account list failed', listed.error.message);
+    return json(500, { error: 'delete_failed' });
+  }
+  if (listed.data.length > 0) {
+    const removed = await admin.storage
+      .from('photos')
+      .remove(listed.data.map((file) => `${userId}/${file.name}`));
+    if (removed.error) {
+      console.error('delete-account photos failed', removed.error.message);
+      return json(500, { error: 'delete_failed' });
+    }
+  }
   const deleted = await admin.auth.admin.deleteUser(userId);
   if (deleted.error) {
     console.error('delete-account failed', deleted.error.message);

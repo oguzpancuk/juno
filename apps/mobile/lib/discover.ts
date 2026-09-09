@@ -21,6 +21,8 @@ export const DiscoverRowSchema = z.object({
   big_three: BigThreeSchema,
   chart: PublicChartSchema,
   distance_km: z.number().int().nonnegative(),
+  bio: z.string().nullable(),
+  photos: z.array(z.string()),
 });
 
 export type DiscoverRow = z.infer<typeof DiscoverRowSchema>;
