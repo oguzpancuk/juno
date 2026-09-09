@@ -10,6 +10,43 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Three fixes, then stop: ADR-0008
+
+- The seventh review found that marking on a write had introduced a
+  regression of its own, and two smaller things. All three are fixed, and
+  then this file stops — the rest is platform, and it is written down in
+  ADR-0008 rather than chased into an eighth round.
+- **The marker could record a state that was never learned.** A single
+  failed AsyncStorage read on a fresh install — the moment that store is
+  most likely to fail, since its file is being created — left the check
+  unable to tell fresh from upgraded, and the first write then wrote the
+  marker anyway. Every later launch read the marker and skipped the check
+  for good: on a resold phone, permanently inside the previous owner's
+  account. The marker is only written when the check actually managed to
+  read the store.
+- **A short-circuit that bought nothing.** "Once marked, stop wiping" was
+  protecting this install's own keys, but the per-key map already does
+  that — every key this install writes went through the wipe first. With
+  the line gone, a leftover key touched after the marker is cleared too,
+  which is the residual the entry below wrongly claimed was already
+  answered.
+- **The write counter counted attempts, not values.** A read fills the
+  cache as well as a write, so a refused write could make an in-flight
+  delete "restore" a session the user had just ended. It counts values
+  that actually landed now.
+- Each of the three has a test, and so do the four mechanisms the review's
+  mutation table showed were unpinned — a future edit cannot quietly
+  remove the load-bearing half of a redundancy and stay green.
+- Recorded as accepted rather than fixed, in ADR-0008: a key this install
+  never touches keeps a previous install's value (only reachable if PKCE
+  or a separate user storage is adopted); iOS reports a failed keychain
+  delete as success, which makes the retry machinery unreachable there; an
+  iCloud restore would carry a clear-text session from a pre-keychain
+  build, which never shipped; and the Android clear-text delete frees the
+  page without zeroing it.
+- Verified: battery green on a clean tree; 53 mobile tests, 41 on this
+  store.
+
 ## 2026-09-10 — The marker belongs to a write, not to a wipe
 
 - The fresh-install wipe still rested on something unwritten: it marked

@@ -418,6 +418,84 @@ describe('keychainStore', () => {
     expect(await store.getItem(NAME)).toBe('fresh');
   });
 
+  it('does not mark an install state it never learned', async () => {
+    // One failed read of the plain store on a fresh install used to write
+    // the marker anyway, and every later launch then skipped the check —
+    // on a resold phone, for ever.
+    keychain.entries.set(NAME, SESSION);
+    legacy.failGet = true;
+    const first = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await first.getItem(NAME)).toBe(SESSION);
+    await first.setItem(NAME, 'signed-in-anyway');
+    expect(legacy.items.get(MARKER)).toBeUndefined();
+
+    // So the next launch, with a working store, still does the wipe.
+    legacy.failGet = false;
+    const second = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await second.getItem(NAME)).toBeNull();
+  });
+
+  it('wipes a leftover key touched after the install is marked', async () => {
+    // The marker says this install owns what it has written, not that
+    // every key it has never touched is its own.
+    keychain.entries.set(`${NAME}-user`, 'previous-owner');
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(NAME)).toBeNull();
+    await fresh.setItem(NAME, SESSION);
+    expect(legacy.items.get(MARKER)).toBe('1');
+    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
+    expect(await fresh.getItem(NAME)).toBe(SESSION);
+  });
+
+  it('does not restore a session from a write that never landed', async () => {
+    // A read fills the cache too, so counting attempted writes let a
+    // refused write drive the restore and resurrect a signed-out session.
+    const store = make();
+    await store.setItem(NAME, SESSION);
+    let release: (() => void) | undefined;
+    keychain.beforeRemove = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const removing = store.removeItem(NAME);
+    keychain.beforeRemove = undefined;
+    // A read that fills the cache, then a write the keychain refuses.
+    keychain.failing = 'set';
+    await store.setItem(NAME, 'never-landed');
+    keychain.failing = 'none';
+    release?.();
+    await removing;
+    expect(keychain.entries.has(NAME)).toBe(false);
+    expect(await store.getItem(NAME)).toBeNull();
+  });
+
+  it('does not throw when restoring the racing write fails', async () => {
+    const store = make();
+    let release: (() => void) | undefined;
+    keychain.beforeRemove = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const removing = store.removeItem(NAME);
+    keychain.beforeRemove = undefined;
+    await store.setItem(NAME, 'newer');
+    keychain.failing = 'set';
+    release?.();
+    await expect(removing).resolves.toBeUndefined();
+  });
+
+  it('keeps checking when the marker write fails', async () => {
+    // `marked` must not be set by a write that did not happen, or the
+    // rest of this launch stops wiping a previous install's keys.
+    keychain.entries.set(`${NAME}-user`, 'previous-owner');
+    keychain.entries.set(NAME, SESSION);
+    legacy.failSet = true;
+    const fresh = keychainStore({ keychain, legacy, installMarker: MARKER });
+    expect(await fresh.getItem(NAME)).toBeNull();
+    await fresh.setItem(NAME, 'mine');
+    expect(await fresh.getItem(`${NAME}-user`)).toBeNull();
+  });
+
   it('answers null when there is nothing anywhere', async () => {
     expect(await make().getItem(NAME)).toBeNull();
   });

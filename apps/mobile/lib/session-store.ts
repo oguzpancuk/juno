@@ -70,12 +70,15 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    */
   const known = new Map<string, string | null>();
 
-  /** Bumped by every write, so a slow delete can tell it is stale. */
+  /**
+   * Counts values that actually landed, so a delete in flight can tell
+   * that something newer than itself was stored. A write that failed does
+   * not count: the restore below replays what is in `known`, and replaying
+   * a value nothing stored would resurrect a session the user just ended.
+   */
   const writes = new Map<string, number>();
-  const bump = (name: string): number => {
-    const next = (writes.get(name) ?? 0) + 1;
-    writes.set(name, next);
-    return next;
+  const bump = (name: string): void => {
+    writes.set(name, (writes.get(name) ?? 0) + 1);
   };
 
   /** Keys whose deletion has not gone through. Reads answer null. */
@@ -127,9 +130,19 @@ export function keychainStore(options: KeychainStoreOptions): Store {
    * where nobody signs in checks again next launch, which costs nothing.
    */
   let freshInstall: Promise<boolean> | null = null;
+  /**
+   * False while the check has not managed to read the plain store. A
+   * launch that never learned whether the install was fresh must not
+   * write the marker: doing so cements "this install has run" on the
+   * strength of a failed read, and every later launch then skips the
+   * check for good — on a resold phone, for good means for ever.
+   */
+  let installStateKnown = false;
   const checkInstall = async (): Promise<boolean> => {
     try {
-      return (await legacy.getItem(installMarker)) === null;
+      const fresh = (await legacy.getItem(installMarker)) === null;
+      installStateKnown = true;
+      return fresh;
     } catch {
       // Cannot tell: do not wipe a session on a guess.
       return false;
@@ -138,7 +151,7 @@ export function keychainStore(options: KeychainStoreOptions): Store {
 
   let marked = false;
   const mark = async (): Promise<void> => {
-    if (marked) return;
+    if (marked || !installStateKnown) return;
     try {
       await legacy.setItem(installMarker, '1');
       marked = true;
@@ -166,9 +179,10 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     }
   };
   const ensureInstalled = async (name: string): Promise<void> => {
-    // Once this install has stored something, nothing here is a previous
-    // install's.
-    if (marked) return;
+    // No short-circuit once the install is marked: a key this launch has
+    // not touched yet may still hold a previous install's value, and the
+    // per-key `wipes` map is what keeps our own keys safe — every key
+    // this install writes passed through here before it was written.
     freshInstall ??= checkInstall();
     if (!(await freshInstall)) return;
     let running = wipes.get(name);
@@ -249,9 +263,9 @@ export function keychainStore(options: KeychainStoreOptions): Store {
 
     async setItem(name: string, value: string): Promise<void> {
       await ensureInstalled(name);
-      bump(name);
       try {
         await keychain.set(name, value);
+        bump(name);
         known.set(name, value);
         pendingRemoval.delete(name);
         // This install now owns what is stored, so the wipe stops here
@@ -265,7 +279,6 @@ export function keychainStore(options: KeychainStoreOptions): Store {
     },
 
     async removeItem(name: string): Promise<void> {
-      bump(name);
       known.set(name, null);
       await forget(name);
       // Both places, always: signing out has to clear the old one too.
