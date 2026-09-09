@@ -102,7 +102,7 @@ export type CreateProfileResult =
   | { readonly ok: true; readonly chart: PublicChart }
   | {
       readonly ok: false;
-      readonly reason: 'underage' | 'exists' | 'invalid-date';
+      readonly reason: 'underage' | 'exists' | 'invalid-date' | 'birth-instant';
     }
   | {
       readonly ok: false;
@@ -110,25 +110,39 @@ export type CreateProfileResult =
       readonly error: PostgrestError;
     };
 
+/** One retry, then give up: the round trip is on the sign-up path. */
+const BIRTH_INSTANT_TIMEOUT_MS = 8000;
+
 /**
- * Ask the server what instant a wall clock in a city refers to. Falls
- * back to what this device computed: a failed round trip must not stop
- * someone signing up, and the server tolerates the difference.
+ * The instant a wall clock in a city refers to, as the server computes
+ * it. Asked rather than computed here, because a phone's zone database
+ * can be years out of date and the two answers then differ by as much as
+ * an hour — and the server refuses what it did not compute.
+ *
+ * Returns null if the server cannot be reached. There is no offline
+ * fallback on purpose: onboarding writes a row, so it needs the network
+ * anyway, and using this device's answer instead produced an insert the
+ * server rejected as "invalid data" with nothing the person could change.
  */
 async function serverBirthInstant(
   cityId: number,
   birthLocal: string,
-  fallback: Date,
-): Promise<Date> {
-  const { data, error } = await supabase.rpc('birth_instant', {
-    city_id: cityId,
-    local_time: birthLocal,
-  });
-  if (error) return fallback;
-  const parsed = z.string().safeParse(data);
-  if (!parsed.success) return fallback;
-  const instant = new Date(parsed.data);
-  return Number.isNaN(instant.getTime()) ? fallback : instant;
+): Promise<Date | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await supabase
+      .rpc('birth_instant', { city_id: cityId, local_time: birthLocal })
+      // Without a signal a stalled connection leaves the button spinning
+      // for ever, which is worse than telling the person to try again.
+      .abortSignal(AbortSignal.timeout(BIRTH_INSTANT_TIMEOUT_MS));
+    if (!error) {
+      const parsed = z.string().safeParse(data);
+      const instant = parsed.success ? new Date(parsed.data) : null;
+      if (instant && !Number.isNaN(instant.getTime())) return instant;
+    }
+    // A city the server does not know is not worth retrying.
+    if (error?.code === '23514') return null;
+  }
+  return null;
 }
 
 export async function createProfile(
@@ -143,13 +157,9 @@ export async function createProfile(
   const birth = resolveBirth({ cityId: input.cityId, local: input.local });
   const { local } = input;
   const birthLocal = `${local.year}-${pad(local.month)}-${pad(local.day)}T${pad(local.hour)}:${pad(local.minute)}:00`;
-  // The server's own conversion, not this device's. A phone's zone
-  // database can be years old, and historical offsets are where the two
-  // disagree — sometimes by a whole hour. Asking once means the chart and
-  // the stored instant are the ones the server would compute, so nothing
-  // downstream has to reconcile two answers. Offline or on an error the
-  // device's answer stands; the server accepts it within a minute.
-  const utc = await serverBirthInstant(input.cityId, birthLocal, birth.utc);
+  // The server's own conversion, not this device's: see the helper.
+  const utc = await serverBirthInstant(input.cityId, birthLocal);
+  if (utc === null) return { ok: false, reason: 'birth-instant' };
   const chart = toPublicChart(
     computeChart({
       utc,

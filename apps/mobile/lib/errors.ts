@@ -28,7 +28,10 @@ export function dbErrorText(error: PostgrestError): string {
     case '23505':
       return t.errors.alreadyExists;
     case '23514':
-      return /birth_date/.test(error.message)
+      // The constraint's own name, not the word "birth_date": several
+      // other rules mention that column, and one of them was telling
+      // people they were under 18 for an unrelated mismatch.
+      return error.message.includes('profiles_birth_date_check')
         ? t.onboarding.errors.underage
         : t.errors.invalidData;
     case '42501':

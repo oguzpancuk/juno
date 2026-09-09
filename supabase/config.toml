@@ -251,12 +251,12 @@ otp_expiry = 600
 # OTP sign-in: the app asks for the 6-digit code, so the template must
 # render {{ .Token }}. The hosted project needs the same template.
 [auth.email.template.magic_link]
-subject = "stardate giriş kodun"
+subject = "Juno giriş kodun"
 content_path = "./supabase/templates/magic_link.html"
 # A brand-new address goes through the signup-confirmation template when
 # enable_confirmations is on; it must render the same code.
 [auth.email.template.confirmation]
-subject = "stardate giriş kodun"
+subject = "Juno giriş kodun"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template

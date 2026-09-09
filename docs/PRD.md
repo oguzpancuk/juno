@@ -1,4 +1,8 @@
-# stardate — PRD
+# Juno — PRD
+
+<!-- Product name: Juno (owner's decision, 2026-09-10). `stardate` stays
+     the repo and code name: the domain is taken by a live astrology dating
+     app, which is why the product needed a different one. -->
 
 <!-- Written via /spec. Every core interaction carries a verifiable
      "works when…" clause; nothing ships without one. -->
@@ -121,7 +125,7 @@ first message that isn't "selam".**
 - **Apple App Store dating-app rules:** 18+ age gate at sign-up; block and
   report reachable from every profile and chat; in-app account deletion;
   a report-review path; Sign in with Apple offered alongside email OTP.
-  Developer name: oguzpancuk; bundle ID `com.oguzpancuk.stardate`;
+  Developer name: oguzpancuk; bundle ID `com.oguzpancuk.juno`;
   whether an Apple Developer Program membership exists is checked in the
   first deploy session.
 - **KVKK (Turkish data protection):** birth date/time/place and location
@@ -171,5 +175,7 @@ Resolved 2026-09-08 by the owner (kept for the audit trail):
 Still open:
 
 - Does an Apple Developer Program membership exist for oguzpancuk, and is
-  the App Store name "stardate" available? Answered in the first deploy
-  session; blocks TestFlight only.
+  the App Store name "Juno" available? Answered in the first deploy
+  session; blocks TestFlight only. Juno is an asteroid used in astrology,
+  which fits, but the name is common enough elsewhere that the listing has
+  to be checked before it is promised anywhere.

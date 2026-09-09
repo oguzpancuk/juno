@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "stardate",
-    "slug": "stardate",
+    "name": "Juno",
+    "slug": "juno",
     "version": "0.0.1",
-    "scheme": "stardate",
+    "scheme": "juno",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.oguzpancuk.stardate"
+      "bundleIdentifier": "com.oguzpancuk.juno"
     },
     "android": {
-      "package": "com.oguzpancuk.stardate",
+      "package": "com.oguzpancuk.juno",
       "adaptiveIcon": {
         "backgroundColor": "#0b0b1a",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -39,7 +39,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "stardate, yak\u0131n\u0131ndaki ki\u015fileri g\u00f6stermek i\u00e7in konumunu bir kez okur. Konum sadece mesafe olarak payla\u015f\u0131l\u0131r, koordinat\u0131n kimseye g\u00f6sterilmez."
+          "locationWhenInUsePermission": "Juno, yak\u0131n\u0131ndaki ki\u015fileri g\u00f6stermek i\u00e7in konumunu bir kez okur. Konum sadece mesafe olarak payla\u015f\u0131l\u0131r, koordinat\u0131n kimseye g\u00f6sterilmez."
         }
       ]
     ],

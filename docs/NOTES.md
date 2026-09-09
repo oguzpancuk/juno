@@ -10,6 +10,44 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The product is Juno, and two ways to break it are closed
+
+- **Name.** The owner chose Juno. Everything a person reads says Juno now:
+  the app name and scheme, the bundle id (`com.oguzpancuk.juno` — nothing
+  is published yet, so this was the last cheap moment to change it), the
+  sign-in mail subject and template, the 18+ line, and the PRD title.
+  `stardate` stays as the repo, workspace and local Supabase project name:
+  it was only ever the code name once stardate.love turned out to be a
+  live astrology dating app. Whether "Juno" is free on the App Store is
+  still open for the first deploy session — it is an asteroid used in
+  astrology, which fits, but it is a common name elsewhere.
+- **One member could darken the app for everyone near them.** A review
+  found that `'-infinity'::date` passes the 18+ rule (it is certainly more
+  than eighteen years ago) and passes the agreement rule (its wall clock
+  and its instant are both infinite and equal) — and then breaks every
+  reader, because `discover` and `match_profiles` cast an age from it and
+  Postgres cannot turn infinity into an integer. Any viewer whose radius
+  covered that profile got a blank deck, with no way back short of a
+  delete in the database. Birth columns are bounded now at both ends, and
+  a test inserts `-infinity` and then asserts a neighbour's deck still
+  answers.
+- **The Tijuana case was only fixed on the happy path.** The helper
+  swallowed any error and fell back to the device's answer, which the
+  server then refused — the same dead end, reached by one transient 5xx.
+  There is no fallback now: onboarding writes a row, so it needs the
+  network anyway. The call retries once with an 8-second abort (a hung
+  request used to leave the button spinning for ever) and a failure is its
+  own retryable reason with copy that says what to do, rather than
+  "invalid data".
+- `dbErrorText` matched `/birth_date/` to decide "you are under 18". The
+  agreement rule mentions that column too, so a mismatch told people the
+  wrong thing; it matches the constraint name now.
+- Verified: battery green on a clean tree; onboarding driven in the
+  browser under the new name, with Monrovia 1965 — the sub-minute offset
+  case — storing 09:44:30Z, the server's exact answer rather than the
+  client's rounded 09:44:00Z; the sign-in mail arrives as "Juno giriş
+  kodun".
+
 ## 2026-09-09 — The birth check was keeping real people out
 
 - The check compared the device's conversion with Postgres's and refused

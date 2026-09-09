@@ -1553,6 +1553,32 @@ describe('birth instant', () => {
     expect(error).toBeNull();
   });
 
+  it('refuses an infinite birth date', async () => {
+    // `-infinity` passed the 18+ rule and the agreement rule, and then
+    // broke every reader: discover and match_profiles cast an age from
+    // it, and Postgres cannot turn infinity into an integer. One such
+    // profile blanked the deck for everyone whose radius reached it.
+    const endless = await user('endless');
+    const { error } = await endless.client.from('profiles').insert({
+      ...profileRow({
+        id: endless.id,
+        display_name: 'Sonsuz',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+      birth_date: '-infinity',
+      birth_local: '-infinity',
+      birth_utc: '-infinity',
+    });
+    expect(error?.code).toBe(CHECK_VIOLATION);
+
+    // And the deck still answers for a neighbour.
+    const neighbour = await alice.client.from('discover').select('id');
+    expect(neighbour.error).toBeNull();
+  });
+
   it('refuses a calendar date that disagrees with the wall clock', async () => {
     // The age gate reads birth_date and the chart reads birth_local;
     // nothing tied them together, so a client could be 36 on paper with a

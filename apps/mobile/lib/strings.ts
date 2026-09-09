@@ -1,6 +1,6 @@
 /** All Turkish UI strings in one place (PRD: single-language, one file). */
 export const t = {
-  appName: 'stardate',
+  appName: 'Juno',
   signIn: {
     title: 'Giriş yap',
     emailLabel: 'E-posta adresin',
@@ -40,7 +40,9 @@ export const t = {
       city: 'Listeden bir şehir seç.',
       date: 'Geçerli bir tarih gir.',
       time: 'Doğum saatin gerekli (00:00–23:59).',
-      underage: 'stardate 18 yaş ve üzeri içindir.',
+      underage: 'Juno 18 yaş ve üzeri içindir.',
+      birthInstant:
+        'Doğum saatin sunucuda hesaplanamadı. Bağlantını kontrol edip tekrar dene.',
       consent: 'Devam etmek için onay kutusunu işaretle.',
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },
