@@ -66,7 +66,7 @@ export async function fetchCandidates(
 
 export type SwipeResult =
   | { readonly ok: true; readonly matchId: string | null }
-  | { readonly ok: false; readonly reason: 'no-aspect' | 'db' };
+  | { readonly ok: false; readonly reason: 'no-aspect' | 'gone' | 'db' };
 
 /**
  * Record a like or pass. The starter key is oriented by uuid order (a < b),
@@ -89,6 +89,12 @@ export async function swipe(
     .from('likes')
     .insert({ from_id: me.id, to_id: them.id, kind, starter_key });
   // 23505: already swiped (lost response); treat as done.
+  // 42501 / 23503: they blocked us or deleted their account while the card
+  // was on screen. Either way this person is no longer swipeable, so the
+  // deck must drop the card instead of refusing every tap on it.
+  if (error && (error.code === '42501' || error.code === '23503')) {
+    return { ok: false, reason: 'gone' };
+  }
   if (error && error.code !== '23505') return { ok: false, reason: 'db' };
   if (kind === 'pass') return { ok: true, matchId: null };
   // The liker learns about a closed match deterministically, without

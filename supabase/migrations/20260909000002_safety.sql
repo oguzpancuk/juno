@@ -97,12 +97,30 @@ create trigger reports_name_both_sides
   before insert on public.reports
   for each row execute function public.reports_name_both_sides();
 
+-- Once either side is gone the row must name nobody: the note is free
+-- text a reporter wrote about a person, so it goes with the identities.
+create or replace function public.reports_scrub_orphan()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.reporter_id is null or new.reported_id is null then
+    new.note = null;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger reports_scrub_orphan
+  before update on public.reports
+  for each row execute function public.reports_scrub_orphan();
+
 alter table public.reports enable row level security;
 
-create policy "reports: read own"
-  on public.reports for select
-  to authenticated
-  using (reporter_id = (select auth.uid()));
+-- No select policy on the table: the reporter reads their own history
+-- through `my_reports`, which masks a subject who has blocked them. A
+-- readable `reported_id` was the same oracle as the like row — present
+-- after a block, null after a deletion.
 
 create policy "reports: insert own"
   on public.reports for insert
@@ -111,6 +129,11 @@ create policy "reports: insert own"
 
 -- No update or delete: a report is a record, not a draft. Moderation reads
 -- it with the service role.
+--
+-- Residual, deliberate: filing a second report tells a prober the same
+-- thing the like insert does, since a blocked subject still accepts the
+-- row while a deleted one fails the foreign key. Error codes remain a
+-- write-side oracle; only the read surfaces are closed.
 
 -- Policy helpers live outside the API-exposed schemas. In `public` they
 -- are also RPC endpoints, and `rpc/is_blocked` would answer the one
@@ -238,6 +261,29 @@ create policy "likes: insert own open"
     and not private.is_blocked(to_id)
   );
 
+-- ------------------------------------------------------------- my_reports
+-- The reporter's own history. `reported_id` is masked when that person
+-- has blocked them, so the row looks exactly like one whose subject
+-- deleted their account.
+create view public.my_reports
+with (security_invoker = false)
+as
+select
+  r.id,
+  case
+    when r.reported_id is null then null
+    when private.is_blocked(r.reported_id) then null
+    else r.reported_id
+  end as reported_id,
+  r.reason,
+  r.note,
+  r.created_at
+from public.reports r
+where r.reporter_id = (select auth.uid());
+
+revoke all on public.my_reports from anon;
+grant select on public.my_reports to authenticated;
+
 -- ---------------------------------------------------------------- discover
 -- Same as before plus two exclusions: anyone in a block with me, either
 -- direction, and anyone I have reported.
@@ -317,9 +363,17 @@ left join lateral (
 where (select auth.uid()) in (m.a, m.b)
   and not private.is_blocked(p.id);
 
+-- Realtime DELETE events are not RLS-filtered: every subscriber sees the
+-- primary key of every deleted row in the published tables, which both
+-- leaks other people's match ids and tells a blocked person that a
+-- disappearance was a deletion rather than a block. Nothing in the app
+-- subscribes to deletes, so the publication stops emitting them.
+alter publication supabase_realtime set (publish = 'insert, update');
+
 revoke all on public.blocks from anon;
 revoke all on public.reports from anon;
 revoke truncate, references, trigger on public.blocks from anon, authenticated;
 revoke truncate, references, trigger on public.reports from anon, authenticated;
 grant select, insert, delete on public.blocks to authenticated;
-grant select, insert on public.reports to authenticated;
+grant insert on public.reports to authenticated;
+revoke select on public.reports from authenticated;

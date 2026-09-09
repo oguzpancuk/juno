@@ -10,6 +10,40 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-09 — Safety third pass: reports and Realtime were reading surfaces
+
+- The third review falsified "no read surface reveals it" again, in two
+  places, and both are now closed:
+  1. `reports: read own` returned the subject's id, so a prober who
+     reports every match on day one later sees the id still there after a
+     block while a deletion nulls it. The table is no longer selectable by
+     `authenticated`; the reporter reads `my_reports`, an owner-executed
+     view that masks a subject who has blocked them, so a block and a
+     deletion look identical.
+  2. Realtime DELETE events are not RLS-filtered: a subscriber received
+     the primary key of matches and messages between other people, and the
+     presence or absence of a DELETE told a blocked person which of the
+     two had happened. `supabase_realtime` now publishes insert and update
+     only; nothing in the app subscribes to deletes.
+- The set-null design had no test: cascading both foreign keys instead
+  left all 58 tests green. The Edge Function suite now asserts the row
+  survives with both ids and the note nulled and the reason intact.
+- "What survives names nobody" was false while `note` (free text a
+  reporter writes, often a name) stayed. A trigger clears the note as soon
+  as either side goes.
+- Deck bug from the new likes insert policy: a card belonging to someone
+  who blocks you mid-session refused both like and pass and stuck at the
+  head. A block or a deleted profile now drops the card, the same as
+  having swiped it.
+- Residual, deliberate and documented in the migration: write error codes
+  still differ (42501 for a block, 23503 for a deletion) on a like or a
+  report insert. Closing that needs a tombstone model. Also unbounded: one
+  caller can still file one report per reason per person; there is no
+  throttle.
+- Reading `reports` needs care in tests: `authenticated` has insert but
+  not select, so `insert(...).select()` comes back null. Insert, then read
+  `my_reports`.
+
 ## 2026-09-09 — Safety re-review: the third oracle, and honest claims
 
 - The re-review falsified the previous entry's claim. `likes` still told

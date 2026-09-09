@@ -467,6 +467,30 @@ export type Database = {
           },
         ]
       }
+      my_reports: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          note: string | null
+          reason: Database["public"]["Enums"]["report_reason"] | null
+          reported_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          note?: string | null
+          reason?: Database["public"]["Enums"]["report_reason"] | null
+          reported_id?: never
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          note?: string | null
+          reason?: Database["public"]["Enums"]["report_reason"] | null
+          reported_id?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       profile_location_text: { Args: { profile_id: string }; Returns: string }

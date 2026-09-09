@@ -891,14 +891,18 @@ describe('blocks and reports', () => {
       blocked_id: z.string().uuid(),
     }),
   );
+  // `my_reports` is the reporter's own view: no reporter_id (it is always
+  // them) and a masked subject.
   const ReportRows = z.array(
-    z.object({
-      id: z.string().uuid(),
-      reporter_id: z.string().uuid(),
-      reported_id: z.string().uuid(),
-      reason: z.string(),
-      note: z.string().nullable(),
-    }),
+    z
+      .object({
+        id: z.string().uuid(),
+        reported_id: z.string().uuid().nullable(),
+        reason: z.string(),
+        note: z.string().nullable(),
+        created_at: z.string(),
+      })
+      .strict(),
   );
 
   beforeAll(async () => {
@@ -1161,20 +1165,21 @@ describe('blocks and reports', () => {
   });
 
   it('a report is stored and hides the profile from the reporter only', async () => {
-    const filed = await lale.client
-      .from('reports')
-      .insert({
-        reporter_id: lale.id,
-        reported_id: kemal.id,
-        reason: 'harassment',
-        note: 'Rahatsız edici mesajlar',
-      })
-      .select('*')
-      .single();
+    const filed = await lale.client.from('reports').insert({
+      reporter_id: lale.id,
+      reported_id: kemal.id,
+      reason: 'harassment',
+      note: 'Rahatsız edici mesajlar',
+    });
     expect(filed.error).toBeNull();
-    const row = ReportRows.parse([filed.data])[0];
+    // The table itself is not readable; the reporter sees their own view.
+    const direct = await lale.client.from('reports').select('id');
+    expect(direct.error?.code).toBe(PERMISSION_DENIED);
+    const row = ReportRows.parse(
+      (await lale.client.from('my_reports').select('*')).data,
+    )[0];
     expect(row?.reason).toBe('harassment');
-    expect(row?.reporter_id).toBe(lale.id);
+    expect(row?.reported_id).toBe(kemal.id);
 
     expect(
       ids((await lale.client.from('discover').select('id')).data),
@@ -1200,13 +1205,15 @@ describe('blocks and reports', () => {
 
   it('a report cannot be edited, withdrawn or read by the reported person', async () => {
     const mine = ReportRows.parse(
-      (await lale.client.from('reports').select('*')).data,
+      (await lale.client.from('my_reports').select('*')).data,
     );
     const first = mine[0];
     if (!first) throw new Error('no report to test');
 
     expect(
-      ReportRows.parse((await kemal.client.from('reports').select('*')).data),
+      ReportRows.parse(
+        (await kemal.client.from('my_reports').select('*')).data,
+      ),
     ).toEqual([]);
 
     const edit = await lale.client
@@ -1214,6 +1221,7 @@ describe('blocks and reports', () => {
       .update({ reason: 'spam' })
       .eq('id', first.id)
       .select('id');
+    // The table is not selectable either, so an update cannot return rows.
     if (edit.error) expect(edit.error.code).toBe(PERMISSION_DENIED);
     else expect(edit.data).toEqual([]);
 
@@ -1226,7 +1234,7 @@ describe('blocks and reports', () => {
     else expect(withdraw.data).toEqual([]);
 
     expect(
-      ReportRows.parse((await lale.client.from('reports').select('*')).data),
+      ReportRows.parse((await lale.client.from('my_reports').select('*')).data),
     ).toHaveLength(1);
   });
 
@@ -1264,7 +1272,7 @@ describe('blocks and reports', () => {
     const mine = ReportRows.parse(
       (
         await lale.client
-          .from('reports')
+          .from('my_reports')
           .select('*')
           .eq('reported_id', kemal.id)
       ).data,

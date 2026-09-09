@@ -158,9 +158,10 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: Vitest proves blocked pairs vanish from discover, matches
       and messages both ways and the report row exists (battery); manual
       delete-account run leaves 0 rows and 0 storage objects for that uid.
-      _Done: 8 RLS tests for blocks and reports, 3 for the Edge Function
-      (no token, wrong method, and a delete that clears the profile, likes,
-      match, messages, blocks and reports while the other person survives).
+      _Done: RLS tests for blocks and reports, and Edge Function tests
+      covering the auth paths, CORS and a delete that clears the profile,
+      likes, match, messages and blocks while the other person survives and
+      the report stays as an anonymised row.
       No storage bucket exists yet, so "0 storage objects" is trivially
       true; the photos item must add the folder delete to the function.
       `screenshots/v1-safety.png` shows the controls; their button wiring

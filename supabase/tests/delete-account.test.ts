@@ -24,6 +24,7 @@ const deleted = new Set<string>();
 let mert: TestUser; // deletes their account
 let nur: TestUser; // stays behind, matched with Mert
 let matchId: string;
+let reportId: string;
 
 async function user(tag: string): Promise<TestUser> {
   const u = await createUser(admin, tag);
@@ -87,9 +88,18 @@ beforeAll(async () => {
   await mert.client
     .from('blocks')
     .insert({ blocker_id: mert.id, blocked_id: nur.id });
-  await mert.client
-    .from('reports')
-    .insert({ reporter_id: mert.id, reported_id: nur.id, reason: 'spam' });
+  // No `.select()` on the insert: `authenticated` has insert but not
+  // select on `reports`, and the reporter reads their own through the
+  // `my_reports` view.
+  const filed = await mert.client.from('reports').insert({
+    reporter_id: mert.id,
+    reported_id: nur.id,
+    reason: 'spam',
+    note: 'Mert bunu yazdı',
+  });
+  if (filed.error) throw new Error(`report: ${filed.error.message}`);
+  const mine = await mert.client.from('my_reports').select('id').single();
+  reportId = z.object({ id: z.string().uuid() }).parse(mine.data).id;
   // Blocking hides the match; the delete must still clear those rows.
   await mert.client
     .from('blocks')
@@ -223,11 +233,30 @@ it('deletes the caller and every row that referenced them', async () => {
     .select('from_id')
     .eq('from_id', mert.id);
   expect(likes.data ?? []).toEqual([]);
+  // Reports are the exception: the row outlives the account with both ids
+  // and the note nulled, so the queue keeps what was reported and when.
   const reports = await admin
     .from('reports')
     .select('reporter_id')
     .eq('reporter_id', mert.id);
   expect(reports.data ?? []).toEqual([]);
+  const orphaned = await admin
+    .from('reports')
+    .select('reporter_id, reported_id, reason, note, created_at')
+    .eq('id', reportId)
+    .single();
+  const keptReport = z
+    .object({
+      reporter_id: z.null(),
+      // Nur is still there, so only the reporter's id went.
+      reported_id: z.string().uuid(),
+      reason: z.literal('spam'),
+      // The note named a person; it goes with the identity.
+      note: z.null(),
+      created_at: z.string(),
+    })
+    .parse(orphaned.data);
+  expect(keptReport.reason).toBe('spam');
   const blocks = await admin
     .from('blocks')
     .select('blocker_id')

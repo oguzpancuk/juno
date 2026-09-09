@@ -76,7 +76,24 @@ export default function Discover() {
       kind,
     );
     setBusy(false);
+    const drop = () => {
+      setState((s) =>
+        s.status === 'ready'
+          ? {
+              status: 'ready',
+              candidates: s.candidates.filter(
+                (c) => c.row.id !== candidate.row.id,
+              ),
+            }
+          : s,
+      );
+    };
     if (!result.ok) {
+      if (result.reason === 'gone') {
+        // Nothing to say: from here it is the same as having swiped them.
+        drop();
+        return;
+      }
       setError(
         result.reason === 'no-aspect' ? t.discover.noAspect : t.errors.generic,
       );

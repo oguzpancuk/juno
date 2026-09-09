@@ -41,7 +41,8 @@ export async function reportUser(
   const { error } = await supabase
     .from('reports')
     .insert({ reporter_id: myId, reported_id: otherId, reason });
-  // One report per pair: a second tap is the same complaint, already filed.
+  // One report per pair and reason: the same reason twice is the same
+  // complaint, already filed; a different reason files a new record.
   return !error || error.code === '23505';
 }
 
