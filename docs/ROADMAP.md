@@ -429,9 +429,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       is four entries with no verdict in any of them — the old very-low and
       low texts told people a pairing would take work — and
       `dimensions.json` is five axis names with fifteen labels. Seven tests
-      over a 300-chart sample. One clause is NOT met: the generator is still
-      duplicated between the script and the test. `--charts=300` reproduces
-      the sample, but neither imports the other's copy._
+      over a 300-chart sample. The generator moved to `src/sample.ts`, which
+      the script and both tests import — three copies before, one now — and
+      it refuses a count past the point where the draws start repeating._
 - [x] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with

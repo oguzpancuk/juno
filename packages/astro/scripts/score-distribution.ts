@@ -36,51 +36,14 @@ import {
   isCurated,
   type Dimension,
 } from '../src/dimensions';
-import { computeChart } from '../src/chart';
-import { toPublicChart, type PublicChart } from '../src/public';
+import { DEFAULT_SEED, MAX_SAMPLE_CHARTS, population } from '../src/sample';
 
 /** Charts, not pairs: the pair count is n(n-1)/2. */
 const CHARTS = 1500;
-const DEFAULT_SEED = 20260910;
 const ELEMENT_BONUS = 2;
 /** Equal-frequency bands: a signal that splits the population evenly. */
 const BAND_CUTS = [25, 50, 75];
 const LABEL_CUTS = [33, 67];
-
-/**
- * Deterministic generator. Determinism rests on IEEE-754 rounding being
- * correctly specified, not on integer arithmetic: the multiply exceeds 2^53,
- * so the low bits are rounding artefacts. Adequate for drawing a few
- * thousand birth instants, not a general-purpose PRNG.
- */
-function makeRandom(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 1103515245 + 12345) % 2147483648;
-    return state / 2147483648;
-  };
-}
-
-function population(count: number, seed: number): PublicChart[] {
-  const random = makeRandom(seed);
-  const charts: PublicChart[] = [];
-  // Ages 20-35 during 2026: born on or after 1991-01-01 and before 2006-01-01.
-  const from = Date.UTC(1991, 0, 1);
-  const to = Date.UTC(2006, 0, 1);
-  for (let i = 0; i < count; i++) {
-    charts.push(
-      toPublicChart(
-        computeChart({
-          utc: new Date(from + random() * (to - from)),
-          // Turkey's bounding box: the cohort the PRD describes.
-          latitude: 36 + random() * 6,
-          longitude: 26 + random() * 19,
-        }),
-      ),
-    );
-  }
-  return charts;
-}
 
 /** ADR-0003's mapping, applied to one dimension's own terms. */
 function reduce(harmony: number, tension: number): number {
@@ -126,14 +89,13 @@ const charts_ =
   chartFlag === undefined
     ? CHARTS
     : Number(chartFlag.slice('--charts='.length));
-// The generator's draws first repeat at 13 361 and each chart costs three,
-// so past this the population silently contains dependent pairs — and the
-// distinct-charts guard below cannot see it, because a recycled draw lands
-// in a different slot and builds a different chart.
-const MAX_CHARTS = 4453;
-if (!Number.isInteger(charts_) || charts_ < 2 || charts_ > MAX_CHARTS)
+// MAX_SAMPLE_CHARTS is where the generator starts reusing draws; past it
+// the population silently contains dependent pairs, and the distinct-charts
+// guard below cannot see it because a recycled draw lands in a different
+// slot and builds a different chart.
+if (!Number.isInteger(charts_) || charts_ < 2 || charts_ > MAX_SAMPLE_CHARTS)
   throw new Error(
-    `--charts must be an integer between 2 and ${MAX_CHARTS} ` +
+    `--charts must be an integer between 2 and ${MAX_SAMPLE_CHARTS} ` +
       `(above that the generator reuses draws)`,
   );
 const positionals = args.filter((arg) => !arg.startsWith('-'));

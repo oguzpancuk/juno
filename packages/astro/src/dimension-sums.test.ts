@@ -5,35 +5,11 @@ import {
   type ChartForScoring,
 } from './compatibility';
 import { DIMENSIONS, dimensionOf } from './dimensions';
-import { computeChart } from './chart';
-import { toPublicChart } from './public';
+import { population } from './sample';
 
 /** ADR-0009 §4: the sums must be a reweighting of the same quantity. */
 
 const round6 = (value: number): number => Number(value.toFixed(6));
-
-function population(count: number, seed = 20260910): ChartForScoring[] {
-  let state = seed;
-  const random = (): number => {
-    state = (state * 1103515245 + 12345) % 2147483648;
-    return state / 2147483648;
-  };
-  const from = Date.UTC(1991, 0, 1);
-  const to = Date.UTC(2006, 0, 1);
-  const charts: ChartForScoring[] = [];
-  for (let i = 0; i < count; i++) {
-    charts.push(
-      toPublicChart(
-        computeChart({
-          utc: new Date(from + random() * (to - from)),
-          latitude: 36 + random() * 6,
-          longitude: 26 + random() * 19,
-        }),
-      ),
-    );
-  }
-  return charts;
-}
 
 const charts = population(40);
 
