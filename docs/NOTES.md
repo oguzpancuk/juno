@@ -74,6 +74,16 @@
 OPTIONS` and delete-account returns `POST, OPTIONS` — constants that
   exist only inside each module, which a shared gateway plugin could not
   produce per route.
+- **Four review rounds on one gate, and each round found the previous
+  fix's own hole.** Worth recording as a pattern rather than as four
+  bugs: a gate written against a list of known shapes keeps having the
+  shape nobody listed. The last one was a computed specifier whose
+  interpolation comes first — `` `${CDN}/pkg@2` `` has no visible scheme,
+  so the "is this remote?" test skipped it entirely. What finally stopped
+  the cycle was moving the specifier parser under a table of cases in the
+  test file: it now fails on a revert without anyone having to plant a
+  poisoned module under `functions/`, which is how every earlier check
+  was done and why each one vanished with its session.
 - **A checkbox I had no right to tick.** The ROADMAP item was marked done
   before CI had seen the commits, while its own done-when clause asks for
   a green run. Review caught it; it is back to `[ ]` with the evidence

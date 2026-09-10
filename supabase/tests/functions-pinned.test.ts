@@ -88,17 +88,100 @@ function parse(file: string, specifier: string): Remote {
   };
 }
 
+/**
+ * Whether a specifier is this gate's business. A computed one counts even
+ * though no scheme is visible: `` `${CDN}/pkg@2` `` is resolved from the
+ * network just the same, and the scheme test alone would let it past.
+ * Relative paths stay out of it — those are local files, and interpolating
+ * one is not a dependency question.
+ */
+function isRemote(specifier: string): boolean {
+  if (REMOTE.test(specifier)) return true;
+  return specifier.includes('${') && !/^[./]/.test(specifier);
+}
+
 function remoteImports(): readonly Remote[] {
   const found: Remote[] = [];
   for (const file of edgeFunctionSources()) {
     const source = readFileSync(file, 'utf8');
     for (const [, , specifier] of source.matchAll(SPECIFIER)) {
-      if (specifier === undefined || !REMOTE.test(specifier)) continue;
+      if (specifier === undefined || !isRemote(specifier)) continue;
       found.push(parse(file, specifier));
     }
   }
   return found;
 }
+
+/**
+ * The parser has its own table, because every hole this gate has had was
+ * in the parser rather than in the walk, and each was found by a
+ * throwaway fixture that vanished with the session. These cases fail on a
+ * revert without putting a poisoned module under `functions/`.
+ */
+const CASES: readonly {
+  readonly specifier: string;
+  readonly version: string | undefined;
+  readonly why: string;
+}[] = [
+  {
+    specifier: 'jsr:@supabase/supabase-js@2.116.0',
+    version: '2.116.0',
+    why: 'the ordinary pinned case',
+  },
+  {
+    specifier: 'npm:pkg@1.2.3/sub/path.js',
+    version: '1.2.3',
+    why: 'a subpath follows the version',
+  },
+  {
+    specifier: 'https://deno.land/std@0.220.0/http/server.ts',
+    version: '0.220.0',
+    why: 'the standard Deno URL shape',
+  },
+  {
+    specifier: 'https://esm.sh/@supabase/supabase-js@2.116.0?target=deno',
+    version: '2.116.0',
+    why: 'a query must not make a pinned specifier look floating',
+  },
+  {
+    specifier: 'jsr:@supabase/supabase-js@2',
+    version: undefined,
+    why: 'a floating major is the bug this gate exists for',
+  },
+  {
+    specifier: 'https://esm.sh/postgres@3?deps=zod@3.22.4',
+    version: undefined,
+    why: 'a version in a query belongs to something else',
+  },
+  {
+    specifier: 'https://esm.sh/${pkg}@1.0.0',
+    version: undefined,
+    why: 'an exact-looking tail on a computed specifier is a coincidence',
+  },
+  {
+    specifier: '${CDN}/@supabase/supabase-js@2.116.0',
+    version: undefined,
+    why: 'the interpolation can be the scheme itself',
+  },
+];
+
+it.each(CASES)('parses $specifier — $why', ({ specifier, version }) => {
+  expect(isRemote(specifier)).toBe(true);
+  expect(parse('probe.ts', specifier).version).toBe(version);
+});
+
+it('leaves relative imports alone', () => {
+  expect(isRemote('./shared.ts')).toBe(false);
+  expect(isRemote('../lib/${name}.ts')).toBe(false);
+});
+
+it('gives one name to a package however it is reached', () => {
+  const name = 'jsr:@supabase/supabase-js@2.116.0';
+  expect(parse('probe.ts', name).name).toBe('@supabase/supabase-js');
+  expect(parse('probe.ts', 'npm:@supabase/supabase-js@2.116.0').name).toBe(
+    '@supabase/supabase-js',
+  );
+});
 
 it('pins every remote import in every Edge Function to an exact version', () => {
   const sources = edgeFunctionSources();
