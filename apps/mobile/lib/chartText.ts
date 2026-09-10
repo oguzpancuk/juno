@@ -3,7 +3,7 @@ import {
   SIGN_TR_LOCATIVE,
   type Planet,
   type Sign,
-} from '@stardate/astro';
+} from '@juno/astro';
 
 /**
  * S5 placeholder: one generic line per planet. The ~360 real snippets

@@ -15,7 +15,7 @@ as $$
 $$;
 revoke all on function public.profile_location_text(uuid) from public, anon, authenticated;
 
--- Six seeded users with real charts (@stardate/astro) for the discover
+-- Six seeded users with real charts (@juno/astro) for the discover
 -- screen: five around Istanbul, one in Ankara (outside a 50 km radius).
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)

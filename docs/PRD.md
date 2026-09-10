@@ -1,8 +1,8 @@
 # Juno — PRD
 
-<!-- Product name: Juno (owner's decision, 2026-09-10). `stardate` stays
-     the repo and code name: the domain is taken by a live astrology dating
-     app, which is why the product needed a different one. -->
+<!-- Product name: Juno (owner's decision, 2026-09-10). The old code name
+     `stardate` was dropped entirely on 2026-09-10 — repo, workspace scope
+     and local Supabase project all say juno now. -->
 
 <!-- Written via /spec. Every core interaction carries a verifiable
      "works when…" clause; nothing ships without one. -->

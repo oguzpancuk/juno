@@ -1,12 +1,13 @@
-# stardate (the product ships as Juno)
+# juno
 
 <!-- Instantiated from maya (see .maya-version). Slots marked [STACK: ...]
      are filled by /new-product; a remaining [STACK: TODO] is a visible gap,
      never fill one with a guess. -->
 
-<!-- `stardate` is the repo and code name; the product name the owner chose
-     on 2026-09-10 is Juno. Anything a user reads says Juno; package names,
-     workspaces and the local Supabase project keep stardate. -->
+<!-- Juno everywhere: the product name, the repo, the npm workspace scope
+     (`@juno/*`) and the local Supabase project. `stardate` was the code
+     name until 2026-09-10 and survives only in historical NOTES and ADR
+     entries, which record what was true when they were written. -->
 
 Star-chart dating app: users enter birth place, date and time; the app
 computes their natal chart, explains it, shows astrological compatibility

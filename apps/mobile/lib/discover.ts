@@ -7,7 +7,7 @@ import {
   starterKey,
   type Compatibility,
   type PublicChart,
-} from '@stardate/astro';
+} from '@juno/astro';
 import { z } from 'zod';
 import { GENDERS } from './profile';
 import { parseRows, warnDropped } from './rows';

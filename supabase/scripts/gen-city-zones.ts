@@ -10,7 +10,7 @@
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { allCities } from '@stardate/geo';
+import { allCities } from '@juno/geo';
 
 const rows = [...allCities()]
   .map((city) => ({ id: city.id, zone: city.timeZone }))

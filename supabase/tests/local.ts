@@ -104,7 +104,7 @@ export interface TestUser {
   readonly client: Client;
 }
 
-const PASSWORD = 'stardate-test-password';
+const PASSWORD = 'juno-test-password';
 
 /** Creates a confirmed user and returns a client signed in as them. */
 export async function createUser(

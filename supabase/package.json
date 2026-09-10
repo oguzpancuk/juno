@@ -1,5 +1,5 @@
 {
-  "name": "@stardate/supabase",
+  "name": "@juno/supabase",
   "version": "0.0.1",
   "private": true,
   "description": "Migrations and Edge Functions live here; this manifest only hosts the RLS test suite that runs against the local stack.",
@@ -12,8 +12,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
-    "@stardate/astro": "*",
-    "@stardate/geo": "*",
+    "@juno/astro": "*",
+    "@juno/geo": "*",
     "@types/node": "^26.5.0",
     "eslint": "^9.39.5",
     "typescript-eslint": "^8.70.0",

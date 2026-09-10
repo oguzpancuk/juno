@@ -11,7 +11,7 @@ create type public.like_kind as enum ('like', 'pass');
 
 -- Conversation starter reference: "<planet of a>-<aspect>-<planet of b>"
 -- with a < b by uuid. Clients render the Turkish sentence from the key
--- (@stardate/astro is deterministic), so no free text ever crosses users.
+-- (@juno/astro is deterministic), so no free text ever crosses users.
 create domain public.starter_key as text
   check (value ~ '^(sun|moon|mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto|ascendant)-(conjunction|sextile|square|trine|opposition)-(sun|moon|mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto|ascendant)$');
 
@@ -27,7 +27,7 @@ create table public.profiles (
   birth_local timestamp without time zone not null,
   birth_city_id integer not null check (birth_city_id > 0),
   birth_utc timestamptz not null,
-  -- Public chart: planets + houses from @stardate/astro, WITHOUT the
+  -- Public chart: planets + houses from @juno/astro, WITHOUT the
   -- engine input (no utc, no coordinates). Shown to matches and in discover.
   -- The CHECK is the server-side guard against a client bug leaking input.
   chart jsonb not null

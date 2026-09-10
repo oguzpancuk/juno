@@ -8,8 +8,8 @@
  * non-local API URL. Idempotent: an existing user keeps their id.
  */
 import { execFileSync } from 'node:child_process';
-import { bigThree, computeChart, toPublicChart } from '@stardate/astro';
-import { resolveBirth } from '@stardate/geo';
+import { bigThree, computeChart, toPublicChart } from '@juno/astro';
+import { resolveBirth } from '@juno/geo';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 

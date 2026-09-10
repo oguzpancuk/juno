@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { allCities } from '@stardate/geo';
+import { allCities } from '@juno/geo';
 import type { Json } from './database.types';
 import {
   ANKARA,

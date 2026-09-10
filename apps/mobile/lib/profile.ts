@@ -5,12 +5,12 @@ import {
   computeChart,
   toPublicChart,
   type PublicChart,
-} from '@stardate/astro';
+} from '@juno/astro';
 import {
   isValidCalendarDate,
   resolveBirth,
   type LocalDateTime,
-} from '@stardate/geo';
+} from '@juno/geo';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { LEGAL_VERSION } from './legal';

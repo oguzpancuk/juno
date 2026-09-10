@@ -10,6 +10,37 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — stardate is gone from the code, not just from the screen
+
+- The owner renamed the working directory and the GitHub repository to
+  `juno`, which retired the reason the earlier rename session had for
+  keeping the old code name ("`stardate` stays as the repo, workspace and
+  local Supabase project name"). Owner decision this session: rename all
+  of it.
+- `origin` still pointed at `oguzpancuk/stardate.git` and only worked
+  because GitHub redirects renamed repositories; it now points at
+  `oguzpancuk/juno.git`, verified with `git ls-remote`.
+- The npm workspace scope is `@juno/*` across twenty files, the root
+  package is `juno`, the local Supabase project id is `juno`, the RLS
+  suite's throwaway password is `juno-test-password`, and
+  `contracts/init.sh` writes `/tmp/juno-expo.log`. `package-lock.json` was
+  regenerated with `npm install`, so `npm ci` in CI still resolves.
+- Changing `project_id` renames every local Docker container, so the old
+  stack was stopped by id (`supabase stop --project-id stardate`, with
+  backup) and a fresh one started: all migrations applied and `seed.sql`
+  ran clean. The old `supabase_db_stardate` volume is still on the machine
+  — harmless, and safe to drop whenever the owner wants it gone.
+- Historical NOTES entries and ADRs 0002/0005 keep the old name on
+  purpose: they record what was true when written. ADR-0005 got Amendment
+  1 instead of an edit, because its consequence section still claimed the
+  bundle id was `com.oguzpancuk.stardate` while `app.json` has said
+  `com.oguzpancuk.juno` since the mark landed — a stale fact a deploy
+  session would have acted on.
+- Verified: `bash .claude/hooks/verify.sh` green (typecheck, lint, format,
+  tests) against the freshly seeded local stack.
+- Open: whether "Juno" is free on the App Store, still for the first
+  deploy session.
+
 ## 2026-09-10 — Two tests that could not fail, and a rule I broke
 
 - The eighth review reverted each of the previous round's fixes and

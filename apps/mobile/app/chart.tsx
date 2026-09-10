@@ -4,7 +4,7 @@ import {
   SIGN_TR,
   formatDegree,
   natalReading,
-} from '@stardate/astro';
+} from '@juno/astro';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {

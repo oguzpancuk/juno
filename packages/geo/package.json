@@ -1,5 +1,5 @@
 {
-  "name": "@stardate/geo",
+  "name": "@juno/geo",
   "version": "0.0.1",
   "private": true,
   "description": "Offline birth-place lookup (GeoNames subset) and local time \u2192 UTC via IANA zones. No I/O at runtime.",

@@ -8,8 +8,8 @@
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { bigThree, computeChart, toPublicChart } from '@stardate/astro';
-import { resolveBirth } from '@stardate/geo';
+import { bigThree, computeChart, toPublicChart } from '@juno/astro';
+import { resolveBirth } from '@juno/geo';
 
 const ISTANBUL = 745044;
 const ANKARA = 323786;
@@ -136,7 +136,7 @@ as $$
 $$;
 revoke all on function public.profile_location_text(uuid) from public, anon, authenticated;
 
--- Six seeded users with real charts (@stardate/astro) for the discover
+-- Six seeded users with real charts (@juno/astro) for the discover
 -- screen: five around Istanbul, one in Ankara (outside a 50 km radius).
 `;
 

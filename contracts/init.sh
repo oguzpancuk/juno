@@ -31,7 +31,7 @@ export EXPO_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
 # cache would otherwise serve the previous session's code.
 if ! curl -sf http://localhost:8082/status >/dev/null 2>&1; then
   (cd apps/mobile && perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV' -- \
-     nohup env CI=1 npx expo start --port 8082 --clear >/tmp/stardate-expo.log 2>&1 </dev/null &)
+     nohup env CI=1 npx expo start --port 8082 --clear >/tmp/juno-expo.log 2>&1 </dev/null &)
   for _ in $(seq 1 60); do
     curl -sf http://localhost:8082/status >/dev/null 2>&1 && break
     sleep 1
@@ -39,5 +39,5 @@ if ! curl -sf http://localhost:8082/status >/dev/null 2>&1; then
 fi
 curl -sf http://localhost:8082/status >/dev/null  # smoke: Metro up
 
-echo "init: Supabase at $API_URL, Expo at http://localhost:8082 (log: /tmp/stardate-expo.log)"
+echo "init: Supabase at $API_URL, Expo at http://localhost:8082 (log: /tmp/juno-expo.log)"
 echo "init: open in the simulator with: xcrun simctl openurl booted exp://127.0.0.1:8082"

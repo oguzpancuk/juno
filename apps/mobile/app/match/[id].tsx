@@ -1,4 +1,4 @@
-import { SIGN_TR, synastryReading } from '@stardate/astro';
+import { SIGN_TR, synastryReading } from '@juno/astro';
 import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {

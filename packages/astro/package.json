@@ -1,5 +1,5 @@
 {
-  "name": "@stardate/astro",
+  "name": "@juno/astro",
   "version": "0.0.1",
   "private": true,
   "description": "Pure, deterministic natal chart + compatibility engine. No I/O, no React Native.",

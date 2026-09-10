@@ -8,7 +8,7 @@
  * non-local API URL.
  */
 import { execFileSync } from 'node:child_process';
-import { PublicChartSchema, isLesserId, starterKey } from '@stardate/astro';
+import { PublicChartSchema, isLesserId, starterKey } from '@juno/astro';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 

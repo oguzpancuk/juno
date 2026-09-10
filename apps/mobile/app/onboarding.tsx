@@ -1,4 +1,4 @@
-import { isValidCalendarDate, searchCities, type City } from '@stardate/geo';
+import { isValidCalendarDate, searchCities, type City } from '@juno/geo';
 import { deviceLocation } from '@/lib/location';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';

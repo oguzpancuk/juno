@@ -1,8 +1,8 @@
 # Juno — Roadmap
 
-<!-- `stardate` is the repo and code name; the product ships as Juno.
-     Historical entries below keep the old name where it describes what was
-     on screen at the time. -->
+<!-- The product, the repo and the code all say Juno. Historical entries
+     below keep the old `stardate` name where it describes what was on
+     screen at the time. -->
 
 <!-- Written via /mvp-scope from the PRD. Every item has a done-when clause
      naming its verification. Status moves only with evidence. -->

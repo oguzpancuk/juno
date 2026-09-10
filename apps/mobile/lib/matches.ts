@@ -4,7 +4,7 @@ import {
   isLesserId,
   parseStarterKey,
   starterFromKey,
-} from '@stardate/astro';
+} from '@juno/astro';
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { GENDERS } from './profile';

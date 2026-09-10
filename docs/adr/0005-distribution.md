@@ -47,3 +47,17 @@ chat feature already depends on.
 - The App Store name decision can wait; the bundle id
   `com.oguzpancuk.stardate` is internal and independent of the
   marketing name.
+
+## Amendment 1 (2026-09-10): the name is Juno, and the bundle id follows it
+
+The last consequence above is stale. The owner settled the product name on
+Juno, and since nothing had been published yet, the bundle id moved with
+it: `com.oguzpancuk.juno` on both platforms, as `apps/mobile/app.json`
+says. The claim that the bundle id is independent of the marketing name
+still holds in principle — it is simply no longer worth spending, because
+the id was free to change before the first TestFlight build and will not
+be after. The same day the owner renamed the working directory and the
+GitHub repository to `juno`, so `stardate` is gone from the code as well:
+the npm workspace scope is `@juno/*` and the local Supabase project id is
+`juno`. Whether "Juno" is available on the App Store is still open for the
+first deploy session.

@@ -1,4 +1,4 @@
-# @stardate/geo
+# @juno/geo
 
 Offline birth-place lookup and local-time → UTC conversion for the
 onboarding form. Pure TypeScript, no runtime I/O; the city list is a
