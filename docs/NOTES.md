@@ -74,16 +74,28 @@
 OPTIONS` and delete-account returns `POST, OPTIONS` — constants that
   exist only inside each module, which a shared gateway plugin could not
   produce per route.
-- **Four review rounds on one gate, and each round found the previous
-  fix's own hole.** Worth recording as a pattern rather than as four
+- **Five review rounds on one gate, and each round found the previous
+  fix's own hole.** Worth recording as a pattern rather than as five
   bugs: a gate written against a list of known shapes keeps having the
-  shape nobody listed. The last one was a computed specifier whose
-  interpolation comes first — `` `${CDN}/pkg@2` `` has no visible scheme,
-  so the "is this remote?" test skipped it entirely. What finally stopped
-  the cycle was moving the specifier parser under a table of cases in the
-  test file: it now fails on a revert without anyone having to plant a
-  poisoned module under `functions/`, which is how every earlier check
-  was done and why each one vanished with its session.
+  shape nobody listed. Four rounds were blind spots, ending with a
+  computed specifier whose interpolation comes first — `` `${CDN}/pkg@2` ``
+  has no visible scheme, so the "is this remote?" test skipped it. The
+  fifth was the opposite failure and arrived with the fix for the fourth:
+  widening that test made it reach strings that are not imports at all,
+  so `supabase.from(`profiles_${shard}`)` would have been reported as an
+  unpinned dependency. Widening a gate creates false alarms as reliably
+  as narrowing one creates blind spots, and only the second kind is
+  obvious while you are writing it.
+- **What stopped the cycle was tables, not care.** The parser and the
+  source scan each have a table of cases in the test file, so what took
+  five rounds to get right now fails on a revert without anyone planting
+  a poisoned module under `functions/` — which is how every earlier check
+  was done, and why each one vanished with its session. Two of those
+  checks did not discriminate on the first attempt: the fixture for the
+  computed guard would have passed with the guard deleted, and the
+  lookbehind case was carried entirely by a different rule until it was
+  given a path separator. A mutation check is only evidence once the
+  mutation actually fails.
 - **A checkbox I had no right to tick.** The ROADMAP item was marked done
   before CI had seen the commits, while its own done-when clause asks for
   a green run. Review caught it; it is back to `[ ]` with the evidence
