@@ -15,25 +15,33 @@ priorities can weight discovery ranking later.
 
 Three of those decisions turn on facts nobody had measured, so they were
 measured first. 400 charts were generated over the product's real
-population — births 1991–2006 (ages 20–35 in 2026) at Turkish coordinates —
-and all 79 800 pairs scored with ADR-0003's `compatibility()`:
+population — 1500 charts, births 1991–2005 (ages 20–35 in 2026) at Turkish
+coordinates — and all 1 124 250 pairs scored with ADR-0003's
+`compatibility()`:
 
 ```
-score:  min 14 · p25 55 · median 62 · p75 68 · p95 75 · p99 80 · max 91
-        ≥70: 18.25 %  ≥80: 1.31 %  ≥86: 0.06 %
-aspects per pair: 21.6 over all 51 pairings, 7.5 over the curated 17
+score:  min 16 · p25 56 · median 62 · p75 67 · p95 75 · p99 80 · max 93
+        ≥70: 17.86 %  ≥80: 1.16 %  ≥86: 0.05 %
+aspects per pair: 21.54 over all 51 pairings, 7.47 over the curated 17
+Pluto–Venus present in 36.51 % of pairs
 ```
 
 Two consequences follow. First, ADR-0003's score is not a percentage: the
-median pair scores 62, and the 86 in the owner's mockups occurs in six pairs
+median pair scores 62, and the 86 in the owner's mockups occurs in five pairs
 in ten thousand. Printed with a `%` sign it reads as a school mark, and an
 average pair is told it scored 62 out of 100. Second, the curated pairing
-list is too thin to fill the match page on its own — 17.07 % of pairs cannot
-produce three positive aspects from it and 4.88 % produce no tension at all,
-against 0.06 % and 0.08 % when all 51 pairings are eligible (never both at
-once).
+list is too thin to fill the match page on its own — 16.03 % of pairs cannot
+produce three positive aspects from it, 4.48 % produce no tension at all and
+0.41 % hit both gaps at once, against 0.05 %, 0.05 % and none when all 51
+pairings are eligible.
 
 The measurement script is `packages/astro/scripts/score-distribution.ts`.
+Its population is a sample, so the figures carry sampling error: rerun under
+a second seed the median holds at 62, the quantile breakpoints of decision 3
+move by less than 0.1 of a point at p50, p86 and p99, and the fill-rule
+shares move by less than 0.2 of a point. The 400-chart first pass this ADR
+was drafted from gave the same medians but a tail too thin to calibrate
+against — a single chart supplied a seventh of its pairs above 86.
 
 ## Decision
 
@@ -60,7 +68,18 @@ too rare to carry a standing section.
 
 **Valence.** Emotional, Chemistry, Communication and Stability sum ADR-0003's
 signed terms. Growth sums `|term|`: a square to Uranus is signal there, not
-deficit. This is the one place where tension counts as presence.
+deficit. This is the one place where tension counts as presence, and it is
+why Growth also keeps its signed sum — without it the five dimensions could
+not add back up to the whole.
+
+**The element bonus belongs to a dimension too.** ADR-0003 adds +2 to harmony
+when the two Suns agree by element and again for the two Moons, outside any
+aspect and therefore outside any pairing. The Sun bonus is counted into
+Stability and the Moon bonus into Emotional, matching where sun–sun and
+moon–moon already sit. Without this the dimension sums cannot reconstruct
+the overall harmony total, which they must for a weighted ordering
+(decision 4) to be a reweighting of the same quantity rather than a
+different one.
 
 ### 2. Dimensions are labels, never numbers
 
@@ -70,22 +89,39 @@ the result is shown as a qualitative label — never as 0–100. Five named
 axes with numbers read as a psychometric assessment of a person the user has
 not met, and the underlying method does not support that claim.
 
-Label thresholds are percentiles of the same reference distribution as the
-overall score (decision 3), not hand-picked cut-offs. A dimension with no
-aspects at all renders as absent, not as a low score.
+Each dimension gets **its own** breakpoints, measured over the same
+population but never borrowed from the overall score's. A dimension reduces
+one to four terms through a mapping whose +10 damping was chosen for a
+whole-chart sum of twenty-odd, so its scores sit far lower: over the
+population above, the median pair's Stability is 50.0 and its Communication 52.3
+— measured over the same population, which places them near the 10th and
+15th percentiles of the overall score. A
+median pair labelled "weak" on four axes out of five would be an artefact of
+the damping, not a signal. A dimension with no aspects at all renders as
+absent, not as a low score.
 
 ### 3. The overall score is shown calibrated, or not at all
 
 ADR-0003 is unchanged: `compatibility()` keeps returning the same raw score,
 and it stays the ranking key. What changes is presentation.
 
-A raw score is mapped through a committed reference distribution to a
-percentile before any number reaches a screen, so a displayed 86 means "ahead
-of 86 % of pairs" — a rank, which the method can support — rather than a
-share of some notional maximum, which it cannot. The reference distribution
-is generated by `scripts/score-distribution.ts` over the population above and
-committed as a fixture; regenerating it is part of any change to ADR-0003's
-table, and a test asserts the mapping is monotonic and covers 0–100.
+A score is mapped through a committed reference distribution to a percentile
+before any number reaches a screen, so a displayed 86 means "ahead of 86 % of
+pairs" — a rank, which the method can support — rather than a share of some
+notional maximum, which it cannot.
+
+The fixture is an array of 101 quantile breakpoints, and the displayed value
+is the largest `k` whose breakpoint is at or below the pair's score. Two
+details are load-bearing. It calibrates on the **unrounded** score, not the
+integer `compatibility()` returns: consecutive integers are whole percentiles
+apart near the median, so calibrating on them would leave most displayable
+numbers unreachable — 86 among them — and collapse the whole top end onto 100. And the displayed value is clamped to 1–99, because no pair is ahead of
+every pair and none is ahead of none.
+
+The fixture is generated by `scripts/score-distribution.ts` over the
+population above; regenerating it is part of any change to ADR-0003's table.
+Each of the five dimensions carries its own breakpoint array, generated the
+same way.
 
 Every screen also carries a band label ("Manyetik ve sağlam"), and the label,
 not the number, is the primary element. Dropping the number entirely stays an
@@ -113,9 +149,11 @@ measurement above is what makes this a two-step rule rather than a special
 case: the curated list alone leaves a gap in roughly one pair in six.
 
 A section that is still empty is omitted with its heading, not filled with a
-verdict. `bands.json`'s low-band sentence ("sürdürmek emek ister") is retired
-by rule 13 of the owner's copy philosophy — no text passes judgement on a
-pairing.
+verdict. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
+zorluyor … sürdürmek emek ister") and its `low` sentence ("Ortalama altı bir
+uyum … sürtüşme de belirgin") are both retired by the amendment's copy rules
+— no text passes judgement on a pairing, and between them those two bands
+cover roughly a fifth of pairs.
 
 ## Consequences
 
@@ -126,8 +164,11 @@ pairing.
   (dimension × valence × variant). The 255 existing interpretations stay as
   the card bodies.
 - The reference distribution is a new committed artefact with a real
-  maintenance cost: it is only valid for the population it was generated
-  over, and it must be regenerated whenever ADR-0003's weights change.
+  maintenance cost: six breakpoint arrays (the overall score and five
+  dimensions), valid only for the population they were generated over, all
+  regenerated whenever ADR-0003's weights change.
+- Calibrating on the unrounded score means the display path needs harmony and
+  tension, not just `score`. `compatibility()` already returns both.
 - Showing the orb on screen (`♀ △ ♂ · 0°48′`) moves ADR-0004's accepted
   error from an internal tolerance to something a user can check against
   astro.com. The tolerance is unchanged and invisible at this precision;
@@ -139,3 +180,6 @@ pairing.
   for that dimension must not read as praise.
 - Per-dimension labels need their own thresholds, so the calibration item
   blocks the dimension UI, not just the overall number.
+- Assigning the element bonus to Stability and Emotional makes those two
+  dimensions carry a term that is not an aspect, so neither can be explained
+  on screen purely by naming its aspects.

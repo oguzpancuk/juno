@@ -10,6 +10,66 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The review caught the presentation rule being unreachable
+
+- code-reviewer on `86635ad..HEAD` returned NEEDS_WORK. It reproduced every
+  figure the script printed and confirmed the dimension table covers all 51
+  pairings exactly once — and then found that ADR-0009's headline rule could
+  not actually render. Fixed in this session; the entry above keeps its
+  original numbers because this file is append-only, and they are superseded
+  by the ones here.
+- **The calibration could not produce the number it promised.** Mapping the
+  _rounded_ score to a percentile yields only ~41 distinct values: raw 71 is
+  the 85th percentile and raw 72 the 87th, so 86 — the ADR's own example —
+  was unreachable, and every raw ≥ 83 read as "ahead of 100 % of pairs",
+  which is false. Calibration now runs on the unrounded score and the
+  fixture is 101 quantile breakpoints instead of a raw→percentile map; the
+  displayed value is clamped to 1–99. All 101 breakpoints are distinct.
+- **The sample was too thin at the end that matters.** 400 charts give
+  79 800 pairs that are not independent — a single chart supplied 14 of the
+  48 pairs above 86, and reruns under other seeds moved the ≥80 share by a
+  fifth of its value. The population is now 1500 charts / 1 124 250 pairs
+  (~20 s). Reruns under a second seed now agree to within 0.01 of a point at
+  p50, p86 and p99. Medians never moved; the tail did.
+- **Numbers, restated at the larger sample:** median 62, p75 67, p95 75,
+  p99 80, max 93; ≥70 17.86 %, ≥80 1.16 %, ≥86 0.05 %. Curated-17 gaps
+  16.03 % / 4.48 %, and 0.41 % hit both at once — the earlier entry's "never
+  both at once" was true only of the all-51 case (0.05 % / 0.05 % / none).
+- **Two done-when clauses could not have been satisfied.** C6 asked the
+  per-dimension sums to reconstruct the overall harmony and tension: they
+  cannot, because ADR-0003's element bonus is added to harmony outside any
+  aspect (so it belongs to no pairing) and because Growth sums `|term|`,
+  which has no signed decomposition. ADR-0009 now assigns the Sun element
+  bonus to Stability and the Moon's to Emotional, and Growth carries both a
+  signed and an absolute sum. C3's "covers 0–100" was unsatisfiable in one
+  reading and trivial in the other, and its symmetry clause was about a
+  function that takes no charts; both replaced with checks that bite.
+- **The ADR contradicted itself on dimension thresholds**, and the wrong side
+  was the normative one: §2 said dimension labels use the overall score's
+  distribution. Measured over the population, the median pair's Stability is
+  50.0, Communication 52.3, Emotional 54.3, Chemistry 56.8, Growth 66.4 — a
+  dimension reduces one to four terms through a damping constant chosen for a
+  sum of twenty-odd, so on the overall scale a median pair would be labelled
+  bottom-decile on four axes out of five. Each dimension now gets its own
+  breakpoints. Recomputing those medians also confirmed the mapping table
+  independently: zero aspects fell outside it over 244 650 pairs.
+- **Smaller corrections:** the judging sentence the ADR retires is
+  `bands.json`'s `very-low`, not `low` (both go — together they are shown to
+  about a fifth of pairs); the cohort now really is ages 20–35 in 2026
+  (births ran to end-2006, which is 19); three figures the ADR quoted were
+  not printed by the script and now are; the pair-count guard throws instead
+  of silently skipping, so a loop-bound mistake cannot produce a wrong ADR
+  with no symptom; the LCG comment no longer claims integer determinism it
+  does not have.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; the
+  script rerun at two seeds. Not re-reviewed yet — these commits need their
+  own code-reviewer pass before any push.
+- Open for the owner, unchanged by this work: whether to show the overall
+  number at all. There are now three independent reasons it is fragile (it
+  is not a percentage, it needs a maintained calibration fixture, and its
+  top end is sampling-sensitive), and the band label carries the meaning
+  without any of them. The mechanism works either way.
+
 ## 2026-09-10 — The chart becomes the hero, and the score stops being a percentage
 
 - The owner wrote a full product system for how Juno should present

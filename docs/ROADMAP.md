@@ -372,6 +372,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `access-control-allow-methods` value, and a fixture answering 204
       without it fails the suite (battery).
 
+<!-- The C series continues the "Full Turkish content" item above, whose
+     screenshots are `c1-*`; these five carry the 2026-09-10 amendment. -->
+
 - [ ] **C2 — Presentation layer (PRD amendment 2026-09-10, ADR-0009 §1/§2/§5).**
       The dimension mapping table lands in `packages/astro` and drives four
       things at once: the five dimension sums, the card titles derived from
@@ -389,20 +392,26 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       has a title (battery); `screenshots/c2-chart.png`, `c2-discover.png`
       and `c2-match.png` show the three screens (screenshot).
 - [ ] **C3 — Score calibration (ADR-0009 §3).** No number reaches a screen
-      raw: `packages/astro/scripts/score-distribution.ts` output is committed
-      as a fixture and `displayScore(raw)` maps through it, so a shown 86
-      means "ahead of 86 % of pairs". Band labels and dimension labels take
-      their thresholds from the same distribution instead of hand-picked
-      cut-offs.
-      — done when: a Vitest asserts the mapping is monotonic and covers
-      0–100, that `displayScore` is symmetric in the two charts, and that
-      rerunning the committed script reproduces the committed fixture byte
-      for byte (battery).
+      raw: `packages/astro/scripts/score-distribution.ts` writes six
+      committed breakpoint fixtures (the overall score and each of the five
+      dimensions) and `displayScore(harmony, tension, fixture)` maps through
+      them, so a shown 86 means "ahead of 86 % of pairs". It calibrates on
+      the unrounded score — integers are a whole percentile apart near the
+      median — and clamps the result to 1–99. Band labels and dimension
+      labels take their thresholds from the same fixtures rather than
+      hand-picked cut-offs.
+      — done when: a Vitest asserts each fixture is 101 strictly increasing
+      breakpoints, that every value 1–99 is reachable (86 among them, which
+      calibrating on the integer score would not be), that the top and bottom
+      clamp, that rerunning the committed script at the committed seed
+      reproduces each fixture byte for byte, and that a second seed's
+      breakpoints agree within 0.5 of a point at p50, p86 and p99 (battery).
 - [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with
-      its heading rather than filled. `bands.json`'s low-band sentence, which
-      passes judgement on a pairing, is retired by the amendment's copy rules.
+      its heading rather than filled. `bands.json`'s `very-low` and `low`
+      sentences, which pass judgement on a pairing and between them are shown
+      to roughly a fifth of pairs, are retired by the amendment's copy rules.
       — done when: a Vitest drives the rule over the same generated
       population the ADR measured and asserts no pair yields a page with
       fewer than three positives _and_ no tension, and that a hand-built thin
@@ -421,11 +430,12 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       recomputing anything and without touching a displayed value. No UI in
       v1 — this item exists so the door stays open without breaking the
       symmetry ADR-0003 guarantees.
-      — done when: a Vitest asserts the per-dimension sums reconstruct the
-      overall harmony and tension totals, that the result is still symmetric
-      in its arguments, and that a weighted ordering over the generated
-      population differs from the unweighted one for at least one viewer
-      (battery).
+      — done when: a Vitest asserts that the five dimensions' signed sums
+      plus the two element bonuses reconstruct `harmony` and `tension`
+      exactly (Growth reports both a signed sum, which reconstructs, and the
+      absolute sum its label uses), that the result is still symmetric in its
+      arguments, and that a weighted ordering over the generated population
+      differs from the unweighted one for at least one viewer (battery).
 - [ ] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`
       is the prompt and context for a claude.ai/design project; the

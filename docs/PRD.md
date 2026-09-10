@@ -119,7 +119,7 @@ qualitative labels. Per-dimension numbers are out: five named axes with
 scores read as a psychometric assessment of a person the user has not met.
 The single overall score may be shown, but only mapped through a committed
 reference distribution first, because ADR-0003's raw score is not a
-percentage (median pair 62, the mockups' 86 occurs in 0.06 % of pairs).
+percentage (median pair 62, the mockups' 86 occurs in 0.05 % of pairs).
 See ADR-0009.
 
 **Editorial voice.** All astrology copy describes tendencies, not facts. Use
