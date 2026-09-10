@@ -1,5 +1,14 @@
 # Juno — design brief for Claude Design
 
+> **Out of date as of 2026-09-10 — do not paste this into a design tool yet.**
+> The PRD amendment of that date and `docs/adr/0009-presentation.md` change
+> three of the screens described below: the chart screen leads with six
+> product-language cards rather than ten planet rows, the compatibility score
+> is never shown as a number (a four-band word beside a four-step visual
+> replaces the large "78 uyum" component), and the match screen becomes a
+> band plus a two-section aspect list rather than the single strongest
+> aspect. The brief is regenerated after ROADMAP items C2 and C3 land.
+
 Paste the "Prompt" section into a new Claude Design project, then feed the
 rest of this file as context. Everything below is derived from
 `docs/PRD.md`, `docs/ROADMAP.md` and the shipped screens; the UI strings

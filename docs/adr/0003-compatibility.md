@@ -105,3 +105,13 @@ Descendant.
   them later is a table change, not a redesign.
 - The score is a heuristic, not a claim; the UI labels it "uyum" and the
   "why" line always names the single aspect behind it.
+
+## Amendment 2 (2026-09-10): the score is not displayed
+
+The Consequences above end "the UI labels it 'uyum'", which was a statement
+about the screen, not the engine. The 2026-09-10 PRD amendment and
+`docs/adr/0009-presentation.md` §3 supersede it: the score is never printed.
+It stays exactly as specified here — same table, same 0–100 return, same
+symmetry — and remains the ranking key for `discover`, but it reaches a
+screen only as one of four bands. Everything else in this ADR is unchanged;
+`compatibility()`'s contract is not a presentation decision and never was.

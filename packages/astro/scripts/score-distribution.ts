@@ -117,13 +117,21 @@ function reduce(harmony: number, tension: number): number {
 }
 
 const args = process.argv.slice(2);
-if (args.includes('--seed'))
-  throw new Error('--seed takes an = sign: --seed=20260910');
+// Anything starting with a dash is an option, so a one-dash `-seed=5` is
+// rejected rather than silently becoming the output path.
 const unknown = args.find(
-  (arg) => arg.startsWith('--') && !arg.startsWith('--seed='),
+  (arg) => arg.startsWith('-') && !arg.startsWith('--seed='),
 );
-if (unknown !== undefined) throw new Error(`unknown option: ${unknown}`);
-const seedFlag = args.find((arg) => arg.startsWith('--seed='));
+if (unknown !== undefined)
+  throw new Error(
+    unknown === '--seed' || unknown === '-seed'
+      ? '--seed takes an = sign: --seed=20260910'
+      : `unknown option: ${unknown}`,
+  );
+const seedFlags = args.filter((arg) => arg.startsWith('--seed='));
+if (seedFlags.length > 1)
+  throw new Error(`--seed given ${seedFlags.length} times`);
+const seedFlag = seedFlags[0];
 const seed =
   seedFlag === undefined
     ? DEFAULT_SEED
@@ -132,7 +140,7 @@ const seed =
 // cohort while both guards below stay green, so it is rejected here.
 if (!Number.isInteger(seed) || seed <= 0)
   throw new Error(`--seed must be a positive integer, got "${seedFlag ?? ''}"`);
-const positionals = args.filter((arg) => !arg.startsWith('--'));
+const positionals = args.filter((arg) => !arg.startsWith('-'));
 if (positionals.length > 1)
   throw new Error(
     `expected at most one output path, got ${positionals.length}`,
@@ -160,6 +168,7 @@ let allShort = 0;
 let allNoTension = 0;
 let allBoth = 0;
 let allEmptyWhy = 0;
+let allShortOnly = 0;
 let allBothEmpty = 0;
 let worstReconstruction = 0;
 let mixedSign = 0;
@@ -266,7 +275,9 @@ for (let i = 0; i < charts.length; i++) {
       Math.abs(tensionSum - result.tension),
     );
 
-    const positives = result.aspects.filter((x) => x.term > 0);
+    // `compatibility()` buckets term >= 0 as harmony (an aspect exactly at
+    // its maximum orb has term 0); a card is a card, so match that.
+    const positives = result.aspects.filter((x) => x.term >= 0);
     const tensions = result.aspects.filter((x) => x.term < 0);
     const curated = result.aspects.filter((x) =>
       isCurated(x.planetA, x.planetB),
@@ -275,13 +286,15 @@ for (let i = 0; i < charts.length; i++) {
     if (curated.some((x) => isPair(['pluto', 'venus'], x.planetA, x.planetB)))
       plutoVenusPairs++;
 
-    const curatedPositives = curated.filter((x) => x.term > 0).length;
+    const curatedPositives = curated.filter((x) => x.term >= 0).length;
     const curatedTensions = curated.filter((x) => x.term < 0).length;
     if (curatedPositives < 3) curatedShort++;
     if (curatedTensions === 0) curatedNoTension++;
     if (curatedPositives < 3 && curatedTensions === 0) curatedBoth++;
     if (positives.length < 3) allShort++;
     if (positives.length === 0) allEmptyWhy++;
+    if (positives.length > 0 && positives.length < 3 && tensions.length > 0)
+      allShortOnly++;
     if (tensions.length === 0) allNoTension++;
     if (positives.length < 3 && tensions.length === 0) allBoth++;
     if (positives.length === 0 && tensions.length === 0) allBothEmpty++;
@@ -347,6 +360,10 @@ console.log(
 console.log('match page gaps (all 51 pairings):');
 console.log(`  fewer than 3 positives: ${share(allShort)} % (${allShort})`);
 console.log(`  both at once:           ${share(allBoth)} % (${allBoth})`);
+console.log(
+  `  of those, short but with nothing empty: ${allShortOnly} ` +
+    `(the counts above are nested, not disjoint)`,
+);
 console.log('sections the omit branch actually empties (all 51 pairings):');
 console.log(
   `  no positive at all:     ${share(allEmptyWhy)} % (${allEmptyWhy})`,

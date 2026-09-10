@@ -18,27 +18,56 @@ measured first. 1500 charts were generated over the product's real
 population — births 1991–2005, ages 20–35 in 2026, Turkish coordinates —
 and all 1 124 250 pairs scored with ADR-0003's `compatibility()`:
 
+<!-- The one place any measured count lives. Three review rounds went on
+     figures restated in a second sentence and left behind when the first was
+     corrected; everything else cites this block rather than repeating it.
+     Refresh the whole block from one run of the script, never a line of it. -->
+
 ```
-score:  min 16 · p25 56 · median 62 · p75 67 · p95 75 · p99 80 · max 93
-        ≥70: 17.86 %  ≥80: 1.16 %  ≥86: 0.05 %
-aspects per pair: 21.54 over all 51 pairings, 7.47 over the curated 17
-Pluto–Venus present in 36.51 % of pairs
+seed 20260910 · 1500 charts · 1 124 250 pairs
+
+score            min 16 · p25 56 · median 62 · p75 67 · p95 75 · p99 80 · max 93
+                 ≥70 17.86 % · ≥80 1.16 % · ≥86 0.05 %
+band cuts        56 / 62 / 67, holding 24.47 / 24.59 / 22.12 / 28.82 %
+unrounded tail   p50 61.7061 · p95 75.1609 · p99 79.8777
+aspects per pair 21.54 over all 51 pairings · 7.47 over the curated 17
+Pluto–Venus      present in 36.51 % of pairs
+two signs        98.88 % of pairs have a dimension carrying both a harmony and
+                 a tension contribution (98.52 % counting aspect terms alone)
+reconstruction   dimension sums recover harmony and tension to 1.4e-14
+
+fill, curated 17   short of three 16.03 % · no tension 4.48 % · both 0.41 %
+fill, all 51       short of three 525 · no tension 616 · both 1
+                   (nested counts: of the 525, thirty have no positive aspect
+                   at all, one also has no tension, and 494 simply show one or
+                   two cards)
+omitted sections   no positive at all 30 · no tension at all 616 · neither 0
+
+per dimension      median · cuts (p33/p67) · terms per pair · absent (bonus-only)
+  emotional        57.5 · 53.06 / 61.70 · 3.74 · 1.21 % (0.53 %)
+  chemistry        56.9 · 52.57 / 60.96 · 5.19 · 0.37 % (0.00 %)
+  communication    52.6 · 49.71 / 55.45 · 2.80 · 3.78 % (0.00 %)
+  stability        53.7 · 49.56 / 57.68 · 2.67 · 4.72 % (2.06 %)
+  growth           66.4 · 64.19 / 68.42 · 7.14 · 0.08 % (0.00 %)
 ```
 
 Two consequences follow. First, ADR-0003's score is not a percentage: the
 median pair scores 62, and the 86 in the owner's mockups occurs in five pairs
 in ten thousand. Printed with a `%` sign it reads as a school mark, and an
 average pair is told it scored 62 out of 100. Second, the curated pairing
-list is too thin to fill the match page on its own — 16.03 % of pairs cannot
-produce three positive aspects from it, 4.48 % produce no tension at all and
-0.41 % hit both gaps at once, against 0.05 %, 0.05 % and a single pair in
-1 124 250 when all 51 pairings are eligible.
+list is too thin to fill the match page on its own: roughly one pair in six
+cannot produce three positive aspects from it, against one in two thousand
+when all 51 pairings are eligible.
 
 The measurement script is `packages/astro/scripts/score-distribution.ts`.
 Its population is a sample, so the figures carry sampling error, and how much
 depends entirely on what is calibrated. Rerun at seed 424242: the band cuts
 of decision 3 are **identical** (56 / 62 / 67), every dimension cut moves by
-at most 0.11, and the fill-rule shares move by at most 0.18. A displayed
+at most 0.11, and the fill-rule _shares_ move by at most 0.18. The fill-rule
+_counts_ are a different matter — they live in the tail, and between the two
+seeds "no positive at all" moves 30 → 18, "no tension" 616 → 785 and "short of
+three" 525 → 386. They are order-of-magnitude facts, not constants, and
+decision 5 only needs them to be small and non-zero. A displayed
 number would not have been so lucky: the unrounded distribution it would have
 calibrated on moves 0.01 at p50, 0.05 at p95 and 0.10 at p99 — the sensitivity
 grows exactly where a shown number would be read most closely, which is what
@@ -103,18 +132,13 @@ not met, and the underlying method does not support that claim.
 
 Three labels per dimension, cut at the 33rd and 67th percentiles of **that
 dimension's own** distribution — never at the overall score's. A dimension
-reduces between two and a half and seven terms on average through a mapping
-whose +10 damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
+reduces between 2.67 and 7.14 terms on average (see the figures above)
+through a mapping whose +10 damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
 lower and spread less.
 Measured over the population above:
 
-| Dimension     | median | cuts (p33 / p67) | terms per pair |
-| ------------- | ------ | ---------------- | -------------- |
-| Emotional     | 57.5   | 53.06 / 61.70    | 3.74           |
-| Chemistry     | 56.9   | 52.57 / 60.96    | 5.19           |
-| Communication | 52.6   | 49.71 / 55.45    | 2.80           |
-| Stability     | 53.7   | 49.56 / 57.68    | 2.67           |
-| Growth        | 66.4   | 64.19 / 68.42    | 7.14           |
+The medians, cuts, term counts and absent shares are in the figures block
+above; they are not repeated here.
 
 Each dimension's cuts are taken over the pairs where that dimension is
 actually present; an absent one shows no label and would otherwise drag its
@@ -125,19 +149,18 @@ bottom-band on Communication and Stability — an artefact of the damping
 meeting a short sum, not a signal. A dimension with no aspects renders as
 absent rather than as a low label, and that holds even when an element bonus
 gives it a value: the bonus is not an aspect, so there would be nothing on
-screen to explain the label. A dimension is absent in 0.08 % (Growth) to
-4.72 % (Stability) of pairs, and the bonus-only case inside that is 2.06 %
-for Stability and 0.53 % for Emotional.
+screen to explain the label. How often that happens, and how much of it is
+the bonus-only case, is in the figures block.
 
 ### 3. The overall score is a band, not a number
 
 ADR-0003 is unchanged: `compatibility()` keeps returning the same raw score
 and it stays the ranking key. It is never printed. What reaches a screen is
 one of **four bands**, cut at the 25th, 50th and 75th percentiles of the
-measured population — raw 56, 62 and 67 (owner decision, 2026-09-10). The
-bands hold 24.47 / 24.59 / 22.12 / 28.82 % of pairs: the score is a discrete
-integer with 3–5 % of the mass sitting exactly on each cut, so no choice of
-cuts makes four equal bands.
+measured population (owner decision, 2026-09-10). The cuts and the shares
+they produce are in the figures block; the bands are near-equal rather than
+equal because the score is a discrete integer with 3–5 % of the mass sitting
+exactly on each cut.
 
 Three reasons, in the order they weigh:
 
@@ -198,11 +221,12 @@ measurement above is what makes this a two-step rule rather than a special
 case: the curated list alone leaves a gap in roughly one pair in six.
 
 A section that is still empty is omitted with its heading, not filled with a
-verdict. Measured over the population above, after widening: 30 pairs in
-1 124 250 have no positive aspect at all and 616 have no tense one, so the
-omit branch fires about once in 1 800 matches; no pair has neither. Falling
-short of three cards is a different and much commoner thing — 525 pairs — and
-is not an omission: the section simply shows what there is. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
+verdict. The figures block has the counts: after widening the omit branch
+fires on about one match in 1 700, always for one section and never for both.
+Falling short of three cards is a different and commoner thing, and is not an
+omission — the section shows what there is. The two must not be conflated,
+and the counts are nested: every pair with no positive aspect is also inside
+the short-of-three count. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
 zorluyor … sürdürmek emek ister") and its `low` sentence ("Ortalama altı bir
 uyum … sürtüşme de belirgin") are both retired by the amendment's copy rules
 — no text passes judgement on a pairing, and between them those two bands

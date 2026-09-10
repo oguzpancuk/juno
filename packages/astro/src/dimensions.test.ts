@@ -142,13 +142,17 @@ describe('dimension table', () => {
   });
 
   it('lists 51 rows, with no pairing under two dimensions', () => {
-    // The pin above checks 51 lookups; this checks the table has 51 rows.
-    // Duplicating a pairing into an earlier dimension leaves every lookup
-    // unchanged, so nothing else here would notice.
+    // The pin above checks 51 lookups, which a duplicated row can leave
+    // untouched. The import-time guard in dimensions.ts is the primary
+    // defence against that — this pins the row count and the frozen table,
+    // so a row added without a lookup changing is still caught here.
     const rows = DIMENSIONS.flatMap((dimension) => PAIRINGS[dimension]);
     expect(rows).toHaveLength(51);
     const keys = rows.map(([a, b]) => pairingKeyFor(a, b));
     expect(new Set(keys).size).toBe(51);
+    expect(Object.isFrozen(PAIRINGS)).toBe(true);
+    for (const dimension of DIMENSIONS)
+      expect(Object.isFrozen(PAIRINGS[dimension])).toBe(true);
   });
 
   it('gives every aspect the engine emits a home', () => {

@@ -408,26 +408,25 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       score falls in, that each dimension's labels come from its own cuts and
       not the overall ones, that a bonus-only dimension renders absent, and
       that over a bounded sample (300 charts, about a second) every band
-      holds 20–30 % of pairs (battery). The committed figures themselves —
-      shares 24.47 / 24.59 / 22.12 / 28.82 % over the full 1 124 250 pairs —
-      are reproduced by rerunning the script, which takes ~23 s and stays out
-      of the battery; the generator moves somewhere both can import, so there
-      is one copy of it rather than two.
+      holds 20–30 % of pairs (battery); plus a byte-compare of the committed
+      table against the script's output at the committed seed, which is cheap
+      even though regenerating the population is not. The population itself
+      stays out of the battery — it takes ~23 s against a suite that runs in
+      0.44 s — and the generator moves somewhere both can import, so there is
+      one copy of it rather than two.
 - [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with
       its heading rather than filled. `bands.json`'s `very-low` and `low`
       sentences, which pass judgement on a pairing and between them are shown
       to roughly a fifth of pairs, are retired by the amendment's copy rules.
-      — done when: a Vitest drives the rule over a bounded sample and
-      asserts that a section with no aspect is omitted rather than filled or
-      judged, and that falling short of three cards is not an omission; and
-      a hand-built pair for each case proves it. The full-population figures
-      the rule is sized against come from the script, not the battery: after
-      widening, 30 pairs in 1 124 250 have no positive aspect at all and 616
-      no tense one — so the omit branch fires about once in 1 800 matches and
-      cannot be assumed away — while none has neither, and 525 fall short of
-      three cards without any section being empty.
+      — done when: hand-built pairs prove each branch: a section with no
+      aspect is omitted rather than filled or judged, a section with one or
+      two is shown as it is, and neither case produces a verdict sentence. A
+      bounded sample cannot carry this — at the committed seed a 300-chart
+      sample contains no pair with an empty section at all — so the rule is
+      sized against the figures block in ADR-0009, not against a sample in
+      the battery (battery).
 - [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
       house, written in both directions (5 × 6 × 2). No engine work: the
@@ -439,9 +438,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
 - [ ] **C6 — Weighted-ranking readiness (ADR-0009 §4).** `compatibility()`
       returns a harmony sum and a tension sum per dimension alongside the
       overall score — two figures, never one signed sum, which would collapse
-      to `H − T` and lose the split on the 98.88 % of pairs where some
-      dimension carries both a harmony and a tension contribution (98.52 %
-      counting aspect terms alone, before the element bonus) — plus Growth's
+      to `H − T` and lose the split on the great majority of pairs (the
+      figures block in ADR-0009 has the share) — plus Growth's
       absolute sum. A viewer's own priorities can then reorder `discover`
       without recomputing anything and without touching a displayed value.
       No UI in v1: the item exists so the door stays open without breaking
@@ -461,9 +459,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `apps/mobile` with tokens in one file and shared pieces in
       `apps/mobile/components`. `/design-sync` is not applicable until
       that component set exists (2026-09-09: nothing to sync yet).
-      `docs/design-brief.md` is regenerated after C2 and C3 land: it
-      describes the ten-row chart screen and a raw 0–100 score, both of
-      which the 2026-09-10 amendment replaces.
+      `docs/design-brief.md` is regenerated after C2 and C3 land and now
+      carries a warning saying so: it describes the ten-row chart screen, a
+      large 0–100 score component ("78 uyum") and a match screen built on the
+      single strongest aspect — all three replaced by the 2026-09-10
+      amendment.
       — done when: every screen in the brief matches the accepted design
       in the simulator (screenshot per screen under `screenshots/design-*`),
       tokens live in one file, and the battery is green.

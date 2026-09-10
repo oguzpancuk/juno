@@ -24,7 +24,7 @@ type Pairing = readonly [Body, Body];
  * separately — both are genuine aspects and both belong to the pairing
  * listed here once.
  */
-export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> = {
+const RAW_PAIRINGS: Record<Dimension, readonly Pairing[]> = {
   // The Moon rules the row it appears in: moon–mercury is Emotional, not
   // Communication.
   emotional: [
@@ -94,6 +94,21 @@ export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> = {
 function pairingKey(a: Body, b: Body): string {
   return BODIES.indexOf(a) <= BODIES.indexOf(b) ? `${a}|${b}` : `${b}|${a}`;
 }
+
+/**
+ * Frozen, not merely `readonly`: the type is erased at runtime and this is
+ * exported, so a single cast could otherwise desync the table from the
+ * lookups snapshotted below.
+ */
+export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> =
+  Object.freeze(
+    Object.fromEntries(
+      DIMENSIONS.map((dimension) => [
+        dimension,
+        Object.freeze([...RAW_PAIRINGS[dimension]]),
+      ]),
+    ) as Record<Dimension, readonly Pairing[]>,
+  );
 
 /**
  * Built with an explicit duplicate check rather than by handing pairs to

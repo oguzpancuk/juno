@@ -10,6 +10,70 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+- 2026-09-10 · `.claude/hooks/verify.sh` · A docs-consistency step. Five
+  review rounds here were spent almost entirely on documents disagreeing
+  with each other or with a measured artefact, and the battery has no gate
+  for prose. The cheap version is a grep list of phrases a product declares
+  forbidden; the better version is what this repo now does structurally —
+  one figures block, cited rather than copied — which suggests the template
+  should say that in CLAUDE.md rather than gate it in a hook. Owner has not
+  decided; parked, not applied.
+
+## 2026-09-10 — Stop copying numbers into prose
+
+- Fifth review, and it found the previous round's own headline fix carrying
+  the same defect it had diagnosed: C4 said "525 fall short of three cards
+  **without any section being empty**", but the three counters are nested,
+  not disjoint. All 30 zero-positive pairs are inside the 525, and one more
+  of them has no tension, so the short-but-nothing-empty count is **494**.
+  Three rounds in a row lost to a figure restated in a second sentence and
+  left behind when the first was corrected.
+- **So the copies are gone.** ADR-0009's Context now holds a single fenced
+  "measured figures" block — every count, cut, share and per-dimension row in
+  one place, refreshed as a whole from one run of the script. §2, §3 and §5
+  cite it instead of repeating it; the per-dimension table in §2 is deleted;
+  ROADMAP C3, C4 and C6 point at it rather than restating shares or
+  percentages. There is now no derived number in this repo's docs that exists
+  in two places, which is the only version of this fix that holds.
+- **C4's done-when could not fire.** It asked a bounded sample to prove the
+  omit branch; at the committed seed a 300-chart sample contains **zero**
+  pairs with an empty section (44 850 pairs), so the assertion was either
+  vacuous or a coin flip across seeds. It is now hand-built pairs for each
+  branch, with the population figures cited from the ADR rather than
+  regenerated in the battery.
+- **The fill-rule counts are not constants.** Between the two seeds "no
+  positive at all" moves 30 → 18, "no tension" 616 → 785 and "short of three"
+  525 → 386 — they live in the tail. The ADR's sensitivity paragraph promised
+  "shares move by at most 0.18", which is true of the shares and not of these
+  counts; it now says so, and decision 5 only needs them small and non-zero.
+- **`-seed=5` still ran silently at the default seed**, one keystroke from
+  the form fixed last round, and wrote a file named `-seed=5` into the repo
+  root. Anything starting with a dash is now an option; a second `--seed=`
+  is refused rather than the first quietly winning. Verified: the one-dash
+  form, the space form, two flags, two positionals, zero, negative,
+  fractional and non-numeric seeds all throw with the reason.
+- **ADR-0003 carried a live presentation requirement** — "the UI labels it
+  'uyum'" — with no pointer to ADR-0009, and it is the ADR someone reads to
+  find out what the score means on screen. Amendment 2 records that the
+  engine contract is untouched and the number is not displayed.
+- **`docs/design-brief.md` was the most dangerous file in the repo**: 282
+  lines instructing a design tool to build a ten-row chart screen, a large
+  "78 uyum" number and a single-strongest-aspect match screen, with nothing
+  saying it was stale. It now opens with a warning naming all three; the
+  ROADMAP note about it named only two.
+- Smaller: `PAIRINGS` is frozen, since exporting it made a runtime desync
+  from the lookups reachable with one cast; aspects with a term of exactly 0
+  (an aspect sitting on its maximum orb) now count as cards, matching how
+  `compatibility()` buckets them; "between two and a half and seven terms"
+  disagreed with its own table at the top end (Growth 7.14); the omit-branch
+  rate is one in ~1 700, not ~1 800.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; both
+  seeds rerun; every argument guard exercised; the docs swept for surviving
+  "0–100" and "uyum" claims — the remaining ones are engine-internal, the
+  superseded ADR-0003 line directly above its amendment, or inside the
+  design brief under its warning.
+- Next: C3 and the rest of C2.
+
 ## 2026-09-10 — The same defect, one screen over
 
 - Fourth review. It confirmed the pin test bites (three cross-dimension
