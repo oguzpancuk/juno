@@ -161,7 +161,11 @@ export default function Onboarding() {
               style={[styles.chip, gender === g && styles.chipOn]}
               onPress={() => setGender(g)}
             >
-              <Text style={styles.chipText}>{t.onboarding.genders[g]}</Text>
+              <Text
+                style={[styles.chipText, gender === g && styles.chipTextOn]}
+              >
+                {t.onboarding.genders[g]}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -175,7 +179,14 @@ export default function Onboarding() {
               style={[styles.chip, interestedIn === i && styles.chipOn]}
               onPress={() => setInterestedIn(i)}
             >
-              <Text style={styles.chipText}>{t.onboarding.interests[i]}</Text>
+              <Text
+                style={[
+                  styles.chipText,
+                  interestedIn === i && styles.chipTextOn,
+                ]}
+              >
+                {t.onboarding.interests[i]}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -356,6 +367,7 @@ const styles = StyleSheet.create({
   },
   chipOn: { backgroundColor: color.cool },
   chipText: { color: color.text },
+  chipTextOn: { color: color.onBright, fontWeight: '600' },
   hit: { padding: 12, backgroundColor: color.surfaceHigh, borderRadius: 8 },
   hitText: { color: color.text },
   hint: { color: color.textFaint, fontSize: 12, marginTop: 12 },

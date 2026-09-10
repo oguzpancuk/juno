@@ -415,7 +415,14 @@ export function houseOverlays(
   viewer: PublicChart,
   other: PublicChart,
 ): readonly OverlayReading[] {
-  const groups = new Map<string, OverlayPlacement[]>();
+  const groups = new Map<
+    string,
+    {
+      house: OverlayHouse;
+      direction: OverlayDirection;
+      placements: OverlayPlacement[];
+    }
+  >();
   for (const direction of ['theirs', 'yours'] as const) {
     const from = direction === 'theirs' ? other : viewer;
     const into = direction === 'theirs' ? viewer : other;
@@ -428,35 +435,36 @@ export function houseOverlays(
       );
       if (!OVERLAY_HOUSE_SET.has(house)) continue;
       const key = `${direction}-${house}`;
-      const placements = groups.get(key) ?? [];
-      placements.push({
+      const group = groups.get(key) ?? {
+        house: house as OverlayHouse,
+        direction,
+        placements: [],
+      };
+      group.placements.push({
         planet,
         text: overlayText(planet, house as OverlayHouse, direction),
       });
-      groups.set(key, placements);
+      groups.set(key, group);
     }
   }
   const readings: OverlayReading[] = [];
-  for (const [key, placements] of groups) {
-    const [direction, house] = key.split('-');
-    if (direction === undefined || house === undefined) continue;
+  for (const { house, direction, placements } of groups.values()) {
     readings.push({
-      house: Number(house) as OverlayHouse,
-      direction: direction as OverlayDirection,
+      house,
+      direction,
       // The texts already name the placements — "Onun Venüs'ü senin 7.
       // evinde: …" — so the title carries the house's meaning instead of
       // repeating that clause one line above it.
-      theme: overlayHouseTheme(Number(house) as OverlayHouse),
+      theme: overlayHouseTheme(house),
       placements,
     });
   }
   // Their planets in your houses first — the ones about you read first —
-  // then by how much the house says about a pair, then by how many
-  // placements landed there.
+  // then by how much the house says about a pair. Direction and house are
+  // unique per group, so those two order it completely.
   return readings.sort(
     (x, y) =>
       (x.direction === 'theirs' ? 0 : 1) - (y.direction === 'theirs' ? 0 : 1) ||
-      HOUSE_RANK[x.house] - HOUSE_RANK[y.house] ||
-      y.placements.length - x.placements.length,
+      HOUSE_RANK[x.house] - HOUSE_RANK[y.house],
   );
 }

@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,7 +9,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { color, gradient, radius, space, type } from '@/theme/tokens';
+import { color, radius, space, type } from '@/theme/tokens';
 
 /**
  * The shared pieces every screen is built from. One file: the set is small
@@ -41,10 +40,6 @@ export function Screen({
       {children}
     </ScrollView>
   );
-}
-
-export function Title({ children }: { children: ReactNode }) {
-  return <Text style={s.title}>{children}</Text>;
 }
 
 export function Display({ children }: { children: ReactNode }) {
@@ -102,65 +97,6 @@ export function Card({
   );
 }
 
-export function GradientButton({
-  label,
-  onPress,
-  disabled = false,
-  testID,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  testID?: string;
-}) {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        s.buttonWrap,
-        (pressed || disabled) && s.buttonPressed,
-      ]}
-    >
-      <LinearGradient
-        colors={[...gradient]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={s.button}
-      >
-        <Text style={s.buttonText}>{label}</Text>
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
-export function QuietButton({
-  label,
-  onPress,
-  disabled = false,
-  testID,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  testID?: string;
-}) {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        s.quiet,
-        (pressed || disabled) && s.buttonPressed,
-      ]}
-    >
-      <Text style={s.quietText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 export function LinkText({
   children,
   onPress,
@@ -179,94 +115,6 @@ export function LinkText({
   );
 }
 
-/** A small pill: a sign, an interest, a dimension. */
-export function Chip({
-  top,
-  bottom,
-  testID,
-}: {
-  top?: string;
-  bottom: string;
-  testID?: string;
-}) {
-  return (
-    <View style={s.chip} testID={testID}>
-      {top === undefined ? null : <Text style={s.chipTop}>{top}</Text>}
-      <Text style={s.chipBottom}>{bottom}</Text>
-    </View>
-  );
-}
-
-/**
- * The compatibility band as a ring: the design's centrepiece, with the
- * band's word where a percentage would have been. There is no percentage
- * in this product (ADR-0009 §3); the ring fills by band step so two cards
- * stay comparable at a glance without claiming a precision the method does
- * not have.
- */
-export function BandRing({
-  step,
-  steps,
-  name,
-  testID,
-}: {
-  step: number;
-  steps: number;
-  name: string;
-  testID?: string;
-}) {
-  const filled = Math.max(0, Math.min(1, step / steps));
-  return (
-    <View style={s.ringOuter} testID={testID}>
-      <LinearGradient
-        colors={[...gradient]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 1, y: 0 }}
-        style={[s.ring, { opacity: 0.35 + filled * 0.65 }]}
-      >
-        <View style={s.ringInner}>
-          <Text style={s.ringName}>{name}</Text>
-          <BandMeter step={step} steps={steps} />
-        </View>
-      </LinearGradient>
-    </View>
-  );
-}
-
-/**
- * Four rising bars with the first N filled — comparability without a
- * number. Used on the discover card, and inside the ring.
- */
-export function BandMeter({
-  step,
-  steps,
-  testID,
-}: {
-  step: number;
-  steps: number;
-  testID?: string;
-}) {
-  return (
-    <View style={s.meter} testID={testID}>
-      {Array.from({ length: steps }, (_, i) => (
-        <View
-          key={i}
-          style={[
-            s.meterStep,
-            { height: 8 + i * 4 },
-            i < step && s.meterStepOn,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
-/**
- * The brand mark, drawn rather than imported: two spheres on an orbit.
- * `assets/brand/mark.svg` is the source of truth for the exported icons;
- * this is the same idea in views, so the app needs no SVG runtime.
- */
 export function OrbitMark({ size = 96 }: { size?: number }) {
   const dot = size * 0.3;
   return (
@@ -318,7 +166,6 @@ const s = StyleSheet.create({
     gap: space.md,
   },
   display: { ...type.display, color: color.text },
-  title: { ...type.title, color: color.text },
   label: {
     ...type.label,
     color: color.textFaint,
@@ -339,60 +186,7 @@ const s = StyleSheet.create({
     backgroundColor: color.surfaceHigh,
     borderColor: color.borderStrong,
   },
-  buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },
-  buttonPressed: { opacity: 0.7 },
-  button: { paddingVertical: 15, alignItems: 'center' },
-  buttonText: { ...type.heading, color: color.onBright },
-  quiet: {
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  quietText: { ...type.heading, color: color.text, fontWeight: '500' },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
-  chip: {
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
-    minWidth: 0,
-  },
-  chipTop: { ...type.caption, color: color.textFaint },
-  chipBottom: { ...type.body, color: color.text, fontWeight: '600' },
-  ringOuter: { alignItems: 'center', paddingVertical: space.sm },
-  ring: {
-    width: 188,
-    height: 188,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringInner: {
-    width: 168,
-    height: 168,
-    borderRadius: 999,
-    backgroundColor: color.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.sm,
-  },
-  ringName: {
-    ...type.title,
-    color: color.text,
-    textAlign: 'center',
-    paddingHorizontal: space.md,
-  },
-  meter: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
-  meterStep: {
-    width: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.13)',
-  },
-  meterStepOn: { backgroundColor: color.pink },
   orbit: {
     position: 'absolute',
     borderWidth: 2,

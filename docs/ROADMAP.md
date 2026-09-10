@@ -505,16 +505,17 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       _Done, by a different route than this clause imagined: the owner
       brought a finished design on 2026-09-11 rather than running a Claude
       Design session, so `design-brief.md` was never used as a prompt — it
-      stands as the written record of the screens. `apps/mobile/theme/
-tokens.ts` is the one file and nothing outside it holds a hex value;
-      `apps/mobile/components/ui.tsx` is the shared set. Screenshots:
+      stands as the written record of the screens. The token file is the one
+      place a colour lives — no literal survives outside it, checked by
+      grep — and `apps/mobile/components/ui.tsx` is the shared set, trimmed
+      to what the screens import. Screenshots:
       `design-chart.png`, `design-discover.png`, `design-match.png`,
       `design-match-sections.png` for the screens the design changed most,
-      plus `design-matches.png`, `design-settings.png`,
-      `design-profile.png`, `design-chat.png`, `design-legal.png` and
-      `design-blocked.png` for the ones that took the palette
-      mechanically. Ten of the eleven screens; onboarding needs a
-      signed-out account and was not photographed._
+      plus `design-sign-in.png`, `design-discover-detail.png`,
+      `design-matches.png`, `design-settings.png`, `design-profile.png`,
+      `design-chat.png`, `design-legal.png` and `design-blocked.png`. Ten
+      of the eleven; onboarding needs an account part-way through sign-up
+      and was not photographed._
       NOT met: the mockups carry a compatibility percentage on most
       screens, five numeric dimension scores and a Juno-asteroid feature.
       The first two are refused by ADR-0009 §3 (owner reaffirmed on

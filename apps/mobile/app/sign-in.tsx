@@ -85,7 +85,10 @@ export default function SignIn() {
           />
           <Pressable
             testID="send-code"
-            style={[styles.button, busy && styles.buttonBusy]}
+            style={[
+              styles.button,
+              (busy || !email.includes('@')) && styles.buttonBusy,
+            ]}
             disabled={busy || !email.includes('@')}
             onPress={() => void sendCode()}
           >

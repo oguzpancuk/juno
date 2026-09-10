@@ -19,8 +19,5 @@
     "prettier": "^3.9.6",
     "tsx": "^4.23.13",
     "typescript": "~6.0.3"
-  },
-  "dependencies": {
-    "expo-linear-gradient": "~57.0.1"
   }
 }

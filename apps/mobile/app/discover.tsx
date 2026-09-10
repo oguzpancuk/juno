@@ -10,6 +10,7 @@ import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  ScrollView,
   Image,
   Pressable,
   StyleSheet,
@@ -139,7 +140,11 @@ export default function Discover() {
   const showDetail = current !== undefined && detailFor === current.row.id;
 
   return (
-    <View style={styles.screen} testID="discover-screen">
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.scrollContent}
+      testID="discover-screen"
+    >
       <View style={styles.nav}>
         <Link href="/chart" style={styles.navLink}>
           {t.discover.myChart}
@@ -196,7 +201,7 @@ export default function Discover() {
             {/* The name sits on the photo, as in the design; the chart
                 below it is what the card is actually about. */}
             <LinearGradient
-              colors={['transparent', 'rgba(7,6,15,0.55)', color.bg]}
+              colors={['transparent', color.scrim, color.bg]}
               style={styles.photoScrim}
             >
               <Text style={styles.name}>
@@ -315,7 +320,7 @@ export default function Discover() {
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -353,11 +358,12 @@ function Chip({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: color.bg,
+  screen: { flex: 1, backgroundColor: color.bg },
+  scrollContent: {
     padding: space.lg,
     paddingTop: 64,
+    paddingBottom: 48,
+    flexGrow: 1,
   },
   center: {
     flex: 1,
@@ -372,25 +378,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: space.md,
   },
-  navLink: { ...type.bodySmall, color: color.textMuted },
+  navLink: { ...type.bodySmall, color: color.textMuted, flexShrink: 1 },
   navTitle: { ...type.heading, color: color.text },
   title: { ...type.heading, color: color.text },
   navRight: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   nudge: { ...type.bodySmall, color: color.cool, paddingBottom: space.sm },
   card: {
-    flex: 1,
     backgroundColor: color.surface,
     borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: color.border,
-    overflow: 'hidden',
     padding: space.lg,
     gap: space.sm,
   },
+  // The photo is what needs clipping, for the card's top corners — not the
+  // card, which has to be free to grow past the viewport and scroll.
   photoWrap: {
     marginHorizontal: -space.lg,
     marginTop: -space.lg,
     marginBottom: space.xs,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    overflow: 'hidden',
   },
   cardPhoto: { width: '100%', height: 380 },
   cardPhotoEmpty: { backgroundColor: color.surfaceHigh },
@@ -433,7 +442,7 @@ const styles = StyleSheet.create({
   meterStep: {
     width: 7,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.13)',
+    backgroundColor: color.track,
   },
   meterStepOn: { backgroundColor: color.pink },
   why: { ...type.body, color: color.textMuted, textAlign: 'center' },

@@ -33,6 +33,51 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — A card that could clip its own buttons
+
+- The review of the redesign found a regression I had introduced, and it
+  was the kind a screenshot cannot show: the discover card became
+  `flex: 1` with `overflow: 'hidden'` inside a screen that does not
+  scroll. On iOS that sets `clipsToBounds`, so anything past the card's
+  bottom edge is neither drawn nor hit-tested. Collapsed, on this device,
+  the content cleared the edge by about 75 points. One tap on "Uyum
+  detayı" adds four hundred, and the like and pass buttons went out of
+  reach with no way back except the toggle that was itself sliding off.
+  A three-line bio ate the slack on its own, and on a smaller phone the
+  buttons were gone before the user touched anything. The screen scrolls
+  now and only the photo clips, for the card's top corners. Verified on
+  the simulator with the detail fully open:
+  `screenshots/design-discover-detail.png`.
+- **Two "done" claims were false and are corrected.** "Nothing outside
+  the token file holds a hex value" — two survived the migration, an
+  `ActivityIndicator` colour and a hand-spelled `rgba` of the background;
+  both are tokens now (`color.track`, `color.scrim`) and the claim is
+  true. And the screenshot inventory said ten of eleven screens while
+  sign-in, the most-redesigned screen of the four, had none. It has one.
+- **Contrast:** `#7c6cff` became the lighter `color.cool`, and four places
+  kept near-white text on it — the gender and radius chips, the unread
+  badge, the chat send button. Measured 2.47:1, below the 3:1 floor even
+  for large text, and the badge is 12 pt. They take `color.onBright` now,
+  which is what its docstring was for.
+- **The shared component set shipped six components nothing imported**,
+  including a `BandRing` that divided by a caller-supplied `steps` with no
+  guard. They are gone; `components/ui.tsx` is now what the screens
+  actually use.
+- Smaller, all from the same review: a block or report resolving after the
+  key swap now checks it is still mounted before navigating or showing a
+  confirmation; a non-string route param starts in the error state instead
+  of spinning for ever; `expo-linear-gradient` was declared in the
+  workspace root as well as the app; the overlay grouping carries its house
+  and direction instead of parsing them back out of a string key, and the
+  unreachable third sort criterion is gone; the sign-in button dims when it
+  is disabled; the discover nav row can shrink.
+- **`matchSections`' second parameter has a test now.** It closed a real
+  collision — three titles are byte-identical to dimension labels — and had
+  none. The test states the honest contract: a title already on the screen
+  is stepped off when a free variant exists, and the section keeps its
+  cards when the bucket is exhausted.
+- Verified: `bash .claude/hooks/verify.sh` green, five steps, 281 tests.
+
 ## 2026-09-11 — The design, and what of it could not be built
 
 - The owner brought a finished visual design and asked for the UI to

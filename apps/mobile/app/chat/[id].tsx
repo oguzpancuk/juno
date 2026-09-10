@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sendDisabled: { backgroundColor: color.disabled },
-  sendLabel: { color: color.text, fontSize: 15, fontWeight: '600' },
+  sendLabel: { color: color.onBright, fontSize: 15, fontWeight: '600' },
   failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
   muted: { color: color.textMuted, textAlign: 'center' },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },

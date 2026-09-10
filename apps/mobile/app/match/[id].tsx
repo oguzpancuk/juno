@@ -51,7 +51,11 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const [row, setRow] = useState<MatchProfileRow | null | 'loading'>('loading');
+  // A route param that is not a string can never resolve, so it starts as
+  // the error state rather than spinning for ever.
+  const [row, setRow] = useState<MatchProfileRow | null | 'loading'>(
+    typeof id === 'string' ? 'loading' : null,
+  );
   const [me, setMe] = useState<OwnProfile | null>(null);
   // The safety buttons are the last thing on the page; without the inset
   // they sit under the home indicator and do not take a tap.
@@ -61,6 +65,15 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = useRef(false);
+  // The view is keyed by id, so a swap unmounts it — but a request already
+  // in flight still resolves. Its result belongs to the person who is gone.
+  const live = useRef(true);
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
 
   const [meFailed, setMeFailed] = useState(false);
 
@@ -113,7 +126,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   if (row === 'loading') {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#9a94b8" />
+        <ActivityIndicator color={color.textMuted} />
       </View>
     );
   }
@@ -139,6 +152,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
     busy.current = true;
     void blockUser(userId, other).then((ok) => {
       busy.current = false;
+      if (!live.current) return;
       setConfirmingBlock(false);
       if (!ok) {
         setNotice(t.safety.failed);
@@ -153,6 +167,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
     busy.current = true;
     void reportUser(userId, other, reason).then((ok) => {
       busy.current = false;
+      if (!live.current) return;
       setReporting(false);
       setNotice(ok ? t.safety.reported : t.safety.failed);
     });

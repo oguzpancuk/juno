@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    color: color.text,
+    color: color.onBright,
     backgroundColor: color.cool,
     fontSize: 12,
     fontWeight: '700',

@@ -168,3 +168,53 @@ describe('card titles', () => {
     }
   });
 });
+
+describe('titles already on the screen', () => {
+  it('steps off a label the dimension chips are showing', () => {
+    // Four of the thirty titles are byte-identical to a dimension label,
+    // and the chips sit directly above these cards on the match screen.
+    const a = chart('1995-07-14T00:30:00Z');
+    const b = chart('1990-01-01T09:00:00Z');
+    const match = compatibility(a, b);
+    const plain = matchSections(match);
+    const first = plain.drawn[0];
+    if (!first) throw new Error('no drawn card');
+
+    const avoided = matchSections(match, [first.title]);
+    const stillThere = [...avoided.drawn, ...avoided.interesting].map(
+      (c) => c.title,
+    );
+    expect(stillThere, `${first.title} came back`).not.toContain(first.title);
+  });
+
+  it('fills both sections all the same', () => {
+    // There are three variants per bucket, so a card whose bucket is
+    // exhausted falls back rather than disappearing: the section keeps its
+    // cards either way, which is what the screen depends on.
+    const a = chart('2001-03-22T17:45:00Z');
+    const b = chart('1996-11-03T04:15:00Z');
+    const match = compatibility(a, b);
+    const plain = matchSections(match);
+    const avoided = matchSections(
+      match,
+      [...plain.drawn, ...plain.interesting].map((c) => c.title),
+    );
+    expect(avoided.drawn).toHaveLength(plain.drawn.length);
+    expect(avoided.interesting).toHaveLength(plain.interesting.length);
+    for (const card of avoided.drawn)
+      expect(card.title.length).toBeGreaterThan(2);
+  });
+
+  it('keeps a screen free of repeats once the chips are fed in', () => {
+    // What the match screen actually does: pass the labels it is showing.
+    const a = chart('1993-05-05T12:00:00Z');
+    const b = chart('2004-08-19T22:10:00Z');
+    const match = compatibility(a, b);
+    const chips = ['Kolay yakınlık', 'Aynı frekans', 'Dönüştüren'];
+    const sections = matchSections(match, chips);
+    const titles = [...sections.drawn, ...sections.interesting].map(
+      (c) => c.title,
+    );
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+});

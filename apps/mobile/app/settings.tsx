@@ -119,7 +119,9 @@ export default function Settings() {
             style={[styles.chip, radius === km && styles.chipOn]}
             onPress={() => void choose(km)}
           >
-            <Text style={styles.chipText}>{km} km</Text>
+            <Text style={[styles.chipText, radius === km && styles.chipTextOn]}>
+              {km} km
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -214,6 +216,7 @@ const styles = StyleSheet.create({
   },
   chipOn: { backgroundColor: color.cool },
   chipText: { color: color.text },
+  chipTextOn: { color: color.onBright, fontWeight: '600' },
   hint: { color: color.textFaint, fontSize: 12 },
   error: { color: color.danger },
   ok: { color: color.ok, fontSize: 13 },

@@ -16,6 +16,10 @@ export const color = {
   surfaceHigh: '#1D1B31',
   border: 'rgba(255,255,255,0.07)',
   borderStrong: 'rgba(255,255,255,0.14)',
+  /** The unfilled part of a meter. */
+  track: 'rgba(255,255,255,0.13)',
+  /** `bg` with alpha, for a scrim over a photo. */
+  scrim: 'rgba(7,6,15,0.55)',
 
   text: '#F6F3FF',
   textMuted: '#9E97BD',
