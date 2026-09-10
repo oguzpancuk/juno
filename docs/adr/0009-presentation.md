@@ -16,7 +16,7 @@ priorities can weight discovery ranking later.
 Three of those decisions turn on facts nobody had measured, so they were
 measured first. 1500 charts were generated over the product's real
 population — births 1991–2005, ages 20–35 in 2026, Turkish coordinates —
-and all 1 124 250 pairs scored with ADR-0003's `compatibility()`:
+and every pair scored with ADR-0003's `compatibility()`:
 
 <!-- The one place any measured count lives. Three review rounds went on
      figures restated in a second sentence and left behind when the first was
@@ -53,6 +53,13 @@ per dimension      median · cuts (p33/p67) · terms per pair · absent (bonus-o
   communication    52.6 · 49.71 / 55.45 · 2.80 · 3.78 % (0.00 %)
   stability        53.7 · 49.56 / 57.68 · 2.67 · 4.72 % (2.06 %)
   growth           66.4 · 64.19 / 68.42 · 7.14 · 0.08 % (0.00 %)
+
+rerun at seed 424242 — what moves
+  band cuts        unchanged
+  dimension cuts   at most 0.11
+  fill shares      at most 0.18
+  fill counts      no positive 30 → 18 · no tension 616 → 785 · short 525 → 386
+  unrounded tail   p50 0.0101 · p95 0.0499 · p99 0.1022
 ```
 
 Two consequences follow. First, ADR-0003's score is not a percentage: the
@@ -65,17 +72,16 @@ when all 51 pairings are eligible.
 
 The measurement script is `packages/astro/scripts/score-distribution.ts`.
 Its population is a sample, so the figures carry sampling error, and how much
-depends entirely on what is calibrated. Rerun at seed 424242: the band cuts
-of decision 3 are **identical** (56 / 62 / 67), every dimension cut moves by
-at most 0.11, and the fill-rule _shares_ move by at most 0.18. The fill-rule
-_counts_ are a different matter — they live in the tail, and between the two
-seeds "no positive at all" moves 30 → 18, "no tension" 616 → 785 and "short of
-three" 525 → 386. They are order-of-magnitude facts, not constants, and
-decision 5 only needs them to be small and non-zero. A displayed
-number would not have been so lucky: the unrounded distribution it would have
-calibrated on moves 0.01 at p50, 0.05 at p95 and 0.10 at p99 — the sensitivity
-grows exactly where a shown number would be read most closely, which is what
-decision 3 declines to maintain. The 400-chart first pass this
+depends entirely on what is calibrated. The block's second half is a rerun
+under another seed: the band cuts decision 3 depends on do not move at all,
+the dimension cuts barely, and the fill-rule shares barely. The fill-rule
+_counts_ are a different matter — they live in the tail and swing by tens of
+per cent between seeds. They are order-of-magnitude facts, not constants, and
+decision 5 only needs them small and non-zero. A displayed number would not
+have been so lucky: the unrounded distribution it would have calibrated on
+moves ten times as much at the 99th percentile as at the median — the
+sensitivity grows exactly where a shown number would be read most closely,
+which is what decision 3 declines to maintain. The 400-chart first pass this
 ADR was drafted from gave the same medians but a tail no calibration should
 have rested on: a single chart supplied 14 of its 48 pairs above 86. That
 last figure is history rather than a refreshable output — it was measured at

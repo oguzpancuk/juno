@@ -130,7 +130,8 @@ qualitative labels. Per-dimension numbers are out: five named axes with
 scores read as a psychometric assessment of a person the user has not met.
 The single overall score is not shown as a number either (owner decision,
 2026-09-10): ADR-0003's raw score is not a percentage — the median pair
-scores 62 and the mockups' 86 occurs in 0.05 % of pairs — and a figure on the
+scores 62 and the mockups' 86 occurs in five pairs in ten thousand — and a
+figure on the
 screen turns the aspect cards under it into evidence for a verdict. It
 reaches the screen as one of four bands instead, shown as a word beside a
 four-step visual so cards stay comparable. See ADR-0009 §3, which also

@@ -33,6 +33,7 @@ step "typecheck" npm run typecheck --workspaces --if-present
 step "lint"      npm run lint --workspaces --if-present
 step "format"    npx prettier --check .
 step "tests"     npm run test --workspaces --if-present
+step "docs"      bash .claude/hooks/docs-figures.sh
 
 rm -f "$log"
 printf '%s\n' "${results[@]}"

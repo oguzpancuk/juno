@@ -10,14 +10,40 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
-- 2026-09-10 · `.claude/hooks/verify.sh` · A docs-consistency step. Five
-  review rounds here were spent almost entirely on documents disagreeing
-  with each other or with a measured artefact, and the battery has no gate
-  for prose. The cheap version is a grep list of phrases a product declares
-  forbidden; the better version is what this repo now does structurally —
-  one figures block, cited rather than copied — which suggests the template
-  should say that in CLAUDE.md rather than gate it in a hook. Owner has not
-  decided; parked, not applied.
+- 2026-09-10 · `.claude/hooks/verify.sh` + `.claude/hooks/docs-figures.sh` ·
+  A docs-consistency step, applied here on the owner's say-so and awaiting
+  `/update-stack` for maya. Six code-review rounds went almost entirely to
+  one defect: a measured number restated in a second sentence, corrected in
+  the first, silently false in the second. The gate is not a phrase
+  blacklist — it reads the fenced "Measured figures" block out of the
+  product's own ADR, takes every distinctive number in it (decimals, grouped
+  thousands) and fails if any appears elsewhere under `docs/`, exempting the
+  append-only NOTES and any file stale by declaration. It is generic: the
+  block's location is the only product-specific line, so the template can
+  carry it with that as a variable. It found three surviving copies on its
+  first run, after six human-style review rounds had passed the same files.
+
+## 2026-09-10 — A gate that reads the ADR instead of a blacklist
+
+- Owner approved the parked upstream candidate and a push. The candidate is
+  applied: `verify.sh` gained a `docs` step backed by
+  `.claude/hooks/docs-figures.sh`.
+- It enforces the property the last six rounds were really about — measured
+  figures are cited, not copied — by deriving its watch list from the ADR's
+  own figures block rather than from a hand-maintained list of forbidden
+  phrases. Nothing to keep in sync: adding a figure to the block extends the
+  gate automatically.
+- On its first run it failed, naming three copies that six review rounds had
+  read past: `0.05 %` restated in the PRD, `1 124 250` in the ADR's own
+  prose above the block, and the sensitivity movements (0.01 / 0.05 / 0.10,
+  0.11, 0.18, and the seed-to-seed count swings) which were themselves
+  measurements living only in prose. The movements are now part of the
+  block — a second half showing what a rerun under another seed moves — and
+  the prose cites them qualitatively.
+- Mutation-checked: pasting `24.47` into `docs/PRD.md` fails the step with
+  the file, line and token; removing it restores green.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit, now
+  five steps.
 
 ## 2026-09-10 — A result I did not observe, and the last of the copies
 
