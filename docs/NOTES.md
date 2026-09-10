@@ -10,6 +10,34 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Closing out the rename: volumes gone, old name let go
+
+- Two owner decisions, recorded because neither is visible in the code
+  and both would otherwise be re-proposed.
+- **No stardate Docker volume is left.** The earlier entry says the
+  `supabase_db_stardate` volume is "still on the machine — harmless, and
+  safe to drop"; the owner dropped it, and two more the entry never named
+  went with it this session (`supabase_edge_runtime_stardate`, the Deno
+  module cache, and `supabase_storage_stardate`, the old local Storage
+  files). Nothing was attached to any of them — the juno stack has run on
+  its own volumes since the rename — and all three are reproducible from
+  migrations, seed and a cold fetch. Treat the earlier line as
+  superseded.
+- **The freed `oguzpancuk/stardate` repository name is not being
+  reserved.** GitHub redirects a renamed repository only until someone
+  else claims the old name, so a stale clone or an external link still
+  pointing at `stardate` breaks the day that happens. The owner accepts
+  that rather than holding an empty repository for it. Nothing here
+  depends on the old URL: `origin` was repointed at
+  `oguzpancuk/juno.git`, and no file in the repo references either name
+  as a URL.
+- Verified after the removal, not before it: `bash .claude/hooks/verify.sh`
+  green on a clean committed tree, with the Supabase suite's 119 tests
+  passing against the running juno stack — which is the check that
+  matters here, since `global-setup.ts` refuses to start unless every
+  Edge Function answers a preflight and `local.ts` fails on a missing
+  database, so there is no path by which a broken stack reports green.
+
 ## 2026-09-10 — The two leftovers from the CI outage, closed
 
 - Both were the same shape as the outage itself: a difference between
