@@ -1,0 +1,12 @@
+{
+  "emotional-soft": ["Kolay yakınlık", "Rahat sıcaklık", "Anlaşılan taraf"],
+  "emotional-hard": ["Farklı ihtiyaçlar", "Yüklü yakınlık", "Dalgalı sıcaklık"],
+  "chemistry-soft": ["Doğal kimya", "Kolay çekim", "Aynı tempo"],
+  "chemistry-hard": ["Yüklü kimya", "Farklı tempolar", "Direnen çekim"],
+  "communication-soft": ["Aynı frekans", "Kolay konuşma", "Anlaşan kafalar"],
+  "communication-hard": ["Farklı zihinler", "Çeviri isteyen", "Ayrı yollardan"],
+  "stability-soft": ["Sağlam bir zemin", "Tutan taraf", "Yere basan"],
+  "stability-hard": ["Ağırlaşan zemin", "Sınav gibi", "Yavaşlatan"],
+  "growth-soft": ["Genişleten", "Kıpırdatan", "Açan taraf"],
+  "growth-hard": ["Sarsan", "Dönüştüren", "Kolay yok sayılmayan"]
+}

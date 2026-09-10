@@ -29,6 +29,8 @@ import type { HouseNumber } from './houses';
 import bandsRaw from '../content/tr/bands.json';
 import dimensionsRaw from '../content/tr/dimensions.json';
 import calibrationRaw from '../content/calibration.json';
+import placementsRaw from '../content/tr/placements.json';
+import titlesRaw from '../content/tr/titles.json';
 import elementsRaw from '../content/tr/elements.json';
 import housesRaw from '../content/tr/houses.json';
 import natalAspectsRaw from '../content/tr/natal-aspects.json';
@@ -90,6 +92,26 @@ const DimensionEntry = z.object({
   high: Label,
 });
 const bands = z.record(z.string(), BandEntry).parse(bandsRaw);
+/**
+ * The six placements the chart screen leads with, titled by what they mean
+ * for dating rather than by the planet's name (PRD amendment 2026-09-10).
+ */
+export const PRIMARY_PLACEMENTS = [
+  'sun',
+  'moon',
+  'ascendant',
+  'mercury',
+  'venus',
+  'mars',
+] as const;
+export type PrimaryPlacement = (typeof PRIMARY_PLACEMENTS)[number];
+const placements = z.record(z.string(), Label).parse(placementsRaw);
+/**
+ * Aspect card titles, keyed by dimension and valence rather than by pairing:
+ * one table of thirty instead of a title on each of the 255 texts, and the
+ * dimension table decides which applies (ADR-0009 §1).
+ */
+const titles = z.record(z.string(), z.array(Label).length(3)).parse(titlesRaw);
 const dimensionLabels = z
   .record(z.string(), DimensionEntry)
   .parse(dimensionsRaw);
@@ -324,3 +346,48 @@ export const CONTENT_FILES = {
   elements,
   bands: Object.fromEntries(Object.entries(bands).map(([k, v]) => [k, v.text])),
 } as const;
+
+/** "Nasıl seversin" for Venus — the product-language title of a placement. */
+export function placementLabel(placement: PrimaryPlacement): string {
+  return must(placements, placement, 'placements.json');
+}
+
+/**
+ * A stable variant index for an aspect, so the same pair always reads the
+ * same way. Not random: a title that changed between two visits would look
+ * like the chart had changed.
+ */
+function variantOf(key: string): number {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++)
+    hash = (hash * 31 + key.charCodeAt(i)) % 9973;
+  return hash % 3;
+}
+
+/**
+ * The card title for an inter-chart aspect: "Kolay çekim", "Yüklü kimya".
+ * Soft and hard are not good and bad — a square is a dynamic, and the hard
+ * titles say what it is rather than judging it (ADR-0009 §1, PRD amendment).
+ */
+export function aspectTitle(
+  dimension: string,
+  term: number,
+  key: string,
+  taken: ReadonlySet<string> = new Set(),
+): string {
+  const valence = term >= 0 ? 'soft' : 'hard';
+  const entry = titles[`${dimension}-${valence}`];
+  if (entry === undefined)
+    throw new Error(`titles.json has no "${dimension}-${valence}"`);
+  // Start at the stable variant, then step on if that title is already on
+  // the screen: two cards reading "Anlaşılan taraf" in one section looks
+  // like a bug, and there are only three variants per bucket to collide in.
+  const start = variantOf(key);
+  for (let step = 0; step < entry.length; step++) {
+    const choice = entry[(start + step) % entry.length];
+    if (choice !== undefined && !taken.has(choice)) return choice;
+  }
+  const fallback = entry[start];
+  if (fallback === undefined) throw new Error('titles.json short of variants');
+  return fallback;
+}

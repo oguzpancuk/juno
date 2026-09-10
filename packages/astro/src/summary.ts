@@ -1,5 +1,10 @@
 import { PLANETS, type Planet } from './bodies';
-import { DIMENSIONS, isCurated, type Dimension } from './dimensions';
+import {
+  DIMENSIONS,
+  dimensionOf,
+  isCurated,
+  type Dimension,
+} from './dimensions';
 import {
   compatibility,
   elementOf,
@@ -12,7 +17,11 @@ import {
 } from './compatibility';
 import {
   IMPOSSIBLE_KEYS,
+  PRIMARY_PLACEMENTS,
   RETRO_PLANETS,
+  placementLabel,
+  type PrimaryPlacement,
+  aspectTitle,
   bandName,
   bandOf,
   bandText,
@@ -32,7 +41,7 @@ import {
 } from './content';
 import type { PublicChart } from './public';
 import { signOf } from './signs';
-import { describeAspectTr } from './tr';
+import { BODY_TR, SIGN_TR_LOCATIVE, describeAspectTr } from './tr';
 
 /**
  * Screen-ready interpretation of one chart: what to say for each planet
@@ -45,6 +54,22 @@ export interface PlanetReading {
   readonly retrogradeText: string | null;
 }
 
+/**
+ * One of the six placements the chart screen leads with, titled by what it
+ * means for dating: "Nasıl seversin · Venüs Akrep'te" rather than
+ * "Venüs · Akrep · 7. ev" (PRD amendment 2026-09-10). The technical line
+ * stays on screen under the product-language one — show the calculation,
+ * soften the conclusion.
+ */
+export interface PrimaryReading {
+  readonly placement: PrimaryPlacement;
+  /** "Nasıl seversin". */
+  readonly label: string;
+  /** "Venüs Akrep'te" — the astrology, kept visible. */
+  readonly technical: string;
+  readonly text: string;
+}
+
 export interface NatalAspectReading {
   readonly aspect: InterAspect;
   readonly text: string;
@@ -52,6 +77,9 @@ export interface NatalAspectReading {
 
 export interface NatalReading {
   readonly risingText: string;
+  /** The six cards the screen opens with. */
+  readonly primary: readonly PrimaryReading[];
+  /** All ten planets — behind "tüm haritanı gör". */
   readonly planets: readonly PlanetReading[];
   /** Strongest first; `limit` caps the list for the screen. */
   readonly aspects: readonly NatalAspectReading[];
@@ -82,8 +110,20 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       aspect,
       text: natalAspectText(aspect.planetA, aspect.aspect, aspect.planetB),
     }));
+  const rising = signOf(chart.houses.ascendant);
+  const primary = PRIMARY_PLACEMENTS.map((placement) => {
+    const sign =
+      placement === 'ascendant' ? rising : chart.planets[placement].sign;
+    return {
+      placement,
+      label: placementLabel(placement),
+      technical: `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]}`,
+      text: signText(placement, sign),
+    };
+  });
   return {
-    risingText: signText('ascendant', signOf(chart.houses.ascendant)),
+    risingText: signText('ascendant', rising),
+    primary,
     planets,
     aspects,
   };
@@ -96,6 +136,10 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
  */
 export interface SynastryAspectReading {
   readonly aspect: InterAspect;
+  /** The dimension the pairing belongs to (ADR-0009 §1). */
+  readonly dimension: Dimension;
+  /** Card title, e.g. "Kolay çekim" — dimension and valence, not a verdict. */
+  readonly title: string;
   /** "Ay'ın onun Venüs'üyle üçgen açı yapıyor." from the viewer's side. */
   readonly headline: string;
   readonly meaning: string;
@@ -137,8 +181,8 @@ export function synastryReading(
   const match = compatibility(viewer, other);
   const aspects = [...match.aspects]
     .sort((x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb)
-    .slice(0, limit)
-    .map((aspect) => readAspect(aspect));
+    .slice(0, limit);
+  const aspectReadings = readAspects(aspects);
   const dimensions: DimensionReading[] = [];
   for (const dimension of DIMENSIONS) {
     const level = dimensionLevel(dimension, match.dimensions[dimension]);
@@ -166,18 +210,50 @@ export function synastryReading(
       elementOf(viewer.planets.moon.sign),
       elementOf(other.planets.moon.sign),
     ),
-    aspects,
+    aspects: aspectReadings,
     match,
   };
 }
 
-function readAspect(aspect: InterAspect): SynastryAspectReading {
+/** Reads a list together, so no two cards on one screen share a title. */
+function readAspects(
+  aspects: readonly InterAspect[],
+  taken: Set<string> = new Set(),
+): SynastryAspectReading[] {
+  return aspects.map((aspect) => {
+    const reading = readAspect(aspect, taken);
+    taken.add(reading.title);
+    return reading;
+  });
+}
+
+function readAspect(
+  aspect: InterAspect,
+  taken: ReadonlySet<string> = new Set(),
+): SynastryAspectReading {
+  const dimension = dimensionOf(aspect.planetA, aspect.planetB);
+  if (dimension === null)
+    throw new Error(
+      `${aspect.planetA}|${aspect.planetB} is outside the dimension table`,
+    );
   const { meaning, question } = synastryText(
     aspect.planetA,
     aspect.aspect,
     aspect.planetB,
   );
-  return { aspect, headline: describeAspectTr(aspect), meaning, question };
+  return {
+    aspect,
+    dimension,
+    title: aspectTitle(
+      dimension,
+      aspect.term,
+      `${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`,
+      taken,
+    ),
+    headline: describeAspectTr(aspect),
+    meaning,
+    question,
+  };
 }
 
 /** Opening line parts for a stored starter key, from the viewer's side. */
@@ -254,12 +330,19 @@ function fill(
 }
 
 export function matchSections(match: Compatibility): MatchSections {
+  // One `taken` set across both sections: the match screen is one screen,
+  // and a title repeated between them reads exactly as wrong.
+  const taken = new Set<string>();
   return {
     // `compatibility()` buckets a term of exactly 0 as harmony (an aspect
     // sitting on its maximum orb), so a card is a card here too.
-    drawn: fill(match.aspects, (a) => a.term >= 0, DRAWN_LIMIT).map(readAspect),
-    interesting: fill(match.aspects, (a) => a.term < 0, INTERESTING_LIMIT).map(
-      readAspect,
+    drawn: readAspects(
+      fill(match.aspects, (a) => a.term >= 0, DRAWN_LIMIT),
+      taken,
+    ),
+    interesting: readAspects(
+      fill(match.aspects, (a) => a.term < 0, INTERESTING_LIMIT),
+      taken,
     ),
   };
 }

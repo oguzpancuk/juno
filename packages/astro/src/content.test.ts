@@ -1,3 +1,4 @@
+import { DIMENSIONS } from './dimensions';
 import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
@@ -19,6 +20,9 @@ import {
   KEY_SPACES,
   bandOf,
   CALIBRATION,
+  PRIMARY_PLACEMENTS,
+  aspectTitle,
+  placementLabel,
   elementKey,
   natalAspectText,
   pairKey,
@@ -234,3 +238,32 @@ function synthetic(
   ) as ChartForScoring['planets']; // why: keys are exactly PLANETS
   return { planets, houses: { ascendant: lon.ascendant } };
 }
+
+describe('presentation content', () => {
+  it('names all six primary placements', () => {
+    for (const placement of PRIMARY_PLACEMENTS) {
+      expect(placementLabel(placement).length).toBeGreaterThan(2);
+    }
+    const labels = PRIMARY_PLACEMENTS.map((p) => placementLabel(p));
+    expect(new Set(labels).size).toBe(PRIMARY_PLACEMENTS.length);
+  });
+
+  it('has three title variants for every dimension and valence', () => {
+    const seen = new Set<string>();
+    for (const dimension of DIMENSIONS) {
+      for (const term of [1, -1]) {
+        const variants = new Set<string>();
+        for (let i = 0; i < 3; i++) {
+          // Feeding the titles already taken walks the variants.
+          variants.add(aspectTitle(dimension, term, `k${i}`, variants));
+        }
+        expect(variants.size, `${dimension} ${term}`).toBe(3);
+        for (const title of variants) {
+          expect(seen.has(title), `${title} is used twice`).toBe(false);
+          seen.add(title);
+        }
+      }
+    }
+    expect(seen.size).toBe(DIMENSIONS.length * 2 * 3);
+  });
+});

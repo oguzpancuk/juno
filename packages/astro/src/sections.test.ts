@@ -120,3 +120,51 @@ describe('match sections', () => {
     }
   });
 });
+
+describe('card titles', () => {
+  it('never shows the same title twice on one match screen', () => {
+    const dates = [
+      '1995-07-14T00:30:00Z',
+      '1990-01-01T09:00:00Z',
+      '2001-03-22T17:45:00Z',
+      '1996-11-03T04:15:00Z',
+      '1993-05-05T12:00:00Z',
+      '2004-08-19T22:10:00Z',
+      '1998-02-11T06:40:00Z',
+      '1992-09-30T15:20:00Z',
+    ].map((iso) => chart(iso));
+    for (let i = 0; i < dates.length; i++) {
+      for (let j = i + 1; j < dates.length; j++) {
+        const a = dates[i];
+        const b = dates[j];
+        if (!a || !b) continue;
+        const sections = matchSections(compatibility(a, b));
+        const titles = [...sections.drawn, ...sections.interesting].map(
+          (c) => c.title,
+        );
+        expect(new Set(titles).size, titles.join(' / ')).toBe(titles.length);
+      }
+    }
+  });
+
+  it('gives the same pair the same titles every time', () => {
+    const a = chart('1995-07-14T00:30:00Z');
+    const b = chart('1990-01-01T09:00:00Z');
+    const first = matchSections(compatibility(a, b));
+    const second = matchSections(compatibility(a, b));
+    expect(second.drawn.map((c) => c.title)).toEqual(
+      first.drawn.map((c) => c.title),
+    );
+  });
+
+  it('titles a tense aspect without judging it', () => {
+    // The hard titles describe a dynamic; none of them is a verdict word.
+    const banned = ['kötü', 'uyumsuz', 'olmaz', 'zararlı', 'toksik'];
+    const a = chart('1995-07-14T00:30:00Z');
+    const b = chart('1990-01-01T09:00:00Z');
+    for (const card of matchSections(compatibility(a, b)).interesting) {
+      for (const word of banned)
+        expect(card.title.toLowerCase()).not.toContain(word);
+    }
+  });
+});
