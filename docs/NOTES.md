@@ -10,6 +10,46 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — CI has never been green, and now we know why
+
+- Pushing the rename surfaced it. GitHub has six runs on record for this
+  repository and all six are failures; the oldest already postdates the
+  commits that added the Edge Function tests, so no run has ever gone
+  green. That matters for what this fix proves: it removes the only
+  defect we have evidence for, not the last one — the rest of the
+  workflow has never been observed to pass end to end, so a second
+  CI-only defect on the next run would be a fresh find, not a
+  regression. Nothing here is rename-related: `npm ci` resolved fine and
+  three of the five Supabase test files passed.
+- Cause: `.github/workflows/ci.yml` started the stack with
+  `-x ...,edge-runtime,...`, an exclusion list written in S4 when no test
+  called an Edge Function. `photo.test.ts` and `delete-account.test.ts`
+  later started calling `/functions/v1/*`; with no edge runtime Kong
+  answers 503, and twelve tests fail on a stack defect instead of on the
+  code. `supabase start` locally boots everything, which is why the
+  battery was green here and red there — the exact disagreement the
+  header comment of that file forbids ("CI runs the SAME battery agents
+  run locally").
+- Reproduced before fixing, not assumed: started the local stack with
+  CI's exact flag list and got 12/12 failures in those two suites, all
+  503; restored the full stack and they pass. Fix is to drop
+  `edge-runtime` from the exclusion, with a comment saying only services
+  no test touches may be excluded.
+- Worth noting for its own sake: six pushes went out under a green local
+  battery while CI was red, because nobody read the run. A local battery
+  is not evidence about CI.
+- Left open by review, both the same class as the bug just fixed — a
+  difference between the two environments that only CI can see: the Edge
+  Functions import `jsr:@supabase/supabase-js@2` with no lockfile or
+  import map, so CI resolves that graph over the network on a cold Deno
+  cache inside a 20 s test timeout, and the floating `@2` means a new
+  2.x release can turn CI red with no commit here. Nothing in
+  `supabase/tests/local.ts` probes the functions gateway either, which is
+  why twelve tests said "expected 503 to be 200" instead of naming the
+  missing runtime.
+- Verified: `bash .claude/hooks/verify.sh` green on a clean tree. Whether
+  CI itself goes green can only be proven by the run on this commit.
+
 ## 2026-09-10 — stardate is gone from the code, not just from the screen
 
 - The owner renamed the working directory and the GitHub repository to

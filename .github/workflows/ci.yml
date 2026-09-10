@@ -19,10 +19,14 @@ jobs:
       - run: npm ci
       # The RLS suite in supabase/tests runs against a real local stack; a
       # missing stack is a FAIL, never a skip, so CI must start one.
+      # Only services no test touches may be excluded: photo.test.ts and
+      # delete-account.test.ts call /functions/v1/*, so edge-runtime has to
+      # boot or Kong answers 503 and those suites fail on a stack defect
+      # rather than on the code.
       - uses: supabase/setup-cli@v1
         with:
           version: 2.117.0 # keep in step with SUPABASE_CLI_VERSION in supabase/tests/local.ts
-      - run: supabase start -x studio,imgproxy,logflare,vector,edge-runtime,mailpit
+      - run: supabase start -x studio,imgproxy,logflare,vector,mailpit
       - run: bash .claude/hooks/verify.sh
       - if: always()
         run: supabase stop
