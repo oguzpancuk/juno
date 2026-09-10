@@ -38,11 +38,14 @@ first message that isn't "selam".**
    without a time; a birth date under 18 years ago is rejected before the
    profile is created.
 2. **See and understand your natal chart** — works when: the chart screen
-   lists the 10 planets (Sun–Pluto) with sign and house, the Ascendant, and
-   the major aspects; each row opens a Turkish explanation of that
-   placement; the "big three" (Sun/Moon/Rising) appear as a badge. All
-   values come from `packages/astro`, verified against reference charts in
-   Vitest.
+   leads with six placements as editorial cards titled in product language
+   (Sun, Moon, Rising, Mercury, Venus, Mars), and the remaining planets,
+   houses and natal aspects are reachable behind an "explore your full
+   chart" disclosure, each with its Turkish explanation; the "big three"
+   (Sun/Moon/Rising) appear as a badge. All values come from
+   `packages/astro`, verified against reference charts in Vitest.
+   _(Revised by the 2026-09-10 amendment; before it, the screen listed all
+   ten planets as rows.)_
 3. **Build a profile** (1–6 photos, name, age, gender, who they want to
    meet, short bio; location captured once with permission; big-three
    badge auto-attached) — works when: another signed-in user sees exactly
@@ -52,15 +55,23 @@ first message that isn't "selam".**
 4. **Discover with compatibility** — works when: the swipe screen shows
    one profile at a time within the user's distance radius (default 50 km,
    adjustable 5–500 km) whose gender matches what the user wants and who
-   wants the user's gender; the card shows a compatibility score (0–100)
-   computed from both charts per `docs/adr/0003-compatibility.md` plus a
-   one-line "why" (e.g. "Ay'ın onun Venüs'üyle üçgen yapıyor"); Like and
-   Pass are recorded; a passed or liked profile never reappears.
+   wants the user's gender; the card gives the chart real visual weight and
+   shows the compatibility band — a word beside a four-step visual, never a
+   number — derived from the score in `docs/adr/0003-compatibility.md` per
+   ADR-0009 §3, plus a one-line "why" (e.g. "Ay'ın onun Venüs'üyle üçgen
+   yapıyor"); Like and Pass are recorded; a passed or liked profile never
+   reappears.
+   _(Revised by the 2026-09-10 amendment; before it, the card showed a
+   0–100 score.)_
 5. **Match and get a conversation starter** — works when: when both users
-   Like, both see a match screen within 5 seconds showing the strongest
-   synastry aspect between the two charts as a Turkish sentence with a
-   question attached (e.g. "…sizce de öyle mi?"), and the same starter is
-   pinned at the top of the chat.
+   Like, both see a match screen within 5 seconds showing the band with a
+   one-sentence summary, up to three aspects under "why you're drawn to each
+   other" and one under "where it gets interesting" (a section with nothing
+   to show is omitted, never filled with a verdict), and the starter — the
+   strongest aspect's own question, e.g. "…sizce de öyle mi?" — which is
+   also pinned at the top of the chat.
+   _(Revised by the 2026-09-10 amendment; before it, the screen showed the
+   single strongest aspect.)_
 6. **Chat with a match** — works when: a text message sent from one device
    appears on the other within 2 seconds; the conversation list shows the
    latest message and unread state; a user who is not matched with you
@@ -108,7 +119,7 @@ signals below are already thin. It is the first thing to watch in the
 TestFlight cohort.
 
 **Revises interaction 5.** The match screen becomes: an overall band with a
-one-sentence summary, two to three aspects under "why you're drawn to each
+one-sentence summary, up to three aspects under "why you're drawn to each
 other", one under "where it gets interesting", optional house overlays, then
 the conversation starter. A tense aspect is a dynamic, never a failure; no
 text passes judgement on a pairing.

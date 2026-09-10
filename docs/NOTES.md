@@ -10,6 +10,70 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The same defect, one screen over
+
+- Fourth review. It confirmed the pin test bites (three cross-dimension
+  swaps, an unscored pairing, a dropped pairing and a broken key order all
+  fail it; reordering within a dimension and flipping a tuple survive, which
+  is correct — both are no-ops through `pairingKey`). Then it found the
+  round's own headline fix had been applied in one place only.
+- **The PRD still required the number, in interaction 4's works-when
+  clause.** The previous round rewrote the amendment's presentation
+  paragraph and left "the card shows a compatibility score (0–100)" in the
+  numbered acceptance criteria — which is the part of that file an
+  implementer actually builds against. Interactions 2 and 5 had drifted the
+  same way. All three clauses are now rewritten to the amendment, each
+  marked with what it used to say, so the acceptance criteria and the
+  amendment cannot disagree again.
+- **C4 pinned numbers that measured a different thing.** The omit branch
+  fires when a section is _empty_; the clause pinned 525, which is how many
+  pairs cannot reach _three_ cards. Measured: after widening, **30** pairs in
+  1 124 250 have no positive aspect at all, **616** have no tense one, and
+  **none** has neither — so the branch fires about once in 1 800 matches and
+  cannot be assumed away, while 525 pairs simply show one or two cards, which
+  is not an omission. The earlier "exactly 1 can fill neither" counted pairs
+  with fewer than three positives _and_ no tension, which justifies nothing
+  about a both-empty case.
+- **A duplicate row could hide from every test.** The pin test derives its
+  map from `dimensionOf`, so listing a pairing under two dimensions left
+  every lookup unchanged when the duplicate went into an _earlier_ dimension
+  — `new Map` lets the later entry win. The table a human reads would say
+  one thing and the code another. `BY_KEY` is now built with an explicit
+  duplicate check that throws at import, and a test pins the row count at 51.
+  Mutation-verified: duplicating `venus–mars` into Emotional now fails at
+  import with both dimensions named.
+- **The seed guard did not guard.** `--seed 424242` (space, the natural typo
+  of the new flag) was read as an output path and ran at the default seed,
+  reporting success — the previous entry claimed this was fixed; it was not.
+  Now the space form, an unknown flag, a second positional and a seed that is
+  not a positive integer all throw. A negative seed used to be accepted and
+  produced 1980s births off the Libyan coast while both existing guards
+  stayed green.
+- **The p99 sensitivity figure was no longer refreshable**, because the
+  script stopped computing unrounded scores when the number came off the
+  screen. It computes them again for that one line: at the second seed the
+  unrounded distribution moves 0.01 at p50, 0.05 at p95 and 0.10 at p99,
+  while the band cuts do not move at all. The ADR previously said "the other
+  quantiles move by 0.01", which was wrong for p95.
+- **98.52 % versus 98.88 %** was a definition, not a disagreement: 98.52 %
+  counts aspect terms only, 98.88 % counts the element bonus as a harmony
+  contribution, which is the form that matters for whether a signed sum can
+  be split. The script now prints both and says which is which; C6 and the
+  ADR both name the same one.
+- Smaller: "between three and seven terms" contradicted its own table
+  (Stability 2.67); C3 still said "equal-frequency" where the ADR says
+  near-equal; C2's note said six tests where there are eight.
+- **A cost the review named and C3 now answers:** pinning the committed
+  figures in the battery would mean regenerating 1 124 250 pairs inside a
+  suite that currently runs in 0.44 s — the script takes ~23 s. C3's
+  done-when now uses a bounded 300-chart sample for the qualitative claims
+  and leaves the exact figures to a rerun of the script, with the generator
+  moved somewhere both can import so there is one copy of it.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; both
+  seeds rerun; all four argument guards fired; the duplicate mutation
+  checked. Eight tests on the table.
+- Next: C3 and the rest of C2.
+
 ## 2026-09-10 — Three tests that let a swapped table through
 
 - Third code-reviewer pass, on the commit that added the engine code. It

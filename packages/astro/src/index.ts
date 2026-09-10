@@ -23,6 +23,7 @@ export {
 } from './content';
 export {
   DIMENSIONS,
+  PAIRINGS,
   dimensionOf,
   dimensionTerm,
   scoredPairings,

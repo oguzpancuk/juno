@@ -117,16 +117,32 @@ function reduce(harmony: number, tension: number): number {
 }
 
 const args = process.argv.slice(2);
+if (args.includes('--seed'))
+  throw new Error('--seed takes an = sign: --seed=20260910');
+const unknown = args.find(
+  (arg) => arg.startsWith('--') && !arg.startsWith('--seed='),
+);
+if (unknown !== undefined) throw new Error(`unknown option: ${unknown}`);
 const seedFlag = args.find((arg) => arg.startsWith('--seed='));
 const seed =
   seedFlag === undefined
     ? DEFAULT_SEED
     : Number(seedFlag.slice('--seed='.length));
-if (!Number.isFinite(seed)) throw new Error(`bad --seed: ${seedFlag ?? ''}`);
-const out = args.find((arg) => !arg.startsWith('--'));
+// A negative or fractional seed drives the generator out of the declared
+// cohort while both guards below stay green, so it is rejected here.
+if (!Number.isInteger(seed) || seed <= 0)
+  throw new Error(`--seed must be a positive integer, got "${seedFlag ?? ''}"`);
+const positionals = args.filter((arg) => !arg.startsWith('--'));
+if (positionals.length > 1)
+  throw new Error(
+    `expected at most one output path, got ${positionals.length}`,
+  );
+const out = positionals[0];
 const charts = population(CHARTS, seed);
 
 const scores: number[] = [];
+/** ADR-0009 §3's sensitivity argument is about the unrounded tail. */
+const unrounded: number[] = [];
 const byDimension: Record<Dimension, number[]> = {
   emotional: [],
   chemistry: [],
@@ -143,8 +159,11 @@ let curatedBoth = 0;
 let allShort = 0;
 let allNoTension = 0;
 let allBoth = 0;
+let allEmptyWhy = 0;
+let allBothEmpty = 0;
 let worstReconstruction = 0;
 let mixedSign = 0;
+let mixedSignTerms = 0;
 const zeroed = (): Record<Dimension, number> => ({
   emotional: 0,
   chemistry: 0,
@@ -163,6 +182,7 @@ for (let i = 0; i < charts.length; i++) {
     if (!a || !b) throw new Error(`missing chart at ${i} or ${j}`);
     const result = compatibility(a, b);
     scores.push(result.score);
+    unrounded.push(reduce(result.harmony, result.tension));
     aspectTotal += result.aspects.length;
 
     const harmony: Record<Dimension, number> = {
@@ -202,6 +222,10 @@ for (let i = 0; i < charts.length; i++) {
         growthAbsolute += dimensionTerm(dimension, aspect.term);
     }
 
+    // Harmony from aspect terms alone, kept so the mixed-sign share can be
+    // reported both ways: the bonus is not a term.
+    const termHarmony = { ...harmony };
+
     // ADR-0009 §1: the element bonus belongs to a dimension too.
     if (elementsAgree(a.planets.sun.sign, b.planets.sun.sign))
       harmony.stability += ELEMENT_BONUS;
@@ -230,6 +254,12 @@ for (let i = 0; i < charts.length; i++) {
       DIMENSIONS.some((d) => d !== 'growth' && harmony[d] > 0 && tension[d] > 0)
     )
       mixedSign++;
+    if (
+      DIMENSIONS.some(
+        (d) => d !== 'growth' && termHarmony[d] > 0 && tension[d] > 0,
+      )
+    )
+      mixedSignTerms++;
     worstReconstruction = Math.max(
       worstReconstruction,
       Math.abs(harmonySum - result.harmony),
@@ -251,8 +281,10 @@ for (let i = 0; i < charts.length; i++) {
     if (curatedTensions === 0) curatedNoTension++;
     if (curatedPositives < 3 && curatedTensions === 0) curatedBoth++;
     if (positives.length < 3) allShort++;
+    if (positives.length === 0) allEmptyWhy++;
     if (tensions.length === 0) allNoTension++;
     if (positives.length < 3 && tensions.length === 0) allBoth++;
+    if (positives.length === 0 && tensions.length === 0) allBothEmpty++;
   }
 }
 
@@ -267,6 +299,7 @@ if (distinct !== CHARTS)
   throw new Error(`${CHARTS} charts requested, ${distinct} distinct`);
 
 scores.sort((x, y) => x - y);
+unrounded.sort((x, y) => x - y);
 const share = (n: number): string => ((n / pairs) * 100).toFixed(2);
 const quantile = (values: number[], percentile: number): number => {
   const index = Math.min(
@@ -291,6 +324,12 @@ for (const threshold of [70, 80, 86]) {
   );
 }
 console.log(
+  `unrounded quantiles (what a displayed number would calibrate on): ` +
+    `p50=${quantile(unrounded, 50).toFixed(4)} ` +
+    `p95=${quantile(unrounded, 95).toFixed(4)} ` +
+    `p99=${quantile(unrounded, 99).toFixed(4)}`,
+);
+console.log(
   `harmony/tension reconstruct from the five dimensions to within ` +
     worstReconstruction.toExponential(1),
 );
@@ -307,14 +346,22 @@ console.log(
 );
 console.log('match page gaps (all 51 pairings):');
 console.log(`  fewer than 3 positives: ${share(allShort)} % (${allShort})`);
+console.log(`  both at once:           ${share(allBoth)} % (${allBoth})`);
+console.log('sections the omit branch actually empties (all 51 pairings):');
+console.log(
+  `  no positive at all:     ${share(allEmptyWhy)} % (${allEmptyWhy})`,
+);
 console.log(
   `  no tension at all:      ${share(allNoTension)} % (${allNoTension})`,
 );
-console.log(`  both at once:           ${share(allBoth)} % (${allBoth})`);
+console.log(
+  `  both empty:             ${share(allBothEmpty)} % (${allBothEmpty})`,
+);
 
 console.log(
-  `a dimension holds terms of both signs in ${share(mixedSign)} % of pairs ` +
-    `(why each carries two sums, not one signed sum)`,
+  `a dimension carries both a harmony and a tension contribution in ` +
+    `${share(mixedSign)} % of pairs (why each keeps two sums, not one ` +
+    `signed sum); counting aspect terms only, ${share(mixedSignTerms)} %`,
 );
 
 /** The whole calibrated surface: three cut points plus two per dimension. */

@@ -392,36 +392,42 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       has a title (battery); `screenshots/c2-chart.png`, `c2-discover.png`
       and `c2-match.png` show the three screens (screenshot).
       _Partly built: `packages/astro/src/dimensions.ts` is the table, with
-      six tests covering the coverage and count claims and one that drives
-      real charts so the aspects are ones the engine emits rather than ones
-      the table was written against. Nothing else — no titles, no UI._
+      eight tests — the 51 assignments pinned as a full map, the row count
+      and duplicate check, and one that drives real charts so the aspects are
+      ones the engine emits rather than ones the table was written against.
+      A pairing listed under two dimensions throws at import rather than
+      letting the later row win silently. Nothing else — no titles, no UI._
 - [ ] **C3 — Bands and labels (ADR-0009 §2/§3).** No score is shown as a
       number (owner decision, 2026-09-10). The whole calibrated surface is
       thirteen figures written by `packages/astro/scripts/score-distribution.ts`
-      and committed: three cut points for the overall score's four
-      equal-frequency bands (56 / 62 / 67) and two per dimension for its
-      three labels. A dimension with no aspect renders absent even when an
+      and committed: three cut points for the overall score's four near-equal
+      bands (56 / 62 / 67 — a discrete score cannot split evenly) and two per
+      dimension for its three labels. A dimension with no aspect renders absent even when an
       element bonus gives it a value.
       — done when: a Vitest asserts the band of a pair is the band its raw
-      score falls in, that the four bands hold 24.47 / 24.59 / 22.12 /
-      28.82 % of the measured population (a discrete score cannot split
-      evenly; the test pins the measured shares), that each dimension's labels come from its own cuts and not
-      the overall ones, that a bonus-only dimension renders absent, and that
-      rerunning the committed script at the committed seed reproduces the
-      committed table byte for byte (battery).
+      score falls in, that each dimension's labels come from its own cuts and
+      not the overall ones, that a bonus-only dimension renders absent, and
+      that over a bounded sample (300 charts, about a second) every band
+      holds 20–30 % of pairs (battery). The committed figures themselves —
+      shares 24.47 / 24.59 / 22.12 / 28.82 % over the full 1 124 250 pairs —
+      are reproduced by rerunning the script, which takes ~23 s and stays out
+      of the battery; the generator moves somewhere both can import, so there
+      is one copy of it rather than two.
 - [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with
       its heading rather than filled. `bands.json`'s `very-low` and `low`
       sentences, which pass judgement on a pairing and between them are shown
       to roughly a fifth of pairs, are retired by the amendment's copy rules.
-      — done when: a Vitest drives the rule over the generated population
-      and asserts the measured figures: after widening, 525 pairs cannot fill
-      "why you're drawn to each other", 616 cannot fill "where it gets
-      interesting", and exactly 1 of 1 124 250 can fill neither — which is
-      why the rule keeps an omit branch instead of assuming it never fires —
-      and that a hand-built thin pair omits a section rather than judging it
-      (battery).
+      — done when: a Vitest drives the rule over a bounded sample and
+      asserts that a section with no aspect is omitted rather than filled or
+      judged, and that falling short of three cards is not an omission; and
+      a hand-built pair for each case proves it. The full-population figures
+      the rule is sized against come from the script, not the battery: after
+      widening, 30 pairs in 1 124 250 have no positive aspect at all and 616
+      no tense one — so the omit branch fires about once in 1 800 matches and
+      cannot be assumed away — while none has neither, and 525 fall short of
+      three cards without any section being empty.
 - [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
       house, written in both directions (5 × 6 × 2). No engine work: the
@@ -433,7 +439,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
 - [ ] **C6 — Weighted-ranking readiness (ADR-0009 §4).** `compatibility()`
       returns a harmony sum and a tension sum per dimension alongside the
       overall score — two figures, never one signed sum, which would collapse
-      to `H − T` and lose the split on 98.52 % of pairs — plus Growth's
+      to `H − T` and lose the split on the 98.88 % of pairs where some
+      dimension carries both a harmony and a tension contribution (98.52 %
+      counting aspect terms alone, before the element bonus) — plus Growth's
       absolute sum. A viewer's own priorities can then reorder `discover`
       without recomputing anything and without touching a displayed value.
       No UI in v1: the item exists so the door stays open without breaking

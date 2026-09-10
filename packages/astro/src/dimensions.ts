@@ -24,7 +24,7 @@ type Pairing = readonly [Body, Body];
  * separately — both are genuine aspects and both belong to the pairing
  * listed here once.
  */
-const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> = {
+export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> = {
   // The Moon rules the row it appears in: moon–mercury is Emotional, not
   // Communication.
   emotional: [
@@ -95,11 +95,26 @@ function pairingKey(a: Body, b: Body): string {
   return BODIES.indexOf(a) <= BODIES.indexOf(b) ? `${a}|${b}` : `${b}|${a}`;
 }
 
-const BY_KEY: ReadonlyMap<string, Dimension> = new Map(
-  DIMENSIONS.flatMap((dimension) =>
-    PAIRINGS[dimension].map(([a, b]) => [pairingKey(a, b), dimension] as const),
-  ),
-);
+/**
+ * Built with an explicit duplicate check rather than by handing pairs to
+ * `new Map`: a Map silently lets a later entry win, so the same pairing
+ * listed under two dimensions would leave `dimensionOf` correct while the
+ * table a human reads — the ADR's "single source of truth" — says something
+ * else. That shape survived every lookup-based test.
+ */
+const BY_KEY: ReadonlyMap<string, Dimension> = (() => {
+  const map = new Map<string, Dimension>();
+  for (const dimension of DIMENSIONS) {
+    for (const [a, b] of PAIRINGS[dimension]) {
+      const key = pairingKey(a, b);
+      const existing = map.get(key);
+      if (existing !== undefined)
+        throw new Error(`${key} is in both ${existing} and ${dimension}`);
+      map.set(key, dimension);
+    }
+  }
+  return map;
+})();
 
 /**
  * The dimension a pairing belongs to. Every pairing ADR-0003 scores has one;

@@ -39,9 +39,10 @@ Its population is a sample, so the figures carry sampling error, and how much
 depends entirely on what is calibrated. Rerun at seed 424242: the band cuts
 of decision 3 are **identical** (56 / 62 / 67), every dimension cut moves by
 at most 0.11, and the fill-rule shares move by at most 0.18. A displayed
-number would not have been so lucky — the same rerun moves the 99th
-percentile by 0.10 where the other quantiles move by 0.01, which is the tail
-sensitivity decision 3 declines to maintain. The 400-chart first pass this
+number would not have been so lucky: the unrounded distribution it would have
+calibrated on moves 0.01 at p50, 0.05 at p95 and 0.10 at p99 — the sensitivity
+grows exactly where a shown number would be read most closely, which is what
+decision 3 declines to maintain. The 400-chart first pass this
 ADR was drafted from gave the same medians but a tail no calibration should
 have rested on: a single chart supplied 14 of its 48 pairs above 86. That
 last figure is history rather than a refreshable output — it was measured at
@@ -102,8 +103,8 @@ not met, and the underlying method does not support that claim.
 
 Three labels per dimension, cut at the 33rd and 67th percentiles of **that
 dimension's own** distribution — never at the overall score's. A dimension
-reduces between three and seven terms on average through a mapping whose +10
-damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
+reduces between two and a half and seven terms on average through a mapping
+whose +10 damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
 lower and spread less.
 Measured over the population above:
 
@@ -197,7 +198,11 @@ measurement above is what makes this a two-step rule rather than a special
 case: the curated list alone leaves a gap in roughly one pair in six.
 
 A section that is still empty is omitted with its heading, not filled with a
-verdict. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
+verdict. Measured over the population above, after widening: 30 pairs in
+1 124 250 have no positive aspect at all and 616 have no tense one, so the
+omit branch fires about once in 1 800 matches; no pair has neither. Falling
+short of three cards is a different and much commoner thing — 525 pairs — and
+is not an omission: the section simply shows what there is. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
 zorluyor … sürdürmek emek ister") and its `low` sentence ("Ortalama altı bir
 uyum … sürtüşme de belirgin") are both retired by the amendment's copy rules
 — no text passes judgement on a pairing, and between them those two bands

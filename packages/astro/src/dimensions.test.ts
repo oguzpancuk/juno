@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compatibility, BODIES, type Body } from './compatibility';
 import {
   DIMENSIONS,
+  PAIRINGS,
   dimensionOf,
   dimensionTerm,
   scoredPairings,
@@ -138,6 +139,16 @@ describe('dimension table', () => {
         'venus|uranus',
       ],
     });
+  });
+
+  it('lists 51 rows, with no pairing under two dimensions', () => {
+    // The pin above checks 51 lookups; this checks the table has 51 rows.
+    // Duplicating a pairing into an earlier dimension leaves every lookup
+    // unchanged, so nothing else here would notice.
+    const rows = DIMENSIONS.flatMap((dimension) => PAIRINGS[dimension]);
+    expect(rows).toHaveLength(51);
+    const keys = rows.map(([a, b]) => pairingKeyFor(a, b));
+    expect(new Set(keys).size).toBe(51);
   });
 
   it('gives every aspect the engine emits a home', () => {
