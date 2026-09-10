@@ -32,9 +32,11 @@ import { edgeFunctionSources } from './edge-functions';
 // reads `supabase.from(`profiles_${shard}`)`, and a template literal there
 // would otherwise be reported as an unpinned dependency — a diagnosis
 // about cold-start resolution for a string that is not an import.
-// Group 1 is the opening paren of `import(`, which marks a call rather
-// than prose — see isRemote.
-const SPECIFIER = /(?<![.$\w])(?:from|import)\s*(\(\s*)?(['"`])([^'"`]*)\2/g;
+// Group 1 is the opening paren of `import(`, and it lives inside the
+// `import` alternative on purpose: no valid static import reads `from (`,
+// so a parenthesised `from` in prose must not be able to set it. It marks
+// a call rather than prose — see isRemote.
+const SPECIFIER = /(?<![.$\w])(?:from\s*|import\s*(\(\s*)?)(['"`])([^'"`]*)\2/g;
 const REMOTE = /^(?:jsr:|npm:|https?:)/;
 // An exact version either ends the path or is followed by a subpath. The
 // query and fragment are cut off first: `?deps=zod@3.22.4` must not make a
@@ -120,7 +122,7 @@ function isRemote(specifier: string, dynamic = false): boolean {
 
 interface Found {
   readonly specifier: string;
-  /** Captured from `import(…)`, so it is a call and not prose. */
+  /** Captured from `import(…)` — a call, which prose cannot be. */
   readonly dynamic: boolean;
 }
 
@@ -221,6 +223,9 @@ it('reports the imports in a source and nothing else', () => {
   ).toEqual([]);
   expect(reported('await supabase.from(`profiles_${shard}`);')).toEqual([]);
   expect(reported('throw new Error(`missing from "${table}"`);')).toEqual([]);
+  // A parenthesised `from` is not an import in any syntax, so it must not
+  // reach the exemption that `import(` gets.
+  expect(reported('log(`deleted from ("${bucket}")`);')).toEqual([]);
   // Carries a separator, so only the lookbehind keeps it out — the rule
   // that a computed specifier must look like a path cannot help here.
   expect(reported('await supabase.storage.from(`photos/${uid}`);')).toEqual([]);
