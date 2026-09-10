@@ -17,7 +17,13 @@ import {
 } from './compatibility';
 import {
   IMPOSSIBLE_KEYS,
+  OVERLAY_HOUSES,
+  OVERLAY_PLANETS,
   PRIMARY_PLACEMENTS,
+  overlayHouseTheme,
+  overlayText,
+  type OverlayDirection,
+  type OverlayHouse,
   RETRO_PLANETS,
   placementLabel,
   type PrimaryPlacement,
@@ -39,6 +45,7 @@ import {
   type Band,
   type RetroPlanet,
 } from './content';
+import { houseOf, type Cusps } from './houses';
 import type { PublicChart } from './public';
 import { signOf } from './signs';
 import { BODY_TR, SIGN_TR_LOCATIVE, describeAspectTr } from './tr';
@@ -345,4 +352,59 @@ export function matchSections(match: Compatibility): MatchSections {
       taken,
     ),
   };
+}
+
+/**
+ * A planet of one chart falling in a house of the other (ROADMAP C5).
+ * `direction` is from the viewer's side: "theirs" is their planet in the
+ * viewer's house.
+ */
+export interface OverlayReading {
+  readonly planet: (typeof OVERLAY_PLANETS)[number];
+  readonly house: OverlayHouse;
+  readonly direction: OverlayDirection;
+  /** What the house means for dating: "Ortaklık", "Arkadaşlık". */
+  readonly theme: string;
+  readonly text: string;
+}
+
+const OVERLAY_HOUSE_SET: ReadonlySet<number> = new Set(OVERLAY_HOUSES);
+
+/**
+ * Both directions, viewer first. No engine work beyond a lookup: the public
+ * chart already carries the twelve cusps, so this is where each planet of
+ * one chart falls in the other's houses.
+ *
+ * Only the six houses that mean something for dating, and only when the
+ * house is one of them — the rest are silent rather than filler.
+ */
+export function houseOverlays(
+  viewer: PublicChart,
+  other: PublicChart,
+): readonly OverlayReading[] {
+  const readings: OverlayReading[] = [];
+  for (const direction of ['theirs', 'yours'] as const) {
+    const from = direction === 'theirs' ? other : viewer;
+    const into = direction === 'theirs' ? viewer : other;
+    for (const planet of OVERLAY_PLANETS) {
+      const house = houseOf(
+        from.planets[planet].longitude,
+        // why: PublicChartSchema pins the array at twelve; Cusps is the
+        // same twelve as a tuple, which Zod's array type cannot express.
+        into.houses.cusps as unknown as Cusps,
+      );
+      if (!OVERLAY_HOUSE_SET.has(house)) continue;
+      readings.push({
+        planet,
+        house: house as OverlayHouse,
+        direction,
+        // The text already names the placement — "Onun Venüs'ü senin 7.
+        // evinde: …" — so the title carries the house's meaning instead of
+        // repeating the same clause one line above it.
+        theme: overlayHouseTheme(house as OverlayHouse),
+        text: overlayText(planet, house as OverlayHouse, direction),
+      });
+    }
+  }
+  return readings;
 }

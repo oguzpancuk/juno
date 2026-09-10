@@ -1,6 +1,7 @@
 import {
   SIGN_TR,
   formatDegree,
+  houseOverlays,
   matchSections,
   synastryReading,
 } from '@juno/astro';
@@ -78,6 +79,12 @@ export default function MatchScreen() {
     () => (reading ? matchSections(reading.match) : null),
     [reading],
   );
+  const overlays = useMemo(
+    () =>
+      me && row && row !== 'loading' ? houseOverlays(me.chart, row.chart) : [],
+    [me, row],
+  );
+  const [showOverlays, setShowOverlays] = useState(false);
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
   if (row === 'loading') {
@@ -216,6 +223,35 @@ export default function MatchScreen() {
               {sections.interesting.map((a) => (
                 <AspectCard key={aspectKey(a)} card={a} />
               ))}
+            </View>
+          ) : null}
+
+          {/* A deeper layer: one card by default, the rest disclosed. */}
+          {overlays.length > 0 ? (
+            <View testID="overlays">
+              <Text style={styles.label}>{t.match.overlays}</Text>
+              {(showOverlays ? overlays : overlays.slice(0, 1)).map((o) => (
+                <View
+                  key={`${o.planet}-${o.house}-${o.direction}`}
+                  style={styles.aspect}
+                  testID={`overlay-${o.planet}-${o.house}-${o.direction}`}
+                >
+                  <Text style={styles.aspectTitle}>{o.theme}</Text>
+                  <Text style={styles.body}>{o.text}</Text>
+                </View>
+              ))}
+              {overlays.length > 1 ? (
+                <Pressable
+                  testID="toggle-overlays"
+                  onPress={() => setShowOverlays((v) => !v)}
+                >
+                  <Text style={styles.link}>
+                    {showOverlays
+                      ? t.match.fewerOverlays
+                      : t.match.moreOverlays(overlays.length - 1)}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
 

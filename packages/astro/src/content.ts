@@ -31,6 +31,8 @@ import dimensionsRaw from '../content/tr/dimensions.json';
 import calibrationRaw from '../content/calibration.json';
 import placementsRaw from '../content/tr/placements.json';
 import titlesRaw from '../content/tr/titles.json';
+import overlaysRaw from '../content/tr/overlays.json';
+import overlayHousesRaw from '../content/tr/overlay-houses.json';
 import elementsRaw from '../content/tr/elements.json';
 import housesRaw from '../content/tr/houses.json';
 import natalAspectsRaw from '../content/tr/natal-aspects.json';
@@ -106,6 +108,47 @@ export const PRIMARY_PLACEMENTS = [
 ] as const;
 export type PrimaryPlacement = (typeof PRIMARY_PLACEMENTS)[number];
 const placements = z.record(z.string(), Label).parse(placementsRaw);
+const overlays = SnippetMap.parse(overlaysRaw);
+const overlayHouses = z.record(z.string(), Label).parse(overlayHousesRaw);
+
+/**
+ * The planets whose house overlay is worth a card, and the houses worth
+ * naming for dating (ADR-0009, ROADMAP C5). Both directions: a planet of
+ * theirs in a house of yours reads differently from the reverse.
+ */
+export const OVERLAY_PLANETS = [
+  'sun',
+  'moon',
+  'mercury',
+  'venus',
+  'mars',
+] as const;
+export type OverlayPlanet = (typeof OVERLAY_PLANETS)[number];
+export const OVERLAY_HOUSES = [1, 5, 7, 8, 11, 12] as const;
+export type OverlayHouse = (typeof OVERLAY_HOUSES)[number];
+export const OVERLAY_DIRECTIONS = ['theirs', 'yours'] as const;
+export type OverlayDirection = (typeof OVERLAY_DIRECTIONS)[number];
+
+export function overlayKey(
+  planet: OverlayPlanet,
+  house: OverlayHouse,
+  direction: OverlayDirection,
+): string {
+  return `${planet}-${house}-${direction}`;
+}
+
+/** What the house means for dating: "Ortaklık", "Yakınlık ve yoğunluk". */
+export function overlayHouseTheme(house: OverlayHouse): string {
+  return must(overlayHouses, String(house), 'overlay-houses.json');
+}
+
+export function overlayText(
+  planet: OverlayPlanet,
+  house: OverlayHouse,
+  direction: OverlayDirection,
+): string {
+  return must(overlays, overlayKey(planet, house, direction), 'overlays.json');
+}
 /**
  * Aspect card titles, keyed by dimension and valence rather than by pairing:
  * one table of thirty instead of a title on each of the 255 texts, and the
@@ -331,6 +374,14 @@ export const KEY_SPACES = {
     return keys;
   },
   bands: (): string[] => [...BANDS],
+  overlays: (): string[] =>
+    OVERLAY_PLANETS.flatMap((planet) =>
+      OVERLAY_HOUSES.flatMap((house) =>
+        OVERLAY_DIRECTIONS.map((direction) =>
+          overlayKey(planet, house, direction),
+        ),
+      ),
+    ),
 } as const;
 
 export const IMPOSSIBLE_KEYS: ReadonlySet<string> = IMPOSSIBLE;
@@ -344,6 +395,7 @@ export const CONTENT_FILES = {
     Object.entries(synastry).map(([k, v]) => [k, v.meaning]),
   ),
   elements,
+  overlays,
   bands: Object.fromEntries(Object.entries(bands).map(([k, v]) => [k, v.text])),
 } as const;
 

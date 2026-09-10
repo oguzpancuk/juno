@@ -2,8 +2,16 @@ export { PLANETS, type Planet } from './bodies';
 export {
   BANDS,
   CALIBRATION,
+  OVERLAY_HOUSES,
+  OVERLAY_PLANETS,
   PRIMARY_PLACEMENTS,
   aspectTitle,
+  overlayHouseTheme,
+  overlayKey,
+  overlayText,
+  type OverlayDirection,
+  type OverlayHouse,
+  type OverlayPlanet,
   placementLabel,
   type PrimaryPlacement,
   LEVELS,
@@ -95,6 +103,7 @@ export {
   type PublicChart,
 } from './public';
 export {
+  houseOverlays,
   matchSections,
   natalReading,
   starterFromKey,
@@ -103,6 +112,7 @@ export {
   type DimensionReading,
   type MatchSections,
   type NatalReading,
+  type OverlayReading,
   type PrimaryReading,
   type PlanetReading,
   type SynastryAspectReading,
