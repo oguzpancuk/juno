@@ -506,10 +506,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       brought a finished design on 2026-09-11 rather than running a Claude
       Design session, so `design-brief.md` was never used as a prompt — it
       stands as the written record of the screens. The token file is the one
-      place a colour lives — no literal survives outside it, checked by
-      grep — and `apps/mobile/components/ui.tsx` is the shared set, trimmed
+      place a colour lives: no literal survives in any `.ts` or `.tsx` under
+      `apps/mobile`, checked by grep. `app.json` is the exception and has
+      to be — Expo reads the splash and adaptive-icon colours out of it
+      before any JavaScript runs — so it carries the ground colour as a
+      literal, kept equal to `color.bg` by hand. `apps/mobile/components/ui.tsx` is the shared set, trimmed
       to what the screens import. Screenshots:
-      `design-chart.png`, `design-discover.png`, `design-match.png`,
+      `design-chart.png`, `design-discover.png` (which predates the scroll fix
+      and still shows the card stretched to the bottom edge —
+      `design-discover-detail.png` is the shipped layout),
+      `design-match.png`,
       `design-match-sections.png` for the screens the design changed most,
       plus `design-sign-in.png`, `design-discover-detail.png`,
       `design-matches.png`, `design-settings.png`, `design-profile.png`,

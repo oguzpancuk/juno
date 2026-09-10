@@ -15,7 +15,7 @@
     "android": {
       "package": "com.oguzpancuk.juno",
       "adaptiveIcon": {
-        "backgroundColor": "#0b0b1a",
+        "backgroundColor": "#07060F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -39,7 +39,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#0b0b1a"
+          "backgroundColor": "#07060F"
         }
       ],
       [

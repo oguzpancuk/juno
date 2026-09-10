@@ -7,7 +7,7 @@ import {
   type Band,
 } from '@juno/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -138,9 +138,19 @@ export default function Discover() {
     [me, current],
   );
   const showDetail = current !== undefined && detailFor === current.row.id;
+  // The card is content-height now, so iOS clamps the old offset to the new
+  // maximum rather than returning to the top: without this the next
+  // candidate opens part-way down, on their compatibility rather than their
+  // face.
+  const scroller = useRef<ScrollView>(null);
+  const currentId = current?.row.id;
+  useEffect(() => {
+    scroller.current?.scrollTo({ y: 0, animated: false });
+  }, [currentId]);
 
   return (
     <ScrollView
+      ref={scroller}
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}
       testID="discover-screen"
@@ -379,7 +389,6 @@ const styles = StyleSheet.create({
     marginBottom: space.md,
   },
   navLink: { ...type.bodySmall, color: color.textMuted, flexShrink: 1 },
-  navTitle: { ...type.heading, color: color.text },
   title: { ...type.heading, color: color.text },
   navRight: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   nudge: { ...type.bodySmall, color: color.cool, paddingBottom: space.sm },
@@ -397,8 +406,9 @@ const styles = StyleSheet.create({
     marginHorizontal: -space.lg,
     marginTop: -space.lg,
     marginBottom: space.xs,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    // The card has a 1pt border, so its padding box is one point tighter.
+    borderTopLeftRadius: radius.xl - 1,
+    borderTopRightRadius: radius.xl - 1,
     overflow: 'hidden',
   },
   cardPhoto: { width: '100%', height: 380 },

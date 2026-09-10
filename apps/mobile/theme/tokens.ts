@@ -7,7 +7,15 @@
  */
 
 export const color = {
-  /** The ground. Blue-black, never neutral grey. */
+  /**
+   * The ground. Blue-black, never neutral grey.
+   *
+   * `apps/mobile/app.json` repeats this value for the splash and the
+   * Android adaptive icon, because Expo reads those before any JavaScript
+   * runs. It is the one place outside this file that holds a colour, and
+   * the two have to be changed together or the app flashes one shade on
+   * launch and paints another.
+   */
   bg: '#07060F',
   /** A card on that ground: barely lighter, lifted by its border. */
   surface: '#12101F',

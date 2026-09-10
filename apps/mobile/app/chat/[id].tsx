@@ -207,7 +207,14 @@ export default function ChatScreen() {
           style={[styles.sendButton, canSend ? null : styles.sendDisabled]}
           testID="chat-send"
         >
-          <Text style={styles.sendLabel}>{t.chat.send}</Text>
+          <Text
+            style={[
+              styles.sendLabel,
+              canSend ? null : styles.sendLabelDisabled,
+            ]}
+          >
+            {t.chat.send}
+          </Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -274,6 +281,9 @@ const styles = StyleSheet.create({
   },
   sendDisabled: { backgroundColor: color.disabled },
   sendLabel: { color: color.onBright, fontSize: 15, fontWeight: '600' },
+  // The button's fill goes dark when it is disabled, which is how the
+  // screen opens; the label has to follow it or it disappears.
+  sendLabelDisabled: { color: color.textFaint },
   failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
   muted: { color: color.textMuted, textAlign: 'center' },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },

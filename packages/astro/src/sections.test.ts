@@ -5,6 +5,7 @@ import {
   type InterAspect,
 } from './compatibility';
 import { isCurated } from './dimensions';
+import { population } from './sample';
 import { matchSections } from './summary';
 import { computeChart } from './chart';
 import { toPublicChart } from './public';
@@ -205,16 +206,39 @@ describe('titles already on the screen', () => {
       expect(card.title.length).toBeGreaterThan(2);
   });
 
-  it('keeps a screen free of repeats once the chips are fed in', () => {
-    // What the match screen actually does: pass the labels it is showing.
-    const a = chart('1993-05-05T12:00:00Z');
-    const b = chart('2004-08-19T22:10:00Z');
-    const match = compatibility(a, b);
-    const chips = ['Kolay yakınlık', 'Aynı frekans', 'Dönüştüren'];
-    const sections = matchSections(match, chips);
-    const titles = [...sections.drawn, ...sections.interesting].map(
-      (c) => c.title,
-    );
-    expect(new Set(titles).size).toBe(titles.length);
+  it('keeps the chips off the cards on a pair that would collide', () => {
+    // Asserting the titles are merely unique proves nothing — the intra-
+    // screen set already guarantees that. This finds a pair whose plain
+    // titles collide with a chip label and asserts the seed removes it.
+    const chips = [
+      'Kolay yakınlık',
+      'Aynı frekans',
+      'Kıpırdatan',
+      'Dönüştüren',
+    ];
+    const charts = population(30);
+    let checked = 0;
+    for (let i = 0; i < charts.length && checked < 5; i++) {
+      for (let j = i + 1; j < charts.length && checked < 5; j++) {
+        const x = charts[i];
+        const y = charts[j];
+        if (!x || !y) continue;
+        const match = compatibility(x, y);
+        const plain = [
+          ...matchSections(match).drawn,
+          ...matchSections(match).interesting,
+        ].map((c) => c.title);
+        if (!plain.some((title) => chips.includes(title))) continue;
+        checked++;
+        const seeded = matchSections(match, chips);
+        for (const card of [...seeded.drawn, ...seeded.interesting]) {
+          expect(chips, `${card.title} is a chip label`).not.toContain(
+            card.title,
+          );
+        }
+      }
+    }
+    // The test is worthless if no pair ever collides.
+    expect(checked).toBeGreaterThan(0);
   });
 });

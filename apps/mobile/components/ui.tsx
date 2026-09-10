@@ -19,18 +19,10 @@ import { color, radius, space, type } from '@/theme/tokens';
 export function Screen({
   children,
   testID,
-  scroll = true,
 }: {
   children: ReactNode;
   testID?: string;
-  scroll?: boolean;
 }) {
-  if (!scroll)
-    return (
-      <View style={s.screen} testID={testID}>
-        {children}
-      </View>
-    );
   return (
     <ScrollView
       style={s.screen}
@@ -79,19 +71,13 @@ export function Card({
   children,
   style,
   testID,
-  tone = 'plain',
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
-  /** `lifted` is a card that sits on another card. */
-  tone?: 'plain' | 'lifted';
 }) {
   return (
-    <View
-      testID={testID}
-      style={[s.card, tone === 'lifted' && s.cardLifted, style]}
-    >
+    <View testID={testID} style={[s.card, style]}>
       {children}
     </View>
   );
@@ -181,10 +167,6 @@ const s = StyleSheet.create({
     borderColor: color.border,
     padding: space.lg,
     gap: space.sm,
-  },
-  cardLifted: {
-    backgroundColor: color.surfaceHigh,
-    borderColor: color.borderStrong,
   },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
   orbit: {

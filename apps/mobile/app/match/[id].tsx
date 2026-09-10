@@ -68,12 +68,12 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   // The view is keyed by id, so a swap unmounts it — but a request already
   // in flight still resolves. Its result belongs to the person who is gone.
   const live = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    live.current = true;
+    return () => {
       live.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
   const [meFailed, setMeFailed] = useState(false);
 

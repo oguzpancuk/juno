@@ -72,7 +72,7 @@
   unreachable third sort criterion is gone; the sign-in button dims when it
   is disabled; the discover nav row can shrink.
 - **`matchSections`' second parameter has a test now.** It closed a real
-  collision — three titles are byte-identical to dimension labels — and had
+  collision — four titles are byte-identical to dimension labels — and had
   none. The test states the honest contract: a title already on the screen
   is stepped off when a free variant exists, and the section keeps its
   cards when the bucket is exhausted.
