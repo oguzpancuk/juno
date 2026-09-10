@@ -33,6 +33,48 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — The last gate, and three of my own claims
+
+- A publication-gate review of the whole branch. Nothing unsafe: no key,
+  token or service-role string anywhere in the tree, the only tracked env
+  file is the example with a literal placeholder, no local path or address
+  in any diff, and the eighteen screenshots carry seed data and flat-colour
+  placeholders — no real face, no account identifier. The battery is green
+  on the clean commit with the Supabase stack actually up, so the RLS and
+  Edge suites ran rather than silently passing.
+- **Three things HEAD said about itself were wrong, and each took one
+  command to falsify.**
+  - The disabled send label went in at `textFaint` on the dark fill:
+    **2.76:1**, under the 3:1 floor this same file had declared two
+    commits earlier as the reason four other colours were changed. It is
+    `textMuted` now — 5.19:1, still visibly dimmer than the enabled state.
+  - "281 tests" was `packages/astro` alone, written next to the battery
+    command. The battery runs four workspaces: 54 + 281 + 36 + 119 =
+    **490**. The docs gate cannot catch this — the figure is not in
+    ADR-0009's block — so it is caught by reading, or not at all.
+  - The entry saying the chat send button "takes `color.onBright` now" was
+    left standing after the button gained a second colour, and
+    `screenshots/design-chat.png` still shows the state before either
+    change, listed as evidence without the caveat `design-discover.png`
+    got. Both corrected here rather than in place.
+- Smaller: the sign-in verify button was disabled on two conditions and
+  dimmed on one, so five typed digits left it looking tappable.
+- **A process note against myself.** The previous commit edited a dated
+  NOTES entry in place to correct "three titles" to "four". The outcome
+  was right and the file's own header forbids the mechanism: _never
+  rewrite old entries — this file is the audit trail_. A correction
+  belongs in a new entry, as this one is. Same-day and factual is still a
+  rewrite.
+- Also recorded rather than fixed, because they are outside this branch's
+  scope: `app.json` sets `userInterfaceStyle: "automatic"` on an app with
+  one fixed dark palette, so a light-mode device gets light keyboards and
+  alerts against the dark composer; the repo has no README and no LICENSE
+  at its root; and every commit in this repository's history is authored
+  from a machine-name address, which is worth changing before the project
+  is shown to anyone.
+- Verified: `bash .claude/hooks/verify.sh` green, five steps, 490 tests
+  across four workspaces.
+
 ## 2026-09-11 — A card that could clip its own buttons
 
 - The review of the redesign found a regression I had introduced, and it

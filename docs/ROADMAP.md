@@ -519,7 +519,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `design-match-sections.png` for the screens the design changed most,
       plus `design-sign-in.png`, `design-discover-detail.png`,
       `design-matches.png`, `design-settings.png`, `design-profile.png`,
-      `design-chat.png`, `design-legal.png` and `design-blocked.png`. Ten
+      `design-chat.png` (which predates two changes to the send button's
+      colour), `design-legal.png` and `design-blocked.png`. Ten
       of the eleven; onboarding needs an account part-way through sign-up
       and was not photographed._
       NOT met: the mockups carry a compatibility percentage on most

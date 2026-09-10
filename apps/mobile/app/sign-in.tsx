@@ -115,7 +115,10 @@ export default function SignIn() {
           />
           <Pressable
             testID="verify"
-            style={[styles.button, busy && styles.buttonBusy]}
+            style={[
+              styles.button,
+              (busy || code.trim().length !== 6) && styles.buttonBusy,
+            ]}
             disabled={busy || code.trim().length !== 6}
             onPress={() => void verify()}
           >

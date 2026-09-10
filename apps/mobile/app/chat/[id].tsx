@@ -282,8 +282,10 @@ const styles = StyleSheet.create({
   sendDisabled: { backgroundColor: color.disabled },
   sendLabel: { color: color.onBright, fontSize: 15, fontWeight: '600' },
   // The button's fill goes dark when it is disabled, which is how the
-  // screen opens; the label has to follow it or it disappears.
-  sendLabelDisabled: { color: color.textFaint },
+  // screen opens; the label has to follow it or it disappears. `textMuted`
+  // rather than `textFaint`: 5.19:1 on this fill against 2.76:1, and this
+  // branch put four other colours right for being under 3:1.
+  sendLabelDisabled: { color: color.textMuted },
   failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
   muted: { color: color.textMuted, textAlign: 'center' },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
