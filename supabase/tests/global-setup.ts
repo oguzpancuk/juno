@@ -1,3 +1,4 @@
+import { edgeFunctionNames } from './edge-functions';
 import { localStack } from './local';
 
 /**
@@ -19,46 +20,87 @@ import { localStack } from './local';
  * graph over the network. Inside a test that is a 20 s timeout away from a
  * red build on an unrelated commit; here it has its own budget.
  *
- * OPTIONS is the probe on purpose: both functions answer a preflight with
- * 204 before they read a token or touch the database, so warming them
- * cannot change state.
+ * OPTIONS is the probe on purpose: every function answers a preflight with
+ * 204 before it reads a token or touches the database, so warming them
+ * cannot change state. Kong forwards the preflight to the worker rather
+ * than answering it itself, which is what makes this warm anything.
  */
 
-const FUNCTIONS = ['photo', 'delete-account'] as const;
 const BUDGET_MS = 120_000;
 const INTERVAL_MS = 500;
+// Bounds one attempt, so the budget above is the real bound rather than a
+// claim: without it a hung connection runs to undici's own ~300 s timeout.
+const ATTEMPT_MS = 15_000;
 
 /** The status, or the transport error when there was no answer at all. */
 async function preflight(url: string): Promise<number | string> {
   try {
-    const response = await fetch(url, { method: 'OPTIONS' });
+    const response = await fetch(url, {
+      method: 'OPTIONS',
+      signal: AbortSignal.timeout(ATTEMPT_MS),
+    });
     return response.status;
   } catch (error) {
     return error instanceof Error ? error.message : String(error);
   }
 }
 
+/** What to do about an answer that is not the 204 we want. */
+function diagnose(answer: number | string): {
+  readonly retry: boolean;
+  readonly cause: string;
+} {
+  if (answer === 503) {
+    return {
+      retry: true,
+      cause:
+        'The edge runtime is not running: whatever starts the stack must not exclude edge-runtime (see .github/workflows/ci.yml).',
+    };
+  }
+  if (answer === 404) {
+    return {
+      retry: false,
+      cause:
+        'Kong has no route for this function: the directory under supabase/functions was renamed or removed, or the stack predates it (npx supabase stop && npx supabase start).',
+    };
+  }
+  if (answer === 500) {
+    return {
+      retry: false,
+      cause:
+        'The worker failed to boot. Its imports are resolved from the network at cold start, so an unreachable or bad specifier lands here (npx supabase functions serve shows the error).',
+    };
+  }
+  if (typeof answer === 'string') {
+    return {
+      retry: true,
+      cause: 'Nothing answered at all: the stack is down (npx supabase start).',
+    };
+  }
+  return { retry: true, cause: 'Unexpected status for a preflight.' };
+}
+
 async function warm(name: string): Promise<void> {
   const url = `${localStack().API_URL}/functions/v1/${name}`;
   const deadline = Date.now() + BUDGET_MS;
-  let last: number | string = 'no request completed';
   for (;;) {
-    last = await preflight(url);
-    if (last === 204) return;
-    if (Date.now() >= deadline) break;
+    const answer = await preflight(url);
+    if (answer === 204) return;
+    const { retry, cause } = diagnose(answer);
+    const waited = Math.round((BUDGET_MS - (deadline - Date.now())) / 1000);
+    if (!retry || Date.now() >= deadline) {
+      throw new Error(
+        [
+          `Edge Function "${name}" did not answer a preflight at ${url}`,
+          `(answer: ${answer}${retry ? `, after ${waited}s of retrying` : ', not retried'}).`,
+          cause,
+        ].join(' '),
+      );
+    }
     await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
   }
-  throw new Error(
-    [
-      `Edge Function "${name}" never answered a preflight at ${url}`,
-      `(${BUDGET_MS / 1000}s budget, last answer: ${last}).`,
-      '503 means the edge runtime is not running: whatever starts the',
-      'stack must not exclude edge-runtime (see .github/workflows/ci.yml).',
-      'A connection error means the stack itself is down (npx supabase start).',
-    ].join(' '),
-  );
 }
 
 export async function setup(): Promise<void> {
-  for (const name of FUNCTIONS) await warm(name);
+  for (const name of edgeFunctionNames()) await warm(name);
 }

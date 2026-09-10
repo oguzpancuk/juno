@@ -35,10 +35,34 @@
   in production is not worth that. Both functions now import
   `jsr:@supabase/supabase-js@2.116.0` — the same version
   `supabase/package.json` resolves, so the repo runs one supabase-js.
-- **The pin has a gate.** `functions/` is outside the TypeScript project
-  and ESLint ignores it, so nothing but `tests/functions-pinned.test.ts`
-  would notice a floating specifier coming back. Checked by restoring
-  `@2`: it fails and names the file and the specifier.
+  Worth being exact about what that buys: pinning the top of the graph is
+  not a lockfile. supabase-js pins its own `@supabase/*` dependencies but
+  declares `npm:@opentelemetry/api@^1.0.0`, and that range is still
+  resolved from the network at cold start. The risk is narrowed to
+  transitive ranges, not closed.
+- **The pin has a gate, and the gate needed a second pass.** `functions/`
+  is outside the TypeScript project and ESLint ignores it, so nothing but
+  `tests/functions-pinned.test.ts` would notice a floating specifier
+  coming back. The first version of it could be walked past three ways,
+  all found in review: it only opened `<dir>/index.ts`, and it only
+  matched `from '…'` — so a side-effect `import '…'`, a dynamic
+  `import('…')`, or any module that is not the entrypoint (a future
+  `_shared/`) would have restored the exact risk the commit exists to
+  remove, with the test green. It now walks every `.ts` under
+  `functions/` and matches all three import forms, and two further
+  assertions close what a comment used to promise: the functions may not
+  disagree with each other on a version, and they may not drift from the
+  supabase-js the workspace has installed — `npm update` alone now turns
+  the suite red until the functions are bumped with it. All three were
+  checked by mutation: a floating specifier hidden in `_shared/boot.ts`,
+  the two functions set to different versions, and both set behind the
+  install. Each fails for its own reason and only that one.
+- **A checkbox I had no right to tick.** The ROADMAP item was marked done
+  before CI had seen the commits, while its own done-when clause asks for
+  a green run. Review caught it; it is back to `[ ]` with the evidence
+  recorded and the run named as what is missing. The lesson is the one
+  this whole outage already taught: a green local battery is not evidence
+  about CI.
 - Verified: battery green on a clean tree. CI green on this commit is the
   claim that still needs the run.
 
