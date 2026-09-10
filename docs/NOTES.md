@@ -23,6 +23,63 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — C2 through C6, and the app the owner asked for by morning
+
+- Owner approved the parked upstream candidate, a publication of the work
+  to date, and asked for the app to be feature-complete by morning with
+  only the visual design left. Five ROADMAP items landed overnight, each
+  with its own commit and its own tests.
+- **C6 — per-dimension sums.** `compatibility()` returns a harmony sum and
+  a tension sum per dimension plus Growth's absolute sum, so a viewer
+  weighting can reorder `discover` without touching a displayed value. Two
+  symmetry defects surfaced while testing it, both invisible until now
+  because the score rounds to an integer: terms accumulated in traversal
+  order, and `separation` computed from `lonB − lonA`, which normalises
+  asymmetrically. The second was the real one and it changed scoring at
+  exact-boundary orbs — recorded as ADR-0003 amendment 3, not filed as
+  float noise.
+- **C3 — bands and labels.** No score is printed. Four bands from the
+  committed calibration, three labels per dimension from that dimension's
+  own cuts. `bands.json` went from five entries to four and lost both
+  judging texts. One clause is not met and says so in the ROADMAP: the
+  population generator is still duplicated between the script and the test.
+- **C4 — the two match sections.** Curated pairings first, widened when
+  short, an empty section omitted rather than padded. The curated list
+  moved into `dimensions.ts`, so the engine and the script read one copy —
+  the duplication class that cost this work six review rounds.
+- **C2 — the three screens.** The chart screen leads with six
+  product-language cards and hides the rest behind "Tüm haritanı gör"; the
+  discover card shows a band word beside a four-step meter; the match
+  screen is band, summary, dimension chips, "Neden birbirinize
+  çekiliyorsunuz" and "Burası ilginç". Thirty card titles by (dimension ×
+  valence × variant), picked by a stable hash so a pair reads the same
+  every visit, and stepped on when a title is already on the screen — two
+  cards both reading "Anlaşılan taraf" is what made that necessary.
+- **C5 — house overlays.** Sixty texts, both directions, six houses. The
+  card's title is the house's dating meaning, because the text already
+  opens by naming the placement and a title repeating it read as a bug.
+- **Verified on the simulator**, signed in as a real tester against the
+  local stack, matched with a seed: `screenshots/c2-chart.png`,
+  `c2-chart-full.png`, `c2-discover.png`, `c2-match.png`,
+  `c2-match-sections.png`, `c5-overlays.png`.
+- **Two environment notes worth keeping.** Expo Go was not installed on the
+  simulator; `xcrun simctl install booted ~/.expo/ios-simulator-app-cache/
+Expo-Go-*.tar.app` uses the cached build without a download. And
+  `contracts/init.sh` starts Metro with `CI=1`, which disables file
+  watching — a screen edited after that start never reaches the bundle, and
+  the symptom is a section that simply does not render with no error
+  anywhere. Restarting Metro without `CI=1` fixed it; the contract should
+  probably say so.
+- **Two off-center taps never registered** in the simulator (the Like and
+  Pass buttons), so the mutual like was completed in the database instead.
+  The like path itself is covered by tests; what the screenshots evidence
+  is the rendering.
+- Verified: `bash .claude/hooks/verify.sh` green, five steps, on each
+  commit. 277 tests.
+- Next: the visual design item, which is now the only thing between this
+  and a TestFlight build. `docs/design-brief.md` must be regenerated first
+  — it carries a warning saying so.
+
 ## 2026-09-11 — What the gate could not see
 
 - The review of the gate commit found its own headline claim false: the

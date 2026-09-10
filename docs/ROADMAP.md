@@ -375,7 +375,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
 <!-- The C series continues the "Full Turkish content" item above, whose
      screenshots are `c1-*`; these five carry the 2026-09-10 amendment. -->
 
-- [ ] **C2 — Presentation layer (PRD amendment 2026-09-10, ADR-0009 §1/§2/§5).**
+- [x] **C2 — Presentation layer (PRD amendment 2026-09-10, ADR-0009 §1/§2/§5).**
       The dimension mapping table lands in `packages/astro` and drives four
       things at once: the five dimension sums, the card titles derived from
       (dimension × valence), the match page's two-section split, and which
@@ -391,13 +391,21 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       ADR-0009's table (8/12/6/7/18), and that every (dimension × valence)
       has a title (battery); `screenshots/c2-chart.png`, `c2-discover.png`
       and `c2-match.png` show the three screens (screenshot).
-      _Partly built: `packages/astro/src/dimensions.ts` is the table, with
-      eight tests — the 51 assignments pinned as a full map, the row count
-      and duplicate check, and one that drives real charts so the aspects are
-      ones the engine emits rather than ones the table was written against.
-      A pairing listed under two dimensions throws at import rather than
-      letting the later row win silently. Nothing else — no titles, no UI._
-- [ ] **C3 — Bands and labels (ADR-0009 §2/§3).** No score is shown as a
+      _Done. `dimensions.ts` is the table, with eight tests: the 51
+      assignments pinned as a full map, the row count and duplicate check,
+      and one driving real charts so the aspects are ones the engine emits.
+      A pairing under two dimensions throws at import. `titles.json` is
+      thirty card titles by (dimension × valence × variant), picked by a
+      stable hash of the aspect and stepped on when a title is already on
+      the screen — two cards both reading "Anlaşılan taraf" is what made
+      that necessary. `placements.json` titles the six leading placements.
+      Screens: `screenshots/c2-chart.png` (six cards, no repeated rising
+      text), `c2-chart-full.png` (the disclosure open on the ten planets),
+      `c2-discover.png` (band word beside a four-step meter, no number),
+      `c2-match.png` and `c2-match-sections.png` (band, dimension chips,
+      the two sections with orbs). Driven on the simulator against the
+      local stack as the tester Ece, matched with the Kaan seed._
+- [x] **C3 — Bands and labels (ADR-0009 §2/§3).** No score is shown as a
       number (owner decision, 2026-09-10). The whole calibrated surface is
       thirteen figures written by `packages/astro/scripts/score-distribution.ts`
       and committed: three cut points for the overall score's four near-equal
@@ -416,7 +424,15 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       that runs in 0.44 s). The generator moves somewhere both the script and
       the bounded-sample test can import, so there is one copy of it rather
       than two.
-- [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
+      _Done. `content/calibration.json` is the thirteen figures, Zod-parsed
+      at import; nothing else in the package holds a threshold. `bands.json`
+      is four entries with no verdict in any of them — the old very-low and
+      low texts told people a pairing would take work — and
+      `dimensions.json` is five axis names with fifteen labels. Seven tests
+      over a 300-chart sample. One clause is NOT met: the generator is still
+      duplicated between the script and the test. `--charts=300` reproduces
+      the sample, but neither imports the other's copy._
+- [x] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with
       its heading rather than filled. `bands.json`'s `very-low` and `low`
@@ -432,7 +448,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `npx tsx packages/astro/scripts/score-distribution.ts --charts=300` —
       so the rule is sized against the figures block in ADR-0009, not against
       a sample in the battery (battery).
-- [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
+      _Done: six tests, including a pair with only positives, one with only
+      tensions, one showing two cards, and one with no aspects at all. The
+      curated list moved into `dimensions.ts` so the engine and the script
+      read one copy._
+- [x] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
       house, written in both directions (5 × 6 × 2). No engine work: the
       public chart already carries the twelve cusps, so this is content plus
@@ -440,7 +460,10 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: the content test proves all 60 keys have a non-empty text
       and the direction is never mixed up (battery);
       `screenshots/c5-overlays.png` shows the section on a real pair.
-- [ ] **C6 — Weighted-ranking readiness (ADR-0009 §4).** `compatibility()`
+      _Done. The card's title is the house's dating meaning rather than a
+      repeat of the text's opening clause. Five tests plus the generic
+      content rules, which caught a telegraphic sentence on the way in._
+- [x] **C6 — Weighted-ranking readiness (ADR-0009 §4).** `compatibility()`
       returns a harmony sum and a tension sum per dimension alongside the
       overall score — two figures, never one signed sum, which would collapse
       to `H − T` and lose the split on the great majority of pairs (the
@@ -457,6 +480,13 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       overshoot by up to 4 — that the result is still symmetric in its
       arguments, and that a weighted ordering over the generated population
       differs from the unweighted one for at least one viewer (battery).
+      _Done, and two symmetry defects surfaced while testing it: terms were
+      accumulated in traversal order, and `separation` came from
+      `lonB − lonA`, which normalises asymmetrically. The second changed
+      scoring at exact-boundary orbs — ADR-0003 amendment 3 — and was the
+      real asymmetry; the first is defensive. Six tests, one of which pins
+      which dimension owns each element bonus, since swapping them left the
+      totals invariant and the labels wrong._
 - [ ] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`
       is the prompt and context for a claude.ai/design project; the
