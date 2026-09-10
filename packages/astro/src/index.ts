@@ -29,8 +29,10 @@ export {
   type RetroPlanet,
 } from './content';
 export {
+  CURATED,
   DIMENSIONS,
   PAIRINGS,
+  isCurated,
   dimensionOf,
   dimensionTerm,
   scoredPairings,
@@ -88,10 +90,12 @@ export {
   type PublicChart,
 } from './public';
 export {
+  matchSections,
   natalReading,
   starterFromKey,
   synastryReading,
   type NatalAspectReading,
+  type MatchSections,
   type NatalReading,
   type PlanetReading,
   type SynastryAspectReading,

@@ -28,11 +28,12 @@
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { compatibility, elementsAgree, type Body } from '../src/compatibility';
+import { compatibility, elementsAgree } from '../src/compatibility';
 import {
   DIMENSIONS,
   dimensionOf,
   dimensionTerm,
+  isCurated,
   type Dimension,
 } from '../src/dimensions';
 import { computeChart } from '../src/chart';
@@ -45,36 +46,6 @@ const ELEMENT_BONUS = 2;
 /** Equal-frequency bands: a signal that splits the population evenly. */
 const BAND_CUTS = [25, 50, 75];
 const LABEL_CUTS = [33, 67];
-
-/**
- * The pairings the owner's product system puts on the primary match view
- * (2026-09-10). Unordered, like the dimension table.
- */
-const CURATED: readonly (readonly [Body, Body])[] = [
-  ['venus', 'mars'],
-  ['venus', 'venus'],
-  ['mars', 'mars'],
-  ['ascendant', 'venus'],
-  ['ascendant', 'mars'],
-  ['moon', 'moon'],
-  ['moon', 'venus'],
-  ['sun', 'moon'],
-  ['moon', 'mars'],
-  ['moon', 'mercury'],
-  ['mercury', 'mercury'],
-  ['mercury', 'venus'],
-  ['sun', 'mercury'],
-  ['saturn', 'sun'],
-  ['saturn', 'moon'],
-  ['saturn', 'venus'],
-  ['pluto', 'venus'],
-];
-
-const isPair = (pair: readonly [Body, Body], a: Body, b: Body): boolean =>
-  (pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a);
-
-const isCurated = (a: Body, b: Body): boolean =>
-  CURATED.some((pair) => isPair(pair, a, b));
 
 /**
  * Deterministic generator. Determinism rests on IEEE-754 rounding being
@@ -298,7 +269,13 @@ for (let i = 0; i < charts.length; i++) {
       isCurated(x.planetA, x.planetB),
     );
     curatedAspectTotal += curated.length;
-    if (curated.some((x) => isPair(['pluto', 'venus'], x.planetA, x.planetB)))
+    if (
+      curated.some(
+        (x) =>
+          (x.planetA === 'pluto' && x.planetB === 'venus') ||
+          (x.planetA === 'venus' && x.planetB === 'pluto'),
+      )
+    )
       plutoVenusPairs++;
 
     const curatedPositives = curated.filter((x) => x.term >= 0).length;

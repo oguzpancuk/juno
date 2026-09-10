@@ -165,3 +165,42 @@ export function scoredPairings(): Pairing[] {
 export function dimensionTerm(dimension: Dimension, term: number): number {
   return dimension === 'growth' ? Math.abs(term) : term;
 }
+
+/**
+ * The pairings the owner's product system puts on the primary match view
+ * (2026-09-10). Unordered, like the table above: synastry visits A × B and
+ * B × A separately and both belong to the pairing listed here once.
+ *
+ * Too thin to fill the match page on its own — roughly one pair in six
+ * cannot produce three positive aspects from it — so ADR-0009 §5 widens to
+ * every scored pairing when a section comes up short. The measured figures
+ * are in that ADR.
+ */
+const CURATED_ROWS: readonly Pairing[] = [
+  ['venus', 'mars'],
+  ['venus', 'venus'],
+  ['mars', 'mars'],
+  ['ascendant', 'venus'],
+  ['ascendant', 'mars'],
+  ['moon', 'moon'],
+  ['moon', 'venus'],
+  ['sun', 'moon'],
+  ['moon', 'mars'],
+  ['moon', 'mercury'],
+  ['mercury', 'mercury'],
+  ['mercury', 'venus'],
+  ['sun', 'mercury'],
+  ['saturn', 'sun'],
+  ['saturn', 'moon'],
+  ['saturn', 'venus'],
+  ['pluto', 'venus'],
+];
+
+export const CURATED: ReadonlySet<string> = new Set(
+  CURATED_ROWS.map(([a, b]) => pairingKey(a, b)),
+);
+
+/** Is this pairing on the primary match view? */
+export function isCurated(a: Body, b: Body): boolean {
+  return CURATED.has(pairingKey(a, b));
+}

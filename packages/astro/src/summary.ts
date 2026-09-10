@@ -1,5 +1,5 @@
 import { PLANETS, type Planet } from './bodies';
-import { DIMENSIONS, type Dimension } from './dimensions';
+import { DIMENSIONS, isCurated, type Dimension } from './dimensions';
 import {
   compatibility,
   elementOf,
@@ -204,5 +204,62 @@ export function starterFromKey(
     }),
     meaning,
     question,
+  };
+}
+
+/**
+ * The match page's two aspect sections (ADR-0009 §5).
+ *
+ * Both fill from the curated pairings first, ranked by |term| then by the
+ * tighter orb, and widen to every scored pairing when a section comes up
+ * short. A section with nothing to show is empty and is omitted with its
+ * heading — never filled with a verdict, and never padded.
+ *
+ * Falling short of three cards is a different thing from an empty section
+ * and much commoner: the section simply shows what there is.
+ */
+export interface MatchSections {
+  /** "Neden birbirinize çekiliyorsunuz" — up to three, harmonious. */
+  readonly drawn: readonly SynastryAspectReading[];
+  /** "Burası ilginç" — one tense aspect, or none. */
+  readonly interesting: readonly SynastryAspectReading[];
+}
+
+const DRAWN_LIMIT = 3;
+const INTERESTING_LIMIT = 1;
+
+/** |term| desc, then the tighter orb; ties settled by a stable triple. */
+function rank(aspects: readonly InterAspect[]): readonly InterAspect[] {
+  return [...aspects].sort(
+    (x, y) =>
+      Math.abs(y.term) - Math.abs(x.term) ||
+      x.orb - y.orb ||
+      `${x.planetA}-${x.planetB}-${x.aspect}`.localeCompare(
+        `${y.planetA}-${y.planetB}-${y.aspect}`,
+      ),
+  );
+}
+
+function fill(
+  aspects: readonly InterAspect[],
+  wanted: (a: InterAspect) => boolean,
+  limit: number,
+): readonly InterAspect[] {
+  const eligible = aspects.filter(wanted);
+  const curated = rank(eligible.filter((a) => isCurated(a.planetA, a.planetB)));
+  if (curated.length >= limit) return curated.slice(0, limit);
+  // Widen: the curated list alone leaves a gap in roughly one pair in six.
+  const rest = rank(eligible.filter((a) => !isCurated(a.planetA, a.planetB)));
+  return [...curated, ...rest].slice(0, limit);
+}
+
+export function matchSections(match: Compatibility): MatchSections {
+  return {
+    // `compatibility()` buckets a term of exactly 0 as harmony (an aspect
+    // sitting on its maximum orb), so a card is a card here too.
+    drawn: fill(match.aspects, (a) => a.term >= 0, DRAWN_LIMIT).map(readAspect),
+    interesting: fill(match.aspects, (a) => a.term < 0, INTERESTING_LIMIT).map(
+      readAspect,
+    ),
   };
 }
