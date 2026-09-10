@@ -27,7 +27,12 @@ import { edgeFunctionSources } from './edge-functions';
 // in any of the three quote characters. Missing a form is a way for a
 // floating specifier to walk past, which is how the first version of this
 // file covered nothing.
-const SPECIFIER = /(?:\bfrom|\bimport)\s*(?:\(\s*)?(['"`])([^'"`]*)\1/g;
+//
+// The lookbehind keeps `.from(…)` out of it. Supabase's own query builder
+// reads `supabase.from(`profiles_${shard}`)`, and a template literal there
+// would otherwise be reported as an unpinned dependency — a diagnosis
+// about cold-start resolution for a string that is not an import.
+const SPECIFIER = /(?<![.$\w])(?:from|import)\s*(?:\(\s*)?(['"`])([^'"`]*)\1/g;
 const REMOTE = /^(?:jsr:|npm:|https?:)/;
 // An exact version either ends the path or is followed by a subpath. The
 // query and fragment are cut off first: `?deps=zod@3.22.4` must not make a
@@ -94,18 +99,34 @@ function parse(file: string, specifier: string): Remote {
  * network just the same, and the scheme test alone would let it past.
  * Relative paths stay out of it — those are local files, and interpolating
  * one is not a dependency question.
+ *
+ * A computed one must also carry a path separator. The word `from` occurs
+ * inside ordinary strings (`` `row missing from "${table}"` ``), and this
+ * is a regex, not a parser, so such a string reaches here as `${table}`;
+ * without the separator it would be reported as an unpinned dependency.
+ * The gap that buys: a bare computed specifier, `` import(`${pkg}`) ``,
+ * goes unseen. Nothing can be said about that one anyway, and it has no
+ * registry, no version and no precedent in this repo.
  */
 function isRemote(specifier: string): boolean {
   if (REMOTE.test(specifier)) return true;
-  return specifier.includes('${') && !/^[./]/.test(specifier);
+  if (!specifier.includes('${') || /^[./]/.test(specifier)) return false;
+  return specifier.includes('/');
+}
+
+/** The import specifiers in one file's text, before any judgement. */
+function specifiersIn(source: string): readonly string[] {
+  return [...source.matchAll(SPECIFIER)]
+    .map(([, , specifier]) => specifier)
+    .filter((specifier): specifier is string => specifier !== undefined);
 }
 
 function remoteImports(): readonly Remote[] {
   const found: Remote[] = [];
   for (const file of edgeFunctionSources()) {
     const source = readFileSync(file, 'utf8');
-    for (const [, , specifier] of source.matchAll(SPECIFIER)) {
-      if (specifier === undefined || !isRemote(specifier)) continue;
+    for (const specifier of specifiersIn(source)) {
+      if (!isRemote(specifier)) continue;
       found.push(parse(file, specifier));
     }
   }
@@ -170,9 +191,44 @@ it.each(CASES)('parses $specifier — $why', ({ specifier, version }) => {
   expect(parse('probe.ts', specifier).version).toBe(version);
 });
 
-it('leaves relative imports alone', () => {
+/** What the gate actually reports for a file with this text in it. */
+const reported = (source: string): readonly string[] =>
+  specifiersIn(source).filter(isRemote);
+
+it('reports the imports in a source and nothing else', () => {
+  // `from` is a word that occurs in code which is not an import: the query
+  // builder reads `supabase.from(…)`, and prose says "missing from". Each
+  // is stopped at a different point — the first two never match, the third
+  // matches and is then judged not a dependency — so they are asserted
+  // through the whole path rather than at one layer.
+  expect(
+    reported('await supabase.storage.from(`photos-${env}`).remove([]);'),
+  ).toEqual([]);
+  expect(reported('await supabase.from(`profiles_${shard}`);')).toEqual([]);
+  expect(reported('throw new Error(`missing from "${table}"`);')).toEqual([]);
+  // Carries a separator, so only the lookbehind keeps it out — the rule
+  // that a computed specifier must look like a path cannot help here.
+  expect(reported('await supabase.storage.from(`photos/${uid}`);')).toEqual([]);
+
+  expect(reported("import { a } from 'jsr:pkg@1.0.0';")).toEqual([
+    'jsr:pkg@1.0.0',
+  ]);
+  expect(reported("import 'npm:polyfill@1.0.0';")).toEqual([
+    'npm:polyfill@1.0.0',
+  ]);
+  expect(reported("await import('npm:lazy@1.0.0');")).toEqual([
+    'npm:lazy@1.0.0',
+  ]);
+  expect(reported('await import(`${CDN}/pkg@2`);')).toEqual(['${CDN}/pkg@2']);
+});
+
+it('leaves relative and non-specifier strings alone', () => {
   expect(isRemote('./shared.ts')).toBe(false);
   expect(isRemote('../lib/${name}.ts')).toBe(false);
+  // What a stray `from` inside an ordinary string looks like by the time
+  // it reaches here.
+  expect(isRemote('${table}')).toBe(false);
+  expect(isRemote('photos-${env}')).toBe(false);
 });
 
 it('gives one name to a package however it is reached', () => {
