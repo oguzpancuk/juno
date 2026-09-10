@@ -33,6 +33,44 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — Pushed, and one more count of my own
+
+- The branch is on `origin/main`: `86635ad..717000e`, 28 commits, under the
+  owner's approval of 2026-09-10 ("publish the work to date"). CI green on
+  the pushed commit — run 34514122573, 4m36s, the same `verify.sh` the
+  local battery runs. The remote is private; nothing became public.
+- **Correction to the entry above**, in a new one because that is the rule
+  it just finished restating: it says "the eighteen screenshots" and there
+  are **37** tracked PNGs under `screenshots/`. The claim the number was
+  supporting still holds — seed names, flat-colour placeholders, no face
+  and no account identifier in any of them — but the count was invented.
+  Three entries in a row have now had to correct a figure I wrote from
+  memory instead of counting. The pattern is worth naming: every number
+  in these notes should come from a command, and when it does not, it has
+  been wrong about a third of the time.
+- **A contrast case left as-is, recorded rather than fixed:** `buttonBusy`
+  is `opacity: 0.55` on the whole `Pressable`, so a dimmed button's
+  `onBright` label composites to 3.03:1 against its own dimmed fill,
+  against 7.68:1 at full opacity. It clears the 3:1 floor and misses 4.5:1
+  at 17 pt. Pre-existing on every button in the app and outside the scope
+  of the commit that found it; a disabled control is also the one place
+  WCAG exempts. Worth a decision, not a reflex.
+- Left for the owner, none of them defects: the repo has no README and no
+  LICENSE at its root; `app.json` sets `userInterfaceStyle: "automatic"`
+  on an app with one fixed dark palette, so a light-mode device gets light
+  keyboards and native alerts against the dark composer; and all 148
+  commits are authored from a machine-name address, which a later change
+  cannot remove from the history already pushed.
+- **The night's gap, stated plainly:** two of the seven review rounds found
+  defects that no test could have caught, because there is no test that
+  renders a screen — the match screen carrying state across an identity
+  change, and the discover card clipping its own like and pass buttons.
+  Both were found by a person reading code and looking at screenshots.
+  Before TestFlight, the battery needs something that mounts a screen.
+- Next session: the startup `TypeError`, a rendering test, and TestFlight
+  itself — which needs the owner for the Apple account, the privacy-policy
+  URL and the EAS project.
+
 ## 2026-09-11 — The last gate, and three of my own claims
 
 - A publication-gate review of the whole branch. Nothing unsafe: no key,
