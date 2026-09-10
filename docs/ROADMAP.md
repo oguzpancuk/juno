@@ -320,7 +320,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       unauthenticated page; the authenticated screens were driven and read
       back in-session. Still open for the hosted project: EXPO_PUBLIC_*
       env for a deployed build and where to host the static output._
-- [ ] **Close the local/CI gap around Edge Functions.** CI was red for
+- [x] **Close the local/CI gap around Edge Functions.** CI was red for
       days because the workflow started a stack without the edge runtime
       and twelve tests reported a bare status mismatch instead of naming
       the missing service (docs/NOTES.md, 2026-09-10). Two leftovers of
@@ -333,8 +333,12 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       suite with a message naming it and the fix, every remote import in
       the functions is pinned, and CI is green on the commit that does it
       (battery + the run).
-      _Code done, checkbox waiting on the run: this item's own done-when
-      asks for CI green, and CI has not seen the commits yet. A vitest
+      _CI green on 9de4b83 (run 34452505805, 4m25s), which is what this
+      item's done-when asked for. CI had already gone green one commit
+      into this work, at 2012b1c — the line that stopped excluding the
+      edge runtime — so what this run adds is that the gates built on top
+      of it hold, against a runtime booting on a Deno cache a fresh
+      runner creates empty. A vitest
       globalSetup preflights every function directory with OPTIONS, which
       they answer 204 before reading a token, so warming them changes
       nothing; it also moves the cold-cache download out of a test's 20 s
@@ -357,6 +361,16 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       promise: pinning the top of the graph is not a lockfile —
       supabase-js itself declares `npm:@opentelemetry/api@^1.0.0`, and
       that range is still resolved at cold start._
+
+- [ ] **Make the Edge Function preflight assert the worker, not the
+      status.** `tests/global-setup.ts` accepts any 204, and the reason a
+      204 means the function's module was evaluated — each returns its own
+      `access-control-allow-methods` — is checked nowhere. A gateway that
+      answered preflights itself would leave the gate green with the edge
+      runtime dead, which is the incident it was written for.
+      — done when: the preflight asserts each function's own
+      `access-control-allow-methods` value, and a fixture answering 204
+      without it fails the suite (battery).
 
 - [ ] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`

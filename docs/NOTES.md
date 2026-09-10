@@ -104,6 +104,29 @@ OPTIONS` and delete-account returns `POST, OPTIONS` — constants that
   about CI.
 - Verified: battery green on a clean tree. CI green on this commit is the
   claim that still needs the run.
+- **The run, and which commit actually fixed CI.** 9de4b83 is green (run
+  34452505805, 4m25s). It is the _second_ green run, not the first: CI
+  went green at 2012b1c (run 34444723974), whose one behavioural line
+  stopped excluding the edge runtime; the nine commits between it and
+  this one were hardening on a pipeline that already passed. Worth stating plainly
+  because the wrong version was written first, reasoned from this file's
+  own older "six runs, all failures" note instead of re-querying — under
+  a bullet about not claiming what was not observed. What the second run
+  adds is narrower and still worth having: the gates written since do not
+  break CI, and they pass against an edge runtime booting on a Deno cache
+  that a fresh runner creates empty.
+- What a green run does not show, since `verify.sh` prints step output
+  only on failure: the log is four `ok` lines. That `ok tests` covers the
+  Edge Functions is an inference from the harness having no skip path —
+  `globalSetup` throws unless every function answers a preflight 204. The
+  next step of that inference is weaker than it reads: the reason a 204
+  means the worker booted is that each function returns its own
+  `access-control-allow-methods`, which was checked by hand on 10 Sep and
+  is asserted nowhere in the battery. `warm()` compares a status and
+  nothing else, so a gateway that ever answered preflights itself would
+  leave the gate passing with the runtime dead — the original incident.
+  Parked as a ROADMAP item rather than fixed here, because it is a change
+  to a gate and this is a docs commit.
 
 ## 2026-09-10 — CI has never been green, and now we know why
 
