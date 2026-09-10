@@ -510,10 +510,11 @@ tokens.ts` is the one file and nothing outside it holds a hex value;
       `apps/mobile/components/ui.tsx` is the shared set. Screenshots:
       `design-chart.png`, `design-discover.png`, `design-match.png`,
       `design-match-sections.png` for the screens the design changed most,
-      plus `design-matches.png`, `design-settings.png` and
-      `design-profile.png` for three that took the palette mechanically and
-      were checked for it. Onboarding, chat, blocked and legal took the
-      same migration and were not photographed._
+      plus `design-matches.png`, `design-settings.png`,
+      `design-profile.png`, `design-chat.png`, `design-legal.png` and
+      `design-blocked.png` for the ones that took the palette
+      mechanically. Ten of the eleven screens; onboarding needs a
+      signed-out account and was not photographed._
       NOT met: the mockups carry a compatibility percentage on most
       screens, five numeric dimension scores and a Juno-asteroid feature.
       The first two are refused by ADR-0009 §3 (owner reaffirmed on

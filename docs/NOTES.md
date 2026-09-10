@@ -77,11 +77,11 @@
   before any navigation. It predates tonight as far as I can tell, no
   screen is affected, and I did not chase it — bisecting it would have meant
   stashing the night's work. It should be found before TestFlight.
-- Also open: the screens that took the palette mechanically kept their old
-  layouts. Matches, settings and profile were checked on the simulator and
-  are consistent — the radius chips and the delete-account line read
-  correctly on the new palette — but onboarding, chat, blocked and legal
-  were migrated and not looked at.
+- The screens that took the palette mechanically kept their old layouts,
+  and all but onboarding were checked on the simulator: matches, settings,
+  profile, chat, legal and blocked are consistent, with the radius chips,
+  the delete-account line and the legal document all reading correctly on
+  the new palette. Onboarding needs a signed-out account and was left.
 - Verified: `bash .claude/hooks/verify.sh` green, five steps; the four
   redesigned screens driven on the simulator against the local stack.
 
