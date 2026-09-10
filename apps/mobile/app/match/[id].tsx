@@ -1,5 +1,6 @@
 import {
   SIGN_TR,
+  aspectGlyphs,
   formatDegree,
   houseOverlays,
   matchSections,
@@ -28,12 +29,25 @@ import {
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity while the row is still loading. */
 const EMPTY: readonly string[] = [];
 
+/**
+ * The root layout navigates to this route when a match arrives over
+ * Realtime, and navigating to the route you are already on swaps the params
+ * without remounting. Everything below is about one person — the row, the
+ * photos, the open report sheet, the open block confirmation — so the id
+ * keys the view and React discards all of it. Without this, an open block
+ * confirmation survived the swap and its next tap blocked whoever arrived.
+ */
 export default function MatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  return <MatchView key={typeof id === 'string' ? id : 'none'} id={id} />;
+}
+
+function MatchView({ id }: { id: string | string[] | undefined }) {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -43,9 +57,12 @@ export default function MatchScreen() {
   // they sit under the home indicator and do not take a tap.
   const insets = useSafeAreaInsets();
   const [reporting, setReporting] = useState(false);
+  const [showOverlays, setShowOverlays] = useState(false);
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = useRef(false);
+
+  const [meFailed, setMeFailed] = useState(false);
 
   useEffect(() => {
     if (!userId || typeof id !== 'string') return;
@@ -55,6 +72,7 @@ export default function MatchScreen() {
         if (cancelled) return;
         setRow(r);
         setMe(p.status === 'ready' ? p.profile : null);
+        setMeFailed(p.status !== 'ready');
       },
     );
     return () => {
@@ -76,7 +94,13 @@ export default function MatchScreen() {
     [me, row],
   );
   const sections = useMemo(
-    () => (reading ? matchSections(reading.match) : null),
+    () =>
+      reading
+        ? matchSections(
+            reading.match,
+            reading.dimensions.map((d) => d.label),
+          )
+        : null,
     [reading],
   );
   const overlays = useMemo(
@@ -84,7 +108,6 @@ export default function MatchScreen() {
       me && row && row !== 'loading' ? houseOverlays(me.chart, row.chart) : [],
     [me, row],
   );
-  const [showOverlays, setShowOverlays] = useState(false);
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
   if (row === 'loading') {
@@ -183,6 +206,11 @@ export default function MatchScreen() {
         <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
       )}
 
+      {meFailed ? (
+        <Text style={styles.notice} testID="synastry-failed">
+          {t.match.synastryFailed}
+        </Text>
+      ) : null}
       {reading && sections ? (
         <View style={styles.summary} testID="synastry">
           <Text style={styles.label}>{t.match.summary}</Text>
@@ -192,19 +220,23 @@ export default function MatchScreen() {
           </Text>
           <Text style={styles.body}>{reading.bandText}</Text>
 
-          <Text style={styles.label}>{t.match.dimensions}</Text>
-          <View style={styles.dimensionRow}>
-            {reading.dimensions.map((d) => (
-              <View
-                key={d.dimension}
-                style={styles.dimensionChip}
-                testID={`dimension-${d.dimension}`}
-              >
-                <Text style={styles.dimensionName}>{d.name}</Text>
-                <Text style={styles.dimensionLabel}>{d.label}</Text>
+          {reading.dimensions.length === 0 ? null : (
+            <>
+              <Text style={styles.label}>{t.match.dimensions}</Text>
+              <View style={styles.dimensionRow}>
+                {reading.dimensions.map((d) => (
+                  <View
+                    key={d.dimension}
+                    style={styles.dimensionChip}
+                    testID={`dimension-${d.dimension}`}
+                  >
+                    <Text style={styles.dimensionName}>{d.name}</Text>
+                    <Text style={styles.dimensionLabel}>{d.label}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
+            </>
+          )}
 
           {/* A section with nothing to show is omitted with its heading,
               never padded and never filled with a verdict (ADR-0009 §5). */}
@@ -232,12 +264,21 @@ export default function MatchScreen() {
               <Text style={styles.label}>{t.match.overlays}</Text>
               {(showOverlays ? overlays : overlays.slice(0, 1)).map((o) => (
                 <View
-                  key={`${o.planet}-${o.house}-${o.direction}`}
+                  key={`${o.direction}-${o.house}`}
                   style={styles.aspect}
-                  testID={`overlay-${o.planet}-${o.house}-${o.direction}`}
+                  testID={`overlay-${o.direction}-${o.house}`}
                 >
                   <Text style={styles.aspectTitle}>{o.theme}</Text>
-                  <Text style={styles.body}>{o.text}</Text>
+                  <Text style={styles.aspectHead}>
+                    {o.direction === 'theirs'
+                      ? t.match.overlayTheirs
+                      : t.match.overlayYours}
+                  </Text>
+                  {o.placements.map((placement) => (
+                    <Text key={placement.planet} style={styles.body}>
+                      {placement.text}
+                    </Text>
+                  ))}
                 </View>
               ))}
               {overlays.length > 1 ? (
@@ -342,7 +383,9 @@ type AspectCardProps = {
     readonly title: string;
     readonly headline: string;
     readonly meaning: string;
-    readonly aspect: { readonly orb: number };
+    readonly aspect: Parameters<typeof aspectGlyphs>[0] & {
+      readonly orb: number;
+    };
   };
 };
 
@@ -351,9 +394,14 @@ function AspectCard({ card }: AspectCardProps) {
   return (
     <View style={styles.aspect}>
       <Text style={styles.aspectTitle}>{card.title}</Text>
-      <Text style={styles.aspectHead}>
-        {card.headline} · {t.chart.orb(formatDegree(card.aspect.orb))}
+      <Text style={styles.aspectGlyphs}>
+        {aspectGlyphs(card.aspect)}
+        <Text style={styles.aspectOrb}>
+          {'  '}
+          {formatDegree(card.aspect.orb)}
+        </Text>
       </Text>
+      <Text style={styles.aspectHead}>{card.headline}</Text>
       <Text style={styles.body}>{card.meaning}</Text>
     </View>
   );
@@ -375,104 +423,124 @@ function Chip({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  photoStrip: { gap: 8, paddingVertical: 4 },
-  photo: { width: 132, height: 176, borderRadius: 14 },
-  bio: { color: '#c8c3e0', fontSize: 14, lineHeight: 21 },
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
-  content: { padding: 24, paddingTop: 80, gap: 12, paddingBottom: 48 },
+  screen: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.xl, paddingTop: 68, gap: space.sm },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    backgroundColor: '#0b0b1a',
+    gap: space.md,
+    backgroundColor: color.bg,
   },
-  kicker: { color: '#7c6cff', fontSize: 14, letterSpacing: 2 },
-  title: { color: '#f5f2ff', fontSize: 30, fontWeight: '800' },
-  row: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  kicker: { ...type.label, color: color.pink },
+  title: { ...type.display, color: color.text, marginBottom: space.md },
+  photoStrip: { gap: space.sm, paddingVertical: space.sm },
+  photo: { width: 132, height: 176, borderRadius: radius.lg },
+  bio: { ...type.body, color: color.textMuted, marginBottom: space.sm },
+  row: { flexDirection: 'row', gap: space.sm, marginBottom: space.sm },
   chip: {
     flex: 1,
-    backgroundColor: '#15142a',
-    borderRadius: 12,
-    padding: 10,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    padding: space.md,
     alignItems: 'center',
+    gap: 2,
   },
-  chipLabel: { color: '#9a94b8', fontSize: 11 },
-  chipValue: {
-    color: '#f5f2ff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 2,
+  chipLabel: { ...type.caption, color: color.textFaint },
+  chipValue: { ...type.body, color: color.text, fontWeight: '600' },
+  label: {
+    ...type.label,
+    color: color.textFaint,
+    marginTop: space.xl,
+    marginBottom: space.xs,
   },
-  label: { color: '#9a94b8', fontSize: 12, letterSpacing: 1, marginTop: 12 },
   starterBox: {
-    backgroundColor: '#15142a',
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    padding: space.lg,
+    gap: space.sm,
   },
-  starterHead: { color: '#c9c4e3', fontSize: 14 },
-  starterMeaning: { color: '#d9d5ef', fontSize: 15, lineHeight: 22 },
-  starterQuestion: {
-    color: '#f5f2ff',
-    fontSize: 19,
-    lineHeight: 26,
-    fontWeight: '600',
-  },
-  summary: { gap: 6 },
-  bandName: { color: '#f5f2ff', fontSize: 24, fontWeight: '700' },
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  starterHead: { ...type.caption, color: color.textMuted },
+  starterMeaning: { ...type.body, color: color.textMuted },
+  starterQuestion: { ...type.heading, color: color.text, lineHeight: 26 },
+  summary: { gap: space.sm },
+  bandName: { ...type.display, color: color.text },
+  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   dimensionChip: {
-    backgroundColor: '#1d1b33',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.md,
   },
-  dimensionName: { color: '#7d789c', fontSize: 11 },
-  dimensionLabel: { color: '#d9d5ef', fontSize: 13 },
-  aspectTitle: { color: '#f5f2ff', fontSize: 17, fontWeight: '600' },
-  score: { color: '#f5f2ff', fontSize: 34, fontWeight: '800' },
-  scoreLabel: { color: '#9a94b8', fontSize: 14, fontWeight: '400' },
-  body: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
-  bodyMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
-  aspect: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 4 },
-  aspectHead: { color: '#f5f2ff', fontSize: 14, fontWeight: '600' },
+  dimensionName: { ...type.caption, color: color.textFaint },
+  dimensionLabel: { ...type.bodySmall, color: color.text },
+  aspect: {
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.border,
+    padding: space.lg,
+    gap: space.xs,
+    marginBottom: space.sm,
+  },
+  aspectTitle: { ...type.heading, color: color.text },
+  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
+  aspectOrb: { ...type.caption, color: color.textFaint, letterSpacing: 0 },
+  aspectHead: { ...type.caption, color: color.textMuted },
+  body: { ...type.body, color: color.text },
+  bodyMuted: { ...type.bodySmall, color: color.textMuted },
   chatLink: {
-    color: '#f5f2ff',
-    fontSize: 16,
-    fontWeight: '600',
-    backgroundColor: '#3b2f7a',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
+    ...type.heading,
+    color: color.text,
+    backgroundColor: color.surfaceHigh,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
     textAlign: 'center',
-    marginTop: 12,
+    paddingVertical: 15,
+    marginTop: space.xl,
     overflow: 'hidden',
   },
-  safetyRow: { flexDirection: 'row', gap: 8 },
+  link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
+  muted: { ...type.body, color: color.textMuted },
+  notice: { ...type.bodySmall, color: color.pink, paddingVertical: space.sm },
+  safetyRow: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
   safetyButton: {
     flex: 1,
-    backgroundColor: '#15142a',
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.md,
     alignItems: 'center',
   },
-  safetyText: { color: '#c9c4e3', fontSize: 14, fontWeight: '600' },
-  reasons: { gap: 6, marginTop: 8 },
-  reason: {
-    backgroundColor: '#15142a',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+  safetyText: { ...type.body, color: color.textMuted },
+  sheet: {
+    backgroundColor: color.surfaceHigh,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    padding: space.lg,
+    gap: space.sm,
+    marginTop: space.sm,
   },
-  danger: {
-    backgroundColor: '#3a1620',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  dangerText: { color: '#ff9a9a', fontSize: 15, fontWeight: '600' },
-  notice: { color: '#8ce0b0', fontSize: 13 },
-  muted: { color: '#9a94b8' },
-  link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
+  sheetTitle: { ...type.body, color: color.text },
+  sheetOption: { paddingVertical: space.md },
+  sheetOptionText: { ...type.body, color: color.text },
+  sheetDanger: { ...type.body, color: color.danger },
+  sheetCancel: { ...type.body, color: color.textFaint, paddingTop: space.sm },
+  reasons: { gap: space.xs },
+  reason: { paddingVertical: space.md },
+  reasonText: { ...type.body, color: color.text },
+  danger: { paddingVertical: space.md },
+  dangerText: { ...type.body, color: color.danger },
+  cancel: { paddingVertical: space.md, alignItems: 'center' },
+  cancelText: { ...type.body, color: color.textFaint },
+  confirmTitle: { ...type.body, color: color.text },
 });

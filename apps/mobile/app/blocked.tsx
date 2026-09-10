@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchBlocked, unblockUser, type BlockedPerson } from '@/lib/safety';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 /**
  * Everyone the member has blocked, and a way back. Apple requires the
@@ -83,7 +84,7 @@ export default function Blocked() {
       <Text style={styles.title}>{t.blocked.title}</Text>
       <Text style={styles.hint}>{t.blocked.hint}</Text>
       {people === null ? (
-        <ActivityIndicator color="#9a94b8" />
+        <ActivityIndicator color={color.textMuted} />
       ) : people.length === 0 ? (
         <Text style={styles.hint}>{t.blocked.empty}</Text>
       ) : (
@@ -107,20 +108,20 @@ export default function Blocked() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 10 },
-  back: { color: '#9a94b8', fontSize: 14 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  hint: { color: '#5f5a7a', fontSize: 12 },
+  back: { color: color.textMuted, fontSize: 14 },
+  title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  hint: { color: color.textFaint, fontSize: 12 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 14,
     padding: 14,
   },
-  name: { color: '#f5f2ff', fontSize: 15 },
-  undo: { color: '#9a94b8', fontSize: 13 },
-  error: { color: '#ff7b7b', fontSize: 13 },
+  name: { color: color.text, fontSize: 15 },
+  undo: { color: color.textMuted, fontSize: 13 },
+  error: { color: color.danger, fontSize: 13 },
 });

@@ -1,4 +1,5 @@
 import { Stack, router } from 'expo-router';
+import { color } from '@/theme/tokens';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 import { useMatchListener } from '@/lib/matches';
@@ -18,7 +19,7 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#0b0b1a' },
+          contentStyle: { backgroundColor: color.bg },
         }}
       />
       <StatusBar style="light" />

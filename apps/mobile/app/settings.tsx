@@ -9,6 +9,7 @@ import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 export default function Settings() {
   const session = useSession();
@@ -195,41 +196,41 @@ export default function Settings() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0b0b1a',
+    backgroundColor: color.bg,
     padding: 24,
     paddingTop: 64,
     gap: 12,
   },
-  back: { color: '#9a94b8', fontSize: 14 },
-  link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  label: { color: '#c9c4e3', fontSize: 14, marginTop: 12 },
+  back: { color: color.textMuted, fontSize: 14 },
+  link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
+  title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  label: { color: color.textMuted, fontSize: 14, marginTop: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
   },
-  chipOn: { backgroundColor: '#7c6cff' },
-  chipText: { color: '#f5f2ff' },
-  hint: { color: '#5f5a7a', fontSize: 12 },
-  error: { color: '#ff7b7b' },
-  ok: { color: '#8ce0b0', fontSize: 13 },
-  danger: { color: '#ff7b7b', fontSize: 15, fontWeight: '600' },
+  chipOn: { backgroundColor: color.cool },
+  chipText: { color: color.text },
+  hint: { color: color.textFaint, fontSize: 12 },
+  error: { color: color.danger },
+  ok: { color: color.ok, fontSize: 13 },
+  danger: { color: color.danger, fontSize: 15, fontWeight: '600' },
   confirm: { gap: 8 },
   confirmDanger: {
-    backgroundColor: '#3a1620',
+    backgroundColor: color.dangerSurface,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   buttonBusy: { opacity: 0.6 },
-  buttonText: { color: '#f5f2ff', fontSize: 15, fontWeight: '600' },
+  buttonText: { color: color.text, fontSize: 15, fontWeight: '600' },
 });

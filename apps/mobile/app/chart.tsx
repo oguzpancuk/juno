@@ -1,8 +1,11 @@
 import {
-  natalAspectTitleTr,
+  BODY_GLYPH,
   PLANET_TR,
+  SIGN_GLYPH,
   SIGN_TR,
+  aspectGlyphs,
   formatDegree,
+  natalAspectTitleTr,
   natalReading,
 } from '@juno/astro';
 import { Link, router } from 'expo-router';
@@ -10,15 +13,33 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import {
+  Body,
+  Card,
+  Display,
+  LinkText,
+  Screen,
+  SectionLabel,
+} from '@/components/ui';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { supabase } from '@/lib/supabase';
+import { color, radius, space, type } from '@/theme/tokens';
+
+/** The six placements the screen leads with, in the engine's order. */
+const PRIMARY_GLYPH = [
+  'sun',
+  'moon',
+  'ascendant',
+  'mercury',
+  'venus',
+  'mars',
+] as const;
 
 export default function ChartScreen() {
   const session = useSession();
@@ -48,7 +69,7 @@ export default function ChartScreen() {
   if (state.status === 'error') {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>{t.errors.generic}</Text>
+        <Body muted>{t.errors.generic}</Body>
         <Pressable
           testID="retry"
           onPress={() => {
@@ -56,7 +77,7 @@ export default function ChartScreen() {
             setAttempt((n) => n + 1);
           }}
         >
-          <Text style={styles.link}>{t.common.retry}</Text>
+          <LinkText>{t.common.retry}</LinkText>
         </Pressable>
       </View>
     );
@@ -64,8 +85,8 @@ export default function ChartScreen() {
   if (state.status !== 'ready' || !reading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#9a94b8" />
-        <Text style={styles.muted}>{t.common.loading}</Text>
+        <ActivityIndicator color={color.pink} />
+        <Body muted>{t.common.loading}</Body>
       </View>
     );
   }
@@ -74,56 +95,47 @@ export default function ChartScreen() {
   const { chart, big_three: three } = profile;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      testID="chart-screen"
-    >
+    <Screen testID="chart-screen">
       <View style={styles.head}>
-        <View>
-          <Text style={styles.title}>{t.chart.title}</Text>
-          <Text style={styles.subtitle}>{profile.display_name}</Text>
-          {profile.photos.length === 0 ? (
-            <Link href="/profile" style={styles.nudge} testID="add-photo-nudge">
-              {t.discover.completeProfile}
-            </Link>
-          ) : null}
+        <View style={styles.headText}>
+          <Display>{t.chart.title}</Display>
+          <Body muted>{profile.display_name}</Body>
         </View>
         <Link href="/discover" style={styles.navLink} testID="go-discover">
           {t.chart.discover}
         </Link>
       </View>
+      {profile.photos.length === 0 ? (
+        <Link href="/profile" style={styles.nudge} testID="add-photo-nudge">
+          {t.discover.completeProfile}
+        </Link>
+      ) : null}
 
-      <Text style={styles.section}>{t.chart.bigThree}</Text>
-      <View style={styles.row}>
-        <Badge
-          label={t.chart.sun}
-          value={SIGN_TR[three.sun]}
-          testID="badge-sun"
-        />
-        <Badge
-          label={t.chart.moon}
-          value={SIGN_TR[three.moon]}
-          testID="badge-moon"
-        />
-        <Badge
+      <View style={styles.trio}>
+        <Trio label={t.chart.sun} sign={three.sun} testID="badge-sun" />
+        <Trio label={t.chart.moon} sign={three.moon} testID="badge-moon" />
+        <Trio
           label={t.chart.rising}
-          value={SIGN_TR[three.rising]}
+          sign={three.rising}
           testID="badge-rising"
         />
       </View>
+
       {/* The six the screen leads with, titled by what they mean for
-          dating. The astrology stays under the label, never instead of it. */}
+          dating. The astrology stays under the label, never instead. */}
       {reading.primary.map(({ placement, label, technical, text }) => (
-        <View
-          key={placement}
-          style={styles.primaryCard}
-          testID={`primary-${placement}`}
-        >
-          <Text style={styles.primaryLabel}>{label}</Text>
-          <Text style={styles.primaryTechnical}>{technical}</Text>
-          <Text style={styles.body}>{text}</Text>
-        </View>
+        <Card key={placement} testID={`primary-${placement}`}>
+          <View style={styles.cardHead}>
+            <View style={styles.glyphBadge}>
+              <Text style={styles.glyph}>{BODY_GLYPH[placement]}</Text>
+            </View>
+            <View style={styles.cardHeadText}>
+              <Text style={styles.cardTitle}>{label}</Text>
+              <Text style={styles.cardTechnical}>{technical}</Text>
+            </View>
+          </View>
+          <Body>{text}</Body>
+        </Card>
       ))}
 
       <Pressable
@@ -137,45 +149,46 @@ export default function ChartScreen() {
       </Pressable>
 
       {!showFull ? null : (
-        <View testID="full-chart" style={styles.fullChart}>
-          <Text style={styles.section}>{t.chart.planets}</Text>
+        <View testID="full-chart" style={styles.full}>
+          <SectionLabel>{t.chart.planets}</SectionLabel>
           {reading.planets.map(
             ({ planet, signText, houseText, retrogradeText }) => {
               const p = chart.planets[planet];
+              // The six above already carry their sign reading; repeating it
+              // here is the duplication the disclosure exists to avoid.
+              const isPrimary = (PRIMARY_GLYPH as readonly string[]).includes(
+                planet,
+              );
               return (
-                <View
-                  key={planet}
-                  style={styles.card}
-                  testID={`planet-${planet}`}
-                >
-                  <View style={styles.cardHead}>
-                    <Text style={styles.planetName}>{PLANET_TR[planet]}</Text>
+                <Card key={planet} testID={`planet-${planet}`}>
+                  <View style={styles.rowBetween}>
+                    <Text style={styles.planetName}>
+                      {BODY_GLYPH[planet]} {PLANET_TR[planet]}
+                    </Text>
                     <Text style={styles.planetPos}>
-                      {SIGN_TR[p.sign]} {formatDegree(p.degree)} · {p.house}.{' '}
-                      {t.chart.house}
+                      {SIGN_GLYPH[p.sign]} {SIGN_TR[p.sign]}{' '}
+                      {formatDegree(p.degree)} · {p.house}. {t.chart.house}
                       {p.retrograde ? ` ${t.chart.retrograde}` : ''}
                     </Text>
                   </View>
-                  <Text style={styles.body}>{signText}</Text>
-                  <Text style={styles.bodyMuted}>{houseText}</Text>
-                  {retrogradeText ? (
-                    <Text style={styles.bodyMuted}>{retrogradeText}</Text>
-                  ) : null}
-                </View>
+                  {isPrimary ? null : <Body>{signText}</Body>}
+                  <Body small>{houseText}</Body>
+                  {retrogradeText ? <Body small>{retrogradeText}</Body> : null}
+                </Card>
               );
             },
           )}
 
-          <Text style={styles.section}>{t.chart.aspects}</Text>
+          <SectionLabel>{t.chart.aspects}</SectionLabel>
           {reading.aspects.length === 0 ? (
-            <Text style={styles.bodyMuted}>{t.chart.noAspects}</Text>
+            <Body muted>{t.chart.noAspects}</Body>
           ) : (
             reading.aspects.map(({ aspect, text }) => (
-              <View
+              <Card
                 key={`${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
-                style={styles.card}
                 testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
               >
+                <Text style={styles.aspectGlyphs}>{aspectGlyphs(aspect)}</Text>
                 <Text style={styles.planetName}>
                   {natalAspectTitleTr(aspect)}
                   <Text style={styles.orb}>
@@ -183,8 +196,8 @@ export default function ChartScreen() {
                     · {t.chart.orb(formatDegree(aspect.orb))}
                   </Text>
                 </Text>
-                <Text style={styles.body}>{text}</Text>
-              </View>
+                <Body>{text}</Body>
+              </Card>
             ))
           )}
         </View>
@@ -197,89 +210,92 @@ export default function ChartScreen() {
           void supabase.auth.signOut().then(() => router.replace('/sign-in'));
         }}
       >
-        <Text style={styles.muted}>{t.chart.signOut}</Text>
+        <Body muted>{t.chart.signOut}</Body>
       </Pressable>
-    </ScrollView>
+    </Screen>
   );
 }
 
-function Badge({
+function Trio({
   label,
-  value,
+  sign,
   testID,
 }: {
   label: string;
-  value: string;
+  sign: keyof typeof SIGN_TR;
   testID: string;
 }) {
   return (
-    <View style={styles.badge} testID={testID}>
-      <Text style={styles.badgeLabel}>{label}</Text>
-      <Text style={styles.badgeValue}>{value}</Text>
+    <View style={styles.trioChip} testID={testID}>
+      <Text style={styles.trioLabel}>{label}</Text>
+      <Text style={styles.trioValue}>
+        {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
-  content: { padding: 24, paddingTop: 64, gap: 8, paddingBottom: 48 },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    backgroundColor: '#0b0b1a',
+    gap: space.md,
+    backgroundColor: color.bg,
   },
   head: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: space.md,
   },
-  navLink: { color: '#c9c4e3', fontSize: 15, paddingTop: 8 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  nudge: { color: '#7c6cff', fontSize: 14, paddingVertical: 6 },
-  subtitle: { color: '#9a94b8', fontSize: 14 },
-  section: { color: '#c9c4e3', fontSize: 13, letterSpacing: 1, marginTop: 20 },
-  row: { flexDirection: 'row', gap: 8 },
-  badge: {
+  headText: { flexShrink: 1 },
+  navLink: { ...type.body, color: color.textMuted, paddingTop: space.sm },
+  nudge: { ...type.body, color: color.cool, paddingVertical: space.xs },
+  trio: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
+  trioChip: {
     flex: 1,
-    backgroundColor: '#15142a',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.md,
     alignItems: 'center',
+    gap: 2,
   },
-  badgeLabel: { color: '#9a94b8', fontSize: 12 },
-  badgeValue: {
-    color: '#f5f2ff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 4,
+  trioLabel: { ...type.caption, color: color.textFaint },
+  trioValue: { ...type.body, color: color.text, fontWeight: '600' },
+  cardHead: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
+  cardHeadText: { flexShrink: 1 },
+  glyphBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    backgroundColor: color.surfaceHigh,
+    borderWidth: 1,
+    borderColor: color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  card: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 6 },
-  primaryCard: {
-    backgroundColor: '#15142a',
-    borderRadius: 14,
-    padding: 16,
-    gap: 4,
-    marginTop: 8,
+  glyph: { fontSize: 19, color: color.pink },
+  cardTitle: { ...type.heading, color: color.text },
+  cardTechnical: { ...type.caption, color: color.textMuted, marginTop: 2 },
+  disclosure: { marginTop: space.xl, alignItems: 'center', padding: space.md },
+  disclosureText: { ...type.body, color: color.textMuted },
+  full: { gap: space.md },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: space.sm,
   },
-  primaryLabel: { color: '#f5f2ff', fontSize: 18, fontWeight: '600' },
-  primaryTechnical: { color: '#9a94b8', fontSize: 13, marginBottom: 4 },
-  disclosure: { marginTop: 20, alignItems: 'center', padding: 12 },
-  disclosureText: { color: '#c9c4e3', fontSize: 15 },
-  fullChart: { gap: 8 },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  planetName: { color: '#f5f2ff', fontSize: 16, fontWeight: '600' },
+  planetName: { ...type.body, color: color.text, fontWeight: '600' },
   planetPos: {
-    color: '#c9c4e3',
-    fontSize: 14,
+    ...type.bodySmall,
+    color: color.textMuted,
     textAlign: 'right',
     flexShrink: 1,
   },
-  orb: { color: '#5f5a7a', fontSize: 12, fontWeight: '400' },
-  body: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
-  bodyMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
-  signOut: { marginTop: 24, alignItems: 'center', padding: 12 },
-  muted: { color: '#9a94b8' },
-  link: { color: '#c9c4e3', padding: 12 },
+  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
+  orb: { ...type.caption, color: color.textFaint, fontWeight: '400' },
+  signOut: { marginTop: space.xl, alignItems: 'center', padding: space.md },
 });

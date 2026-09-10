@@ -26,6 +26,7 @@ import {
 import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -89,7 +90,7 @@ export default function ChatScreen() {
   if (row === 'loading' || messages === 'loading') {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#9a94b8" />
+        <ActivityIndicator color={color.textMuted} />
       </View>
     );
   }
@@ -195,7 +196,7 @@ export default function ChatScreen() {
           value={draft}
           onChangeText={setDraft}
           placeholder={t.chat.placeholder}
-          placeholderTextColor="#5f5a7a"
+          placeholderTextColor={color.textFaint}
           multiline
           maxLength={MAX_MESSAGE_LENGTH}
           testID="chat-input"
@@ -214,13 +215,13 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#0b0b1a',
+    backgroundColor: color.bg,
   },
   header: {
     paddingTop: 64,
@@ -228,52 +229,52 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#1c1a33',
+    borderBottomColor: color.border,
   },
-  back: { color: '#9a94b8', fontSize: 14 },
-  title: { color: '#f5f2ff', fontSize: 22, fontWeight: '700' },
+  back: { color: color.textMuted, fontSize: 14 },
+  title: { color: color.text, fontSize: 22, fontWeight: '700' },
   list: { flex: 1 },
   listContent: { padding: 16, gap: 8 },
   bubble: { maxWidth: '82%', borderRadius: 16, padding: 12 },
-  mine: { alignSelf: 'flex-end', backgroundColor: '#3b2f7a' },
-  theirs: { alignSelf: 'flex-start', backgroundColor: '#15142a' },
-  bubbleText: { color: '#f5f2ff', fontSize: 15, lineHeight: 21 },
+  mine: { alignSelf: 'flex-end', backgroundColor: color.mine },
+  theirs: { alignSelf: 'flex-start', backgroundColor: color.surface },
+  bubbleText: { color: color.text, fontSize: 15, lineHeight: 21 },
   starterBox: {
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 16,
     padding: 16,
     gap: 6,
     marginBottom: 12,
   },
-  starterLabel: { color: '#9a94b8', fontSize: 11, letterSpacing: 1 },
-  starterQuestion: { color: '#f5f2ff', fontSize: 17, lineHeight: 24 },
+  starterLabel: { color: color.textMuted, fontSize: 11, letterSpacing: 1 },
+  starterQuestion: { color: color.text, fontSize: 17, lineHeight: 24 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1c1a33',
+    borderTopColor: color.border,
   },
   input: {
     flex: 1,
     maxHeight: 120,
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: '#f5f2ff',
+    color: color.text,
     fontSize: 15,
   },
   sendButton: {
-    backgroundColor: '#7c6cff',
+    backgroundColor: color.cool,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  sendDisabled: { backgroundColor: '#2a2647' },
-  sendLabel: { color: '#f5f2ff', fontSize: 15, fontWeight: '600' },
-  failed: { color: '#ff9a9a', fontSize: 13, paddingHorizontal: 16 },
-  muted: { color: '#9a94b8', textAlign: 'center' },
-  link: { color: '#c9c4e3', fontSize: 15, paddingVertical: 8 },
+  sendDisabled: { backgroundColor: color.disabled },
+  sendLabel: { color: color.text, fontSize: 15, fontWeight: '600' },
+  failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
+  muted: { color: color.textMuted, textAlign: 'center' },
+  link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
 });

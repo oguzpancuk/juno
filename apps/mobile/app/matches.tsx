@@ -10,6 +10,7 @@ import {
 import { fetchMatches, starterFor, type MatchProfileRow } from '@/lib/matches';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 export default function Matches() {
   const session = useSession();
@@ -49,7 +50,7 @@ export default function Matches() {
       </Link>
       <Text style={styles.title}>{t.matches.title}</Text>
       {rows === 'loading' ? (
-        <ActivityIndicator color="#9a94b8" />
+        <ActivityIndicator color={color.textMuted} />
       ) : rows === null ? (
         <Text style={styles.muted}>{t.errors.generic}</Text>
       ) : rows.length === 0 ? (
@@ -94,14 +95,14 @@ export default function Matches() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 12 },
-  back: { color: '#9a94b8', fontSize: 14 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  muted: { color: '#9a94b8' },
-  card: { backgroundColor: '#15142a', borderRadius: 14, padding: 14 },
-  name: { color: '#f5f2ff', fontSize: 18, fontWeight: '600' },
-  preview: { color: '#9a94b8', fontSize: 13, marginTop: 4 },
+  back: { color: color.textMuted, fontSize: 14 },
+  title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  muted: { color: color.textMuted },
+  card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
+  name: { color: color.text, fontSize: 18, fontWeight: '600' },
+  preview: { color: color.textMuted, fontSize: 13, marginTop: 4 },
   cardHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -109,8 +110,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    color: '#f5f2ff',
-    backgroundColor: '#7c6cff',
+    color: color.text,
+    backgroundColor: color.cool,
     fontSize: 12,
     fontWeight: '700',
     minWidth: 22,

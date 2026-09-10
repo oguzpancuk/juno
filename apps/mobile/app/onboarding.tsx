@@ -24,6 +24,7 @@ import { dbErrorText } from '@/lib/errors';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
@@ -189,7 +190,7 @@ export default function Onboarding() {
             setCityQuery(text);
           }}
           placeholder={t.onboarding.cityPlaceholder}
-          placeholderTextColor="#5f5a7a"
+          placeholderTextColor={color.textFaint}
           autoCorrect={false}
         />
         {cityHits.map((hit) => (
@@ -218,7 +219,7 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="GG"
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
           />
           <TextInput
             testID="month"
@@ -228,7 +229,7 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="AA"
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
           />
           <TextInput
             testID="year"
@@ -238,7 +239,7 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={4}
             placeholder="YYYY"
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
           />
         </View>
 
@@ -252,7 +253,7 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="SS"
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
           />
           <TextInput
             testID="minute"
@@ -262,7 +263,7 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="DD"
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
           />
         </View>
 
@@ -300,9 +301,9 @@ export default function Onboarding() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 8 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
+  title: { color: color.text, fontSize: 26, fontWeight: '700' },
   consentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -314,27 +315,32 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#4b4770',
+    borderColor: color.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  boxOn: { backgroundColor: '#6c5ce7', borderColor: '#6c5ce7' },
-  tick: { color: '#ffffff', fontSize: 14, lineHeight: 18 },
-  consentText: { color: '#c9c4e3', fontSize: 13, flex: 1, lineHeight: 19 },
-  consentLink: { color: '#9a94b8', fontSize: 12, marginTop: 6 },
-  subtitle: { color: '#9a94b8', fontSize: 14, marginBottom: 4 },
-  switchAccount: { color: '#5f5a7a', fontSize: 12, marginBottom: 12 },
-  label: { color: '#c9c4e3', fontSize: 14, marginTop: 10 },
+  boxOn: { backgroundColor: color.cool, borderColor: color.cool },
+  tick: { color: color.onBright, fontSize: 14, lineHeight: 18 },
+  consentText: {
+    color: color.textMuted,
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 19,
+  },
+  consentLink: { color: color.textMuted, fontSize: 12, marginTop: 6 },
+  subtitle: { color: color.textMuted, fontSize: 14, marginBottom: 4 },
+  switchAccount: { color: color.textFaint, fontSize: 12, marginBottom: 12 },
+  label: { color: color.textMuted, fontSize: 14, marginTop: 10 },
   input: {
-    backgroundColor: '#15142a',
-    color: '#f5f2ff',
+    backgroundColor: color.surface,
+    color: color.text,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
   },
   small: {
-    backgroundColor: '#15142a',
-    color: '#f5f2ff',
+    backgroundColor: color.surface,
+    color: color.text,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
@@ -346,21 +352,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
   },
-  chipOn: { backgroundColor: '#7c6cff' },
-  chipText: { color: '#f5f2ff' },
-  hit: { padding: 12, backgroundColor: '#1c1b33', borderRadius: 8 },
-  hitText: { color: '#f5f2ff' },
-  hint: { color: '#5f5a7a', fontSize: 12, marginTop: 12 },
-  error: { color: '#ff7b7b' },
+  chipOn: { backgroundColor: color.cool },
+  chipText: { color: color.text },
+  hit: { padding: 12, backgroundColor: color.surfaceHigh, borderRadius: 8 },
+  hitText: { color: color.text },
+  hint: { color: color.textFaint, fontSize: 12, marginTop: 12 },
+  error: { color: color.danger },
   button: {
-    backgroundColor: '#7c6cff',
+    backgroundColor: color.cool,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
     marginTop: 12,
   },
   buttonBusy: { opacity: 0.6 },
-  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  buttonText: { color: color.onBright, fontSize: 16, fontWeight: '600' },
 });

@@ -120,6 +120,10 @@ export {
 } from './summary';
 export { sunLongitude, sunSign } from './sun';
 export {
+  ASPECT_GLYPH,
+  BODY_GLYPH,
+  SIGN_GLYPH,
+  aspectGlyphs,
   ASPECT_TR,
   natalAspectTitleTr,
   BODY_TR,

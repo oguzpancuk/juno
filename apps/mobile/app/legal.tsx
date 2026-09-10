@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 const BULLET = '• ';
 
@@ -63,14 +64,14 @@ export default function Legal() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 4, maxWidth: 720 },
-  back: { color: '#9a94b8', fontSize: 14 },
-  updated: { color: '#5f5a7a', fontSize: 12 },
+  back: { color: color.textMuted, fontSize: 14 },
+  updated: { color: color.textFaint, fontSize: 12 },
   section: { marginTop: 20, gap: 8 },
-  heading: { color: '#f5f2ff', fontSize: 17, fontWeight: '700' },
-  paragraph: { color: '#c8c3e0', fontSize: 14, lineHeight: 21 },
+  heading: { color: color.text, fontSize: 17, fontWeight: '700' },
+  paragraph: { color: color.textMuted, fontSize: 14, lineHeight: 21 },
   bulletRow: { flexDirection: 'row', gap: 2 },
-  bullet: { color: '#9a94b8', fontSize: 14, lineHeight: 21 },
-  bulletText: { color: '#c8c3e0', fontSize: 14, lineHeight: 21, flex: 1 },
+  bullet: { color: color.textMuted, fontSize: 14, lineHeight: 21 },
+  bulletText: { color: color.textMuted, fontSize: 14, lineHeight: 21, flex: 1 },
 });

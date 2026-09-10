@@ -16,10 +16,13 @@ import { toPublicChart, type PublicChart } from './public';
 const DEFAULT_SEED = 20260910;
 
 /**
- * The generator's draws first repeat at 13 361, and each chart costs three,
- * so past this the population silently contains dependent pairs.
+ * A ceiling that holds for any seed. Where the generator's draws start
+ * repeating depends on the seed — 13 360 at the default, 10 925 at 424242,
+ * 11 154 at 1 — so this is not the real bound; `population` detects a
+ * repeat itself and throws. This only keeps a typo from asking for a
+ * million charts.
  */
-export const MAX_SAMPLE_CHARTS = 4453;
+export const MAX_SAMPLE_CHARTS = 3000;
 
 /**
  * Deterministic. Determinism rests on IEEE-754 rounding being correctly
@@ -43,7 +46,21 @@ export function population(
     throw new Error(
       `population: count must be an integer between 2 and ${MAX_SAMPLE_CHARTS}`,
     );
-  const random = makeRandom(seed);
+  const next = makeRandom(seed);
+  // Seed-correct exhaustion check: the cycle length varies by seed, and a
+  // recycled draw lands in a different slot and builds a *different* chart,
+  // so a distinct-charts guard cannot see it. Watching the draws can.
+  const seen = new Set<number>();
+  const random = (): number => {
+    const value = next();
+    if (seen.has(value))
+      throw new Error(
+        `population: the generator repeated a draw after ${seen.size} of ` +
+          `them at seed ${seed}; the pairs would not be independent`,
+      );
+    seen.add(value);
+    return value;
+  };
   const charts: PublicChart[] = [];
   const from = Date.UTC(1991, 0, 1);
   const to = Date.UTC(2006, 0, 1);

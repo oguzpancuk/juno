@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
+import { OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
+import { color, radius, space, type } from '@/theme/tokens';
 
 type Step = { kind: 'email' } | { kind: 'code'; email: string };
 
@@ -60,7 +62,11 @@ export default function SignIn() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <View style={styles.mark}>
+        <OrbitMark size={112} />
+      </View>
       <Text style={styles.brand}>{t.appName}</Text>
+      <Text style={styles.tagline}>{t.signIn.tagline}</Text>
       <Text style={styles.title}>{t.signIn.title}</Text>
       {step.kind === 'email' ? (
         <View style={styles.form}>
@@ -71,7 +77,7 @@ export default function SignIn() {
             value={email}
             onChangeText={setEmail}
             placeholder={t.signIn.emailPlaceholder}
-            placeholderTextColor="#5f5a7a"
+            placeholderTextColor={color.textFaint}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -125,37 +131,54 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0b0b1a',
-    padding: 24,
+    backgroundColor: color.bg,
+    padding: space.xl,
     justifyContent: 'center',
-    gap: 8,
+    gap: space.sm,
   },
+  mark: { alignItems: 'center', marginBottom: space.xl },
   brand: {
-    color: '#f5f2ff',
-    fontSize: 32,
-    fontWeight: '700',
-    letterSpacing: 2,
+    ...type.display,
+    color: color.text,
+    fontSize: 44,
+    fontWeight: '300',
+    letterSpacing: 6,
+    textAlign: 'center',
   },
-  title: { color: '#9a94b8', fontSize: 16, marginBottom: 16 },
-  form: { gap: 12 },
-  label: { color: '#c9c4e3', fontSize: 14 },
+  tagline: {
+    ...type.label,
+    color: color.textMuted,
+    textAlign: 'center',
+    marginTop: space.sm,
+    marginBottom: space.xxl,
+  },
+  title: { ...type.heading, color: color.textMuted },
+  form: { gap: space.md, marginTop: space.md },
+  label: { ...type.bodySmall, color: color.textMuted },
   input: {
-    backgroundColor: '#15142a',
-    color: '#f5f2ff',
-    borderRadius: 10,
-    padding: 14,
-    fontSize: 18,
+    backgroundColor: color.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    color: color.text,
+    fontSize: 17,
+    padding: space.lg,
   },
   button: {
-    backgroundColor: '#7c6cff',
-    borderRadius: 10,
-    padding: 14,
+    backgroundColor: color.pink,
+    borderRadius: radius.pill,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  buttonBusy: { opacity: 0.6 },
-  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
-  link: { color: '#9a94b8', textAlign: 'center', marginTop: 8 },
-  consent: { color: '#5f5a7a', fontSize: 12, marginTop: 8 },
-  consentLink: { color: '#9a94b8', fontSize: 12, marginTop: 4 },
-  error: { color: '#ff7b7b', marginTop: 12 },
+  buttonBusy: { opacity: 0.55 },
+  buttonText: { ...type.heading, color: color.onBright },
+  link: {
+    ...type.body,
+    color: color.textMuted,
+    textAlign: 'center',
+    paddingVertical: space.md,
+  },
+  consent: { ...type.bodySmall, color: color.textFaint },
+  consentLink: { ...type.bodySmall, color: color.textMuted },
+  error: { ...type.body, color: color.danger, marginTop: space.md },
 });

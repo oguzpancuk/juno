@@ -157,3 +157,59 @@ const BODY_TR_POSSESSIVE: Readonly<Record<Body, string>> = {
   pluto: "Plüton'u",
   ascendant: "Yükselen'i",
 };
+
+/**
+ * Astrological glyphs, for the aspect line on a card: `♀ △ ♂`. The mockups
+ * of 2026-09-11 put these next to every aspect, and they carry the
+ * "show the calculation" rule better than the word does — a reader who
+ * knows astrology reads the row without reading the sentence.
+ */
+export const BODY_GLYPH: Readonly<Record<Body, string>> = {
+  sun: '☉',
+  moon: '☾',
+  mercury: '☿',
+  venus: '♀',
+  mars: '♂',
+  jupiter: '♃',
+  saturn: '♄',
+  uranus: '♅',
+  neptune: '♆',
+  pluto: '♇',
+  ascendant: '↑',
+};
+
+export const ASPECT_GLYPH: Readonly<Record<Aspect, string>> = {
+  conjunction: '☌',
+  sextile: '⚹',
+  square: '□',
+  trine: '△',
+  opposition: '☍',
+};
+
+/** `♀ △ ♂` for an inter-chart aspect, viewer's body first. */
+export function aspectGlyphs(aspect: {
+  readonly planetA: Body;
+  readonly aspect: Aspect;
+  readonly planetB: Body;
+}): string {
+  return `${BODY_GLYPH[aspect.planetA]} ${ASPECT_GLYPH[aspect.aspect]} ${BODY_GLYPH[aspect.planetB]}`;
+}
+
+/**
+ * Each carries U+FE0E, the text variation selector: without it iOS renders
+ * the zodiac characters with the emoji font, as coloured tiles.
+ */
+export const SIGN_GLYPH: Readonly<Record<Sign, string>> = {
+  aries: '♈\uFE0E',
+  taurus: '♉\uFE0E',
+  gemini: '♊\uFE0E',
+  cancer: '♋\uFE0E',
+  leo: '♌\uFE0E',
+  virgo: '♍\uFE0E',
+  libra: '♎\uFE0E',
+  scorpio: '♏\uFE0E',
+  sagittarius: '♐\uFE0E',
+  capricorn: '♑\uFE0E',
+  aquarius: '♒\uFE0E',
+  pisces: '♓\uFE0E',
+};

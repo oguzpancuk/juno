@@ -336,10 +336,18 @@ function fill(
   return [...curated, ...rest].slice(0, limit);
 }
 
-export function matchSections(match: Compatibility): MatchSections {
+export function matchSections(
+  match: Compatibility,
+  /**
+   * Labels already on the screen — the dimension chips sit above these
+   * cards, and four of the thirty titles are byte-identical to a chip
+   * label. Seed the set with them and the card steps to another variant.
+   */
+  alreadyShown: readonly string[] = [],
+): MatchSections {
   // One `taken` set across both sections: the match screen is one screen,
   // and a title repeated between them reads exactly as wrong.
-  const taken = new Set<string>();
+  const taken = new Set<string>(alreadyShown);
   return {
     // `compatibility()` buckets a term of exactly 0 as harmony (an aspect
     // sitting on its maximum orb), so a card is a card here too.
@@ -359,14 +367,39 @@ export function matchSections(match: Compatibility): MatchSections {
  * `direction` is from the viewer's side: "theirs" is their planet in the
  * viewer's house.
  */
-export interface OverlayReading {
+export interface OverlayPlacement {
   readonly planet: (typeof OVERLAY_PLANETS)[number];
+  readonly text: string;
+}
+
+/**
+ * One house of one chart, with every placement of the other that lands in
+ * it. Grouped rather than one card per placement: Sun, Mercury and Venus
+ * stay within ~76° of each other, so several of them share a house on most
+ * pairs, and one card per placement meant three cards in a row all titled
+ * "Yakınlık ve yoğunluk".
+ */
+export interface OverlayReading {
   readonly house: OverlayHouse;
   readonly direction: OverlayDirection;
   /** What the house means for dating: "Ortaklık", "Arkadaşlık". */
   readonly theme: string;
-  readonly text: string;
+  readonly placements: readonly OverlayPlacement[];
 }
+
+/**
+ * Which houses say most about a pair, strongest first. The screen shows one
+ * card before the disclosure, so the order decides which one that is —
+ * their Sun landing somewhere should not outrank a Venus on the 7th.
+ */
+const HOUSE_RANK: Readonly<Record<OverlayHouse, number>> = {
+  7: 0,
+  8: 1,
+  5: 2,
+  1: 3,
+  11: 4,
+  12: 5,
+};
 
 const OVERLAY_HOUSE_SET: ReadonlySet<number> = new Set(OVERLAY_HOUSES);
 
@@ -382,7 +415,7 @@ export function houseOverlays(
   viewer: PublicChart,
   other: PublicChart,
 ): readonly OverlayReading[] {
-  const readings: OverlayReading[] = [];
+  const groups = new Map<string, OverlayPlacement[]>();
   for (const direction of ['theirs', 'yours'] as const) {
     const from = direction === 'theirs' ? other : viewer;
     const into = direction === 'theirs' ? viewer : other;
@@ -394,17 +427,36 @@ export function houseOverlays(
         into.houses.cusps as unknown as Cusps,
       );
       if (!OVERLAY_HOUSE_SET.has(house)) continue;
-      readings.push({
+      const key = `${direction}-${house}`;
+      const placements = groups.get(key) ?? [];
+      placements.push({
         planet,
-        house: house as OverlayHouse,
-        direction,
-        // The text already names the placement — "Onun Venüs'ü senin 7.
-        // evinde: …" — so the title carries the house's meaning instead of
-        // repeating the same clause one line above it.
-        theme: overlayHouseTheme(house as OverlayHouse),
         text: overlayText(planet, house as OverlayHouse, direction),
       });
+      groups.set(key, placements);
     }
   }
-  return readings;
+  const readings: OverlayReading[] = [];
+  for (const [key, placements] of groups) {
+    const [direction, house] = key.split('-');
+    if (direction === undefined || house === undefined) continue;
+    readings.push({
+      house: Number(house) as OverlayHouse,
+      direction: direction as OverlayDirection,
+      // The texts already name the placements — "Onun Venüs'ü senin 7.
+      // evinde: …" — so the title carries the house's meaning instead of
+      // repeating that clause one line above it.
+      theme: overlayHouseTheme(Number(house) as OverlayHouse),
+      placements,
+    });
+  }
+  // Their planets in your houses first — the ones about you read first —
+  // then by how much the house says about a pair, then by how many
+  // placements landed there.
+  return readings.sort(
+    (x, y) =>
+      (x.direction === 'theirs' ? 0 : 1) - (y.direction === 'theirs' ? 0 : 1) ||
+      HOUSE_RANK[x.house] - HOUSE_RANK[y.house] ||
+      y.placements.length - x.placements.length,
+  );
 }

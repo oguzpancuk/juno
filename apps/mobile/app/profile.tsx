@@ -23,6 +23,7 @@ import {
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
@@ -116,7 +117,7 @@ export default function Profile() {
       <Text style={styles.label}>{t.profile.photos}</Text>
       <Text style={styles.hint}>{t.profile.photosHint(MAX_PHOTOS)}</Text>
       {photos === null ? (
-        <ActivityIndicator color="#9a94b8" />
+        <ActivityIndicator color={color.textMuted} />
       ) : (
         <>
           {photos.length === 0 ? (
@@ -167,7 +168,7 @@ export default function Profile() {
         value={bio}
         onChangeText={setBio}
         placeholder={t.profile.bioPlaceholder}
-        placeholderTextColor="#5f5a7a"
+        placeholderTextColor={color.textFaint}
         multiline
         maxLength={MAX_BIO_LENGTH}
       />
@@ -182,35 +183,40 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a' },
+  screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 10 },
-  back: { color: '#9a94b8', fontSize: 14 },
-  title: { color: '#f5f2ff', fontSize: 26, fontWeight: '700' },
-  label: { color: '#9a94b8', fontSize: 12, letterSpacing: 1, marginTop: 16 },
-  hint: { color: '#5f5a7a', fontSize: 12 },
+  back: { color: color.textMuted, fontSize: 14 },
+  title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  label: {
+    color: color.textMuted,
+    fontSize: 12,
+    letterSpacing: 1,
+    marginTop: 16,
+  },
+  hint: { color: color.textFaint, fontSize: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   tile: { width: 96, gap: 4 },
   photo: { width: 96, height: 128, borderRadius: 12 },
-  photoEmpty: { backgroundColor: '#15142a' },
-  removeText: { color: '#9a94b8', fontSize: 12, textAlign: 'center' },
+  photoEmpty: { backgroundColor: color.surface },
+  removeText: { color: color.textMuted, fontSize: 12, textAlign: 'center' },
   button: {
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonBusy: { opacity: 0.6 },
-  buttonText: { color: '#f5f2ff', fontSize: 15, fontWeight: '600' },
+  buttonText: { color: color.text, fontSize: 15, fontWeight: '600' },
   bio: {
-    backgroundColor: '#15142a',
+    backgroundColor: color.surface,
     borderRadius: 14,
     padding: 14,
     minHeight: 96,
-    color: '#f5f2ff',
+    color: color.text,
     fontSize: 15,
     textAlignVertical: 'top',
   },
-  ok: { color: '#8ce0b0', fontSize: 13 },
-  error: { color: '#ff7b7b', fontSize: 13 },
+  ok: { color: color.ok, fontSize: 13 },
+  error: { color: color.danger, fontSize: 13 },
 });

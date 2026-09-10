@@ -2,6 +2,8 @@
 export const t = {
   appName: 'Juno',
   signIn: {
+    // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
+    tagline: 'ARANIZDAKİNİ GÖR',
     title: 'Giriş yap',
     emailLabel: 'E-posta adresin',
     emailPlaceholder: 'ornek@eposta.com',
@@ -108,6 +110,10 @@ export const t = {
     interesting: 'BURASI İLGİNÇ',
     dimensions: 'BAĞLANTININ TARAFLARI',
     overlays: 'EVLERİNİZDE',
+    overlayTheirs: 'Onun gezegenleri senin evlerinde',
+    overlayYours: 'Senin gezegenlerin onun evlerinde',
+    synastryFailed:
+      'Uyum bölümü yüklenemedi. Sayfayı yenilersen tekrar denenir.',
     moreOverlays: (n: number) => `${n} tane daha ›`,
     fewerOverlays: 'Daha az göster',
     allMatches: 'Tüm eşleşmeler ›',

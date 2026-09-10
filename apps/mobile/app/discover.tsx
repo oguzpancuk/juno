@@ -1,4 +1,11 @@
-import { SIGN_TR, bandName, bandOf, synastryReading } from '@juno/astro';
+import {
+  BANDS,
+  SIGN_TR,
+  bandName,
+  bandOf,
+  synastryReading,
+  type Band,
+} from '@juno/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -15,10 +22,12 @@ import {
   type Candidate,
   type DiscoverState,
 } from '@/lib/discover';
+import { LinearGradient } from 'expo-linear-gradient';
 import { usePhotoSources } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 export default function Discover() {
   const session = useSession();
@@ -148,7 +157,7 @@ export default function Discover() {
 
       {state.status === 'loading' ? (
         <View style={styles.center}>
-          <ActivityIndicator color="#9a94b8" />
+          <ActivityIndicator color={color.textMuted} />
         </View>
       ) : state.status === 'error' ? (
         <View style={styles.center}>
@@ -170,34 +179,41 @@ export default function Discover() {
         </View>
       ) : (
         <View style={styles.card} testID={`card-${current.row.id}`}>
-          {(() => {
-            const source = cardSource;
-            return source ? (
-              <Image
-                source={source}
-                style={styles.cardPhoto}
-                resizeMode="cover"
-                testID="card-photo"
-              />
-            ) : (
-              <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
-            );
-          })()}
+          <View style={styles.photoWrap}>
+            {(() => {
+              const source = cardSource;
+              return source ? (
+                <Image
+                  source={source}
+                  style={styles.cardPhoto}
+                  resizeMode="cover"
+                  testID="card-photo"
+                />
+              ) : (
+                <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
+              );
+            })()}
+            {/* The name sits on the photo, as in the design; the chart
+                below it is what the card is actually about. */}
+            <LinearGradient
+              colors={['transparent', 'rgba(7,6,15,0.55)', color.bg]}
+              style={styles.photoScrim}
+            >
+              <Text style={styles.name}>
+                {current.row.display_name}, {current.row.age}
+              </Text>
+              <Text style={styles.distance}>
+                {current.row.distance_km === 0
+                  ? t.discover.under1km
+                  : `${current.row.distance_km} km`}
+              </Text>
+            </LinearGradient>
+          </View>
           {current.row.bio ? (
             <Text style={styles.bio} numberOfLines={3}>
               {current.row.bio}
             </Text>
           ) : null}
-          <View style={styles.cardHead}>
-            <Text style={styles.name}>
-              {current.row.display_name}, {current.row.age}
-            </Text>
-            <Text style={styles.distance}>
-              {current.row.distance_km === 0
-                ? t.discover.under1km
-                : `${current.row.distance_km} km`}
-            </Text>
-          </View>
           <View style={styles.row}>
             <Chip
               label={t.chart.sun}
@@ -237,7 +253,9 @@ export default function Discover() {
           {showDetail && detail ? (
             <View style={styles.detail} testID="detail">
               <Text style={styles.detailText}>{detail.bandText}</Text>
-              <Text style={styles.detailLabel}>{t.discover.dimensions}</Text>
+              {detail.dimensions.length === 0 ? null : (
+                <Text style={styles.detailLabel}>{t.discover.dimensions}</Text>
+              )}
               <View style={styles.dimensionRow}>
                 {detail.dimensions.map((d) => (
                   <View
@@ -268,19 +286,28 @@ export default function Discover() {
           <View style={styles.actions}>
             <Pressable
               testID="pass"
-              style={[styles.button, styles.pass, busy && styles.buttonBusy]}
+              accessibilityLabel={t.discover.pass}
+              style={[styles.round, busy && styles.buttonBusy]}
               disabled={busy}
               onPress={() => void act(current, 'pass')}
             >
-              <Text style={styles.buttonText}>{t.discover.pass}</Text>
+              <Text style={styles.roundGlyph}>✕</Text>
             </Pressable>
             <Pressable
               testID="like"
-              style={[styles.button, styles.like, busy && styles.buttonBusy]}
+              accessibilityLabel={t.discover.like}
+              style={[styles.roundLike, busy && styles.buttonBusy]}
               disabled={busy}
               onPress={() => void act(current, 'like')}
             >
-              <Text style={styles.buttonText}>{t.discover.like}</Text>
+              <LinearGradient
+                colors={[...gradient]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.roundFill}
+              >
+                <Text style={styles.roundGlyphOn}>♥</Text>
+              </LinearGradient>
             </Pressable>
           </View>
           <Text style={styles.remaining}>
@@ -292,17 +319,17 @@ export default function Discover() {
   );
 }
 
-const BAND_STEPS = ['quiet', 'even', 'strong', 'rare'] as const;
-
 /**
  * Four steps, not a number. It keeps cards comparable at a glance without
- * asserting a precision the method does not have (ADR-0009 §3).
+ * asserting a precision the method does not have (ADR-0009 §3). The order
+ * comes from the engine's own BANDS, so a reorder there cannot silently
+ * fill the wrong number of bars here.
  */
-function BandMeter({ band }: { band: (typeof BAND_STEPS)[number] }) {
-  const filled = BAND_STEPS.indexOf(band) + 1;
+function BandMeter({ band }: { band: Band }) {
+  const filled = BANDS.indexOf(band) + 1;
   return (
     <View style={styles.meter} testID={`band-meter-${band}`}>
-      {BAND_STEPS.map((step, i) => (
+      {BANDS.map((step, i) => (
         <View
           key={step}
           style={[
@@ -326,93 +353,142 @@ function Chip({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0b1a', padding: 24, paddingTop: 64 },
+  screen: {
+    flex: 1,
+    backgroundColor: color.bg,
+    padding: space.lg,
+    paddingTop: 64,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.md,
+    backgroundColor: color.bg,
+  },
   nav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: space.md,
   },
-  navLink: { color: '#9a94b8', fontSize: 14, padding: 4 },
-  navRight: { flexDirection: 'row', gap: 8 },
-  title: { color: '#f5f2ff', fontSize: 18, fontWeight: '700' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  muted: { color: '#9a94b8', textAlign: 'center' },
-  link: { color: '#c9c4e3', padding: 12 },
-  card: { backgroundColor: '#15142a', borderRadius: 20, padding: 20, gap: 14 },
-  cardHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
+  navLink: { ...type.bodySmall, color: color.textMuted },
+  navTitle: { ...type.heading, color: color.text },
+  title: { ...type.heading, color: color.text },
+  navRight: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
+  nudge: { ...type.bodySmall, color: color.cool, paddingBottom: space.sm },
+  card: {
+    flex: 1,
+    backgroundColor: color.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: color.border,
+    overflow: 'hidden',
+    padding: space.lg,
+    gap: space.sm,
   },
-  cardPhoto: {
-    width: '100%',
-    height: 280,
-    borderRadius: 14,
-    marginBottom: 12,
+  photoWrap: {
+    marginHorizontal: -space.lg,
+    marginTop: -space.lg,
+    marginBottom: space.xs,
   },
-  cardPhotoEmpty: { backgroundColor: '#15142a' },
-  bio: { color: '#d9d5ef', fontSize: 14, lineHeight: 20, marginBottom: 8 },
-  name: { color: '#f5f2ff', fontSize: 24, fontWeight: '700' },
-  distance: { color: '#9a94b8', fontSize: 14 },
-  row: { flexDirection: 'row', gap: 8 },
+  cardPhoto: { width: '100%', height: 380 },
+  cardPhotoEmpty: { backgroundColor: color.surfaceHigh },
+  photoScrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: space.lg,
+    paddingTop: space.xxl,
+    paddingBottom: space.sm,
+    gap: 2,
+  },
+  name: { ...type.title, color: color.text },
+  distance: { ...type.bodySmall, color: color.textMuted },
+  bio: { ...type.bodySmall, color: color.textMuted },
+  row: { flexDirection: 'row', gap: space.sm },
   chip: {
     flex: 1,
-    backgroundColor: '#1c1b33',
-    borderRadius: 12,
-    padding: 10,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.sm,
     alignItems: 'center',
+    gap: 1,
   },
-  chipLabel: { color: '#9a94b8', fontSize: 11 },
-  chipValue: {
-    color: '#f5f2ff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 2,
-  },
+  chipLabel: { ...type.caption, color: color.textFaint },
+  chipValue: { ...type.bodySmall, color: color.text, fontWeight: '600' },
   bandBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 8,
+    gap: space.md,
+    paddingVertical: space.sm,
   },
-  bandName: { color: '#f5f2ff', fontSize: 22, fontWeight: '700' },
-  meter: { flexDirection: 'row', gap: 3, alignItems: 'flex-end' },
-  meterStep: { width: 6, borderRadius: 2, backgroundColor: '#2a2745' },
-  meterStepOn: { backgroundColor: '#e98fa0' },
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  dimensionChip: {
-    backgroundColor: '#1d1b33',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  bandName: { ...type.title, color: color.text },
+  scoreLabel: { ...type.label, color: color.textFaint },
+  meter: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
+  meterStep: {
+    width: 7,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.13)',
   },
-  dimensionName: { color: '#7d789c', fontSize: 11 },
-  dimensionLabel: { color: '#d9d5ef', fontSize: 13 },
-  scoreLabel: {
-    color: '#9a94b8',
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  meterStepOn: { backgroundColor: color.pink },
+  why: { ...type.body, color: color.textMuted, textAlign: 'center' },
+  link: {
+    ...type.bodySmall,
+    color: color.textMuted,
+    textAlign: 'center',
+    paddingVertical: space.sm,
   },
-  why: { color: '#c9c4e3', fontSize: 15, textAlign: 'center' },
-  error: { color: '#ff7b7b', textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  button: { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center' },
-  pass: { backgroundColor: '#2a2945' },
-  like: { backgroundColor: '#7c6cff' },
-  buttonBusy: { opacity: 0.6 },
-  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
-  remaining: { color: '#5f5a7a', fontSize: 12, textAlign: 'center' },
   detail: {
-    gap: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#2a2945',
-    paddingTop: 10,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    padding: space.md,
+    gap: space.xs,
   },
-  detailLabel: { color: '#9a94b8', fontSize: 12, letterSpacing: 0.5 },
-  detailText: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },
-  detailMuted: { color: '#9a94b8', fontSize: 13, lineHeight: 19 },
-  detailAspect: { gap: 2, marginTop: 4 },
+  detailLabel: { ...type.label, color: color.textFaint, marginTop: space.sm },
+  detailText: { ...type.bodySmall, color: color.text },
+  detailMuted: { ...type.bodySmall, color: color.textMuted },
+  detailAspect: { gap: 2, marginTop: space.sm },
+  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
+  dimensionChip: {
+    backgroundColor: color.surfaceHigh,
+    borderRadius: radius.sm,
+    paddingVertical: 5,
+    paddingHorizontal: space.sm,
+  },
+  dimensionName: { ...type.caption, color: color.textFaint, fontSize: 11 },
+  dimensionLabel: { ...type.caption, color: color.text },
+  error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },
+  actions: {
+    flexDirection: 'row',
+    gap: space.xl,
+    justifyContent: 'center',
+    marginTop: space.sm,
+  },
+  round: {
+    width: 62,
+    height: 62,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roundLike: {
+    width: 62,
+    height: 62,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  roundFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  roundGlyph: { fontSize: 22, color: color.textMuted },
+  roundGlyphOn: { fontSize: 24, color: color.onBright },
+  buttonBusy: { opacity: 0.5 },
+  remaining: { ...type.caption, color: color.textFaint, textAlign: 'center' },
+  muted: { ...type.body, color: color.textMuted, textAlign: 'center' },
 });

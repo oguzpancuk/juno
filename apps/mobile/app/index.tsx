@@ -10,6 +10,7 @@ import {
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { color } from '@/theme/tokens';
 
 /** Entry: route by auth + profile state. */
 export default function Index() {
@@ -58,7 +59,7 @@ export default function Index() {
   }
   return (
     <View style={styles.center}>
-      <ActivityIndicator color="#9a94b8" />
+      <ActivityIndicator color={color.textMuted} />
       <Text style={styles.text}>{t.common.loading}</Text>
     </View>
   );
@@ -66,6 +67,6 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  text: { color: '#9a94b8' },
-  link: { color: '#c9c4e3', padding: 12 },
+  text: { color: color.textMuted },
+  link: { color: color.textMuted, padding: 12 },
 });
