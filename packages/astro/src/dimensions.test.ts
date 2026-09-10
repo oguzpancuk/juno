@@ -13,6 +13,11 @@ import { toPublicChart } from './public';
  * ADR-0009 §1 is a table a human wrote and a human can misread. These assert
  * the properties the ADR claims for it rather than the table's contents.
  */
+/** Mirrors dimensions.ts' key order (BODIES order) without importing it. */
+function pairingKeyFor(a: Body, b: Body): string {
+  return BODIES.indexOf(a) <= BODIES.indexOf(b) ? `${a}|${b}` : `${b}|${a}`;
+}
+
 describe('dimension table', () => {
   it('covers every pairing ADR-0003 scores, exactly once', () => {
     const pairings = scoredPairings();
@@ -53,6 +58,85 @@ describe('dimension table', () => {
       communication: 6,
       stability: 7,
       growth: 18,
+    });
+  });
+
+  it('pins every one of the 51 assignments, not just the counts', () => {
+    // The counts alone let any count-preserving swap through, and the table
+    // drives card titles, the section split and eligibility at once — four
+    // surfaces would move on a green battery. This is the full map, checked
+    // against ADR-0009 §1 when it was written; changing an assignment has to
+    // change the ADR and this list together.
+    const actual: Record<string, string[]> = {};
+    for (const dimension of DIMENSIONS) actual[dimension] = [];
+    for (const [a, b] of scoredPairings()) {
+      const dimension = dimensionOf(a, b);
+      if (dimension === null) continue;
+      actual[dimension]?.push(pairingKeyFor(a, b));
+    }
+    for (const dimension of DIMENSIONS) actual[dimension]?.sort();
+    expect(actual).toEqual({
+      emotional: [
+        'moon|ascendant',
+        'moon|jupiter',
+        'moon|mars',
+        'moon|mercury',
+        'moon|moon',
+        'moon|neptune',
+        'moon|venus',
+        'sun|moon',
+      ],
+      chemistry: [
+        'ascendant|ascendant',
+        'jupiter|ascendant',
+        'mars|ascendant',
+        'mars|jupiter',
+        'mars|mars',
+        'sun|ascendant',
+        'sun|mars',
+        'sun|venus',
+        'venus|ascendant',
+        'venus|jupiter',
+        'venus|mars',
+        'venus|venus',
+      ],
+      communication: [
+        'mercury|ascendant',
+        'mercury|jupiter',
+        'mercury|mars',
+        'mercury|mercury',
+        'mercury|venus',
+        'sun|mercury',
+      ],
+      stability: [
+        'mars|saturn',
+        'mercury|saturn',
+        'moon|saturn',
+        'saturn|ascendant',
+        'sun|saturn',
+        'sun|sun',
+        'venus|saturn',
+      ],
+      growth: [
+        'mars|neptune',
+        'mars|pluto',
+        'mars|uranus',
+        'mercury|neptune',
+        'mercury|pluto',
+        'mercury|uranus',
+        'moon|pluto',
+        'moon|uranus',
+        'neptune|ascendant',
+        'pluto|ascendant',
+        'sun|jupiter',
+        'sun|neptune',
+        'sun|pluto',
+        'sun|uranus',
+        'uranus|ascendant',
+        'venus|neptune',
+        'venus|pluto',
+        'venus|uranus',
+      ],
     });
   });
 

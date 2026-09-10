@@ -43,7 +43,9 @@ number would not have been so lucky — the same rerun moves the 99th
 percentile by 0.10 where the other quantiles move by 0.01, which is the tail
 sensitivity decision 3 declines to maintain. The 400-chart first pass this
 ADR was drafted from gave the same medians but a tail no calibration should
-have rested on: a single chart supplied 14 of its 48 pairs above 86.
+have rested on: a single chart supplied 14 of its 48 pairs above 86. That
+last figure is history rather than a refreshable output — it was measured at
+`CHARTS = 400` and under the birth range that pass used.
 
 ## Decision
 
@@ -76,8 +78,8 @@ there, not deficit. This is the one place where tension counts as presence.
 sum.** A signed sum yields `H − T` and destroys the split, and the split is
 not recoverable afterwards: `{+3, −2}` and `{+1}` both sum to +1 but are
 (3, 2) and (1, 0). This is the common case, not an edge — over the population
-below, 98.52 % of pairs have at least one of the four signed dimensions
-holding terms of both signs. Growth carries a third figure, its absolute sum,
+below, 98.88 % of pairs have at least one of the four signed dimensions
+carrying both a harmony and a tension contribution. Growth carries a third figure, its absolute sum,
 which is what its label reads; its harmony and tension sums exist so the five
 dimensions still add back up to the whole.
 
@@ -100,24 +102,30 @@ not met, and the underlying method does not support that claim.
 
 Three labels per dimension, cut at the 33rd and 67th percentiles of **that
 dimension's own** distribution — never at the overall score's. A dimension
-reduces one to five terms through a mapping whose +10 damping was chosen for
-a whole-chart sum of twenty-odd, so its scores sit lower and spread less.
+reduces between three and seven terms on average through a mapping whose +10
+damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
+lower and spread less.
 Measured over the population above:
 
-| Dimension     | median | cuts (p33 / p67) |
-| ------------- | ------ | ---------------- |
-| Emotional     | 57.5   | 52.98 / 61.60    |
-| Chemistry     | 56.8   | 52.50 / 60.93    |
-| Communication | 52.3   | 49.97 / 55.23    |
-| Stability     | 53.6   | 49.99 / 57.82    |
-| Growth        | 66.4   | 64.18 / 68.42    |
+| Dimension     | median | cuts (p33 / p67) | terms per pair |
+| ------------- | ------ | ---------------- | -------------- |
+| Emotional     | 57.5   | 53.06 / 61.70    | 3.74           |
+| Chemistry     | 56.9   | 52.57 / 60.96    | 5.19           |
+| Communication | 52.6   | 49.71 / 55.45    | 2.80           |
+| Stability     | 53.7   | 49.56 / 57.68    | 2.67           |
+| Growth        | 66.4   | 64.19 / 68.42    | 7.14           |
+
+Each dimension's cuts are taken over the pairs where that dimension is
+actually present; an absent one shows no label and would otherwise drag its
+own thresholds down.
 
 Against the overall score's cuts (56 / 62 / 67) a median pair would read as
 bottom-band on Communication and Stability — an artefact of the damping
 meeting a short sum, not a signal. A dimension with no aspects renders as
 absent rather than as a low label, and that holds even when an element bonus
 gives it a value: the bonus is not an aspect, so there would be nothing on
-screen to explain the label. Over the population below that is 2.06 % of pairs
+screen to explain the label. A dimension is absent in 0.08 % (Growth) to
+4.72 % (Stability) of pairs, and the bonus-only case inside that is 2.06 %
 for Stability and 0.53 % for Emotional.
 
 ### 3. The overall score is a band, not a number
@@ -125,8 +133,10 @@ for Stability and 0.53 % for Emotional.
 ADR-0003 is unchanged: `compatibility()` keeps returning the same raw score
 and it stays the ranking key. It is never printed. What reaches a screen is
 one of **four bands**, cut at the 25th, 50th and 75th percentiles of the
-measured population — raw 56, 62 and 67 — so each band holds about a quarter
-of pairs (owner decision, 2026-09-10).
+measured population — raw 56, 62 and 67 (owner decision, 2026-09-10). The
+bands hold 24.47 / 24.59 / 22.12 / 28.82 % of pairs: the score is a discrete
+integer with 3–5 % of the mass sitting exactly on each cut, so no choice of
+cuts makes four equal bands.
 
 Three reasons, in the order they weigh:
 
@@ -145,8 +155,8 @@ Three reasons, in the order they weigh:
    The calibrated surface is now three cut points plus two per dimension —
    thirteen numbers.
 
-Equal-frequency bands are deliberate: a four-way split that divides the
-population evenly is the most informative one available, and it keeps any
+Near-equal frequency is deliberate: a four-way split that comes as close to
+even as a discrete score allows is the most informative one available, and it keeps any
 band from being rare enough to read as a verdict. The bottom band's copy is
 descriptive, never deficient — it is where a quarter of all pairs live.
 

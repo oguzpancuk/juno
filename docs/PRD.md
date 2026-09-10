@@ -117,10 +117,13 @@ text passes judgement on a pairing.
 communication, stability, growth — are computed internally and shown as
 qualitative labels. Per-dimension numbers are out: five named axes with
 scores read as a psychometric assessment of a person the user has not met.
-The single overall score may be shown, but only mapped through a committed
-reference distribution first, because ADR-0003's raw score is not a
-percentage (median pair 62, the mockups' 86 occurs in 0.05 % of pairs).
-See ADR-0009.
+The single overall score is not shown as a number either (owner decision,
+2026-09-10): ADR-0003's raw score is not a percentage — the median pair
+scores 62 and the mockups' 86 occurs in 0.05 % of pairs — and a figure on the
+screen turns the aspect cards under it into evidence for a verdict. It
+reaches the screen as one of four bands instead, shown as a word beside a
+four-step visual so cards stay comparable. See ADR-0009 §3, which also
+records the path back to a number if the cohort asks for one.
 
 **Editorial voice.** All astrology copy describes tendencies, not facts. Use
 "olabilir", "genelde", "eğilimindesin"; never "sensin", "bu ilişki şöyle

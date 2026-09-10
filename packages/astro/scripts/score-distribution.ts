@@ -14,20 +14,27 @@
  *  3. the aspect counts, the Pluto-Venus share and the per-dimension medians
  *     the ADR quotes, so every figure in it refreshes from one run.
  *
- * It also checks the property decision 4 rests on: the five dimensions'
- * signed sums plus the two element bonuses reconstruct `harmony` and
- * `tension` exactly, so a weighted ordering is a reweighting of the same
- * quantity rather than a different one.
+ * It also checks the property decision 4 rests on: each dimension's own
+ * harmony and tension sums — with the two element bonuses already folded
+ * into Stability and Emotional — add back up to `compatibility()`'s totals,
+ * so a weighted ordering is a reweighting of the same quantity rather than a
+ * different one. A single signed sum per dimension would not do: it collapses
+ * to `H − T` and the split cannot be recovered.
  *
  * Not part of the battery: it is the evidence for the ADR and the generator
  * for the committed threshold table.
  *
- *   npx tsx packages/astro/scripts/score-distribution.ts [out.json] [seed]
+ *   npx tsx packages/astro/scripts/score-distribution.ts [--seed=N] [out.json]
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { compatibility, elementsAgree, type Body } from '../src/compatibility';
-import { DIMENSIONS, dimensionOf, type Dimension } from '../src/dimensions';
+import {
+  DIMENSIONS,
+  dimensionOf,
+  dimensionTerm,
+  type Dimension,
+} from '../src/dimensions';
 import { computeChart } from '../src/chart';
 import { toPublicChart, type PublicChart } from '../src/public';
 
@@ -109,8 +116,14 @@ function reduce(harmony: number, tension: number): number {
   return 50 + (50 * (harmony - tension)) / (harmony + tension + 10);
 }
 
-const seedArg = process.argv[3];
-const seed = seedArg === undefined ? DEFAULT_SEED : Number(seedArg);
+const args = process.argv.slice(2);
+const seedFlag = args.find((arg) => arg.startsWith('--seed='));
+const seed =
+  seedFlag === undefined
+    ? DEFAULT_SEED
+    : Number(seedFlag.slice('--seed='.length));
+if (!Number.isFinite(seed)) throw new Error(`bad --seed: ${seedFlag ?? ''}`);
+const out = args.find((arg) => !arg.startsWith('--'));
 const charts = population(CHARTS, seed);
 
 const scores: number[] = [];
@@ -131,6 +144,17 @@ let allShort = 0;
 let allNoTension = 0;
 let allBoth = 0;
 let worstReconstruction = 0;
+let mixedSign = 0;
+const zeroed = (): Record<Dimension, number> => ({
+  emotional: 0,
+  chemistry: 0,
+  communication: 0,
+  stability: 0,
+  growth: 0,
+});
+const termTotals = zeroed();
+const absent = zeroed();
+const bonusOnly = zeroed();
 
 for (let i = 0; i < charts.length; i++) {
   for (let j = i + 1; j < charts.length; j++) {
@@ -155,16 +179,27 @@ for (let i = 0; i < charts.length; i++) {
       stability: 0,
       growth: 0,
     };
-    // Growth's label uses |term|; its signed sum is what reconstructs.
+    // Growth's label reads |term| (dimensionTerm); its harmony and tension
+    // sums are what reconstruct.
     let growthAbsolute = 0;
+    const terms: Record<Dimension, number> = {
+      emotional: 0,
+      chemistry: 0,
+      communication: 0,
+      stability: 0,
+      growth: 0,
+    };
 
     for (const aspect of result.aspects) {
       const dimension = dimensionOf(aspect.planetA, aspect.planetB);
       if (dimension === null)
         throw new Error(`unmapped pairing ${aspect.planetA}|${aspect.planetB}`);
+      terms[dimension]++;
+      termTotals[dimension]++;
       if (aspect.term >= 0) harmony[dimension] += aspect.term;
       else tension[dimension] -= aspect.term;
-      if (dimension === 'growth') growthAbsolute += Math.abs(aspect.term);
+      if (dimension === 'growth')
+        growthAbsolute += dimensionTerm(dimension, aspect.term);
     }
 
     // ADR-0009 §1: the element bonus belongs to a dimension too.
@@ -178,12 +213,23 @@ for (let i = 0; i < charts.length; i++) {
     for (const dimension of DIMENSIONS) {
       harmonySum += harmony[dimension];
       tensionSum += tension[dimension];
-      const value =
+      // ADR-0009 §2: a dimension with no aspect renders absent, element bonus
+      // or not, so it must not sit in the sample its labels are cut from.
+      if (terms[dimension] === 0) {
+        absent[dimension]++;
+        if (harmony[dimension] > 0) bonusOnly[dimension]++;
+        continue;
+      }
+      byDimension[dimension].push(
         dimension === 'growth'
           ? reduce(growthAbsolute, 0)
-          : reduce(harmony[dimension], tension[dimension]);
-      byDimension[dimension].push(value);
+          : reduce(harmony[dimension], tension[dimension]),
+      );
     }
+    if (
+      DIMENSIONS.some((d) => d !== 'growth' && harmony[d] > 0 && tension[d] > 0)
+    )
+      mixedSign++;
     worstReconstruction = Math.max(
       worstReconstruction,
       Math.abs(harmonySum - result.harmony),
@@ -266,11 +312,24 @@ console.log(
 );
 console.log(`  both at once:           ${share(allBoth)} % (${allBoth})`);
 
+console.log(
+  `a dimension holds terms of both signs in ${share(mixedSign)} % of pairs ` +
+    `(why each carries two sums, not one signed sum)`,
+);
+
 /** The whole calibrated surface: three cut points plus two per dimension. */
 const bands = BAND_CUTS.map((cut) => quantile(scores, cut));
 console.log(
   `overall band cuts (p${BAND_CUTS.join('/p')}): ${bands.join(', ')}`,
 );
+// The score is a discrete integer with mass sitting exactly on the cuts, so
+// the four bands cannot come out equal however the cuts are chosen.
+const bandShares = [0, 1, 2, 3].map((index) => {
+  const lower = index === 0 ? -Infinity : (bands[index - 1] ?? 0);
+  const upper = index === 3 ? Infinity : (bands[index] ?? 0);
+  return share(scores.filter((s) => s >= lower && s < upper).length);
+});
+console.log(`  band shares: ${bandShares.join(' / ')} %`);
 
 const labels: Record<string, number[]> = {};
 for (const dimension of DIMENSIONS) {
@@ -281,11 +340,13 @@ for (const dimension of DIMENSIONS) {
   );
   console.log(
     `  ${dimension.padEnd(14)} median=${quantile(values, 50).toFixed(1)} ` +
-      `cuts=${(labels[dimension] ?? []).join(', ')}`,
+      `cuts=${(labels[dimension] ?? []).join(', ')} ` +
+      `terms/pair=${(termTotals[dimension] / pairs).toFixed(2)} ` +
+      `absent=${share(absent[dimension])} % ` +
+      `(bonus-only ${share(bonusOnly[dimension])} %)`,
   );
 }
 
-const out = process.argv[2];
 if (out !== undefined) {
   const path = resolve(out);
   writeFileSync(

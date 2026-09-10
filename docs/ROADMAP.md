@@ -403,8 +403,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       three labels. A dimension with no aspect renders absent even when an
       element bonus gives it a value.
       — done when: a Vitest asserts the band of a pair is the band its raw
-      score falls in, that the four bands each hold 20–30 % of the measured
-      population, that each dimension's labels come from its own cuts and not
+      score falls in, that the four bands hold 24.47 / 24.59 / 22.12 /
+      28.82 % of the measured population (a discrete score cannot split
+      evenly; the test pins the measured shares), that each dimension's labels come from its own cuts and not
       the overall ones, that a bonus-only dimension renders absent, and that
       rerunning the committed script at the committed seed reproduces the
       committed table byte for byte (battery).
@@ -415,10 +416,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       sentences, which pass judgement on a pairing and between them are shown
       to roughly a fifth of pairs, are retired by the amendment's copy rules.
       — done when: a Vitest drives the rule over the generated population
-      and asserts that widening leaves at most one pair in 1 124 250 unable
-      to fill both sections — the measured figure, and the reason the rule
-      must still have an omit branch rather than assume it never fires — and
-      that a hand-built thin pair omits a section rather than judging it
+      and asserts the measured figures: after widening, 525 pairs cannot fill
+      "why you're drawn to each other", 616 cannot fill "where it gets
+      interesting", and exactly 1 of 1 124 250 can fill neither — which is
+      why the rule keeps an omit branch instead of assuming it never fires —
+      and that a hand-built thin pair omits a section rather than judging it
       (battery).
 - [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
@@ -437,10 +439,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       No UI in v1: the item exists so the door stays open without breaking
       the symmetry ADR-0003 guarantees.
       — done when: a Vitest asserts that the five dimensions' harmony sums
-      plus the Sun element bonus and the Moon element bonus reconstruct
-      `harmony`, and their tension sums reconstruct `tension`, both to
-      `roundTerm`'s six decimals (float associativity makes `===` fail on
-      about half of pairs), that the result is still symmetric in its
+      reconstruct `harmony` and their tension sums reconstruct `tension`,
+      both to `roundTerm`'s six decimals (float associativity makes `===`
+      fail on about half of pairs) — the element bonuses are already inside
+      Stability and Emotional per ADR-0009 §1, so adding them again would
+      overshoot by up to 4 — that the result is still symmetric in its
       arguments, and that a weighted ordering over the generated population
       differs from the unweighted one for at least one viewer (battery).
 - [ ] **Visual design (Claude Design).** The screens are functional but

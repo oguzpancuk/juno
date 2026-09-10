@@ -10,6 +10,62 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — Three tests that let a swapped table through
+
+- Third code-reviewer pass, on the commit that added the engine code. It
+  confirmed `dimensions.ts` transcribes ADR-0009 §1 exactly, that
+  `pairingKey` is order-independent for every pair, that `scoredPairings()`
+  reproduces `compatibility()`'s pairing set including the outer–outer skip,
+  and that every figure the docs quote reproduces from a fresh run. Then it
+  found three things worth the round.
+- **The table's tests did not pin the table.** Counts alone let any
+  count-preserving exchange through: moving `venus–jupiter` to Growth and
+  `neptune–venus` to Chemistry kept 8/12/6/7/18 and every test green. Since
+  the table drives card titles, the section split and eligibility at once,
+  four surfaces would have moved on a green battery. `dimensions.test.ts`
+  now pins all 51 assignments as a full key→dimension map. Verified by
+  mutation: that exact swap now fails the suite, and reverting restores it.
+- **The PRD still authorised the number the ADR forbids.** The amendment
+  said the score "may be shown, but only mapped through a committed
+  reference distribution first" — written before the owner's decision, and
+  left behind when the ADR, ROADMAP and NOTES were updated. Whoever built
+  the match screen would have read the spec file first and shipped a
+  compliant number. Rewritten to record the decision and point at ADR-0009
+  §3 for the way back.
+- **C6's clause double-counted the element bonus.** ADR-0009 §1 folds the Sun
+  bonus into Stability and the Moon's into Emotional; the clause then asked a
+  test to add them again on top of the five dimension sums, which overshoots
+  `harmony` by up to 4 on the ~75 % of pairs carrying one. Fixed, and the
+  clause now says why.
+- **Corrections to earlier entries** (append-only, so they stand as written):
+  the middle entry's "reruns agree to within 0.01 of a point at p50, p86 and
+  p99" is wrong at p99 — that quantile moves 0.10 where the others move 0.01,
+  which is precisely the tail sensitivity the band decision declines to
+  maintain. The 98.52 % figure for mixed-sign dimensions is 98.88 % once the
+  element bonus counts as a harmony contribution, which is the form that
+  matters for the split.
+- **Now measured by the script rather than by hand**, so the ADR refreshes
+  from one run: the mixed-sign share, each dimension's terms per pair, how
+  often a dimension is absent and how much of that is bonus-only, and the
+  four band shares. The one figure that stays historical is the 400-chart
+  tail, which needs that pass's chart count and birth range.
+- **A calibration detail worth the change:** the dimension cuts were being
+  taken over every pair, including pairs where the dimension renders absent.
+  They are now taken over pairs where it is present, which moved Stability's
+  cuts from 49.99/57.82 to 49.56/57.68 and Communication's from 49.97/55.23
+  to 49.71/55.45. Small, but these are the numbers C3 commits.
+- **Bands are not equal and cannot be.** They hold 24.47 / 24.59 / 22.12 /
+  28.82 % — the score is a discrete integer with 3–5 % of the mass sitting
+  exactly on each cut. The ADR said "about a quarter"; C3 now pins the
+  measured shares instead.
+- Smaller: the script takes `--seed=N` rather than a positional argument,
+  which used to make `score-distribution.ts 424242` write a file called
+  `424242` under the default seed and report success; `dimensionTerm` is now
+  used by the script instead of the rule being re-implemented inline.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; both
+  seeds rerun; the pinning test mutation-checked. Seven tests on the table.
+- Next: C3 (commit the thirteen figures) and the rest of C2.
+
 ## 2026-09-10 — The number comes off the screen, and a signed sum loses the split
 
 - **Owner decision: the overall compatibility score is never printed.** It
