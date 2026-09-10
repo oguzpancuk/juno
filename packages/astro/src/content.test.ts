@@ -18,6 +18,7 @@ import {
   IMPOSSIBLE_KEYS,
   KEY_SPACES,
   bandOf,
+  CALIBRATION,
   elementKey,
   natalAspectText,
   pairKey,
@@ -89,15 +90,17 @@ describe('keys', () => {
   });
 
   it('bands follow the ADR thresholds', () => {
-    expect(bandOf(0)).toBe('very-low');
-    expect(bandOf(39)).toBe('very-low');
-    expect(bandOf(40)).toBe('low');
-    expect(bandOf(50)).toBe('low');
-    expect(bandOf(55)).toBe('mid');
-    expect(bandOf(69)).toBe('mid');
-    expect(bandOf(70)).toBe('high');
-    expect(bandOf(85)).toBe('very-high');
-    expect(bandOf(100)).toBe('very-high');
+    const [first, second, third] = CALIBRATION.bands;
+    if (first === undefined || second === undefined || third === undefined)
+      throw new Error('no band cuts');
+    expect(bandOf(0)).toBe('quiet');
+    expect(bandOf(first - 1)).toBe('quiet');
+    expect(bandOf(first)).toBe('even');
+    expect(bandOf(second - 1)).toBe('even');
+    expect(bandOf(second)).toBe('strong');
+    expect(bandOf(third - 1)).toBe('strong');
+    expect(bandOf(third)).toBe('rare');
+    expect(bandOf(100)).toBe('rare');
   });
 
   it('synastry questions end with a question mark', () => {

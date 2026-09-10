@@ -1,4 +1,5 @@
 import { PLANETS, type Planet } from './bodies';
+import { DIMENSIONS, type Dimension } from './dimensions';
 import {
   compatibility,
   elementOf,
@@ -12,8 +13,13 @@ import {
 import {
   IMPOSSIBLE_KEYS,
   RETRO_PLANETS,
+  bandName,
   bandOf,
   bandText,
+  dimensionLabelText,
+  dimensionLevel,
+  dimensionName,
+  type Level,
   elementText,
   houseText,
   natalAspectText,
@@ -96,10 +102,27 @@ export interface SynastryAspectReading {
   readonly question: string;
 }
 
+/** One dimension as the match screen shows it: a word, never a number. */
+export interface DimensionReading {
+  readonly dimension: Dimension;
+  /** Turkish name of the axis, e.g. "Duygusal bağ". */
+  readonly name: string;
+  readonly level: Level;
+  /** The label itself, e.g. "Kolay yakınlık". */
+  readonly label: string;
+}
+
 export interface SynastryReading {
+  /**
+   * ADR-0009 §3: the ranking key, never printed. `band` and `bandName` are
+   * what a screen may show.
+   */
   readonly score: number;
   readonly band: Band;
+  readonly bandName: string;
   readonly bandText: string;
+  /** Absent dimensions are omitted, not shown at a low level. */
+  readonly dimensions: readonly DimensionReading[];
   readonly sunElements: string;
   readonly moonElements: string;
   readonly aspects: readonly SynastryAspectReading[];
@@ -116,10 +139,23 @@ export function synastryReading(
     .sort((x, y) => Math.abs(y.term) - Math.abs(x.term) || x.orb - y.orb)
     .slice(0, limit)
     .map((aspect) => readAspect(aspect));
+  const dimensions: DimensionReading[] = [];
+  for (const dimension of DIMENSIONS) {
+    const level = dimensionLevel(dimension, match.dimensions[dimension]);
+    if (level === null) continue;
+    dimensions.push({
+      dimension,
+      name: dimensionName(dimension),
+      level,
+      label: dimensionLabelText(dimension, level),
+    });
+  }
   return {
     score: match.score,
     band: bandOf(match.score),
+    bandName: bandName(match.score),
     bandText: bandText(match.score),
+    dimensions,
     sunElements: elementText(
       'sun',
       elementOf(viewer.planets.sun.sign),
