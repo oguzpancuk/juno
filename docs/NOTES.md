@@ -76,6 +76,15 @@
   none. The test states the honest contract: a title already on the screen
   is stepped off when a free variant exists, and the section keeps its
   cards when the bucket is exhausted.
+- **A tooling note for the next session that drives the simulator.** Taps
+  through the simulator MCP landed unreliably in the lower part of the
+  screen: the discover Like and Pass buttons never fired, and neither did
+  the sign-in "Doğrula" on a second attempt at a different y. Taps in the
+  upper two-thirds worked every time. It cost the same twenty minutes
+  twice — first when a mutual like had to be completed in the database
+  instead, then when onboarding could not be reached, which is why that
+  screen is still the one without a photograph. Whatever the cause, it is
+  the environment and not the app: the same buttons work under a finger.
 - Verified: `bash .claude/hooks/verify.sh` green, five steps, 281 tests.
 
 ## 2026-09-11 — The design, and what of it could not be built
