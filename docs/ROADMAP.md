@@ -372,6 +372,60 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `access-control-allow-methods` value, and a fixture answering 204
       without it fails the suite (battery).
 
+- [ ] **C2 — Presentation layer (PRD amendment 2026-09-10, ADR-0009 §1/§2/§5).**
+      The dimension mapping table lands in `packages/astro` and drives four
+      things at once: the five dimension sums, the card titles derived from
+      (dimension × valence), the match page's two-section split, and which
+      aspects are eligible for the primary view. UI: the chart screen leads
+      with the six product-language cards ("Nasıl seversin · Venüs Akrep'te")
+      and moves the other planets, houses and natal aspects behind an
+      "explore your full chart" disclosure; the match screen becomes band +
+      summary, "why you're drawn to each other", "where it gets interesting",
+      each aspect showing its glyph, orb to the arcminute and a strength
+      label; the discovery card gives the chart real visual weight.
+      — done when: a Vitest asserts every one of the 51 scored pairings maps
+      to exactly one dimension, that the per-dimension counts equal
+      ADR-0009's table (8/12/6/7/18), and that every (dimension × valence)
+      has a title (battery); `screenshots/c2-chart.png`, `c2-discover.png`
+      and `c2-match.png` show the three screens (screenshot).
+- [ ] **C3 — Score calibration (ADR-0009 §3).** No number reaches a screen
+      raw: `packages/astro/scripts/score-distribution.ts` output is committed
+      as a fixture and `displayScore(raw)` maps through it, so a shown 86
+      means "ahead of 86 % of pairs". Band labels and dimension labels take
+      their thresholds from the same distribution instead of hand-picked
+      cut-offs.
+      — done when: a Vitest asserts the mapping is monotonic and covers
+      0–100, that `displayScore` is symmetric in the two charts, and that
+      rerunning the committed script reproduces the committed fixture byte
+      for byte (battery).
+- [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
+      fill from the curated 17 pairings first and widen to all 51 when a
+      section cannot be filled; a section that is still empty is omitted with
+      its heading rather than filled. `bands.json`'s low-band sentence, which
+      passes judgement on a pairing, is retired by the amendment's copy rules.
+      — done when: a Vitest drives the rule over the same generated
+      population the ADR measured and asserts no pair yields a page with
+      fewer than three positives _and_ no tension, and that a hand-built thin
+      pair omits a section rather than judging it (battery).
+- [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
+      Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
+      house, written in both directions (5 × 6 × 2). No engine work: the
+      public chart already carries the twelve cusps, so this is content plus
+      a lookup. A deeper layer — one card by default, the rest disclosed.
+      — done when: the content test proves all 60 keys have a non-empty text
+      and the direction is never mixed up (battery);
+      `screenshots/c5-overlays.png` shows the section on a real pair.
+- [ ] **C6 — Weighted-ranking readiness (ADR-0009 §4).** `compatibility()`
+      returns the per-dimension raw sums alongside the overall score, so a
+      viewer's own priorities can reorder `discover` later without
+      recomputing anything and without touching a displayed value. No UI in
+      v1 — this item exists so the door stays open without breaking the
+      symmetry ADR-0003 guarantees.
+      — done when: a Vitest asserts the per-dimension sums reconstruct the
+      overall harmony and tension totals, that the result is still symmetric
+      in its arguments, and that a weighted ordering over the generated
+      population differs from the unweighted one for at least one viewer
+      (battery).
 - [ ] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`
       is the prompt and context for a claude.ai/design project; the
@@ -379,6 +433,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `apps/mobile` with tokens in one file and shared pieces in
       `apps/mobile/components`. `/design-sync` is not applicable until
       that component set exists (2026-09-09: nothing to sync yet).
+      `docs/design-brief.md` is regenerated after C2 and C3 land: it
+      describes the ten-row chart screen and a raw 0–100 score, both of
+      which the 2026-09-10 amendment replaces.
       — done when: every screen in the brief matches the accepted design
       in the simulator (screenshot per screen under `screenshots/design-*`),
       tokens live in one file, and the battery is green.

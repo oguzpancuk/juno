@@ -10,6 +10,73 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The chart becomes the hero, and the score stops being a percentage
+
+- The owner wrote a full product system for how Juno should present
+  astrology ("Juno — Astrology / Compatibility Product System"). It adds no
+  interaction: it changes how what the engine already computes reaches a
+  screen. Two rules govern it — _the chart is the hero, the photo is the
+  context_ and _show the calculation, soften the conclusion_. Recorded as an
+  amendment in `docs/PRD.md` rather than a rewrite, since interactions 1–7
+  and their "works when" clauses still stand.
+- **Three of its decisions turned on numbers nobody had measured, so they
+  were measured first.** `packages/astro/scripts/score-distribution.ts`
+  builds the product's real population (400 charts, births 1991–2006 at
+  Turkish coordinates) and scores all 79 800 pairs. Findings:
+  - ADR-0003's score is **not a percentage**. Median pair 62, p95 75, max 91;
+    the 86 in the owner's mockups occurs in 0.06 % of pairs. Printed with a
+    `%` an average pair is told it scored 62 out of 100. Decision: the raw
+    score stays the ranking key and is unchanged, but nothing reaches a
+    screen before being mapped through a committed reference distribution,
+    so a shown 86 means "ahead of 86 % of pairs" — a rank the method can
+    support. Whether to show a number at all stays an open owner option.
+  - The owner's curated 17 pairings are **too thin to fill the match page**:
+    17.07 % of pairs cannot produce three positive aspects from them and
+    4.88 % produce no tension, against 0.06 % and 0.08 % when all 51 are
+    eligible, never both at once. Hence a two-step fill rule rather than a
+    special case, and it needs no new content — the existing 255 synastry
+    texts already cover all 51.
+  - Pluto–Venus is present in only 36.8 % of pairs, so the owner's
+    "Intensity" category cannot be a standing section; folded into Growth.
+- **ADR-0009** records the mapping table (every one of the 51 scored
+  pairings belongs to exactly one of emotional/chemistry/communication/
+  stability/growth, 8/12/6/7/18), that dimensions are shown as labels and
+  never as numbers, the calibration rule, the fill rule, and the one that is
+  easy to get wrong later: viewer-weighted ranking may reorder `discover`
+  but may never touch a displayed value, because ADR-0003 guarantees
+  symmetry and a test asserts it. Growth is the single place where tension
+  counts as presence (`|term|`), which is why its label vocabulary must not
+  read as praise.
+- **ADR-0004 amended**: putting the orb on screen to the arcminute moves its
+  two accepted boundary cases (a planet on a cusp, a retrograde near a
+  station) from an internal tolerance to something a user can check against
+  astro.com. Unchanged decision, now a visible one.
+- **Deferred with reasons, not dropped**: dating archetypes (a "you are X"
+  claim over 24 buckets discredits the screen when one feels wrong), the
+  Juno asteroid and "Juno Signature" (the ephemeris cannot compute it —
+  the product is named after a body the engine does not have), directional
+  Saturn/Pluto readings (a rewrite of existing texts), user-weighted
+  ranking (designed for, not exposed).
+- **Cut from the owner's draft, with the reason**: 96 themed conversation
+  starters — `synastry.json` already carries an aspect-specific question on
+  each of its 255 entries, so a 12-theme library would be a regression;
+  "try another" walks down the ranked aspect list instead. Per-aspect
+  intensity prose (a label plus the orb says it). Rare-pattern copy trimmed
+  from 36 to the six patterns that actually trigger.
+- **Content accounting**, since the draft's "~500–800 atoms" budget reads as
+  the total: 754 already exist and are owner-approved. The draft reuses ~213
+  of them on its primary surfaces; the rest stay reachable behind "explore
+  your full chart". New copy after the cuts is ~180, not the ~450 the draft
+  implies — mostly house overlays (60) and card titles (~30).
+- Written this session: PRD amendment, ADR-0009, ADR-0004 amendment 1,
+  ROADMAP items C2–C6 (each with a done-when), and the measurement script.
+  Verified: `bash .claude/hooks/verify.sh` green on the commit. No engine or
+  UI code changed — C2 is the first item that touches either.
+- Next: C2 (mapping table + presentation), then C3 (calibration), which
+  together are the input `docs/design-brief.md` needs before it is
+  regenerated — the brief still describes the ten-row chart screen and a raw
+  0–100 score.
+
 ## 2026-09-10 — Closing out the rename: volumes gone, old name let go
 
 - Two owner decisions, recorded because neither is visible in the code

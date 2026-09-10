@@ -50,3 +50,15 @@ The owner chose `astronomy-engine` when asked (2026-09-08).
   Placidus is undefined, are rejected by the Zod schema with a message.
 - Swapping the ephemeris later only touches the position adapter in
   `packages/astro`; the fixtures stay valid.
+
+## Amendment 1 (2026-09-10): the orb becomes user-visible
+
+The 2026-09-10 PRD amendment puts the aspect and its orb on screen to the
+arcminute (`♀ △ ♂ · 0°48′`), under the rule _show the calculation, soften the
+conclusion_. The accuracy target above is unchanged and invisible at that
+precision — the observed ≤ 14″ error cannot move a printed arcminute by more
+than one — but the two boundary cases already accepted here stop being
+internal: a planet within arcseconds of a sign or house cusp, and a
+retrograde flag within minutes of a station, can now be seen to disagree with
+astro.com by a user who checks. Accepted for the same reason as before; a
+sub-arcsecond ephemeris is available only under AGPL or a paid licence.

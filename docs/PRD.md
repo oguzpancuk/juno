@@ -72,6 +72,72 @@ first message that isn't "selam".**
    the auth user, profile, photos, likes and messages, and the app returns
    to the sign-in screen.
 
+## Amendment 2026-09-10 — chart-first presentation
+
+<!-- The owner's product system of 2026-09-10 (recorded in docs/NOTES.md).
+     It does not add an interaction; it revises how 2, 4 and 5 present what
+     the engine already computes. Mechanics: docs/adr/0009-presentation.md. -->
+
+Two rules govern every presentation decision from here:
+
+> The chart is the hero. The photo is the context.
+
+> Show the calculation. Soften the conclusion.
+
+The second is the tighter constraint. The real astrology stays on screen —
+the aspect glyphs, the orb to the arcminute, the sign and house — while the
+conclusion drawn from it is written as a tendency, never as a verdict or a
+measurement.
+
+**Product language leads, astrology follows.** A placement is titled by what
+it means for dating and subtitled by what it is: "Nasıl seversin ·
+Venüs Akrep'te", not "Venüs · Akrep · 7. ev". The six primary placements are
+Sun (core self), Moon (emotional world), Rising (first impression), Mercury
+(how you think), Venus (how you love), Mars (what moves you).
+
+**Revises interaction 2.** The chart screen leads with those six as editorial
+cards; the remaining planets, houses and natal aspects move behind an
+"explore your full chart" disclosure. Nothing is deleted — the 754 existing
+texts all stay reachable — but the first screen stops being a ten-row report.
+
+**Revises interaction 4.** The discovery card gives the chart real visual
+weight rather than a badge under the photo, and the compatibility signal is
+a label first. This is the product's central bet and also its main risk: a
+card that takes longer to read lowers swipe throughput, and the success
+signals below are already thin. It is the first thing to watch in the
+TestFlight cohort.
+
+**Revises interaction 5.** The match screen becomes: an overall band with a
+one-sentence summary, two to three aspects under "why you're drawn to each
+other", one under "where it gets interesting", optional house overlays, then
+the conversation starter. A tense aspect is a dynamic, never a failure; no
+text passes judgement on a pairing.
+
+**Compatibility presentation.** Five dimensions — emotional, chemistry,
+communication, stability, growth — are computed internally and shown as
+qualitative labels. Per-dimension numbers are out: five named axes with
+scores read as a psychometric assessment of a person the user has not met.
+The single overall score may be shown, but only mapped through a committed
+reference distribution first, because ADR-0003's raw score is not a
+percentage (median pair 62, the mockups' 86 occurs in 0.06 % of pairs).
+See ADR-0009.
+
+**Editorial voice.** All astrology copy describes tendencies, not facts. Use
+"olabilir", "genelde", "eğilimindesin"; never "sensin", "bu ilişki şöyle
+olacak", "ihtiyacın var". No "ruh eşi", "kader", "toksik", "mükemmel
+eşleşme", no claim of psychological measurement, no fortune-teller register.
+Explain the technical term in ordinary language, keep the calculation
+visible, keep it short enough for a phone, and prefer a specific relational
+meaning over generic horoscope language. One voice across all of it.
+
+**Deferred by this amendment,** each for a stated reason: dating archetypes
+("you are X" claims more than a placement reading does, and 24 buckets over
+35 million configurations discredit the screen when one feels wrong);
+the Juno asteroid and any "Juno Signature" feature (the ephemeris does not
+compute it — ADR-0004); directional readings of Saturn and Pluto contacts
+(a rewrite of existing texts, not an addition); user-weighted discovery
+ranking (designed for in ADR-0009, not exposed in v1).
+
 ## Non-goals
 
 - No LLM-generated text. All chart explanations and conversation starters
