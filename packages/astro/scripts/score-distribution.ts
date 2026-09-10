@@ -394,6 +394,15 @@ const bandShares = [0, 1, 2, 3].map((index) => {
   return share(scores.filter((s) => s >= lower && s < upper).length);
 });
 console.log(`  band shares: ${bandShares.join(' / ')} %`);
+const onCuts = bands.map((cut) =>
+  share(scores.filter((x) => x === cut).length),
+);
+console.log(`  mass sitting exactly on each cut: ${onCuts.join(' / ')} %`);
+// bands.json's very-low and low (raw < 55) are the two the amendment retires.
+console.log(
+  `  pairs below raw 55 (the two retired bands.json texts): ` +
+    `${share(scores.filter((x) => x < 55).length)} %`,
+);
 
 const labels: Record<string, number[]> = {};
 for (const dimension of DIMENSIONS) {

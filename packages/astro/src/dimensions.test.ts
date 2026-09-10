@@ -151,8 +151,11 @@ describe('dimension table', () => {
     const keys = rows.map(([a, b]) => pairingKeyFor(a, b));
     expect(new Set(keys).size).toBe(51);
     expect(Object.isFrozen(PAIRINGS)).toBe(true);
-    for (const dimension of DIMENSIONS)
+    for (const dimension of DIMENSIONS) {
       expect(Object.isFrozen(PAIRINGS[dimension])).toBe(true);
+      for (const pair of PAIRINGS[dimension])
+        expect(Object.isFrozen(pair)).toBe(true);
+    }
   });
 
   it('gives every aspect the engine emits a home', () => {

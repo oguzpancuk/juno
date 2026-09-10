@@ -23,12 +23,16 @@ and all 1 124 250 pairs scored with ADR-0003's `compatibility()`:
      corrected; everything else cites this block rather than repeating it.
      Refresh the whole block from one run of the script, never a line of it. -->
 
+**Measured figures** (`packages/astro/scripts/score-distribution.ts`):
+
 ```
 seed 20260910 · 1500 charts · 1 124 250 pairs
 
 score            min 16 · p25 56 · median 62 · p75 67 · p95 75 · p99 80 · max 93
                  ≥70 17.86 % · ≥80 1.16 % · ≥86 0.05 %
 band cuts        56 / 62 / 67, holding 24.47 / 24.59 / 22.12 / 28.82 %
+                 mass sitting exactly on each cut 3.56 / 4.57 / 3.93 %
+                 pairs below raw 55 (bands.json very-low + low) 21.17 %
 unrounded tail   p50 61.7061 · p95 75.1609 · p99 79.8777
 aspects per pair 21.54 over all 51 pairings · 7.47 over the curated 17
 Pluto–Venus      present in 36.51 % of pairs
@@ -37,10 +41,10 @@ two signs        98.88 % of pairs have a dimension carrying both a harmony and
 reconstruction   dimension sums recover harmony and tension to 1.4e-14
 
 fill, curated 17   short of three 16.03 % · no tension 4.48 % · both 0.41 %
-fill, all 51       short of three 525 · no tension 616 · both 1
-                   (nested counts: of the 525, thirty have no positive aspect
-                   at all, one also has no tension, and 494 simply show one or
-                   two cards)
+fill, all 51       short of three 525 · short of three AND no tension 1
+                   the 525 partition as: 30 with no positive aspect at all,
+                   1 with one or two positives and no tension, 494 with one
+                   or two positives and some tension
 omitted sections   no positive at all 30 · no tension at all 616 · neither 0
 
 per dimension      median · cuts (p33/p67) · terms per pair · absent (bonus-only)
@@ -97,8 +101,8 @@ sections, and decides which aspects are eligible for the primary view.
 moon–mercury is Emotional, not Communication; the Moon rules the row it
 appears in. Counts: 8 + 12 + 6 + 7 + 18 = 51, asserted by a test rather than
 trusted to this table being read correctly. The owner's "Intensity" category
-is folded into Growth: Pluto–Venus alone is present in only 36.51 % of pairs,
-too rare to carry a standing section.
+is folded into Growth: Pluto–Venus alone is present in only about a third of
+pairs (figures block), too rare to carry a standing section.
 
 **Valence.** Emotional, Chemistry, Communication and Stability read
 ADR-0003's signed terms. Growth reads `|term|`: a square to Uranus is signal
@@ -108,8 +112,9 @@ there, not deficit. This is the one place where tension counts as presence.
 sum.** A signed sum yields `H − T` and destroys the split, and the split is
 not recoverable afterwards: `{+3, −2}` and `{+1}` both sum to +1 but are
 (3, 2) and (1, 0). This is the common case, not an edge — over the population
-below, 98.88 % of pairs have at least one of the four signed dimensions
-carrying both a harmony and a tension contribution. Growth carries a third figure, its absolute sum,
+above, nearly every pair (the figures block has the share) has at least one
+of the four signed dimensions carrying both a harmony and a tension
+contribution. Growth carries a third figure, its absolute sum,
 which is what its label reads; its harmony and tension sums exist so the five
 dimensions still add back up to the whole.
 
@@ -132,11 +137,9 @@ not met, and the underlying method does not support that claim.
 
 Three labels per dimension, cut at the 33rd and 67th percentiles of **that
 dimension's own** distribution — never at the overall score's. A dimension
-reduces between 2.67 and 7.14 terms on average (see the figures above)
-through a mapping whose +10 damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
+reduces a handful of terms on average (the per-dimension rows of the figures
+block) through a mapping whose +10 damping was chosen for a whole-chart sum of twenty-odd, so its scores sit
 lower and spread less.
-Measured over the population above:
-
 The medians, cuts, term counts and absent shares are in the figures block
 above; they are not repeated here.
 
@@ -144,7 +147,7 @@ Each dimension's cuts are taken over the pairs where that dimension is
 actually present; an absent one shows no label and would otherwise drag its
 own thresholds down.
 
-Against the overall score's cuts (56 / 62 / 67) a median pair would read as
+Against the overall score's cuts a median pair would read as
 bottom-band on Communication and Stability — an artefact of the damping
 meeting a short sum, not a signal. A dimension with no aspects renders as
 absent rather than as a low label, and that holds even when an element bonus
@@ -159,8 +162,8 @@ and it stays the ranking key. It is never printed. What reaches a screen is
 one of **four bands**, cut at the 25th, 50th and 75th percentiles of the
 measured population (owner decision, 2026-09-10). The cuts and the shares
 they produce are in the figures block; the bands are near-equal rather than
-equal because the score is a discrete integer with 3–5 % of the mass sitting
-exactly on each cut.
+equal because the score is a discrete integer with a few per cent of the
+mass sitting exactly on each cut (figures block).
 
 Three reasons, in the order they weigh:
 
@@ -226,11 +229,15 @@ fires on about one match in 1 700, always for one section and never for both.
 Falling short of three cards is a different and commoner thing, and is not an
 omission — the section shows what there is. The two must not be conflated,
 and the counts are nested: every pair with no positive aspect is also inside
-the short-of-three count. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
+the short-of-three count. One consistency point for C4: an aspect whose term
+is exactly 0 (sitting on its maximum orb) is a card here, matching how
+`compatibility()` buckets it, but `strongestOf` searches harmonious
+candidates with `term > 0` — the fill rule and the "why" line must agree on
+which. `bands.json`'s `very-low` sentence ("Haritalarınız birbirini
 zorluyor … sürdürmek emek ister") and its `low` sentence ("Ortalama altı bir
 uyum … sürtüşme de belirgin") are both retired by the amendment's copy rules
 — no text passes judgement on a pairing, and between them those two bands
-cover roughly a fifth of pairs.
+cover about a fifth of pairs (figures block, "below raw 55").
 
 ## Consequences
 

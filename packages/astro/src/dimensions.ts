@@ -96,17 +96,22 @@ function pairingKey(a: Body, b: Body): string {
 }
 
 /**
- * Frozen, not merely `readonly`: the type is erased at runtime and this is
- * exported, so a single cast could otherwise desync the table from the
- * lookups snapshotted below.
+ * Frozen at every level — the record, each dimension's array, each tuple —
+ * not merely `readonly`: the type is erased at runtime and this is exported,
+ * so a single cast could otherwise desync the table from the lookups
+ * snapshotted below.
  */
 export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> =
   Object.freeze(
     Object.fromEntries(
       DIMENSIONS.map((dimension) => [
         dimension,
-        Object.freeze([...RAW_PAIRINGS[dimension]]),
+        Object.freeze(
+          RAW_PAIRINGS[dimension].map((pair) => Object.freeze([...pair])),
+        ),
       ]),
+      // why: Object.fromEntries widens the key to string; the keys are
+      // exactly DIMENSIONS, and the tests assert every one is present.
     ) as Record<Dimension, readonly Pairing[]>,
   );
 

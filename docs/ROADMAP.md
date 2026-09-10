@@ -401,32 +401,36 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       number (owner decision, 2026-09-10). The whole calibrated surface is
       thirteen figures written by `packages/astro/scripts/score-distribution.ts`
       and committed: three cut points for the overall score's four near-equal
-      bands (56 / 62 / 67 — a discrete score cannot split evenly) and two per
+      bands (a discrete score cannot split evenly; the cuts are in ADR-0009's
+      figures block) and two per
       dimension for its three labels. A dimension with no aspect renders absent even when an
       element bonus gives it a value.
       — done when: a Vitest asserts the band of a pair is the band its raw
       score falls in, that each dimension's labels come from its own cuts and
       not the overall ones, that a bonus-only dimension renders absent, and
       that over a bounded sample (300 charts, about a second) every band
-      holds 20–30 % of pairs (battery); plus a byte-compare of the committed
-      table against the script's output at the committed seed, which is cheap
-      even though regenerating the population is not. The population itself
-      stays out of the battery — it takes ~23 s against a suite that runs in
-      0.44 s — and the generator moves somewhere both can import, so there is
-      one copy of it rather than two.
+      holds 20–30 % of pairs (battery). The committed table is checked
+      against the script by rerunning it and diffing — a manual step named
+      next to the script, not a battery step, since the only way to get the
+      script's output is to regenerate the population (~23 s against a suite
+      that runs in 0.44 s). The generator moves somewhere both the script and
+      the bounded-sample test can import, so there is one copy of it rather
+      than two.
 - [ ] **C4 — Section fill rule (ADR-0009 §5).** The two match-page sections
       fill from the curated 17 pairings first and widen to all 51 when a
       section cannot be filled; a section that is still empty is omitted with
       its heading rather than filled. `bands.json`'s `very-low` and `low`
       sentences, which pass judgement on a pairing and between them are shown
-      to roughly a fifth of pairs, are retired by the amendment's copy rules.
+      to about a fifth of pairs (ADR-0009's figures block), are retired by the
+      amendment's copy rules.
       — done when: hand-built pairs prove each branch: a section with no
       aspect is omitted rather than filled or judged, a section with one or
       two is shown as it is, and neither case produces a verdict sentence. A
-      bounded sample cannot carry this — at the committed seed a 300-chart
-      sample contains no pair with an empty section at all — so the rule is
-      sized against the figures block in ADR-0009, not against a sample in
-      the battery (battery).
+      bounded sample cannot carry the no-positive branch — at the committed
+      seed a 300-chart sample (44 850 pairs) has no pair without a positive
+      aspect, fourteen without a tense one and thirteen short of three — so
+      the rule is sized against the figures block in ADR-0009, not against a
+      sample in the battery (battery).
 - [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
       house, written in both directions (5 × 6 × 2). No engine work: the

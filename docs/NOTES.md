@@ -19,6 +19,52 @@
   should say that in CLAUDE.md rather than gate it in a hook. Owner has not
   decided; parked, not applied.
 
+## 2026-09-10 — A result I did not observe, and the last of the copies
+
+- Sixth review, on the consolidation. It confirmed every line of the figures
+  block against the script and cleared the sensitivity paragraph, the
+  argument guards and the `term >= 0` change (byte-identical output; the
+  zero-term aspects are real — thirteen in a 300-chart sample — but none
+  crosses a counter). Two things were mine to own.
+- **I wrote a measured result I had not measured.** The previous entry and
+  ROADMAP C4 said a 300-chart sample at the committed seed "contains no pair
+  with an empty section at all". I had generalised from one column of a
+  table the reviewer produced — the no-positive branch is zero there — to
+  both branches. Measured now: **0** pairs without a positive aspect,
+  **14** without a tense one, 13 short of three, over 44 850 pairs. The
+  decision (hand-built pairs per branch) stands; its stated justification
+  was false and is corrected in C4. The rule broken is the one this
+  constitution puts first — never state a result you did not observe — and
+  the way it broke is worth naming: a reviewer's table read as my own
+  measurement.
+- **The consolidation was not complete.** The previous entry claimed no
+  derived number lived in two places; four still did outside the block
+  (Pluto–Venus 36.51, the two-signs 98.88, the "2.67 and 7.14" term range,
+  the 56 / 62 / 67 cuts twice) and `616` was in the block twice for one
+  counter. The nested-count parenthetical also read as if one of the thirty
+  zero-positive pairs had no tension either, contradicting "neither 0" two
+  lines down. All replaced with citations; the 525 now partition explicitly
+  as 30 + 1 + 494. Two prose figures the script did not print (mass on the
+  cuts, share below raw 55) are printed now and sit in the block. The block
+  has a visible label, so citations from the ROADMAP resolve for someone
+  reading rendered markdown.
+- **Freeze was one level short.** `PAIRINGS` froze the record and the
+  arrays but shared the tuples with `RAW_PAIRINGS`, so a cast could still
+  rewrite a pair in place and desync the table from `BY_KEY`. Each tuple is
+  now frozen too; the test asserts all three levels. Under tsx the mutation
+  fails silently rather than throwing, but it no longer changes anything.
+- Also: C3 asked the battery to byte-compare the committed table against
+  script output "cheaply", which is impossible without regenerating the
+  population — it is a manual rerun-and-diff now; the orphaned "Measured
+  over the population above:" colon from the deleted §2 table is gone; a
+  `// why:` on the one cast in `dimensions.ts`; and a consistency note for
+  C4 that `strongestOf` still searches with `term > 0`.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; the
+  script rerun; the tuple mutation probed at runtime. **This commit has not
+  been reviewed** — the session stops here by the owner's stopping
+  condition, and the push gate will refuse it until code-reviewer covers it.
+- Next: C3 and the rest of C2, after a review of this commit.
+
 ## 2026-09-10 — Stop copying numbers into prose
 
 - Fifth review, and it found the previous round's own headline fix carrying
