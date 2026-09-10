@@ -1,4 +1,4 @@
-import { BODIES, OUTER_BODIES, type Body } from './compatibility';
+import { BODIES, OUTER_BODIES, type Body } from './bodies';
 
 /**
  * The five compatibility dimensions (ADR-0009 §1). Every scored pairing

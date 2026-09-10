@@ -1,4 +1,5 @@
-import { PLANETS } from './bodies';
+import { BODIES, OUTER_BODIES, type Body } from './bodies';
+import { DIMENSIONS, dimensionOf, type Dimension } from './dimensions';
 import type { PublicChart } from './public';
 import { signedDelta, type Sign } from './signs';
 
@@ -6,8 +7,7 @@ import { signedDelta, type Sign } from './signs';
  * Synastry score per docs/adr/0003-compatibility.md. Every number here is
  * the ADR's table; change the ADR first. Pure and symmetric.
  */
-export const BODIES = [...PLANETS, 'ascendant'] as const;
-export type Body = (typeof BODIES)[number];
+export { BODIES, OUTER_BODIES, type Body };
 
 export const ASPECTS = [
   'conjunction',
@@ -33,13 +33,6 @@ const BODY_WEIGHT: Readonly<Record<Body, number>> = {
 };
 
 /** Social and generational bodies: pairs among these are never scored or emitted. */
-export const OUTER_BODIES: ReadonlySet<Body> = new Set([
-  'jupiter',
-  'saturn',
-  'uranus',
-  'neptune',
-  'pluto',
-]);
 const OUTER_ORB_FACTOR = 0.75;
 
 interface AspectSpec {
@@ -82,14 +75,43 @@ export interface InterAspect {
   readonly term: number;
 }
 
+/**
+ * One dimension's share of the totals (ADR-0009 §1). Two sums, never one
+ * signed sum: a signed sum is `H − T` and the split cannot be recovered from
+ * it, which matters on the great majority of pairs.
+ */
+export interface DimensionSums {
+  readonly harmony: number;
+  readonly tension: number;
+  /**
+   * Sum of `|term|`. Growth's label reads this — a square to Uranus is
+   * signal there, not deficit — and the other four ignore it.
+   */
+  readonly absolute: number;
+  /**
+   * Aspects counted into this dimension. Zero means the dimension renders
+   * absent (ADR-0009 §2), element bonus or not: the bonus is not an aspect,
+   * so there would be nothing on screen to explain a label.
+   */
+  readonly terms: number;
+}
+
 export interface Compatibility {
-  /** 0–100. */
+  /** 0–100. Never printed: it is the ranking key and a band (ADR-0009 §3). */
   readonly score: number;
   readonly harmony: number;
   readonly tension: number;
   readonly aspects: readonly InterAspect[];
   /** Largest |term|, harmonious preferred within 10 %; null when no aspects. */
   readonly strongest: InterAspect | null;
+  /**
+   * Per-dimension sums. The five harmony sums add back up to `harmony` and
+   * the five tension sums to `tension` (to `roundTerm`'s six decimals), so a
+   * viewer-weighted ordering is a reweighting of the same quantity — never a
+   * different one. The element bonuses are already inside Stability and
+   * Emotional.
+   */
+  readonly dimensions: Readonly<Record<Dimension, DimensionSums>>;
 }
 
 /** Charts as stored/shared: placements plus the Ascendant. */
@@ -135,6 +157,19 @@ function roundTerm(value: number): number {
   return Number(value.toFixed(6));
 }
 
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+
+function blankSums(): Mutable<DimensionSums> {
+  return { harmony: 0, tension: 0, absolute: 0, terms: 0 };
+}
+
+/** Ascending, so the total depends on the multiset and not on visit order. */
+function sumSorted(values: readonly number[]): number {
+  let total = 0;
+  for (const value of [...values].sort((x, y) => x - y)) total += value;
+  return total;
+}
+
 /** One inter-chart aspect for a body pair, or null when out of orb. */
 export function aspectBetween(
   planetA: Body,
@@ -142,7 +177,13 @@ export function aspectBetween(
   planetB: Body,
   lonB: number,
 ): InterAspect | null {
-  const separation = Math.abs(signedDelta(lonB - lonA));
+  // From the unordered pair, so it is bit-identical whichever way round the
+  // two bodies are passed: `lonB - lonA` and `lonA - lonB` negate exactly,
+  // but normalising them does not, and a term landing on `roundTerm`'s
+  // boundary then made compatibility(a, b) and (b, a) disagree by 1e-6.
+  const separation = Math.abs(
+    signedDelta(Math.max(lonA, lonB) - Math.min(lonA, lonB)),
+  );
   const outer = OUTER_BODIES.has(planetA) || OUTER_BODIES.has(planetB);
   for (const aspect of ASPECTS) {
     const spec = ASPECT_SPEC[aspect];
@@ -200,18 +241,74 @@ export function compatibility(
       if (found) aspects.push(found);
     }
   }
-  let harmony = 0;
-  let tension = 0;
+  // Terms are bucketed and summed in sorted order, never in traversal order:
+  // compatibility(a, b) and compatibility(b, a) see the same multiset of
+  // terms but visit it differently, and floating-point addition is not
+  // associative, so accumulating as we go made the sums disagree in the sixth
+  // decimal. The score survived that (it rounds to an integer); a weighted
+  // ordering built on the dimension sums would not have.
+  const buckets: Record<Dimension, number[]> = {
+    emotional: [],
+    chemistry: [],
+    communication: [],
+    stability: [],
+    growth: [],
+  };
   for (const a of aspects) {
-    if (a.term >= 0) harmony += a.term;
-    else tension -= a.term;
+    const dimension = dimensionOf(a.planetA, a.planetB);
+    // Unreachable: the loop above skips exactly the generational pairs the
+    // table omits, and a test asserts the two agree over all 51 pairings.
+    if (dimension === null) continue;
+    buckets[dimension].push(a.term);
   }
+  const sums: Record<Dimension, Mutable<DimensionSums>> = {
+    emotional: blankSums(),
+    chemistry: blankSums(),
+    communication: blankSums(),
+    stability: blankSums(),
+    growth: blankSums(),
+  };
+  const positives: number[] = [];
+  const negatives: number[] = [];
+  for (const dimension of DIMENSIONS) {
+    const terms = [...buckets[dimension]].sort((x, y) => x - y);
+    const bucket = sums[dimension];
+    bucket.terms = terms.length;
+    for (const term of terms) {
+      if (term >= 0) {
+        bucket.harmony += term;
+        positives.push(term);
+      } else {
+        bucket.tension -= term;
+        negatives.push(-term);
+      }
+      bucket.absolute += Math.abs(term);
+    }
+  }
+  let harmony = sumSorted(positives);
+  const tension = sumSorted(negatives);
   // Stored `sign` is the contract for both luminaries (toPublicChart derives
-  // it from the rounded longitude, so the two cannot disagree).
-  if (elementsAgree(chartA.planets.sun.sign, chartB.planets.sun.sign))
+  // it from the rounded longitude, so the two cannot disagree). ADR-0009 §1
+  // gives each bonus a dimension so the sums still reconstruct the totals.
+  if (elementsAgree(chartA.planets.sun.sign, chartB.planets.sun.sign)) {
     harmony += ELEMENT_BONUS;
-  if (elementsAgree(chartA.planets.moon.sign, chartB.planets.moon.sign))
+    sums.stability.harmony += ELEMENT_BONUS;
+  }
+  if (elementsAgree(chartA.planets.moon.sign, chartB.planets.moon.sign)) {
     harmony += ELEMENT_BONUS;
+    sums.emotional.harmony += ELEMENT_BONUS;
+  }
+
+  const dimensions = {} as Record<Dimension, DimensionSums>; // why: filled for every DIMENSIONS key below
+  for (const dimension of DIMENSIONS) {
+    const bucket = sums[dimension];
+    dimensions[dimension] = {
+      harmony: roundTerm(bucket.harmony),
+      tension: roundTerm(bucket.tension),
+      absolute: roundTerm(bucket.absolute),
+      terms: bucket.terms,
+    };
+  }
 
   return {
     score: scoreFrom(harmony, tension),
@@ -219,6 +316,7 @@ export function compatibility(
     tension: roundTerm(tension),
     aspects,
     strongest: strongestOf(aspects),
+    dimensions,
   };
 }
 
