@@ -1,4 +1,9 @@
-import { SIGN_TR, synastryReading } from '@juno/astro';
+import {
+  SIGN_TR,
+  formatDegree,
+  matchSections,
+  synastryReading,
+} from '@juno/astro';
 import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -68,6 +73,10 @@ export default function MatchScreen() {
         ? synastryReading(me.chart, row.chart, 5)
         : null,
     [me, row],
+  );
+  const sections = useMemo(
+    () => (reading ? matchSections(reading.match) : null),
+    [reading],
   );
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
@@ -167,27 +176,52 @@ export default function MatchScreen() {
         <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
       )}
 
-      {reading ? (
+      {reading && sections ? (
         <View style={styles.summary} testID="synastry">
           <Text style={styles.label}>{t.match.summary}</Text>
-          <Text style={styles.score}>
-            {reading.score}{' '}
-            <Text style={styles.scoreLabel}>{t.discover.scoreLabel}</Text>
+          {/* The band, never the number (ADR-0009 §3). */}
+          <Text style={styles.bandName} testID="band">
+            {reading.bandName}
           </Text>
           <Text style={styles.body}>{reading.bandText}</Text>
+
+          <Text style={styles.label}>{t.match.dimensions}</Text>
+          <View style={styles.dimensionRow}>
+            {reading.dimensions.map((d) => (
+              <View
+                key={d.dimension}
+                style={styles.dimensionChip}
+                testID={`dimension-${d.dimension}`}
+              >
+                <Text style={styles.dimensionName}>{d.name}</Text>
+                <Text style={styles.dimensionLabel}>{d.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* A section with nothing to show is omitted with its heading,
+              never padded and never filled with a verdict (ADR-0009 §5). */}
+          {sections.drawn.length > 0 ? (
+            <View testID="drawn">
+              <Text style={styles.label}>{t.match.drawn}</Text>
+              {sections.drawn.map((a) => (
+                <AspectCard key={aspectKey(a)} card={a} />
+              ))}
+            </View>
+          ) : null}
+
+          {sections.interesting.length > 0 ? (
+            <View testID="interesting">
+              <Text style={styles.label}>{t.match.interesting}</Text>
+              {sections.interesting.map((a) => (
+                <AspectCard key={aspectKey(a)} card={a} />
+              ))}
+            </View>
+          ) : null}
+
           <Text style={styles.label}>{t.match.elements}</Text>
           <Text style={styles.bodyMuted}>{reading.sunElements}</Text>
           <Text style={styles.bodyMuted}>{reading.moonElements}</Text>
-          <Text style={styles.label}>{t.match.aspects}</Text>
-          {reading.aspects.map((a) => (
-            <View
-              key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
-              style={styles.aspect}
-            >
-              <Text style={styles.aspectHead}>{a.headline}</Text>
-              <Text style={styles.body}>{a.meaning}</Text>
-            </View>
-          ))}
         </View>
       ) : null}
 
@@ -267,6 +301,34 @@ export default function MatchScreen() {
   );
 }
 
+type AspectCardProps = {
+  card: {
+    readonly title: string;
+    readonly headline: string;
+    readonly meaning: string;
+    readonly aspect: { readonly orb: number };
+  };
+};
+
+/** Title first, then the astrology, then the reading: show the calculation. */
+function AspectCard({ card }: AspectCardProps) {
+  return (
+    <View style={styles.aspect}>
+      <Text style={styles.aspectTitle}>{card.title}</Text>
+      <Text style={styles.aspectHead}>
+        {card.headline} · {t.chart.orb(formatDegree(card.aspect.orb))}
+      </Text>
+      <Text style={styles.body}>{card.meaning}</Text>
+    </View>
+  );
+}
+
+function aspectKey(a: {
+  readonly aspect: { planetA: string; aspect: string; planetB: string };
+}): string {
+  return `${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`;
+}
+
 function Chip({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.chip}>
@@ -322,6 +384,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   summary: { gap: 6 },
+  bandName: { color: '#f5f2ff', fontSize: 24, fontWeight: '700' },
+  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  dimensionChip: {
+    backgroundColor: '#1d1b33',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  dimensionName: { color: '#7d789c', fontSize: 11 },
+  dimensionLabel: { color: '#d9d5ef', fontSize: 13 },
+  aspectTitle: { color: '#f5f2ff', fontSize: 17, fontWeight: '600' },
   score: { color: '#f5f2ff', fontSize: 34, fontWeight: '800' },
   scoreLabel: { color: '#9a94b8', fontSize: 14, fontWeight: '400' },
   body: { color: '#d9d5ef', fontSize: 14, lineHeight: 20 },

@@ -115,3 +115,30 @@ It stays exactly as specified here — same table, same 0–100 return, same
 symmetry — and remains the ranking key for `discover`, but it reaches a
 screen only as one of four bands. Everything else in this ADR is unchanged;
 `compatibility()`'s contract is not a presentation decision and never was.
+
+## Amendment 3 (2026-09-11): the separation is computed from the unordered pair
+
+`aspectBetween` derived the separation from `lonB - lonA`. Subtraction
+negates exactly, but normalising the negation does not: `((d % 360) + 360)
+% 360` rounds `d + 360` and `360 - d` differently, so the two argument
+orders disagreed by one ulp on roughly a seventh of body pairs. That ulp
+sits on two thresholds — `orb > maxOrb` and the tight-orb bonus at exactly
+2° — where it is worth up to a quarter of a term, so
+`compatibility(a, b)` and `compatibility(b, a)` could differ in the terms
+themselves, not merely in the last decimal of a sum. This ADR guarantees
+symmetry; it was not being honoured.
+
+The separation now comes from `max(lonA, lonB) − min(lonA, lonB)`, which is
+the same expression whichever way round the pair is passed.
+
+This changes scoring at exact-boundary orbs, and the change is worth
+naming rather than filing as float noise. Measured over 79 800 pairs: 3 908
+pairs move in harmony or tension, two move by a whole integer score point,
+one gains an aspect (a trine sitting exactly on `6° × 0.75`), and one has
+its `strongest` aspect flip — which is the conversation starter a matched
+pair receives. No figure in `docs/adr/0009-presentation.md`'s measured
+block moves: the reference run is byte-identical before and after.
+
+The new behaviour is the one this ADR always specified. The old one was
+order-dependent, which meant that of the two values, at least one was
+already wrong.

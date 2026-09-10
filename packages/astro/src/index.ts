@@ -82,6 +82,7 @@ export {
   type Body,
   type ChartForScoring,
   type Compatibility,
+  type DimensionSums,
   type InterAspect,
 } from './compatibility';
 export {

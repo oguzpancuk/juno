@@ -96,12 +96,14 @@ const unknown = args.find(
     !arg.startsWith('--seed=') &&
     !arg.startsWith('--charts='),
 );
-if (unknown !== undefined)
+if (unknown !== undefined) {
+  const bare = unknown.replace(/^-+/, '');
   throw new Error(
-    unknown === '--seed' || unknown === '-seed'
-      ? '--seed takes an = sign: --seed=20260910'
+    bare === 'seed' || bare === 'charts'
+      ? `--${bare} takes an = sign: --${bare}=…`
       : `unknown option: ${unknown}`,
   );
+}
 const seedFlags = args.filter((arg) => arg.startsWith('--seed='));
 if (seedFlags.length > 1)
   throw new Error(`--seed given ${seedFlags.length} times`);
@@ -124,8 +126,16 @@ const charts_ =
   chartFlag === undefined
     ? CHARTS
     : Number(chartFlag.slice('--charts='.length));
-if (!Number.isInteger(charts_) || charts_ < 2)
-  throw new Error(`--charts must be an integer of at least 2`);
+// The generator's draws first repeat at 13 361 and each chart costs three,
+// so past this the population silently contains dependent pairs — and the
+// distinct-charts guard below cannot see it, because a recycled draw lands
+// in a different slot and builds a different chart.
+const MAX_CHARTS = 4453;
+if (!Number.isInteger(charts_) || charts_ < 2 || charts_ > MAX_CHARTS)
+  throw new Error(
+    `--charts must be an integer between 2 and ${MAX_CHARTS} ` +
+      `(above that the generator reuses draws)`,
+  );
 const positionals = args.filter((arg) => !arg.startsWith('-'));
 if (positionals.length > 1)
   throw new Error(
@@ -297,8 +307,9 @@ const pairs = scores.length;
 const expected = (charts_ * (charts_ - 1)) / 2;
 if (pairs !== expected)
   throw new Error(`scored ${pairs} pairs, expected ${expected}`);
-// The generator repeats after ~10 466 draws and each chart costs three, so
-// a larger CHARTS would silently emit duplicates and dependent pairs.
+// Distinct whole charts. Necessary but not sufficient — see MAX_CHARTS,
+// which is the real bound on how many independent charts this generator
+// can supply.
 const distinct = new Set(charts.map((chart) => JSON.stringify(chart))).size;
 if (distinct !== charts_)
   throw new Error(`${charts_} charts requested, ${distinct} distinct`);

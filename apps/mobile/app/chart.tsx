@@ -26,6 +26,7 @@ export default function ChartScreen() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const [attempt, setAttempt] = useState(0);
+  const [showFull, setShowFull] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -111,54 +112,82 @@ export default function ChartScreen() {
           testID="badge-rising"
         />
       </View>
-      <Text style={styles.body} testID="rising-text">
-        {reading.risingText}
-      </Text>
+      {/* The six the screen leads with, titled by what they mean for
+          dating. The astrology stays under the label, never instead of it. */}
+      {reading.primary.map(({ placement, label, technical, text }) => (
+        <View
+          key={placement}
+          style={styles.primaryCard}
+          testID={`primary-${placement}`}
+        >
+          <Text style={styles.primaryLabel}>{label}</Text>
+          <Text style={styles.primaryTechnical}>{technical}</Text>
+          <Text style={styles.body}>{text}</Text>
+        </View>
+      ))}
 
-      <Text style={styles.section}>{t.chart.planets}</Text>
-      {reading.planets.map(
-        ({ planet, signText, houseText, retrogradeText }) => {
-          const p = chart.planets[planet];
-          return (
-            <View key={planet} style={styles.card} testID={`planet-${planet}`}>
-              <View style={styles.cardHead}>
-                <Text style={styles.planetName}>{PLANET_TR[planet]}</Text>
-                <Text style={styles.planetPos}>
-                  {SIGN_TR[p.sign]} {formatDegree(p.degree)} · {p.house}.{' '}
-                  {t.chart.house}
-                  {p.retrograde ? ` ${t.chart.retrograde}` : ''}
+      <Pressable
+        testID="toggle-full-chart"
+        style={styles.disclosure}
+        onPress={() => setShowFull((v) => !v)}
+      >
+        <Text style={styles.disclosureText}>
+          {showFull ? t.chart.hideFullChart : t.chart.fullChart}
+        </Text>
+      </Pressable>
+
+      {!showFull ? null : (
+        <View testID="full-chart" style={styles.fullChart}>
+          <Text style={styles.section}>{t.chart.planets}</Text>
+          {reading.planets.map(
+            ({ planet, signText, houseText, retrogradeText }) => {
+              const p = chart.planets[planet];
+              return (
+                <View
+                  key={planet}
+                  style={styles.card}
+                  testID={`planet-${planet}`}
+                >
+                  <View style={styles.cardHead}>
+                    <Text style={styles.planetName}>{PLANET_TR[planet]}</Text>
+                    <Text style={styles.planetPos}>
+                      {SIGN_TR[p.sign]} {formatDegree(p.degree)} · {p.house}.{' '}
+                      {t.chart.house}
+                      {p.retrograde ? ` ${t.chart.retrograde}` : ''}
+                    </Text>
+                  </View>
+                  <Text style={styles.body}>{signText}</Text>
+                  <Text style={styles.bodyMuted}>{houseText}</Text>
+                  {retrogradeText ? (
+                    <Text style={styles.bodyMuted}>{retrogradeText}</Text>
+                  ) : null}
+                </View>
+              );
+            },
+          )}
+
+          <Text style={styles.section}>{t.chart.aspects}</Text>
+          {reading.aspects.length === 0 ? (
+            <Text style={styles.bodyMuted}>{t.chart.noAspects}</Text>
+          ) : (
+            reading.aspects.map(({ aspect, text }) => (
+              <View
+                key={`${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
+                style={styles.card}
+                testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
+              >
+                <Text style={styles.planetName}>
+                  {natalAspectTitleTr(aspect)}
+                  <Text style={styles.orb}>
+                    {' '}
+                    · {t.chart.orb(formatDegree(aspect.orb))}
+                  </Text>
                 </Text>
+                <Text style={styles.body}>{text}</Text>
               </View>
-              <Text style={styles.body}>{signText}</Text>
-              <Text style={styles.bodyMuted}>{houseText}</Text>
-              {retrogradeText ? (
-                <Text style={styles.bodyMuted}>{retrogradeText}</Text>
-              ) : null}
-            </View>
-          );
-        },
-      )}
-
-      <Text style={styles.section}>{t.chart.aspects}</Text>
-      {reading.aspects.length === 0 ? (
-        <Text style={styles.bodyMuted}>{t.chart.noAspects}</Text>
-      ) : (
-        reading.aspects.map(({ aspect, text }) => (
-          <View
-            key={`${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
-            style={styles.card}
-            testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
-          >
-            <Text style={styles.planetName}>
-              {natalAspectTitleTr(aspect)}
-              <Text style={styles.orb}>
-                {' '}
-                · {t.chart.orb(formatDegree(aspect.orb))}
-              </Text>
-            </Text>
-            <Text style={styles.body}>{text}</Text>
-          </View>
-        ))
+            ))
+          )}
+        </View>
       )}
 
       <Pressable
@@ -227,6 +256,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: { backgroundColor: '#15142a', borderRadius: 12, padding: 12, gap: 6 },
+  primaryCard: {
+    backgroundColor: '#15142a',
+    borderRadius: 14,
+    padding: 16,
+    gap: 4,
+    marginTop: 8,
+  },
+  primaryLabel: { color: '#f5f2ff', fontSize: 18, fontWeight: '600' },
+  primaryTechnical: { color: '#9a94b8', fontSize: 13, marginBottom: 4 },
+  disclosure: { marginTop: 20, alignItems: 'center', padding: 12 },
+  disclosureText: { color: '#c9c4e3', fontSize: 15 },
+  fullChart: { gap: 8 },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   planetName: { color: '#f5f2ff', fontSize: 16, fontWeight: '600' },
   planetPos: {

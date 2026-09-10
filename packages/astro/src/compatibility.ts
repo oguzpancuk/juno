@@ -110,6 +110,10 @@ export interface Compatibility {
    * viewer-weighted ordering is a reweighting of the same quantity — never a
    * different one. The element bonuses are already inside Stability and
    * Emotional.
+   *
+   * All five, including any with `terms === 0`. ADR-0009 §2 renders those
+   * absent on screen, but a weighting that iterates only the rendered ones
+   * drops up to four harmony points and stops being the same quantity.
    */
   readonly dimensions: Readonly<Record<Dimension, DimensionSums>>;
 }
@@ -241,12 +245,12 @@ export function compatibility(
       if (found) aspects.push(found);
     }
   }
-  // Terms are bucketed and summed in sorted order, never in traversal order:
-  // compatibility(a, b) and compatibility(b, a) see the same multiset of
-  // terms but visit it differently, and floating-point addition is not
-  // associative, so accumulating as we go made the sums disagree in the sixth
-  // decimal. The score survived that (it rounds to an integer); a weighted
-  // ordering built on the dimension sums would not have.
+  // Terms are summed in sorted order, so the total depends on the multiset
+  // and not on visit order. Defensive rather than corrective: with terms
+  // already rounded to six decimals, no asymmetry from accumulation order has
+  // been observed over 44 850 pairs — the asymmetry that was real came from
+  // `separation` (see `aspectBetween`). Kept because a future weighting could
+  // sum unrounded values, and because it costs a sort of two dozen numbers.
   const buckets: Record<Dimension, number[]> = {
     emotional: [],
     chemistry: [],
@@ -328,8 +332,10 @@ export function strongestOf(
   // planetB, aspect) triple, so the winner depends only on the aspect set,
   // never on array order. On an exact tie between mirrored pairs
   // (a.moon–b.venus vs a.venus–b.moon) strongest(b, a) is therefore not the
-  // mirror of strongest(a, b); harmless because starterKey is always
-  // computed in a < b uuid order.
+  // mirror of strongest(a, b). starterKey is unaffected — it is always
+  // computed in a < b uuid order — but the discover card's why-line takes
+  // `strongest` viewer-first, so on such a tie the two would read different
+  // aspects. No tie has been found over 72 270 pairs.
   const tripleKey = (a: InterAspect) => `${a.planetA}-${a.planetB}-${a.aspect}`;
   const byMagnitude = [...aspects].sort(
     (x, y) =>

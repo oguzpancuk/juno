@@ -1,4 +1,4 @@
-import { SIGN_TR, synastryReading } from '@juno/astro';
+import { SIGN_TR, bandName, bandOf, synastryReading } from '@juno/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -212,11 +212,14 @@ export default function Discover() {
               value={SIGN_TR[current.row.big_three.rising]}
             />
           </View>
-          <View style={styles.scoreBox}>
-            <Text style={styles.score} testID="score">
-              {current.match.score}
-            </Text>
-            <Text style={styles.scoreLabel}>{t.discover.scoreLabel}</Text>
+          <View style={styles.bandBox}>
+            <BandMeter band={bandOf(current.match.score)} />
+            <View>
+              <Text style={styles.bandName} testID="band">
+                {bandName(current.match.score)}
+              </Text>
+              <Text style={styles.scoreLabel}>{t.discover.scoreLabel}</Text>
+            </View>
           </View>
           <Text style={styles.why} testID="why">
             {current.why ?? t.discover.noAspectWhy}
@@ -234,6 +237,19 @@ export default function Discover() {
           {showDetail && detail ? (
             <View style={styles.detail} testID="detail">
               <Text style={styles.detailText}>{detail.bandText}</Text>
+              <Text style={styles.detailLabel}>{t.discover.dimensions}</Text>
+              <View style={styles.dimensionRow}>
+                {detail.dimensions.map((d) => (
+                  <View
+                    key={d.dimension}
+                    style={styles.dimensionChip}
+                    testID={`dimension-${d.dimension}`}
+                  >
+                    <Text style={styles.dimensionName}>{d.name}</Text>
+                    <Text style={styles.dimensionLabel}>{d.label}</Text>
+                  </View>
+                ))}
+              </View>
               <Text style={styles.detailLabel}>{t.discover.elements}</Text>
               <Text style={styles.detailMuted}>{detail.sunElements}</Text>
               <Text style={styles.detailMuted}>{detail.moonElements}</Text>
@@ -272,6 +288,30 @@ export default function Discover() {
           </Text>
         </View>
       )}
+    </View>
+  );
+}
+
+const BAND_STEPS = ['quiet', 'even', 'strong', 'rare'] as const;
+
+/**
+ * Four steps, not a number. It keeps cards comparable at a glance without
+ * asserting a precision the method does not have (ADR-0009 §3).
+ */
+function BandMeter({ band }: { band: (typeof BAND_STEPS)[number] }) {
+  const filled = BAND_STEPS.indexOf(band) + 1;
+  return (
+    <View style={styles.meter} testID={`band-meter-${band}`}>
+      {BAND_STEPS.map((step, i) => (
+        <View
+          key={step}
+          style={[
+            styles.meterStep,
+            { height: 10 + i * 5 },
+            i < filled && styles.meterStepOn,
+          ]}
+        />
+      ))}
     </View>
   );
 }
@@ -330,8 +370,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  scoreBox: { alignItems: 'center', paddingVertical: 8 },
-  score: { color: '#f5f2ff', fontSize: 56, fontWeight: '800' },
+  bandBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  bandName: { color: '#f5f2ff', fontSize: 22, fontWeight: '700' },
+  meter: { flexDirection: 'row', gap: 3, alignItems: 'flex-end' },
+  meterStep: { width: 6, borderRadius: 2, backgroundColor: '#2a2745' },
+  meterStepOn: { backgroundColor: '#e98fa0' },
+  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  dimensionChip: {
+    backgroundColor: '#1d1b33',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  dimensionName: { color: '#7d789c', fontSize: 11 },
+  dimensionLabel: { color: '#d9d5ef', fontSize: 13 },
   scoreLabel: {
     color: '#9a94b8',
     fontSize: 12,

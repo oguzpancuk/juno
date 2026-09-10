@@ -24,9 +24,9 @@ the block:
      corrected; everything else cites this block rather than repeating it.
      Refresh it whole, never a line of it: the first half is one run of the
      script at its default seed, the second half a run at the other seed the
-     block names, with the two compared. Two-digit figures in here are not covered by the
-     `docs` gate (they collide with ordinary prose); keep them out of
-     sentences by hand. -->
+     block names, with the two compared. Two-digit figures in here — 16, 18, 30, 56, 62, 67,
+     75, 80, 93 — are not covered by the `docs` gate, because they collide
+     with ordinary prose; keep those out of sentences by hand. -->
 
 **Measured figures** (`packages/astro/scripts/score-distribution.ts`):
 
@@ -71,7 +71,7 @@ rerun at seed 424242 — what moves
 Two consequences follow. First, ADR-0003's score is not a percentage: the
 median sits in the low sixties, and the 86 in the owner's mockups occurs in
 five pairs in ten thousand. Printed with a `%` sign it reads as a school
-mark, and the average pair is told it scored a low D. Second, the curated pairing
+mark, and the average pair is told it scored barely over half. Second, the curated pairing
 list is too thin to fill the match page on its own: roughly one pair in six
 cannot produce three positive aspects from it, against one in two thousand
 when all 51 pairings are eligible.

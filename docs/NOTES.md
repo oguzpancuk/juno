@@ -69,10 +69,12 @@
   own figures block rather than from a hand-maintained list of forbidden
   phrases. Adding a figure to the block extends the gate with no list to
   update. **What it does not cover:** two-digit integers. The block holds
-  16, 30, 56, 62, 67 and 93, and gating on those would fire on ordinary
-  prose, so they are guarded by review alone — the block's own maintenance
-  comment says so. Decimals, grouped thousands and integers of three digits
-  or more are covered: 73 tokens at the time of writing.
+  16, 18, 30, 56, 62, 67, 75, 80 and 93, and gating on those would fire on
+  ordinary prose, so they are guarded by review alone — the block's own
+  maintenance comment says so. Decimals, grouped thousands and integers of
+  three digits or more are covered: 66 tokens at the time of writing, and
+  the plain integers are taken from what is left after the compound forms
+  are cut out, so a decimal never shreds into a spurious token.
 - On its first run it failed, naming three copies that six review rounds had
   read past: `0.05 %` restated in the PRD, `1 124 250` in the ADR's own
   prose above the block, and the sensitivity movements (0.01 / 0.05 / 0.10,

@@ -41,12 +41,20 @@ block = match.group(1)
 # Distinctive enough that a match elsewhere is a copy, not a coincidence:
 # a decimal, thousands grouped with spaces, or an integer of three or more
 # digits. Two-digit integers are deliberately NOT guarded — the block holds
-# 16, 30, 56, 62, 67 and 93, and those collide with ordinary prose too often
-# to gate on. They are the gap in this check: a two-digit figure copied into
-# a sentence still has to be caught by review.
-tokens = set(re.findall(r'\d+\.\d+(?:e-?\d+)?', block))
-tokens |= set(re.findall(r'\d{1,3}(?:\s\d{3})+', block))
-tokens |= set(re.findall(r'\d{3,}', block))
+# 16, 18, 30, 56, 62, 67, 75, 80 and 93, and those collide with ordinary
+# prose too often to gate on. They are the gap in this check: a two-digit
+# figure copied into a sentence still has to be caught by review.
+decimals = re.findall(r'\d+\.\d+(?:e-?\d+)?', block)
+grouped = re.findall(r'\d{1,3}(?:\s\d{3})+', block)
+tokens = set(decimals) | set(grouped)
+# Plain integers come from what is left after the compound forms are cut
+# out: matching them in place would shred `61.7061` into `7061` and a
+# grouped thousand into `124` and `250`, and then a stray port number under
+# docs/ would fail the battery with a message that was not true.
+remainder = block
+for compound in decimals + grouped:
+    remainder = remainder.replace(compound, ' ')
+tokens |= set(re.findall(r'\d{3,}', remainder))
 if not tokens:
     print('FAIL docs — the figures block holds no recognisable numbers',
           file=sys.stderr)

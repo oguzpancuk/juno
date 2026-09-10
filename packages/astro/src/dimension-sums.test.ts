@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compatibility, type ChartForScoring } from './compatibility';
-import { DIMENSIONS } from './dimensions';
+import {
+  compatibility,
+  elementsAgree,
+  type ChartForScoring,
+} from './compatibility';
+import { DIMENSIONS, dimensionOf } from './dimensions';
 import { computeChart } from './chart';
 import { toPublicChart } from './public';
 
@@ -86,6 +90,43 @@ describe('per-dimension sums', () => {
       if (growth.tension > 0) sawGrowthTension = true;
     }
     expect(sawGrowthTension).toBe(true);
+  });
+
+  it('puts the Sun bonus in Stability and the Moon bonus in Emotional', () => {
+    // Which dimension owns which bonus is what a user reads as a label, and
+    // the totals are invariant under swapping them — so nothing else here
+    // would notice. Recomputed from the aspects, the bonus is the remainder.
+    let sawSun = false;
+    let sawMoon = false;
+    for (const [a, b] of pairs()) {
+      const result = compatibility(a, b);
+      const fromAspects = (dimension: string): number => {
+        let total = 0;
+        for (const aspect of result.aspects) {
+          if (dimensionOf(aspect.planetA, aspect.planetB) !== dimension)
+            continue;
+          if (aspect.term >= 0) total += aspect.term;
+        }
+        return Number(total.toFixed(6));
+      };
+      const sunAgrees = elementsAgree(a.planets.sun.sign, b.planets.sun.sign);
+      const moonAgrees = elementsAgree(
+        a.planets.moon.sign,
+        b.planets.moon.sign,
+      );
+      expect(result.dimensions.stability.harmony).toBeCloseTo(
+        fromAspects('stability') + (sunAgrees ? 2 : 0),
+        6,
+      );
+      expect(result.dimensions.emotional.harmony).toBeCloseTo(
+        fromAspects('emotional') + (moonAgrees ? 2 : 0),
+        6,
+      );
+      if (sunAgrees) sawSun = true;
+      if (moonAgrees) sawMoon = true;
+    }
+    expect(sawSun).toBe(true);
+    expect(sawMoon).toBe(true);
   });
 
   it('is symmetric in its arguments', () => {

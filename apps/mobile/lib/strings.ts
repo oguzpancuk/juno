@@ -62,6 +62,10 @@ export const t = {
     house: 'ev',
     retrograde: 'R',
     aspects: 'AÇILAR',
+    // The chart screen leads with six placements; everything else is behind
+    // this (PRD amendment 2026-09-10).
+    fullChart: 'Tüm haritanı gör',
+    hideFullChart: 'Haritayı kapat',
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
@@ -74,6 +78,7 @@ export const t = {
     myChart: 'Haritam',
     settings: 'Ayarlar',
     matches: 'Eşleşmeler',
+    // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
     like: 'Beğen',
     pass: 'Geç',
@@ -85,6 +90,7 @@ export const t = {
     noAspectWhy: 'Haritalarınız birbirine değmiyor.',
     detail: 'Uyum detayı',
     hideDetail: 'Detayı gizle',
+    dimensions: 'BAĞLANTININ TARAFLARI',
     elements: 'Elementler',
     remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
   },
@@ -98,6 +104,9 @@ export const t = {
     summary: 'UYUM ÖZETİ',
     elements: 'ELEMENTLER',
     aspects: 'ÖNE ÇIKAN AÇILAR',
+    drawn: 'NEDEN BİRBİRİNİZE ÇEKİLİYORSUNUZ',
+    interesting: 'BURASI İLGİNÇ',
+    dimensions: 'BAĞLANTININ TARAFLARI',
     allMatches: 'Tüm eşleşmeler ›',
     backToDiscover: '‹ Keşfete dön',
   },
