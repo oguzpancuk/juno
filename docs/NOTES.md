@@ -10,6 +10,16 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+- 2026-09-11 · `contracts/init.sh` · Metro is started with `CI=1`, which
+  disables file watching. Any screen edited after `init.sh` runs never
+  reaches the bundle, and the symptom is silent: the section simply does
+  not render, with no error in Metro, in the app, or in the battery. It
+  cost most of an hour tonight before the cause was found. The comment in
+  the script explains why `--clear` is there but not what `CI=1` gives up.
+  Either drop `CI=1` and keep `--clear`, or say in the echoed output that
+  the server does not watch. Parked, not applied: no owner decision, and
+  `contracts/` is template-origin.
+
 - 2026-09-10 · `.claude/hooks/verify.sh` + `.claude/hooks/docs-figures.sh` ·
   A docs-consistency step, applied here on the owner's say-so and awaiting
   `/update-stack` for maya. Six code-review rounds went almost entirely to
