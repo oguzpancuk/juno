@@ -345,10 +345,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       could only be verified for serve here, never for deploy, and a
       mechanism that fails first in production is not worth the single
       source of truth. `tests/functions-pinned.test.ts` is the gate,
-      since tsc and ESLint both ignore `functions/`. It reads every `.ts`
-      under `functions/` and catches side-effect and dynamic imports too,
-      after a review found the first version blind to all three; each of
-      its three assertions was checked by mutation. What it cannot
+      since tsc and ESLint both ignore `functions/`. It reads every
+      module extension Deno runs, everywhere under `functions/`, and
+      catches side-effect, dynamic and computed imports too, after three
+      review rounds found the first version blind to all of them; every
+      assertion was checked by a fixture that fails without it. What it cannot
       promise: pinning the top of the graph is not a lockfile —
       supabase-js itself declares `npm:@opentelemetry/api@^1.0.0`, and
       that range is still resolved at cold start._

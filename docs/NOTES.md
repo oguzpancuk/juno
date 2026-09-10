@@ -27,7 +27,7 @@
 - **The cold cache is paid outside a test.** CI creates the runtime's
   Deno cache volume empty, so the first request to each function resolves
   its import graph over the network. That was happening inside a 20 s
-  test timeout; it now has its own 120 s budget in setup.
+  test timeout; it now has its own budget in setup.
 - **The version is pinned in the specifier, not an import map.** An
   import map (`functions/deno.json`) would have been the single source of
   truth, but the CLI's handling of it could only be verified here for
@@ -48,8 +48,8 @@
   matched `from '…'` — so a side-effect `import '…'`, a dynamic
   `import('…')`, or any module that is not the entrypoint (a future
   `_shared/`) would have restored the exact risk the commit exists to
-  remove, with the test green. It now walks every `.ts` under
-  `functions/` and matches all three import forms, and two further
+  remove, with the test green. It now walks every module extension Deno
+  runs, everywhere under `functions/`, and matches all three import forms, and two further
   assertions close what a comment used to promise: the functions may not
   disagree with each other on a version, and they may not drift from the
   supabase-js the workspace has installed — `npm update` alone now turns

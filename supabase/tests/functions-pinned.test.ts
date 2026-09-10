@@ -60,10 +60,19 @@ interface Remote {
 }
 
 function parse(file: string, specifier: string): Remote {
-  // A computed specifier cannot be checked at all, so it counts as floating.
-  const path = specifier.includes('${')
-    ? specifier
-    : (specifier.split(/[?#]/, 1)[0] ?? specifier);
+  // A computed specifier is unpinnable whatever its tail looks like: both
+  // the package and the version are decided at runtime, so an interpolated
+  // one ending in `@1.0.0` is not pinned to anything. Reading the version
+  // out of it here would be believing a coincidence.
+  if (specifier.includes('${')) {
+    return {
+      file,
+      specifier,
+      name: specifier.replace(REMOTE, ''),
+      version: undefined,
+    };
+  }
+  const path = specifier.split(/[?#]/, 1)[0] ?? specifier;
   const version = EXACT.exec(path)?.[1];
   const withoutVersion =
     version === undefined
