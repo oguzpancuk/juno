@@ -32,7 +32,9 @@ import { edgeFunctionSources } from './edge-functions';
 // reads `supabase.from(`profiles_${shard}`)`, and a template literal there
 // would otherwise be reported as an unpinned dependency — a diagnosis
 // about cold-start resolution for a string that is not an import.
-const SPECIFIER = /(?<![.$\w])(?:from|import)\s*(?:\(\s*)?(['"`])([^'"`]*)\1/g;
+// Group 1 is the opening paren of `import(`, which marks a call rather
+// than prose — see isRemote.
+const SPECIFIER = /(?<![.$\w])(?:from|import)\s*(\(\s*)?(['"`])([^'"`]*)\2/g;
 const REMOTE = /^(?:jsr:|npm:|https?:)/;
 // An exact version either ends the path or is followed by a subpath. The
 // query and fragment are cut off first: `?deps=zod@3.22.4` must not make a
@@ -100,33 +102,44 @@ function parse(file: string, specifier: string): Remote {
  * Relative paths stay out of it — those are local files, and interpolating
  * one is not a dependency question.
  *
- * A computed one must also carry a path separator. The word `from` occurs
- * inside ordinary strings (`` `row missing from "${table}"` ``), and this
- * is a regex, not a parser, so such a string reaches here as `${table}`;
- * without the separator it would be reported as an unpinned dependency.
- * The gap that buys: a bare computed specifier, `` import(`${pkg}`) ``,
- * goes unseen. Nothing can be said about that one anyway, and it has no
- * registry, no version and no precedent in this repo.
+ * A computed one written after `from` must also carry a path separator.
+ * The word `from` occurs inside ordinary strings (`` `row missing from
+ * "${table}"` ``), and this is a regex, not a parser, so such a string
+ * reaches here as `${table}`; without the separator it would be reported
+ * as an unpinned dependency. `import(` is a call, never prose, so nothing
+ * captured from one needs that test — which matters, because the
+ * separator can be inside the interpolated part: `` `${CDN}pkg@2` `` with
+ * a base URL ending in a slash is the same floating cold-start resolve as
+ * `` `${CDN}/pkg@2` ``, and only this distinction sees it.
  */
-function isRemote(specifier: string): boolean {
+function isRemote(specifier: string, dynamic = false): boolean {
   if (REMOTE.test(specifier)) return true;
   if (!specifier.includes('${') || /^[./]/.test(specifier)) return false;
-  return specifier.includes('/');
+  return dynamic || specifier.includes('/');
+}
+
+interface Found {
+  readonly specifier: string;
+  /** Captured from `import(…)`, so it is a call and not prose. */
+  readonly dynamic: boolean;
 }
 
 /** The import specifiers in one file's text, before any judgement. */
-function specifiersIn(source: string): readonly string[] {
+function specifiersIn(source: string): readonly Found[] {
   return [...source.matchAll(SPECIFIER)]
-    .map(([, , specifier]) => specifier)
-    .filter((specifier): specifier is string => specifier !== undefined);
+    .map(([, paren, , specifier]) => ({
+      specifier,
+      dynamic: paren !== undefined,
+    }))
+    .filter((found): found is Found => found.specifier !== undefined);
 }
 
 function remoteImports(): readonly Remote[] {
   const found: Remote[] = [];
   for (const file of edgeFunctionSources()) {
     const source = readFileSync(file, 'utf8');
-    for (const specifier of specifiersIn(source)) {
-      if (!isRemote(specifier)) continue;
+    for (const { specifier, dynamic } of specifiersIn(source)) {
+      if (!isRemote(specifier, dynamic)) continue;
       found.push(parse(file, specifier));
     }
   }
@@ -193,7 +206,9 @@ it.each(CASES)('parses $specifier — $why', ({ specifier, version }) => {
 
 /** What the gate actually reports for a file with this text in it. */
 const reported = (source: string): readonly string[] =>
-  specifiersIn(source).filter(isRemote);
+  specifiersIn(source)
+    .filter(({ specifier, dynamic }) => isRemote(specifier, dynamic))
+    .map(({ specifier }) => specifier);
 
 it('reports the imports in a source and nothing else', () => {
   // `from` is a word that occurs in code which is not an import: the query
@@ -220,6 +235,9 @@ it('reports the imports in a source and nothing else', () => {
     'npm:lazy@1.0.0',
   ]);
   expect(reported('await import(`${CDN}/pkg@2`);')).toEqual(['${CDN}/pkg@2']);
+  // No separator outside the interpolation, because the base URL ends in
+  // one. Only `import(` being a call rather than prose catches this.
+  expect(reported('await import(`${CDN}pkg@2`);')).toEqual(['${CDN}pkg@2']);
 });
 
 it('leaves relative and non-specifier strings alone', () => {
@@ -251,7 +269,7 @@ it('pins every remote import in every Edge Function to an exact version', () => 
     .map((remote) => `${remote.file}: ${remote.specifier}`);
   expect(
     floating,
-    'each of these resolves from the network at cold start, so a release nobody here made changes what runs; pin an exact version (a specifier quoted inside a comment counts too, and the fix there is to pin the example)',
+    'each of these resolves from the network at cold start, so a release nobody here made changes what runs; pin an exact version. This is a regex, not a parser, so a quoted specifier inside a comment counts (pin the example), and so does a string that happens to read `from "a/path"` (reword it or move the path out of the literal)',
   ).toEqual([]);
 });
 
