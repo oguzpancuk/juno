@@ -15,7 +15,10 @@
  * Deno, not Node: Edge Functions run on the edge runtime, so this file is
  * outside the workspace's TypeScript project (see supabase/eslint.config.js).
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+// Pinned, not `@2`: a floating major resolves over the network at cold
+// start, so a new release could break a deploy or a CI run with no commit
+// here. Keep in step with the version supabase/package.json resolves.
+import { createClient } from 'jsr:@supabase/supabase-js@2.116.0';
 
 const CORS = {
   'access-control-allow-origin': '*',

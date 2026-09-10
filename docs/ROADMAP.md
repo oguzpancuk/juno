@@ -320,6 +320,31 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       unauthenticated page; the authenticated screens were driven and read
       back in-session. Still open for the hosted project: EXPO_PUBLIC_*
       env for a deployed build and where to host the static output._
+- [x] **Close the local/CI gap around Edge Functions.** CI was red for
+      days because the workflow started a stack without the edge runtime
+      and twelve tests reported a bare status mismatch instead of naming
+      the missing service (docs/NOTES.md, 2026-09-10). Two leftovers of
+      the same class: the Supabase test run has no probe that the
+      functions gateway answers, and the functions import
+      `jsr:@supabase/supabase-js@2` — a floating major with no import map
+      or lockfile, resolved over the network on CI's cold Deno cache
+      inside a 20 s test timeout.
+      — done when: a missing or unbooted edge runtime fails the Supabase
+      suite with a message naming it and the fix, the functions resolve a
+      pinned version, and CI is green on the commit that does it (battery + the run).
+      _A vitest globalSetup preflights both functions with OPTIONS, which
+      both answer 204 before reading a token, so warming them changes
+      nothing; it also moves the cold-cache download out of a test's 20 s
+      budget. Checked by starting the stack without the runtime: one
+      error naming the function, the 503 and the fix, in place of twelve
+      status mismatches. The version is pinned in the specifier rather
+      than an import map — the CLI's handling of `functions/deno.json`
+      could only be verified for serve here, never for deploy, and a
+      mechanism that fails first in production is not worth the single
+      source of truth. `tests/functions-pinned.test.ts` is the gate,
+      since tsc and ESLint both ignore `functions/`; checked by
+      restoring `@2` and watching it fail._
+
 - [ ] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`
       is the prompt and context for a claude.ai/design project; the

@@ -10,6 +10,38 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The two leftovers from the CI outage, closed
+
+- Both were the same shape as the outage itself: a difference between
+  this machine and CI that only CI could see.
+- **The suite now says what is missing.** A vitest globalSetup preflights
+  `photo` and `delete-account` before any file runs. `local.ts` already
+  turned a missing database into a FAIL naming the fix; the functions
+  gateway had no such contract, which is why twelve tests reported
+  "expected 503 to be 200" and the cause had to be found by hand. OPTIONS
+  is the probe because both functions answer a preflight 204 before they
+  read a token or touch the database, so warming them cannot change
+  state. Checked the only way that means anything — started the stack
+  with `-x ...,edge-runtime,...` and watched one named error replace the
+  twelve.
+- **The cold cache is paid outside a test.** CI creates the runtime's
+  Deno cache volume empty, so the first request to each function resolves
+  its import graph over the network. That was happening inside a 20 s
+  test timeout; it now has its own 120 s budget in setup.
+- **The version is pinned in the specifier, not an import map.** An
+  import map (`functions/deno.json`) would have been the single source of
+  truth, but the CLI's handling of it could only be verified here for
+  serve, never for deploy, and a mechanism whose first failure would be
+  in production is not worth that. Both functions now import
+  `jsr:@supabase/supabase-js@2.116.0` — the same version
+  `supabase/package.json` resolves, so the repo runs one supabase-js.
+- **The pin has a gate.** `functions/` is outside the TypeScript project
+  and ESLint ignores it, so nothing but `tests/functions-pinned.test.ts`
+  would notice a floating specifier coming back. Checked by restoring
+  `@2`: it fails and names the file and the specifier.
+- Verified: battery green on a clean tree. CI green on this commit is the
+  claim that still needs the run.
+
 ## 2026-09-10 — CI has never been green, and now we know why
 
 - Pushing the rename surfaced it. GitHub has six runs on record for this
