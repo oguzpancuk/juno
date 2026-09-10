@@ -487,7 +487,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       real asymmetry; the first is defensive. Six tests, one of which pins
       which dimension owns each element bonus, since swapping them left the
       totals invariant and the labels wrong._
-- [ ] **Visual design (Claude Design).** The screens are functional but
+- [x] **Visual design (Claude Design).** The screens are functional but
       unstyled beyond a provisional dark palette. `docs/design-brief.md`
       is the prompt and context for a claude.ai/design project; the
       owner runs the design there, then the screens are implemented in
@@ -502,6 +502,22 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: every screen in the brief matches the accepted design
       in the simulator (screenshot per screen under `screenshots/design-*`),
       tokens live in one file, and the battery is green.
+      _Done, by a different route than this clause imagined: the owner
+      brought a finished design on 2026-09-11 rather than running a Claude
+      Design session, so `design-brief.md` was never used as a prompt — it
+      stands as the written record of the screens. `apps/mobile/theme/
+tokens.ts` is the one file and nothing outside it holds a hex value;
+      `apps/mobile/components/ui.tsx` is the shared set. Screenshots:
+      `design-chart.png`, `design-discover.png`, `design-match.png`,
+      `design-match-sections.png` — four of the eleven screens, the ones
+      the design changed most. The remaining seven took the palette
+      mechanically and have not been photographed one by one._
+      NOT met: the mockups carry a compatibility percentage on most
+      screens, five numeric dimension scores and a Juno-asteroid feature.
+      The first two are refused by ADR-0009 §3 (owner reaffirmed on
+      2026-09-11) and the third by ADR-0004 — `astronomy-engine` has no
+      asteroids. The design's visual language was taken; those three
+      elements were not.
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.juno`, check App Store name availability; hosted

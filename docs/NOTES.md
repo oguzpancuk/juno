@@ -33,6 +33,57 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — The design, and what of it could not be built
+
+- The owner brought a finished visual design and asked for the UI to
+  become it. Applied: `apps/mobile/theme/tokens.ts` is now the only file
+  in the app holding a colour, `components/ui.tsx` is the shared set, and
+  every screen draws from both. `expo-linear-gradient` is the one new
+  dependency; the brand mark is drawn in views rather than pulling in an
+  SVG runtime.
+- **Three things in the mockups were not built, each for a reason older
+  than the mockups.** They carry a compatibility percentage on most
+  screens (`86%`, `92%`), five numeric dimension scores
+  (`Emotional 92 · Chemistry 95 · Communication 68`), and a Juno-asteroid
+  feature (`Juno Taurus 26°`, `Juno △ Venus`). The first two were removed
+  by the owner's own decision the night before — the raw score is not a
+  percentage, the median pair takes 62 — and the owner reaffirmed the band
+  when asked. The third the engine cannot compute: `astronomy-engine` has
+  no asteroids (ADR-0004). Drawing a Juno placement would have been
+  inventing data. The mockups appear to predate the 2026-09-10 decision:
+  both the percentage and the "Juno signature" come from the owner's first
+  product document.
+- The English copy in the mockups was replaced with the strings that
+  already exist. The PRD's single-market decision stands and 800-odd
+  Turkish texts depend on it.
+- **The review of the previous three commits found a safety bug**, and it
+  is the most important thing in this entry: the match screen kept every
+  piece of state across a change of match id. The root layout navigates to
+  `/match/[id]` when a match arrives over Realtime, and navigating to a
+  route you are already on swaps the params without remounting — so an open
+  "Engelle" confirmation survived the swap, and its next tap would have
+  blocked whoever had just arrived. The view is keyed by id now. Nothing
+  in the battery would have caught this; there is no test that renders a
+  screen.
+- Other findings closed in the same commit: overlay cards collided on 83 %
+  of pairs (grouped by house and ranked now), four card titles matched a
+  dimension chip on the same screen, the disclosed planet list repeated the
+  six lead cards verbatim, a stray heading over an empty dimension row on
+  two screens, a local re-declaration of `BANDS` that a reorder would have
+  broken silently, and a lost own-profile fetch that removed the whole
+  compatibility block without saying so.
+- **Open, and worth a session of its own:** the app logs
+  `TypeError: Cannot convert undefined value to object` twice at startup,
+  before any navigation. It predates tonight as far as I can tell, no
+  screen is affected, and I did not chase it — bisecting it would have meant
+  stashing the night's work. It should be found before TestFlight.
+- Also open: the seven screens that took the palette mechanically
+  (onboarding, profile, settings, matches, chat, blocked, legal) have not
+  been photographed against the design. They are consistent in colour and
+  type but their layouts are the old ones.
+- Verified: `bash .claude/hooks/verify.sh` green, five steps; the four
+  redesigned screens driven on the simulator against the local stack.
+
 ## 2026-09-11 — C2 through C6, and the app the owner asked for by morning
 
 - Owner approved the parked upstream candidate, a publication of the work
