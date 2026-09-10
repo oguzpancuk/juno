@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,32 +16,52 @@ import { fileURLToPath } from 'node:url';
 // does not exist.
 const DIR = fileURLToPath(new URL('../functions', import.meta.url));
 
+/** Both gates are worthless against a directory that moved; say so. */
+function functionsDir(): string {
+  if (!existsSync(DIR)) {
+    throw new Error(
+      `no Edge Functions directory at ${DIR}: it moved or was removed, and the gates that read it (tests/global-setup.ts, tests/functions-pinned.test.ts) now cover nothing`,
+    );
+  }
+  return DIR;
+}
+
 /**
- * Deployable function names — one HTTP endpoint each. A directory whose
- * name starts with `_` is Supabase's convention for shared code that is
- * not itself a function (`_shared`), so it has no endpoint to preflight.
+ * Deployable function names — one HTTP endpoint each. A directory is one
+ * only if it holds an `index.ts`: `_shared` is Supabase's convention for
+ * code that is not a function, and a directory of fixtures is not one
+ * either. Preflighting a name with no route would fail the whole suite on
+ * something that was never an endpoint.
  */
 export function edgeFunctionNames(): readonly string[] {
-  return readdirSync(DIR, { withFileTypes: true })
+  return readdirSync(functionsDir(), { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
     .map((entry) => entry.name)
+    .filter((name) => existsSync(join(DIR, name, 'index.ts')))
     .sort();
 }
 
 /**
- * Every TypeScript file under `functions/`, `_shared` included. What the
- * runtime resolves is the whole graph, not just the entrypoints.
+ * Every module under `functions/`, `_shared` included. What the runtime
+ * resolves is the whole graph, not just the entrypoints, and Deno runs
+ * more than `.ts`.
+ *
+ * Symlinked directories are not followed: `withFileTypes` reports the link
+ * itself, so a broken link cannot throw here and a cycle cannot recurse.
+ * Nothing in this repo symlinks into `functions/`; if something ever does,
+ * this is the line that has to learn about it.
  */
+const MODULE = /\.(?:[cm]?[jt]sx?)$/;
+
 export function edgeFunctionSources(): readonly string[] {
   const found: string[] = [];
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
-      // A symlinked directory reports as a link, so ask the filesystem.
-      if (statSync(path).isDirectory()) walk(path);
-      else if (entry.name.endsWith('.ts')) found.push(path);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile() && MODULE.test(entry.name)) found.push(path);
     }
   };
-  walk(DIR);
+  walk(functionsDir());
   return found.sort();
 }

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { edgeFunctionSources } from './edge-functions';
@@ -17,25 +18,35 @@ import { edgeFunctionSources } from './edge-functions';
  * lockfile. supabase-js pins its own @supabase/* dependencies exactly but
  * declares npm:@opentelemetry/api@^1.0.0, and that range is still resolved
  * at cold start. The risk is narrowed to transitive ranges, not closed.
+ * Nor does it see specifiers moved into an import map (`functions/deno.json`
+ * or config.toml's `import_map`) — the repo deliberately has neither, and
+ * adding one means teaching this file about it.
  */
 
-// `from '…'`, the side-effect `import '…'`, and the dynamic `import('…')`.
-// Missing any of the three is a way for a floating specifier to walk past.
-const SPECIFIER = /(?:\bfrom|\bimport)\s*(?:\(\s*)?['"]([^'"]+)['"]/g;
+// `from '…'`, the side-effect `import '…'`, and the dynamic `import('…')`,
+// in any of the three quote characters. Missing a form is a way for a
+// floating specifier to walk past, which is how the first version of this
+// file covered nothing.
+const SPECIFIER = /(?:\bfrom|\bimport)\s*(?:\(\s*)?(['"`])([^'"`]*)\1/g;
 const REMOTE = /^(?:jsr:|npm:|https?:)/;
-// An exact version either ends the specifier or is followed by a subpath,
-// so `npm:pkg@1.2.3/sub.js` and `https://deno.land/std@0.220.0/x.ts` pass.
+// An exact version either ends the path or is followed by a subpath. The
+// query and fragment are cut off first: `?deps=zod@3.22.4` must not make a
+// floating `esm.sh/postgres@3` look pinned, and `?target=deno` must not
+// make a pinned one look floating.
 const EXACT =
   /@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)(?:\/|$)/;
 
 const PackageSchema = z.object({ version: z.string().min(1) });
 
-/** The supabase-js the rest of the repo actually runs, from the install. */
+/**
+ * The supabase-js this workspace actually loads. Resolved the way the
+ * suite itself resolves it rather than by a hardcoded path into the
+ * hoisted root, so a future layout that nests a different copy under
+ * `supabase/node_modules` is compared against the copy that would run.
+ */
 function installedSupabaseJs(): string {
-  const path = new URL(
-    '../../node_modules/@supabase/supabase-js/package.json',
-    import.meta.url,
-  );
+  const require = createRequire(import.meta.url);
+  const path = require.resolve('@supabase/supabase-js/package.json');
   const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
   return PackageSchema.parse(raw).version;
 }
@@ -43,28 +54,38 @@ function installedSupabaseJs(): string {
 interface Remote {
   readonly file: string;
   readonly specifier: string;
-  /** Everything before the exact version, e.g. `jsr:@supabase/supabase-js`. */
+  /** Registry-independent identity, e.g. `@supabase/supabase-js`. */
   readonly name: string;
   readonly version: string | undefined;
+}
+
+function parse(file: string, specifier: string): Remote {
+  // A computed specifier cannot be checked at all, so it counts as floating.
+  const path = specifier.includes('${')
+    ? specifier
+    : (specifier.split(/[?#]/, 1)[0] ?? specifier);
+  const version = EXACT.exec(path)?.[1];
+  const withoutVersion =
+    version === undefined
+      ? path
+      : path.slice(0, path.lastIndexOf(`@${version}`));
+  return {
+    file,
+    specifier,
+    // Drop the scheme so the same package via jsr: and npm: is one name;
+    // otherwise two registries could disagree on a version in silence.
+    name: withoutVersion.replace(REMOTE, ''),
+    version,
+  };
 }
 
 function remoteImports(): readonly Remote[] {
   const found: Remote[] = [];
   for (const file of edgeFunctionSources()) {
     const source = readFileSync(file, 'utf8');
-    for (const [, specifier] of source.matchAll(SPECIFIER)) {
+    for (const [, , specifier] of source.matchAll(SPECIFIER)) {
       if (specifier === undefined || !REMOTE.test(specifier)) continue;
-      const match = EXACT.exec(specifier);
-      const version = match?.[1];
-      found.push({
-        file,
-        specifier,
-        name:
-          version === undefined
-            ? specifier
-            : specifier.slice(0, specifier.lastIndexOf(`@${version}`)),
-        version,
-      });
+      found.push(parse(file, specifier));
     }
   }
   return found;
@@ -80,7 +101,10 @@ it('pins every remote import in every Edge Function to an exact version', () => 
   const floating = remotes
     .filter((remote) => remote.version === undefined)
     .map((remote) => `${remote.file}: ${remote.specifier}`);
-  expect(floating).toEqual([]);
+  expect(
+    floating,
+    'each of these resolves from the network at cold start, so a release nobody here made changes what runs; pin an exact version (a specifier quoted inside a comment counts too, and the fix there is to pin the example)',
+  ).toEqual([]);
 });
 
 it('resolves one version of each package across the functions', () => {
@@ -101,9 +125,10 @@ it('resolves one version of each package across the functions', () => {
 });
 
 /**
- * The functions and the rest of the repo must run the same supabase-js. A
- * comment saying "keep in step" is not a gate: `npm update` moves the
- * workspace's copy and nothing would notice the functions staying behind.
+ * The functions and the rest of the workspace must run the same
+ * supabase-js. A comment saying "keep in step" is not a gate: `npm update`
+ * moves the installed copy and nothing would notice the functions staying
+ * behind.
  */
 it('keeps the supabase-js pin in step with the installed one', () => {
   const pins = remoteImports().filter((remote) =>

@@ -57,6 +57,23 @@
   checked by mutation: a floating specifier hidden in `_shared/boot.ts`,
   the two functions set to different versions, and both set behind the
   install. Each fails for its own reason and only that one.
+- **The second review found the fixes had their own regressions.** Two
+  mattered, both in the direction of failing the whole suite on something
+  that was not a defect here: a 500 was made fail-fast, but a 500 is
+  exactly what a briefly unreachable registry produces during a cold
+  boot, so one bad moment at jsr.io would have failed every Supabase
+  suite; and the per-attempt timeout was set to 15 s, shorter than the
+  20 s cold start the file exists to outlast, with an aborted attempt
+  reported as "the stack is down". Both are the same wrong-cause failure
+  this whole series is about. Now everything except a 404 is retried
+  inside a 180 s budget, an attempt gets 60 s, and a timeout says it is a
+  timeout.
+- **The preflight's second claim is now observed, not asserted.** That it
+  boots the worker (rather than being answered by the gateway) is visible
+  in the answer: photo returns `access-control-allow-methods: GET,
+OPTIONS` and delete-account returns `POST, OPTIONS` — constants that
+  exist only inside each module, which a shared gateway plugin could not
+  produce per route.
 - **A checkbox I had no right to tick.** The ROADMAP item was marked done
   before CI had seen the commits, while its own done-when clause asks for
   a green run. Review caught it; it is back to `[ ]` with the evidence

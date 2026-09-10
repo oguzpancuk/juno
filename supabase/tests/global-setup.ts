@@ -22,77 +22,122 @@ import { localStack } from './local';
  *
  * OPTIONS is the probe on purpose: every function answers a preflight with
  * 204 before it reads a token or touches the database, so warming them
- * cannot change state. Kong forwards the preflight to the worker rather
- * than answering it itself, which is what makes this warm anything.
+ * cannot change state. It reaches the worker rather than being answered by
+ * the gateway — each function returns its own `access-control-allow-methods`
+ * (`GET, OPTIONS` for photo, `POST, OPTIONS` for delete-account), which is
+ * a value only its own module can produce, so answering the preflight means
+ * that module was evaluated and its imports resolved.
+ *
+ * Everything here is retried except a 404, because everything else is a
+ * state the stack can still leave: a boot failure includes a registry that
+ * was briefly unreachable, which is not a defect in this repo and must not
+ * fail the suite on its first occurrence.
  */
 
-const BUDGET_MS = 120_000;
+const BUDGET_MS = 180_000;
 const INTERVAL_MS = 500;
-// Bounds one attempt, so the budget above is the real bound rather than a
+// Bounds one attempt so the budget above is the real bound rather than a
 // claim: without it a hung connection runs to undici's own ~300 s timeout.
-const ATTEMPT_MS = 15_000;
+// Generous on purpose — this file exists because a cold import graph can
+// take longer than a test's 20 s, so the attempt must outlast that by far
+// rather than chop up the very case it is here to absorb.
+const ATTEMPT_MS = 60_000;
 
-/** The status, or the transport error when there was no answer at all. */
-async function preflight(url: string): Promise<number | string> {
+type Answer =
+  | { readonly kind: 'status'; readonly status: number }
+  | { readonly kind: 'timeout' }
+  | { readonly kind: 'transport'; readonly message: string };
+
+function describe(answer: Answer): string {
+  switch (answer.kind) {
+    case 'status':
+      return `HTTP ${answer.status}`;
+    case 'timeout':
+      return `no answer within ${ATTEMPT_MS / 1000}s`;
+    case 'transport':
+      return answer.message;
+  }
+}
+
+async function preflight(url: string): Promise<Answer> {
   try {
     const response = await fetch(url, {
       method: 'OPTIONS',
       signal: AbortSignal.timeout(ATTEMPT_MS),
     });
-    return response.status;
+    return { kind: 'status', status: response.status };
   } catch (error) {
-    return error instanceof Error ? error.message : String(error);
+    // AbortSignal.timeout rejects with TimeoutError; anything else here is
+    // the connection failing, which is a different thing to tell someone.
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      return { kind: 'timeout' };
+    }
+    return {
+      kind: 'transport',
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
 /** What to do about an answer that is not the 204 we want. */
-function diagnose(answer: number | string): {
+function diagnose(answer: Answer): {
   readonly retry: boolean;
   readonly cause: string;
 } {
-  if (answer === 503) {
+  if (answer.kind === 'timeout') {
     return {
       retry: true,
       cause:
-        'The edge runtime is not running: whatever starts the stack must not exclude edge-runtime (see .github/workflows/ci.yml).',
+        'The request itself timed out. A cold Deno cache resolves the whole import graph on the first request, so the first attempts can be slow; this only gives up once the budget is gone.',
     };
   }
-  if (answer === 404) {
-    return {
-      retry: false,
-      cause:
-        'Kong has no route for this function: the directory under supabase/functions was renamed or removed, or the stack predates it (npx supabase stop && npx supabase start).',
-    };
-  }
-  if (answer === 500) {
-    return {
-      retry: false,
-      cause:
-        'The worker failed to boot. Its imports are resolved from the network at cold start, so an unreachable or bad specifier lands here (npx supabase functions serve shows the error).',
-    };
-  }
-  if (typeof answer === 'string') {
+  if (answer.kind === 'transport') {
     return {
       retry: true,
       cause: 'Nothing answered at all: the stack is down (npx supabase start).',
     };
   }
-  return { retry: true, cause: 'Unexpected status for a preflight.' };
+  switch (answer.status) {
+    case 503:
+      return {
+        retry: true,
+        cause:
+          'The edge runtime is not running: whatever starts the stack must not exclude edge-runtime (see .github/workflows/ci.yml).',
+      };
+    case 404:
+      return {
+        retry: false,
+        cause:
+          'Kong has no route for this function: the directory under supabase/functions was renamed or removed, or the stack predates it (npx supabase stop && npx supabase start).',
+      };
+    case 500:
+      return {
+        retry: true,
+        // Retried on purpose: the imports are resolved from the network at
+        // cold start, so a registry that is briefly unreachable lands here
+        // and recovers by itself. Only a persistent one is a real defect.
+        cause:
+          'The worker failed to boot. Its imports are resolved from the network at cold start, so a bad specifier or an unreachable registry both land here (npx supabase functions serve shows the error).',
+      };
+    default:
+      return { retry: true, cause: 'Unexpected status for a preflight.' };
+  }
 }
 
 async function warm(name: string): Promise<void> {
   const url = `${localStack().API_URL}/functions/v1/${name}`;
-  const deadline = Date.now() + BUDGET_MS;
+  const started = Date.now();
+  const deadline = started + BUDGET_MS;
   for (;;) {
     const answer = await preflight(url);
-    if (answer === 204) return;
+    if (answer.kind === 'status' && answer.status === 204) return;
     const { retry, cause } = diagnose(answer);
-    const waited = Math.round((BUDGET_MS - (deadline - Date.now())) / 1000);
+    const spent = Math.round((Date.now() - started) / 1000);
     if (!retry || Date.now() >= deadline) {
       throw new Error(
         [
           `Edge Function "${name}" did not answer a preflight at ${url}`,
-          `(answer: ${answer}${retry ? `, after ${waited}s of retrying` : ', not retried'}).`,
+          `(${describe(answer)}${retry ? `, after ${spent}s of retrying` : ', not retried'}).`,
           cause,
         ].join(' '),
       );
@@ -102,5 +147,13 @@ async function warm(name: string): Promise<void> {
 }
 
 export async function setup(): Promise<void> {
-  for (const name of edgeFunctionNames()) await warm(name);
+  const names = edgeFunctionNames();
+  // A move or a rename must not turn this gate into a silent pass — that
+  // is the original incident, with the suites back to bare 503s.
+  if (names.length === 0) {
+    throw new Error(
+      'no Edge Functions found under supabase/functions: nothing was preflighted, so the suites that call /functions/v1/* have no gate at all',
+    );
+  }
+  for (const name of names) await warm(name);
 }
