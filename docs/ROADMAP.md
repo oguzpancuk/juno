@@ -494,11 +494,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `apps/mobile` with tokens in one file and shared pieces in
       `apps/mobile/components`. `/design-sync` is not applicable until
       that component set exists (2026-09-09: nothing to sync yet).
-      `docs/design-brief.md` is regenerated after C2 and C3 land and now
-      carries a warning saying so: it describes the ten-row chart screen, a
-      large 0–100 score component ("78 uyum") and a match screen built on the
-      single strongest aspect — all three replaced by the 2026-09-10
-      amendment.
+      `docs/design-brief.md` was regenerated on 2026-09-11, after C2–C6: the
+      six-card chart screen with its disclosure, the band word and four-step
+      meter in place of the score component, and the match screen's two
+      aspect sections plus the house overlays. Its prompt now carries the
+      two rules the amendment set. It is ready to paste.
       — done when: every screen in the brief matches the accepted design
       in the simulator (screenshot per screen under `screenshots/design-*`),
       tokens live in one file, and the battery is green.

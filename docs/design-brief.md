@@ -1,13 +1,11 @@
 # Juno — design brief for Claude Design
 
-> **Out of date as of 2026-09-10 — do not paste this into a design tool yet.**
-> The PRD amendment of that date and `docs/adr/0009-presentation.md` change
-> three of the screens described below: the chart screen leads with six
-> product-language cards rather than ten planet rows, the compatibility score
-> is never shown as a number (a four-band word beside a four-step visual
-> replaces the large "78 uyum" component), and the match screen becomes a
-> band plus a two-section aspect list rather than the single strongest
-> aspect. The brief is regenerated after ROADMAP items C2 and C3 land.
+<!-- Regenerated 2026-09-11, after ROADMAP C2–C6. Three screens changed
+     shape under the PRD amendment of 2026-09-10 and
+     docs/adr/0009-presentation.md: the chart screen leads with six
+     product-language cards, no compatibility score is ever printed as a
+     number, and the match screen is a band plus two aspect sections. The
+     strings below are the ones in apps/mobile/lib/strings.ts as shipped. -->
 
 Paste the "Prompt" section into a new Claude Design project, then feed the
 rest of this file as context. Everything below is derived from
@@ -19,9 +17,17 @@ the app is Turkish-only and every string is already reviewed.
 
 > Design the complete mobile UI for **Juno**, a Turkish dating app
 > whose whole point is astrology done properly: users enter birth place,
-> date and time; the app computes their real natal chart, explains it,
-> shows a compatibility score with every profile, and gives matched pairs
-> a chart-based first message so nobody has to open with "selam".
+> date and time; the app computes their real natal chart, explains it in
+> plain language, shows what is happening between two charts, and gives
+> matched pairs a chart-based first message so nobody has to open with
+> "selam".
+>
+> Two rules govern every decision. **The chart is the hero, the photo is
+> the context** — astrology is not a badge under a photograph here. And
+> **show the calculation, soften the conclusion** — the real aspect, the
+> real orb to the arcminute, stay on screen, while what is drawn from them
+> is written as a tendency, never as a verdict or a measurement. There is
+> no compatibility percentage anywhere in this product, by decision.
 >
 > Audience: 20–35 year olds in Istanbul, Ankara and Izmir who use Tinder,
 > Bumble or Hinge and are bored of them. iPhone users. They read their
@@ -42,12 +48,14 @@ the app is Turkish-only and every string is already reviewed.
 ## Product in one paragraph
 
 Sign in with email code → enter name, gender, who you want to meet, birth
-city, date and time → see your natal chart (big three, ten planets with
-sign and house, major aspects, each explained in Turkish) → add photos and
-a bio → swipe through people within a radius, each with a 0–100
-compatibility score and a one-line "why" → on a mutual like, a match
-screen shows the strongest link between the two charts as a conversation
-starter → text chat with that starter pinned on top. Block, report and
+city, date and time → see your natal chart (six product-language cards, with
+the ten planets, houses and aspects one tap behind them, all explained in
+Turkish) → add photos and
+a bio → swipe through people within a radius, each with a compatibility
+band and a one-line "why" → on a mutual like, a match screen shows the
+band, the sides of the connection, why you are drawn to each other, where
+it gets interesting, and a conversation starter → text chat with that
+starter pinned on top. Block, report and
 account deletion live in every profile and in settings.
 
 ## Design principles
@@ -129,20 +137,36 @@ disabled until all fields validate.
 
 ### 3. Natal chart (`chart`)
 
-The user's own chart. Data comes from the engine; the screen renders it.
+The user's own chart, and the screen where the product's first rule shows
+most: the chart is the hero. It leads with six editorial cards, not a
+ten-row report. Everything else is one tap away and stays there.
 
-- Title **Doğum haritan**
+- Title **Doğum haritan**, name underneath
 - Section **BÜYÜK ÜÇLÜN**: three chips **Güneş / Ay / Yükselen**, each with
-  a sign name (e.g. "Akrep") and a degree ("14°"). This trio is also the
-  badge shown on every profile card.
-- Section **GEZEGENLER**: ten rows (Güneş, Ay, Merkür, Venüs, Mars,
-  Jüpiter, Satürn, Uranüs, Neptün, Plüton). Each row: planet, sign,
-  degree, house ("7. ev"), retrograde marker **R**. Tapping a row expands
-  a 1–3 sentence Turkish explanation.
-- Section **AÇILAR**: rows like "Güneş kare Ay · 2.1° orb" with a
-  tap-to-expand meaning. Empty state: _Haritanda majör açı yok;
-  gezegenlerin birbirinden bağımsız çalışıyor._
-- A chart wheel illustration is welcome but optional; the list is the
+  a sign name (e.g. "Akrep"). This trio is also the badge on every profile
+  card.
+- **Six cards, in this order.** Each has a product-language title, the
+  astrology underneath it in a quieter weight, then a 1–2 sentence Turkish
+  reading. This hierarchy is the design problem on this screen: the title
+  must read first, the astrology must stay visible, and neither may look
+  like a subtitle of the other.
+
+  | Title                        | Second line         | Example reading                              |
+  | ---------------------------- | ------------------- | -------------------------------------------- |
+  | **Çekirdek benlik**          | Güneş Yengeç'te     | "Kimliğin duygudan ve aidiyetten örülür…"    |
+  | **Duygusal dünya**           | Ay Kova'da          | "Duygularını mesafeden gözlemler…"           |
+  | **İlk izlenim**              | Yükselen İkizler'de | "Meraklı, konuşkan ve hareketli görünürsün…" |
+  | **Nasıl düşünürsün**         | Merkür Yengeç'te    | "Duyguyla düşünür, hafızayla konuşursun…"    |
+  | **Nasıl seversin**           | Venüs Yengeç'te     | "Sevgin koruyucu ve besleyicidir…"           |
+  | **Seni ne harekete geçirir** | Mars Başak'ta       | "Hareket tarzın titiz ve ölçülü…"            |
+
+- Disclosure **Tüm haritanı gör** / **Haritayı kapat**. Opened, it reveals
+  the old depth and nothing is lost: section **GEZEGENLER** with ten rows
+  (planet, sign, degree, house "7. ev", retrograde **R**, then the
+  sign and house readings), and section **AÇILAR** with rows like
+  "Güneş kare Ay · 2°06′ orb" and a meaning. Empty state: _Haritanda majör
+  açı yok; gezegenlerin birbirinden bağımsız çalışıyor._
+- A chart wheel illustration is welcome but optional; the six cards are the
   requirement.
 - Links: **Keşfet ›**, **Çıkış yap**
 
@@ -156,13 +180,23 @@ strong as the photo.
   fotoğraf ekle ›**
 - Card: portrait photo; name and age ("Elif, 27"); distance ("3 km" or
   **1 km altı**); bio (up to 3 lines); big-three chips (Güneş / Ay /
-  Yükselen with sign); the score as a large number with the label
-  **uyum** ("78 uyum"); one-line why, e.g. _Ay'ın onun Venüs'üyle üçgen
-  yapıyor._ Fallback why: _Haritalarınız birbirine değmiyor._
-- Toggle **Uyum detayı** / **Detayı gizle** expands: a band sentence
-  (what the score range means), **Elementler** with two lines (Sun
-  elements, Moon elements), then 1–4 aspect rows each with a headline and
-  a meaning sentence.
+  Yükselen with sign); **the compatibility band** — a word beside a
+  four-step meter, with the small label **uyum** under it; one-line why,
+  e.g. _Ay'ın onun Venüs'üyle üçgen yapıyor._ Fallback why:
+  _Haritalarınız birbirine değmiyor._
+- **There is no score number anywhere in this product.** The four band
+  words are **Kendi ritminde**, **Dengeli**, **Belirgin**, **Nadir**, and
+  the meter is four bars of rising height with the first N filled. It must
+  stay comparable at a glance between two cards — that is the one job a
+  number did well — without implying that two adjacent pairs can be told
+  apart. Precision has to match confidence.
+- Toggle **Uyum detayı** / **Detayı gizle** expands: the band's sentence,
+  **BAĞLANTININ TARAFLARI** as up to five small chips (axis name over a
+  label: "Duygusal bağ / Kolay yakınlık", "Kimya / Manyetik", "Anlaşma /
+  Farklı diller", "Zemin / Sağlam", "Devinim / Dönüştüren"), **Elementler**
+  with two lines, then 1–4 aspect rows each with a headline and a meaning.
+  A chip is absent, never shown at a low value, when that dimension has no
+  aspect behind it.
 - Actions: **Geç** and **Beğen** as two large buttons (swipe gestures are
   a bonus, buttons are required for web).
 - Counter under the buttons: "4 kişi daha" / **Sonuncu**
@@ -183,8 +217,24 @@ the chat.
   rahatlamak kolay, sizce de öyle mi?_ Below it a small **Neden** line
   with the aspect. Empty: _Haritalarınız bir başlangıç cümlesi vermedi;
   sen bir şey sor._
-- Section **UYUM ÖZETİ**: score + **uyum**; **ELEMENTLER**; **ÖNE ÇIKAN
-  AÇILAR** rows (headline + meaning)
+- Section **UYUM ÖZETİ**: the band word in display size (no number),
+  then its one-sentence summary, then **BAĞLANTININ TARAFLARI** as the
+  five chips.
+- Section **NEDEN BİRBİRİNİZE ÇEKİLİYORSUNUZ**: up to three aspect cards.
+  Each card is a title ("Kolay yakınlık", "Aynı tempo", "Doğal kimya"),
+  then the astrology with its orb ("Ay'ın onun Venüs'üyle kavuşuyor ·
+  2°10′ orb"), then the meaning. Show the calculation, soften the
+  conclusion — the orb is deliberately visible.
+- Section **BURASI İLGİNÇ**: exactly one card, same shape, for a tense
+  aspect ("Ayrı yollardan", "Farklı zihinler", "Yüklü kimya"). It must not
+  read as a warning: same weight, same colour, no red. A square is a
+  dynamic, not a fault. **Either section is omitted with its heading when
+  there is nothing to show** — never padded, never filled with a verdict.
+- Section **EVLERİNİZDE**: one card by default, the rest behind
+  **N tane daha ›** / **Daha az göster**. Card title is the house's
+  meaning ("Ortaklık", "Yakınlık ve yoğunluk", "Söylenmeyen"), body names
+  the placement ("Onun Güneş'i senin 8. evinde: …").
+- Section **ELEMENTLER**: two lines.
 - Primary button **Sohbeti aç ›**; links **Tüm eşleşmeler ›**, **‹ Keşfete
   dön**
 - Safety block at the bottom (see §10)
@@ -259,7 +309,7 @@ Design these once and reuse them; they will become the shared components
 in the app:
 
 - Big-three chip (label + sign + degree) and the compact badge variant
-- Compatibility score (large number + "uyum" label), with a small variant
+- Compatibility band (word + four-step meter), with a small variant
 - "Why" line and aspect row (headline + meaning, expandable)
 - Profile card (photo, name/age, distance, bio, badges, score)
 - Starter quote card (pinned in chat, hero on match)
