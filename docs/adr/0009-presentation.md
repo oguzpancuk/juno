@@ -14,10 +14,9 @@ it gets interesting", and a compatibility engine designed so a viewer's own
 priorities can weight discovery ranking later.
 
 Three of those decisions turn on facts nobody had measured, so they were
-measured first. 400 charts were generated over the product's real
-population — 1500 charts, births 1991–2005 (ages 20–35 in 2026) at Turkish
-coordinates — and all 1 124 250 pairs scored with ADR-0003's
-`compatibility()`:
+measured first. 1500 charts were generated over the product's real
+population — births 1991–2005, ages 20–35 in 2026, Turkish coordinates —
+and all 1 124 250 pairs scored with ADR-0003's `compatibility()`:
 
 ```
 score:  min 16 · p25 56 · median 62 · p75 67 · p95 75 · p99 80 · max 93
@@ -32,16 +31,19 @@ in ten thousand. Printed with a `%` sign it reads as a school mark, and an
 average pair is told it scored 62 out of 100. Second, the curated pairing
 list is too thin to fill the match page on its own — 16.03 % of pairs cannot
 produce three positive aspects from it, 4.48 % produce no tension at all and
-0.41 % hit both gaps at once, against 0.05 %, 0.05 % and none when all 51
-pairings are eligible.
+0.41 % hit both gaps at once, against 0.05 %, 0.05 % and a single pair in
+1 124 250 when all 51 pairings are eligible.
 
 The measurement script is `packages/astro/scripts/score-distribution.ts`.
-Its population is a sample, so the figures carry sampling error: rerun under
-a second seed the median holds at 62, the quantile breakpoints of decision 3
-move by less than 0.1 of a point at p50, p86 and p99, and the fill-rule
-shares move by less than 0.2 of a point. The 400-chart first pass this ADR
-was drafted from gave the same medians but a tail too thin to calibrate
-against — a single chart supplied a seventh of its pairs above 86.
+Its population is a sample, so the figures carry sampling error, and how much
+depends entirely on what is calibrated. Rerun at seed 424242: the band cuts
+of decision 3 are **identical** (56 / 62 / 67), every dimension cut moves by
+at most 0.11, and the fill-rule shares move by at most 0.18. A displayed
+number would not have been so lucky — the same rerun moves the 99th
+percentile by 0.10 where the other quantiles move by 0.01, which is the tail
+sensitivity decision 3 declines to maintain. The 400-chart first pass this
+ADR was drafted from gave the same medians but a tail no calibration should
+have rested on: a single chart supplied 14 of its 48 pairs above 86.
 
 ## Decision
 
@@ -63,14 +65,21 @@ sections, and decides which aspects are eligible for the primary view.
 moon–mercury is Emotional, not Communication; the Moon rules the row it
 appears in. Counts: 8 + 12 + 6 + 7 + 18 = 51, asserted by a test rather than
 trusted to this table being read correctly. The owner's "Intensity" category
-is folded into Growth: Pluto–Venus alone is present in only 36.8 % of pairs,
+is folded into Growth: Pluto–Venus alone is present in only 36.51 % of pairs,
 too rare to carry a standing section.
 
-**Valence.** Emotional, Chemistry, Communication and Stability sum ADR-0003's
-signed terms. Growth sums `|term|`: a square to Uranus is signal there, not
-deficit. This is the one place where tension counts as presence, and it is
-why Growth also keeps its signed sum — without it the five dimensions could
-not add back up to the whole.
+**Valence.** Emotional, Chemistry, Communication and Stability read
+ADR-0003's signed terms. Growth reads `|term|`: a square to Uranus is signal
+there, not deficit. This is the one place where tension counts as presence.
+
+**Every dimension carries two sums, harmony and tension — never one signed
+sum.** A signed sum yields `H − T` and destroys the split, and the split is
+not recoverable afterwards: `{+3, −2}` and `{+1}` both sum to +1 but are
+(3, 2) and (1, 0). This is the common case, not an edge — over the population
+below, 98.52 % of pairs have at least one of the four signed dimensions
+holding terms of both signs. Growth carries a third figure, its absolute sum,
+which is what its label reads; its harmony and tension sums exist so the five
+dimensions still add back up to the whole.
 
 **The element bonus belongs to a dimension too.** ADR-0003 adds +2 to harmony
 when the two Suns agree by element and again for the two Moons, outside any
@@ -89,43 +98,72 @@ the result is shown as a qualitative label — never as 0–100. Five named
 axes with numbers read as a psychometric assessment of a person the user has
 not met, and the underlying method does not support that claim.
 
-Each dimension gets **its own** breakpoints, measured over the same
-population but never borrowed from the overall score's. A dimension reduces
-one to four terms through a mapping whose +10 damping was chosen for a
-whole-chart sum of twenty-odd, so its scores sit far lower: over the
-population above, the median pair's Stability is 50.0 and its Communication 52.3
-— measured over the same population, which places them near the 10th and
-15th percentiles of the overall score. A
-median pair labelled "weak" on four axes out of five would be an artefact of
-the damping, not a signal. A dimension with no aspects at all renders as
-absent, not as a low score.
+Three labels per dimension, cut at the 33rd and 67th percentiles of **that
+dimension's own** distribution — never at the overall score's. A dimension
+reduces one to five terms through a mapping whose +10 damping was chosen for
+a whole-chart sum of twenty-odd, so its scores sit lower and spread less.
+Measured over the population above:
 
-### 3. The overall score is shown calibrated, or not at all
+| Dimension     | median | cuts (p33 / p67) |
+| ------------- | ------ | ---------------- |
+| Emotional     | 57.5   | 52.98 / 61.60    |
+| Chemistry     | 56.8   | 52.50 / 60.93    |
+| Communication | 52.3   | 49.97 / 55.23    |
+| Stability     | 53.6   | 49.99 / 57.82    |
+| Growth        | 66.4   | 64.18 / 68.42    |
 
-ADR-0003 is unchanged: `compatibility()` keeps returning the same raw score,
-and it stays the ranking key. What changes is presentation.
+Against the overall score's cuts (56 / 62 / 67) a median pair would read as
+bottom-band on Communication and Stability — an artefact of the damping
+meeting a short sum, not a signal. A dimension with no aspects renders as
+absent rather than as a low label, and that holds even when an element bonus
+gives it a value: the bonus is not an aspect, so there would be nothing on
+screen to explain the label. Over the population below that is 2.06 % of pairs
+for Stability and 0.53 % for Emotional.
 
-A score is mapped through a committed reference distribution to a percentile
-before any number reaches a screen, so a displayed 86 means "ahead of 86 % of
-pairs" — a rank, which the method can support — rather than a share of some
-notional maximum, which it cannot.
+### 3. The overall score is a band, not a number
 
-The fixture is an array of 101 quantile breakpoints, and the displayed value
-is the largest `k` whose breakpoint is at or below the pair's score. Two
-details are load-bearing. It calibrates on the **unrounded** score, not the
-integer `compatibility()` returns: consecutive integers are whole percentiles
-apart near the median, so calibrating on them would leave most displayable
-numbers unreachable — 86 among them — and collapse the whole top end onto 100. And the displayed value is clamped to 1–99, because no pair is ahead of
-every pair and none is ahead of none.
+ADR-0003 is unchanged: `compatibility()` keeps returning the same raw score
+and it stays the ranking key. It is never printed. What reaches a screen is
+one of **four bands**, cut at the 25th, 50th and 75th percentiles of the
+measured population — raw 56, 62 and 67 — so each band holds about a quarter
+of pairs (owner decision, 2026-09-10).
 
-The fixture is generated by `scripts/score-distribution.ts` over the
-population above; regenerating it is part of any change to ADR-0003's table.
-Each of the five dimensions carries its own breakpoint array, generated the
-same way.
+Three reasons, in the order they weigh:
 
-Every screen also carries a band label ("Manyetik ve sağlam"), and the label,
-not the number, is the primary element. Dropping the number entirely stays an
-open owner option; nothing downstream depends on it being displayed.
+1. **A number becomes the hero.** Put a figure on the screen and everything
+   under it reads as its justification; the aspect cards turn into evidence
+   for a verdict. That is the direct opposite of _the chart is the hero_, and
+   no amount of softened copy under the number undoes it.
+2. **It would be a ranking of people.** Calibrated honestly, a displayed
+   number can only mean "ahead of N % of pairs" — and the population it is
+   calibrated against is not the one `discover` serves, which is already
+   filtered by radius and gender. The error is unmeasurable until there are
+   users.
+3. **It costs more than it carries.** A displayed number needs a maintained
+   reference distribution, regenerated on every change to ADR-0003's table
+   and sampling-sensitive at exactly the top end people would care about.
+   The calibrated surface is now three cut points plus two per dimension —
+   thirteen numbers.
+
+Equal-frequency bands are deliberate: a four-way split that divides the
+population evenly is the most informative one available, and it keeps any
+band from being rare enough to read as a verdict. The bottom band's copy is
+descriptive, never deficient — it is where a quarter of all pairs live.
+
+Comparability across cards, the one thing a number does well, is carried by
+showing the band as a four-step visual next to its word, so cards can be
+ranked at a glance without asserting that 85 and 86 are distinguishable.
+Precision has to match confidence: four steps claims what the method can
+support, two significant figures does not.
+
+**If the cohort asks for a number**, the path is specified and not built:
+calibrate on the _unrounded_ score (consecutive integers are a whole
+percentile apart near the median, so an integer calibration leaves most
+values unreachable and collapses the top end onto 100), store 101 quantile
+breakpoints, display the largest `k` whose breakpoint is at or below the
+pair's score — 0 when the score is below every breakpoint, which production
+scores outside the sample's range can be — and clamp the result to 1–99. Turning it on is a day's work; turning it
+off after users have seen it is not, which is why it starts off.
 
 ### 4. Symmetry survives weighted ranking
 
@@ -163,12 +201,13 @@ cover roughly a fifth of pairs.
 - Card titles collapse from 255 (one per key) to ~30, derived from
   (dimension × valence × variant). The 255 existing interpretations stay as
   the card bodies.
-- The reference distribution is a new committed artefact with a real
-  maintenance cost: six breakpoint arrays (the overall score and five
-  dimensions), valid only for the population they were generated over, all
-  regenerated whenever ADR-0003's weights change.
-- Calibrating on the unrounded score means the display path needs harmony and
-  tension, not just `score`. `compatibility()` already returns both.
+- The calibrated surface is thirteen numbers — three band cuts and two per
+  dimension — valid only for the population they were generated over and
+  regenerated whenever ADR-0003's weights change. Small enough to read in a
+  diff, which a 101-entry breakpoint array is not.
+- Nothing on screen distinguishes two pairs in the same band. Sorting still
+  uses the raw score, so the order is finer than the display; a user who
+  compares two cards in the same band sees no reason for their order.
 - Showing the orb on screen (`♀ △ ♂ · 0°48′`) moves ADR-0004's accepted
   error from an internal tolerance to something a user can check against
   astro.com. The tolerance is unchanged and invisible at this precision;
@@ -179,7 +218,7 @@ cover roughly a fifth of pairs.
   through hard aspects. That is intended, and it is why the label vocabulary
   for that dimension must not read as praise.
 - Per-dimension labels need their own thresholds, so the calibration item
-  blocks the dimension UI, not just the overall number.
+  blocks the dimension UI.
 - Assigning the element bonus to Stability and Emotional makes those two
   dimensions carry a term that is not an aspect, so neither can be explained
   on screen purely by naming its aspects.

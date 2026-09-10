@@ -22,6 +22,13 @@ export {
   type RetroPlanet,
 } from './content';
 export {
+  DIMENSIONS,
+  dimensionOf,
+  dimensionTerm,
+  scoredPairings,
+  type Dimension,
+} from './dimensions';
+export {
   ChartInputSchema,
   computeChart,
   geocentricLongitude,

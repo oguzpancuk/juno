@@ -10,6 +10,70 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+## 2026-09-10 — The number comes off the screen, and a signed sum loses the split
+
+- **Owner decision: the overall compatibility score is never printed.** It
+  stays the ranking key and reaches the screen as one of four bands, cut at
+  the 25th, 50th and 75th percentiles (raw 56 / 62 / 67), shown as a word
+  next to a four-step visual so cards stay comparable at a glance. Three
+  reasons, recorded in ADR-0009 §3: a number becomes the hero and turns the
+  aspect cards into evidence for a verdict, which is the opposite of the
+  amendment's first rule; calibrated honestly it can only mean "ahead of N %
+  of pairs", and the population it would be calibrated against is not the one
+  `discover` serves; and it needs a maintained reference distribution whose
+  tail is the sampling-sensitive part. The reversal path is written down and
+  not built — turning a number on later is a day's work, turning it off after
+  users have seen it is not.
+- The decision paid for itself immediately in stability. Rerun at seed
+  424242 the band cuts are **identical** and every dimension cut moves by at
+  most 0.11, where the 99th percentile of a displayed number moves by 0.10
+  against 0.01 elsewhere. The calibrated surface went from six 101-entry
+  breakpoint arrays to **thirteen numbers**, small enough to read in a diff.
+- **`packages/astro/src/dimensions.ts` landed** so the table lives in one
+  place: the ADR, the script and the future UI now read the same definition
+  rather than three copies. Six tests assert what the ADR claims about it,
+  including one that drives real charts so the aspects are ones the engine
+  emits. Zero aspects fall outside the table over 1 124 250 pairs.
+- **The second review caught a fix that had not fixed it.** C6 asked the
+  per-dimension _signed_ sums to reconstruct harmony and tension: they
+  cannot, and the previous entry's diagnosis (the element bonus, Growth's
+  `|term|`) named two real problems but missed the structural one. A signed
+  sum is `H − T`; `{+3, −2}` and `{+1}` both give +1 but are (3, 2) and
+  (1, 0), and 98.52 % of pairs have at least one dimension holding both
+  signs. Every dimension now carries two sums. Growth keeps a third, its
+  absolute sum, which is the only one its label reads. Verified in the
+  script: reconstruction holds to 1.4e-14, and the clause now names
+  `roundTerm`'s six decimals, since `===` fails on about half of pairs on
+  float associativity alone.
+- **"Never both at once" was false by exactly one pair.** Across all 51
+  pairings, 1 pair in 1 124 250 has fewer than three positives _and_ no
+  tension — the script printed 0.00 % because shares are two-decimal. C4's
+  done-when asked for a test that would have failed on that pair; it now
+  asserts the measured figure and keeps the omit branch, which is the
+  outcome the rule already specifies. The script prints raw counts now.
+- **Corrections to the previous entry**, which stands unrewritten because
+  this file is append-only: the per-dimension medians quoted there were
+  measured before the element bonus was assigned; with it they are Emotional
+  57.5, Chemistry 56.8, Communication 52.3, Stability 53.6, Growth 66.4. Of
+  the five, one sits in the overall score's bottom decile and three more
+  below its 30th percentile — "bottom-decile on four axes out of five"
+  overstated it. The 400-chart pass's tail was worse than described: one
+  chart supplied 14 of 48 pairs above 86, nearly a third, not a seventh.
+- **Script hardening from the same review:** it now refuses to run if the
+  charts are not all distinct. The generator repeats after ~10 466 draws and
+  each chart costs three, so raising `CHARTS` past ~3 488 would have silently
+  produced duplicates and dependent pairs — the exact defect the move to 1500
+  charts was meant to remove. `quantile` also indexes the array it is given
+  rather than the module-level pair count, which would have read past the end
+  of any filtered sample.
+- Verified: `bash .claude/hooks/verify.sh` green on the clean commit; the
+  script rerun at two seeds; the six new dimension tests pass. Not yet
+  reviewed: `dimensions.ts` and its test were uncommitted during the second
+  review, so they are outside the range it covered and need their own pass
+  before any push.
+- Next: C3 (thirteen figures, committed) and the rest of C2 — the card
+  titles and the three screens.
+
 ## 2026-09-10 — The review caught the presentation rule being unreachable
 
 - code-reviewer on `86635ad..HEAD` returned NEEDS_WORK. It reproduced every
