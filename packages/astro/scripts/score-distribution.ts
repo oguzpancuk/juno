@@ -24,7 +24,7 @@
  * Not part of the battery: it is the evidence for the ADR and the generator
  * for the committed threshold table.
  *
- *   npx tsx packages/astro/scripts/score-distribution.ts [--seed=N] [out.json]
+ *   npx tsx packages/astro/scripts/score-distribution.ts [--seed=N] [--charts=N] [out.json]
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -120,7 +120,10 @@ const args = process.argv.slice(2);
 // Anything starting with a dash is an option, so a one-dash `-seed=5` is
 // rejected rather than silently becoming the output path.
 const unknown = args.find(
-  (arg) => arg.startsWith('-') && !arg.startsWith('--seed='),
+  (arg) =>
+    arg.startsWith('-') &&
+    !arg.startsWith('--seed=') &&
+    !arg.startsWith('--charts='),
 );
 if (unknown !== undefined)
   throw new Error(
@@ -140,13 +143,25 @@ const seed =
 // cohort while both guards below stay green, so it is rejected here.
 if (!Number.isInteger(seed) || seed <= 0)
   throw new Error(`--seed must be a positive integer, got "${seedFlag ?? ''}"`);
+const chartFlags = args.filter((arg) => arg.startsWith('--charts='));
+if (chartFlags.length > 1)
+  throw new Error(`--charts given ${chartFlags.length} times`);
+const chartFlag = chartFlags[0];
+// ROADMAP C4 quotes a 300-chart sample; without this there was no way to
+// reproduce it from the committed script.
+const charts_ =
+  chartFlag === undefined
+    ? CHARTS
+    : Number(chartFlag.slice('--charts='.length));
+if (!Number.isInteger(charts_) || charts_ < 2)
+  throw new Error(`--charts must be an integer of at least 2`);
 const positionals = args.filter((arg) => !arg.startsWith('-'));
 if (positionals.length > 1)
   throw new Error(
     `expected at most one output path, got ${positionals.length}`,
   );
 const out = positionals[0];
-const charts = population(CHARTS, seed);
+const charts = population(charts_, seed);
 
 const scores: number[] = [];
 /** ADR-0009 §3's sensitivity argument is about the unrounded tail. */
@@ -302,14 +317,14 @@ for (let i = 0; i < charts.length; i++) {
 }
 
 const pairs = scores.length;
-const expected = (CHARTS * (CHARTS - 1)) / 2;
+const expected = (charts_ * (charts_ - 1)) / 2;
 if (pairs !== expected)
   throw new Error(`scored ${pairs} pairs, expected ${expected}`);
 // The generator repeats after ~10 466 draws and each chart costs three, so
 // a larger CHARTS would silently emit duplicates and dependent pairs.
 const distinct = new Set(charts.map((chart) => JSON.stringify(chart))).size;
-if (distinct !== CHARTS)
-  throw new Error(`${CHARTS} charts requested, ${distinct} distinct`);
+if (distinct !== charts_)
+  throw new Error(`${charts_} charts requested, ${distinct} distinct`);
 
 scores.sort((x, y) => x - y);
 unrounded.sort((x, y) => x - y);
@@ -324,7 +339,7 @@ const quantile = (values: number[], percentile: number): number => {
   return value;
 };
 
-console.log(`charts=${CHARTS} pairs=${pairs} seed=${seed}`);
+console.log(`charts=${charts_} pairs=${pairs} seed=${seed}`);
 console.log(
   `score: min=${quantile(scores, 0)} p25=${quantile(scores, 25)} ` +
     `median=${quantile(scores, 50)} p75=${quantile(scores, 75)} ` +
@@ -373,6 +388,10 @@ console.log(
 );
 console.log(
   `  both empty:             ${share(allBothEmpty)} % (${allBothEmpty})`,
+);
+console.log(
+  `  the omit branch therefore fires on 1 match in ` +
+    `${Math.round(pairs / Math.max(1, allEmptyWhy + allNoTension))}`,
 );
 
 console.log(
@@ -424,7 +443,7 @@ if (out !== undefined) {
   const path = resolve(out);
   writeFileSync(
     path,
-    `${JSON.stringify({ charts: CHARTS, pairs, seed, bands, labels }, null, 2)}\n`,
+    `${JSON.stringify({ charts: charts_, pairs, seed, bands, labels }, null, 2)}\n`,
   );
   console.log(`wrote ${path}`);
 }

@@ -427,10 +427,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       aspect is omitted rather than filled or judged, a section with one or
       two is shown as it is, and neither case produces a verdict sentence. A
       bounded sample cannot carry the no-positive branch — at the committed
-      seed a 300-chart sample (44 850 pairs) has no pair without a positive
-      aspect, fourteen without a tense one and thirteen short of three — so
-      the rule is sized against the figures block in ADR-0009, not against a
-      sample in the battery (battery).
+      seed a 300-chart sample has no pair without a positive aspect, fourteen
+      without a tense one and thirteen short of three, reproducible with
+      `npx tsx packages/astro/scripts/score-distribution.ts --charts=300` —
+      so the rule is sized against the figures block in ADR-0009, not against
+      a sample in the battery (battery).
 - [ ] **C5 — House overlays (60 texts).** The partner's Sun, Moon, Mercury,
       Venus and Mars falling in the viewer's 1st, 5th, 7th, 8th, 11th or 12th
       house, written in both directions (5 × 6 × 2). No engine work: the

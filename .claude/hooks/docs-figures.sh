@@ -16,6 +16,10 @@
 # regenerated.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "FAIL docs — python3 not found; this step needs it (see CLAUDE.md)" >&2
+  exit 1
+fi
 exec python3 - "$@" <<'PY'
 import re, sys, pathlib
 
@@ -35,15 +39,28 @@ if match is None:
 block = match.group(1)
 
 # Distinctive enough that a match elsewhere is a copy, not a coincidence:
-# a decimal, or thousands grouped with spaces.
+# a decimal, thousands grouped with spaces, or an integer of three or more
+# digits. Two-digit integers are deliberately NOT guarded — the block holds
+# 16, 30, 56, 62, 67 and 93, and those collide with ordinary prose too often
+# to gate on. They are the gap in this check: a two-digit figure copied into
+# a sentence still has to be caught by review.
 tokens = set(re.findall(r'\d+\.\d+(?:e-?\d+)?', block))
 tokens |= set(re.findall(r'\d{1,3}(?:\s\d{3})+', block))
+tokens |= set(re.findall(r'\d{3,}', block))
 if not tokens:
     print('FAIL docs — the figures block holds no recognisable numbers',
           file=sys.stderr)
     sys.exit(1)
 
-rest = text[:match.start()] + text[match.end():]
+# Blank the block's lines rather than splicing them out, so reported line
+# numbers in this file stay true.
+lines = text.splitlines()
+blanked = [
+    '' if text.count('\n', 0, match.start()) <= i < text.count('\n', 0, match.end())
+    else line
+    for i, line in enumerate(lines)
+]
+rest = '\n'.join(blanked)
 sources = [(str(BLOCK_FILE), rest)]
 for path in sorted(pathlib.Path('docs').rglob('*.md')):
     if str(path) in EXEMPT or path == BLOCK_FILE:

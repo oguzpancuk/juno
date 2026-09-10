@@ -14,14 +14,19 @@ it gets interesting", and a compatibility engine designed so a viewer's own
 priorities can weight discovery ranking later.
 
 Three of those decisions turn on facts nobody had measured, so they were
-measured first. 1500 charts were generated over the product's real
-population — births 1991–2005, ages 20–35 in 2026, Turkish coordinates —
-and every pair scored with ADR-0003's `compatibility()`:
+measured first. A population was generated over the product's real cohort —
+births 1991–2005, ages 20–35 in 2026, Turkish coordinates — and every pair
+in it scored with ADR-0003's `compatibility()`. The size and the seed are in
+the block:
 
 <!-- The one place any measured count lives. Three review rounds went on
      figures restated in a second sentence and left behind when the first was
      corrected; everything else cites this block rather than repeating it.
-     Refresh the whole block from one run of the script, never a line of it. -->
+     Refresh it whole, never a line of it: the first half is one run of the
+     script at its default seed, the second half a run at the other seed the
+     block names, with the two compared. Two-digit figures in here are not covered by the
+     `docs` gate (they collide with ordinary prose); keep them out of
+     sentences by hand. -->
 
 **Measured figures** (`packages/astro/scripts/score-distribution.ts`):
 
@@ -46,6 +51,7 @@ fill, all 51       short of three 525 · short of three AND no tension 1
                    1 with one or two positives and no tension, 494 with one
                    or two positives and some tension
 omitted sections   no positive at all 30 · no tension at all 616 · neither 0
+                   the omit branch fires on 1 match in 1740
 
 per dimension      median · cuts (p33/p67) · terms per pair · absent (bonus-only)
   emotional        57.5 · 53.06 / 61.70 · 3.74 · 1.21 % (0.53 %)
@@ -63,9 +69,9 @@ rerun at seed 424242 — what moves
 ```
 
 Two consequences follow. First, ADR-0003's score is not a percentage: the
-median pair scores 62, and the 86 in the owner's mockups occurs in five pairs
-in ten thousand. Printed with a `%` sign it reads as a school mark, and an
-average pair is told it scored 62 out of 100. Second, the curated pairing
+median sits in the low sixties, and the 86 in the owner's mockups occurs in
+five pairs in ten thousand. Printed with a `%` sign it reads as a school
+mark, and the average pair is told it scored a low D. Second, the curated pairing
 list is too thin to fill the match page on its own: roughly one pair in six
 cannot produce three positive aspects from it, against one in two thousand
 when all 51 pairings are eligible.
@@ -230,8 +236,8 @@ measurement above is what makes this a two-step rule rather than a special
 case: the curated list alone leaves a gap in roughly one pair in six.
 
 A section that is still empty is omitted with its heading, not filled with a
-verdict. The figures block has the counts: after widening the omit branch
-fires on about one match in 1 700, always for one section and never for both.
+verdict. The figures block has the counts, including the rate at which the omit
+branch fires after widening: rare, always for one section, never for both.
 Falling short of three cards is a different and commoner thing, and is not an
 omission — the section shows what there is. The two must not be conflated,
 and the counts are nested: every pair with no positive aspect is also inside

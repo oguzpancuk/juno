@@ -23,6 +23,42 @@
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
 
+## 2026-09-11 — What the gate could not see
+
+- The review of the gate commit found its own headline claim false: the
+  tokeniser took decimals and grouped thousands only, so every integer in
+  the figures block was unguarded, and "the median pair scores 62" was
+  sitting in three documents. Confirmed by the reviewer against a snapshot:
+  pasting a copy of that sentence passed the step, exit 0.
+- The gate now also takes integers of three digits or more (73 tokens, up
+  from 57), which caught `1500` and the second seed restated in the ADR's
+  own prose. Two-digit figures stay outside it by decision, not oversight —
+  16, 30, 56, 62, 67 and 93 collide with ordinary prose — and both the
+  block's maintenance comment and the upstream-candidate entry now say so
+  rather than claiming coverage the check does not have.
+- The three "median 62" copies are gone: the prose says "the low sixties"
+  and "a low D". The one-in-1700 rate was a hand-derived aggregate no
+  artefact printed; the script prints it now and the block carries it.
+- **C4's 300-chart sample is reproducible again.** `CHARTS` was a constant
+  with no override, so the 0 / 14 / 13 figures could only be obtained by
+  re-implementing the generator. `--charts=300` reproduces them exactly, and
+  the ROADMAP names the command.
+- Smaller, from the same review: the gate blanks the block's lines instead
+  of splicing them, so reported line numbers in that file are true (they
+  were off by the block's height); it refuses to run without `python3`,
+  which is the battery's first non-Node dependency and is now in CLAUDE.md's
+  command table; the `// why:` in `dimensions.ts` sits on the cast it
+  explains.
+- **Owner approval, recorded here because a commit message is not the
+  approval record:** on 2026-09-10 the owner approved applying the parked
+  upstream candidate and publishing the work to date to the remote, and
+  asked for the app to be feature-complete by morning with only the visual
+  design left. That is the authority under which `a36c61e` landed and under
+  which this branch goes to the remote. Later publications are not covered
+  by it and are asked for again.
+- Verified: `bash .claude/hooks/verify.sh` green, five steps; the gate
+  mutation-checked in both directions; `--charts=300` rerun.
+
 ## 2026-09-10 — A gate that reads the ADR instead of a blacklist
 
 - Owner approved the parked upstream candidate and a push. The candidate is
@@ -31,8 +67,12 @@
 - It enforces the property the last six rounds were really about — measured
   figures are cited, not copied — by deriving its watch list from the ADR's
   own figures block rather than from a hand-maintained list of forbidden
-  phrases. Nothing to keep in sync: adding a figure to the block extends the
-  gate automatically.
+  phrases. Adding a figure to the block extends the gate with no list to
+  update. **What it does not cover:** two-digit integers. The block holds
+  16, 30, 56, 62, 67 and 93, and gating on those would fire on ordinary
+  prose, so they are guarded by review alone — the block's own maintenance
+  comment says so. Decimals, grouped thousands and integers of three digits
+  or more are covered: 73 tokens at the time of writing.
 - On its first run it failed, naming three copies that six review rounds had
   read past: `0.05 %` restated in the PRD, `1 124 250` in the ADR's own
   prose above the block, and the sensitivity movements (0.01 / 0.05 / 0.10,

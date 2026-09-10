@@ -110,9 +110,7 @@ export const PAIRINGS: Readonly<Record<Dimension, readonly Pairing[]>> =
           RAW_PAIRINGS[dimension].map((pair) => Object.freeze([...pair])),
         ),
       ]),
-      // why: Object.fromEntries widens the key to string; the keys are
-      // exactly DIMENSIONS, and the tests assert every one is present.
-    ) as Record<Dimension, readonly Pairing[]>,
+    ) as Record<Dimension, readonly Pairing[]>, // why: fromEntries widens the key to string; the keys are exactly DIMENSIONS, asserted by a test
   );
 
 /**

@@ -37,7 +37,7 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 | lint | `npm run lint --workspaces --if-present` (ESLint) + `npx prettier --check .` |
 | dev | `bash contracts/init.sh` (local Supabase + Expo on 8082 with local keys); or `npm run start -w apps/mobile` with `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` set (see `apps/mobile/.env.example`) |
 | local backend | `npx supabase start` / `npx supabase db reset` (needs Docker) |
-| full battery | `bash .claude/hooks/verify.sh` |
+| full battery | `bash .claude/hooks/verify.sh` (needs `python3` for the docs step) |
 
 ## Standards
 - Strict typing where the language offers it; schema validation at every
