@@ -25,10 +25,11 @@ describe('degreeInSign', () => {
     expect(formatDegree(30.15 % 30)).toBe('0°08′');
   });
 
-  it('folds a longitude into its own sign', () => {
+  it('folds a longitude into its own sign, and never onto the boundary', () => {
     expect(degreeInSign(0)).toBe(0);
     expect(degreeInSign(359.9)).toBe(29.9);
-    expect(degreeInSign(-1)).toBe(29);
+    // Rounding can carry a value up to 30, which is the next sign's 0.
+    expect(degreeInSign(59.99999)).toBe(0);
   });
 });
 

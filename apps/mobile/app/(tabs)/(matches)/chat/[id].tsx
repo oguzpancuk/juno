@@ -248,7 +248,14 @@ function ChatView({
 
   return (
     <View style={styles.screen} testID="chat-screen">
-      <View style={[styles.header, { paddingTop: insets.top + space.xs }]}>
+      <View
+        style={[
+          styles.header,
+          // The floor is for the web client, where the inset is 0 and
+          // the back link would sit against the top of the viewport.
+          { paddingTop: Math.max(insets.top, 44) + space.xs },
+        ]}
+      >
         <BackLink
           label={t.chat.backToMatches}
           fallback="/matches"

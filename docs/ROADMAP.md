@@ -994,8 +994,9 @@ each item lands with its own screenshot.
 
 - [x] **6 — the dimension names fit one row.** (owner, mid-pass) The
       longest, "Duygusal yakınlık", pushed Gelişim onto a second line. It
-      is "Yakınlık" now, and the five chips share the row's width instead
-      of wrapping.
+      is "Yakınlık" now, and the five chips share one row's width, with
+      a wrap left as the escape hatch for a width too narrow to hold
+      five of them at all.
       — _Done. `s6-dimensions-one-row.png`: Yakınlık · Çekim · İletişim ·
       İstikrar · Gelişim, each with its meter, on one line._
 

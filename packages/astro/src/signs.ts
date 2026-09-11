@@ -50,7 +50,11 @@ export function signOf(longitude: number): Sign {
  * agree with astro.com (ADR-0009).
  */
 export function degreeInSign(longitude: number): number {
-  return Number((normalizeDegrees(longitude) % 30).toFixed(4));
+  // The second modulo is not redundant: rounding can carry a value up to
+  // the sign boundary (29.99999 → 30.0000), and "Boğa'da 30°00′" is not
+  // a degree in a sign. `toPublicChart` rounds its longitudes first so
+  // its planets never reach it; an Ascendant is whatever the row holds.
+  return Number((normalizeDegrees(longitude) % 30).toFixed(4)) % 30;
 }
 
 /** Signed angular difference folded into [-180, 180). */

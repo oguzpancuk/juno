@@ -3733,3 +3733,17 @@ padding comes from the safe-area inset rather than a number that put the
 back link's hit area under the Dynamic Island; and
 `t.person.openProfile` lost the "›" it no longer earns now that it is
 only an accessibility label.
+
+The review of that fix approved it and left four things worth doing,
+all taken. The test that proved the rounding tested the helper, not the
+call site that had regressed: `summary.test.ts` now feeds an Ascendant
+of 30.2 through `natalReading` and pins `0°12′`, which the raw modulo
+prints as `0°11′`. `degreeInSign` could round a longitude up onto the
+boundary (59.99999 → "Boğa'da 30°00′"), unreachable through
+`toPublicChart` but not through an Ascendant the schema only bounds to
+[0, 360); a second modulo closes it. The chips' `flexBasis` of 58 needed
+322pt and a 360dp Android leaves 310, so the row would have wrapped with
+one stretched orphan on the second line — exactly the owner's complaint
+in a louder form; 52 needs 292 and holds. And the chat header's
+safe-area inset is floored at 44, because on the web client the inset is
+0 and the back link would sit against the top of the viewport.

@@ -31,6 +31,20 @@ describe('natalReading', () => {
     expect(reading.risingText).toMatch(/Meraklı|konuşkan/); // Gemini rising
   });
 
+  // The helper is tested in public.test.ts; this pins the call site that
+  // regressed, where a raw `% 30` printed an arcminute low.
+  it("rounds the Ascendant's degree the way it rounds a planet's", () => {
+    const chart = pub(istanbul);
+    const withAscendant = {
+      ...chart,
+      houses: { ...chart.houses, ascendant: 30.2 },
+    };
+    const card = natalReading(withAscendant).placements.find(
+      (p) => p.placement === 'ascendant',
+    );
+    expect(card?.degree).toBe('0°12′');
+  });
+
   it('marks retrograde planets with a retrograde line and never the Sun or Moon', () => {
     const at = (body: string) =>
       reading.placements.find((p) => p.placement === body);
