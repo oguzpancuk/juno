@@ -17,7 +17,7 @@ import { aspectBetween, type Aspect, type Body } from '../src/compatibility';
 import { CONTENT_FILES, KEY_SPACES, synastryText } from '../src/content';
 import { toPublicChart, type PublicChart } from '../src/public';
 import { natalReading, synastryReading } from '../src/summary';
-import { signOf } from '../src/signs';
+import { roundLongitude, signOf } from '../src/signs';
 import { BODY_TR, SIGN_TR } from '../src/tr';
 import { resolveBirth } from '../../geo/src/index';
 
@@ -220,7 +220,7 @@ function natalBrief(p: Person): string[] {
     return `  - ${BODY_TR[body]} ${SIGN_TR[c.planets[body].sign]} (${c.planets[body].house}. ev): ${pr?.text ?? ''} ${pr?.houseText ?? ''}`;
   };
   return [
-    `### ${p.name} — Güneş ${SIGN_TR[c.planets.sun.sign]}, Ay ${SIGN_TR[c.planets.moon.sign]}, Yükselen ${SIGN_TR[signOf(c.houses.ascendant)]}`,
+    `### ${p.name} — Güneş ${SIGN_TR[c.planets.sun.sign]}, Ay ${SIGN_TR[c.planets.moon.sign]}, Yükselen ${SIGN_TR[signOf(roundLongitude(c.houses.ascendant))]}`,
     `  - Yükselen: ${r.risingText}`,
     pick('sun'),
     pick('moon'),

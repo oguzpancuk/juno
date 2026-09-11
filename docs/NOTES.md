@@ -3760,11 +3760,14 @@ unlike the malformed "30°00′" it replaced, nothing a reader could catch.
 Sign and degree now come from one value. `roundLongitude` lives in
 `signs.ts` beside `signOf` and `degreeInSign`; `toPublicChart`'s private
 `roundDeg` is gone. Not quite the same function: the new one normalises
-first, which matters only for input outside [0, 360) — which the schema
-rejects anyway — and at an exact 1e-5 tie, where the fold shifts the
-value by an ulp and flips the fourth decimal (29.99995 now rounds to 30,
-i.e. Boğa 0°00′ rather than Koç 29°59′). That is 0.36 of an arcsecond
-and on the correct side of the boundary, but it is a change to what a
+first. That matters for input outside [0, 360), which `computeHouses`
+never produces (it normalises every angle it returns) and which the
+schema would reject on the way out, and at an exact 1e-5 tie, where the
+fold shifts the value by an ulp and flips the fourth decimal — 29.99995
+now rounds to 30, so Boğa 0°00′ where it used to be Koç 29°59′. The
+value is mathematically inside Aries, so that is a tie-break, not a
+correction; what it buys is that the sign agrees with the longitude
+actually stored. 0.36 of an arcsecond, but it is a change to what a
 chart stores, not only to what one prints. `degreeInSign` rounds
 twice on purpose and the comment says why: the longitude first, so a
 boundary point lands in the same sign here and in `signOf`, and the
@@ -3782,13 +3785,28 @@ displayed degree goes through. The comment there now says so.
 The chips' basis went 52 → 44. At 52 the row still wrapped below 310pt,
 and a 320pt viewport is in reach without an old device (Display Zoom, or
 Android with an enlarged display size); at 44 five chips and four gaps
-need 252 against 270. The web client at a 320px viewport does hold the
-row — all five at one offsetTop, 47.6px each, each label a single line
-by `Range.getClientRects` — but that run cannot stand in for the native
-one: CSS shrinks a flex child by default and Yoga does not, so the web
-could hold a row the device would wrap. `flexShrink: 1` is now set
-explicitly, which both closes that gap and makes the failure mode below
-270 a narrower chip instead of a wrapped row with one stretched orphan
-beneath it. The simulator screenshot stays what it was; at 402pt every
-basis in this discussion fits, so it witnesses the names and the meters,
-not the width.
+need 252 against 270.
+
+Then the row stopped wrapping at all, which is what the owner asked for
+in the first place. `flexShrink: 1` beside `flexWrap: 'wrap'` was a
+misunderstanding worth recording: Yoga collects flex lines from the
+basis, before any shrink is resolved, so a wrapping row breaks at 252
+however much the chips could have given up — and the chip left alone on
+the second line is then stretched across it by `flexGrow`, which is the
+complaint in a louder form. Wrap and shrink cannot both be the cushion.
+With the wrap gone the five always share the row and `flexShrink`
+absorbs a narrow width as a tighter chip and a two-line label.
+
+Measured after the change at a 300px viewport — narrower than anything
+the wrap version survived — the five sit at one offsetTop, 43.6px each,
+every label still a single line. That corroborates the arrangement rather than
+proving the device: Chrome and CoreText do not measure the same string
+identically, and whether a label wraps is exactly a measurement
+question. (The first write-up of this blamed a `flex-shrink` default
+that Yoga and CSS supposedly disagree on. They do — but
+react-native-web's own `View` sets `flexShrink: 0`, so the web client
+had Yoga's default all along, and line collection ignores shrink in both
+engines. A note about evidence asserting an unchecked mechanism is the
+same fault it is warning about.) The simulator screenshot stays what it
+was; at 402pt every width in this discussion fits, so it witnesses the
+names and the meters, not the narrow case.

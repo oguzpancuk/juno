@@ -173,22 +173,21 @@ const styles = StyleSheet.create({
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
   // Five chips, one row, equal widths (owner, 2026-09-12: the longest
-  // name was pushing Gelişim onto a second line). `flexBasis` rather than
-  // `flex: 1`, and the name may take two lines inside its chip: at a
-  // large Dynamic Type setting a fixed single line would come back as
-  // "Yakınlı…" on all five, which is the same complaint in a worse form.
-  // One row on every width this ships to: five basis widths and four
-  // gaps need 252pt, and the narrowest layout in reach is 270 — a 320pt
-  // viewport (an iPhone in Display Zoom, or Android with an enlarged
-  // display size) inside the page's 24pt padding and a popup's borders.
-  // `flexGrow` spreads them across whatever a device actually gives them
-  // (64pt each on a 402pt phone); `flexShrink` is what makes the failure
-  // mode below 270 a narrower chip rather than a wrapped row with one
-  // stretched orphan under it. Yoga does not shrink a flex child by
-  // default the way CSS does, so it has to be asked for — and it is why
-  // a measurement on the web client cannot stand in for this one.
-  // `flexWrap` remains only for a width too narrow for five chips at all.
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  // name was pushing Gelişim onto a second line). The name may take two
+  // lines inside its chip rather than being clipped to one: at a large
+  // Dynamic Type setting a fixed single line comes back as "Yakınlı…" on
+  // all five, which is the same complaint in a worse form.
+  //
+  // No `flexWrap`: Yoga collects
+  // flex lines from the basis, before any shrink is resolved, so a
+  // wrapping row would break at 252pt however much the chips could have
+  // given up — and the chip that lands alone on the second line is then
+  // stretched across it by `flexGrow`, which is the complaint in a
+  // louder form. Without it the five share whatever a device gives them
+  // (64pt each on a 402pt phone, 47.6 inside a popup at 320pt) and
+  // `flexShrink` is what absorbs anything narrower, a tighter chip and a
+  // label over two lines rather than a broken row.
+  dimensionRow: { flexDirection: 'row', gap: space.sm },
   dimensionChip: {
     flexGrow: 1,
     flexShrink: 1,

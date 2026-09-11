@@ -999,16 +999,16 @@ each item lands with its own screenshot.
       five of them at all.
       — _Done. `s6-dimensions-one-row.png`: Yakınlık · Çekim · İletişim ·
       İstikrar · Gelişim, each with its meter, on one line. That is a
-      402pt device, where every basis in this discussion fits, so it
-      cannot witness the narrow case. The narrow case is argued, not
-      photographed: five 44pt chips and four 8pt gaps need 252pt and the
-      narrowest layout in reach leaves 270, with `flexShrink` making
-      anything below that a narrower chip rather than a wrapped row. The
-      web client at a 320px viewport does hold the row (all five at one
-      offsetTop, 47.6px each, each label rendering as a single line
-      measured with `Range.getClientRects`), but Yoga and CSS disagree on
-      the default `flex-shrink`, so that run corroborates rather than
-      proves it._
+      402pt device, where every width in this discussion fits, so it
+      cannot witness the narrow case. The row no longer wraps at all, so
+      there is no threshold left to cross: below the 252pt the five chips
+      would like, `flexShrink` takes the difference out of their width.
+      Measured on the web client at a 300px viewport, narrower than
+      anything the wrapping version survived: all five at one offsetTop,
+      43.6px each, every label a single line. That corroborates the
+      arrangement without standing for the device — Chrome and CoreText do not measure the
+      same string identically, and whether a label wraps at a given width
+      is exactly a measurement question._
 
 Owner decisions taken by default in this pass, each reversible: the full
 chart repeats the Sun, Moon and Ascendant cards the profile shows above
