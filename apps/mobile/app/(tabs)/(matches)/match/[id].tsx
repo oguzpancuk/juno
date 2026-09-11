@@ -30,6 +30,7 @@ import {
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { BackLink } from '@/components/ui';
 import { color, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity while the row is still loading. */
@@ -135,9 +136,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{t.errors.generic}</Text>
-        <Link href="/discover" style={styles.link}>
-          {t.match.backToDiscover}
-        </Link>
+        <BackLink label={t.chat.backToMatches} fallback="/matches" />
       </View>
     );
   }
@@ -159,7 +158,9 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
         setNotice(t.safety.failed);
         return;
       }
-      router.replace('/matches');
+      // POP_TO, not replace: this screen sits on the matches stack, and a
+      // replace there would leave the list twice on it.
+      router.dismissTo('/matches');
     });
   };
 
@@ -330,12 +331,6 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
         testID="open-chat"
       >
         {t.chat.open}
-      </Link>
-      <Link href="/matches" style={styles.link}>
-        {t.match.allMatches}
-      </Link>
-      <Link href="/discover" style={styles.link}>
-        {t.match.backToDiscover}
       </Link>
 
       <Text style={styles.label}>{t.safety.title}</Text>

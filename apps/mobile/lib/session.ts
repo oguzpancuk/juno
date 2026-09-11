@@ -37,13 +37,19 @@ export function useSession(): SessionState {
  * Leave the app for the sign-in screen with nothing of the old session
  * left on the stack.
  *
- * `replace` alone only swaps the top route, so the tab group stays
- * underneath. The route that follows sign-in is `/` , which redirects into
- * the tab group again — and expo-router, seeing the focused route diverge
- * at the root, adds a *second* tab navigator rather than reusing the one
- * already there. Two bottom tab bars then sit in one stack: an edge swipe
- * reveals the stale one, and on Android back lands in it instead of
- * leaving the app.
+ * `replace` alone only swaps the top route. When signed-in screens were
+ * pushed on the root stack, the tab group stayed underneath; the route
+ * that follows sign-in is `/`, which redirects into the tab group again —
+ * and expo-router, seeing the focused route diverge at the root, added a
+ * *second* tab navigator rather than reusing the one already there. Two
+ * bottom tab bars then sat in one stack: an edge swipe revealed the stale
+ * one, and on Android back landed in it instead of leaving the app.
+ *
+ * Since 2026-09-11 every signed-in screen lives on a stack inside its
+ * tab, so the root holds exactly one signed-in route, `(tabs)`, and the
+ * replace lands on `[sign-in]` by construction. `dismissAll` is kept: it
+ * pops the focused tab's stack to its top, which is still the right
+ * thing to do with a session that no longer exists.
  */
 export function leaveToSignIn(): void {
   if (router.canDismiss()) router.dismissAll();

@@ -77,7 +77,7 @@ export default function Settings() {
       <Link href="/blocked" style={styles.link}>
         {t.blocked.open}
       </Link>
-      <Link href="/legal" style={styles.link}>
+      <Link href="/settings/legal" style={styles.link}>
         {t.legal.open}
       </Link>
       <Link href="/filters" style={styles.link}>

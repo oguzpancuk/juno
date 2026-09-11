@@ -1,4 +1,4 @@
-import { Link, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchBlocked, unblockUser, type BlockedPerson } from '@/lib/safety';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
 
 /**
@@ -78,9 +79,7 @@ export default function Blocked() {
       ]}
       testID="blocked-screen"
     >
-      <Link href="/settings" style={styles.back}>
-        {t.blocked.back}
-      </Link>
+      <BackLink label={t.blocked.back} fallback="/settings" />
       <Text style={styles.title}>{t.blocked.title}</Text>
       <Text style={styles.hint}>{t.blocked.hint}</Text>
       {people === null ? (

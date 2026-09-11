@@ -63,9 +63,7 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
         <Body muted>
           {state.status === 'gone' ? t.person.gone : t.errors.generic}
         </Body>
-        <Link href="/discover" style={styles.link}>
-          {t.person.back}
-        </Link>
+        <BackLink label={t.person.back} fallback="/discover" />
       </View>
     );
   }

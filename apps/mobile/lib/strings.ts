@@ -123,8 +123,6 @@ export const t = {
       'Uyum bölümü yüklenemedi. Sayfayı yenilersen tekrar denenir.',
     moreOverlays: (n: number) => `${n} tane daha ›`,
     fewerOverlays: 'Daha az göster',
-    allMatches: 'Tüm eşleşmeler ›',
-    backToDiscover: '‹ Keşfete dön',
   },
   calculating: {
     title: 'Haritan hesaplanıyor',

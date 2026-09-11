@@ -101,9 +101,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{t.errors.generic}</Text>
-        <Link href="/matches" style={styles.link}>
-          {t.match.allMatches}
-        </Link>
+        <BackLink label={t.chat.backToMatches} fallback="/matches" />
       </View>
     );
   }

@@ -123,12 +123,10 @@ export default function Onboarding() {
       });
       await heldFor(started);
       if (result.ok || result.reason === 'exists') {
-        // The deck, then the chart on top of it. `replace('/chart')` alone
-        // left the whole stack as that one screen: the chart is not in the
-        // tab group, so the first thing a new account saw was a screen
-        // with no tab bar under it and nowhere to go but a back chevron
-        // to a tab it had never seen.
-        router.replace('/discover');
+        // The profile tab, then the chart pushed on its stack. The chart
+        // belongs to the profile (owner, 2026-09-11), and `replace('/chart')`
+        // alone would leave a one-route stack with no tab bar under it.
+        router.replace('/profile');
         router.push('/chart');
         return;
       }

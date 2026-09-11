@@ -22,6 +22,7 @@ import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
 
 /**
@@ -109,9 +110,7 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{t.errors.generic}</Text>
-        <Link href="/matches" style={styles.link}>
-          {t.chat.backToMatches}
-        </Link>
+        <BackLink label={t.chat.backToMatches} fallback="/matches" />
       </View>
     );
   }
@@ -146,13 +145,10 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
       testID="chat-screen"
     >
       <View style={styles.header}>
-        <Link href="/matches" style={styles.back}>
-          {t.chat.backToMatches}
-        </Link>
         <Text style={styles.title}>{row.display_name}</Text>
         <Link
           href={{ pathname: '/match/[id]', params: { id: matchId } }}
-          style={styles.back}
+          style={styles.detail}
         >
           {t.chat.viewMatch}
         </Link>
@@ -264,7 +260,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: color.border,
   },
-  back: { color: color.textMuted, fontSize: 14 },
+  detail: { color: color.textMuted, fontSize: 14 },
   title: { color: color.text, fontSize: 22, fontWeight: '700' },
   list: { flex: 1 },
   listContent: { padding: 16, gap: 8 },

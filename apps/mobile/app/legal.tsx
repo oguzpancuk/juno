@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
 
 const BULLET = '• ';
@@ -31,9 +32,7 @@ export default function Legal() {
       testID="legal-screen"
     >
       {session.status === 'signed-in' ? (
-        <Link href="/settings" style={styles.back}>
-          {t.legal.back}
-        </Link>
+        <BackLink label={t.legal.back} fallback="/settings" />
       ) : session.status === 'signed-out' ? (
         <Link href="/sign-in" style={styles.back}>
           {t.legal.backToSignIn}
