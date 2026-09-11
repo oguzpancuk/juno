@@ -394,7 +394,9 @@ export default function Discover() {
               testID="open-person"
               accessibilityRole="button"
               style={styles.pill}
-              onPress={() => router.push(personHref(current.row.id))}
+              // navigate, not push: a second tap before the transition
+              // lands would otherwise stack the same person twice.
+              onPress={() => router.navigate(personHref(current.row.id))}
             >
               <Text style={styles.pillText}>{t.discover.openProfile}</Text>
             </Pressable>
@@ -491,7 +493,14 @@ function createDeckResponder({
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
     },
-    // Once the card has the touch the scroll view may not take it back.
+    // Refuses the JS-side request only. On iOS under the new
+    // architecture the native scroll view can still cancel a content
+    // touch once its own pan begins on a steep diagonal; that arrives as
+    // a terminate below and settles the card — no decision, no write. A
+    // 300 pt drag with 90 pt of vertical travel recorded fine on the
+    // simulator (NOTES 2026-09-11); if testers report lost swipes,
+    // `scrollEnabled={false}` on the scroll view for the length of a
+    // drag is the no-dependency remedy.
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, g) => {
       pan.setValue({ x: g.dx, y: g.dy * DY_FOLLOW });
@@ -517,7 +526,10 @@ function createDeckResponder({
         duration: FLY_OUT_MS,
         useNativeDriver: NATIVE_DRIVER,
       }).start(({ finished }) => {
-        // Caught mid-flight: that gesture owns the card now.
+        // Caught mid-flight. The new touch remakes the responder (flying
+        // is a dependency), and the remade one never had the grant, so
+        // the catch only snaps the card home and settles — it cannot
+        // decide. Rare, and the safe way round.
         if (!finished) {
           setFlying(false);
           return;

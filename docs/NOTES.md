@@ -3567,6 +3567,23 @@ scrolling the page and recording nothing, and a `touch_path` drag of
 300 pt recording a like on Ayşe (the `likes` row, count 4 → 5) with
 Melis's card up next — `screenshots/disc-*.png`.
 
+The merge review on main raised the iOS question the track could not:
+under the new architecture a native scroll view can cancel a content
+touch when its own pan begins, whatever the JS responder answers to a
+termination request, so a steep diagonal drag would settle the card
+with no decision. Tried on the simulator: a drag of 300 pt left with
+90 pt of downward travel recorded a pass on Melis, so at that angle
+the card keeps the touch. The comment in `discover.tsx` no longer
+claims a guarantee, and names `scrollEnabled={false}` for the length
+of a drag as the remedy if a tester reports a lost swipe. Two of the
+review's smaller notes are worth keeping in mind for the TestFlight
+cohort: while the like's round trip is in flight the card sits off
+screen and the deck looks blank, and a card with no shared aspect
+flies out and springs straight back with the error because the
+refusal is synchronous — a pre-check before animating would remove
+that fake like. "Profili gör" navigates rather than pushes, so a
+double tap cannot stack the same person twice.
+
 All four tracks are merged into main with `--no-ff`, each reviewed on
 main, the full battery green after each merge and after the prune
 (`80b85ea`). The four track branches and worktrees are still on disk
