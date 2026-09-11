@@ -159,6 +159,10 @@ export default function Profile() {
   };
 
   const move = (index: number, direction: 'left' | 'right') => {
+    // Gated like every other edit: a move during an in-flight save would
+    // show an order the save did not write, and one during an upload is
+    // undone when the upload's own list lands.
+    if (working.current) return;
     setPhotos((list) => movePhoto(list, index, direction));
   };
 
@@ -203,12 +207,14 @@ export default function Profile() {
             <Pressable
               testID="edit-profile"
               accessibilityRole="button"
-              disabled={saving}
+              // Not during an upload either: the tap would be swallowed
+              // by the working gate and read as a broken button.
+              disabled={saving || adding}
               onPress={toggle}
               style={({ pressed }) => [
                 styles.pill,
                 editing && styles.pillOn,
-                (pressed || saving) && styles.dim,
+                (pressed || saving || adding) && styles.dim,
               ]}
             >
               <Text style={[styles.pillText, editing && styles.pillTextOn]}>
@@ -272,6 +278,7 @@ export default function Profile() {
             onRemove: remove,
             onAdd: add,
             adding,
+            busy: saving || adding,
           }}
         />
       )}

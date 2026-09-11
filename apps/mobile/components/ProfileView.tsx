@@ -39,6 +39,8 @@ export interface ProfileEdit {
   readonly onAdd: () => void;
   /** An upload is in flight: the add tile dims and refuses a second tap. */
   readonly adding: boolean;
+  /** A write is in flight (save or upload): the draft must hold still. */
+  readonly busy: boolean;
 }
 
 /**
@@ -116,6 +118,8 @@ export function ProfileView({
             placeholderTextColor={color.textFaint}
             multiline
             maxLength={MAX_BIO_LENGTH}
+            // Typing during the save would be reverted when it lands.
+            editable={!edit.busy}
           />
           <Text style={styles.hint}>{t.profile.bioHint(MAX_BIO_LENGTH)}</Text>
         </Card>
