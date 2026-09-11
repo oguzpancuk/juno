@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
-import { OrbitMark } from '@/components/ui';
+import { BackLink, OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -62,9 +62,12 @@ export default function SignIn() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Link href="/welcome" style={styles.back}>
-        {t.signIn.back}
-      </Link>
+      {/* Pops, never pushes: a Link here grew the root stack by two
+          screens per round trip, and what an edge swipe revealed after
+          signing out was that history. */}
+      <View style={styles.back}>
+        <BackLink label={t.signIn.back} fallback="/welcome" />
+      </View>
       <View style={styles.mark}>
         <OrbitMark size={72} />
       </View>
@@ -143,13 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
-  back: {
-    ...type.body,
-    color: color.textMuted,
-    position: 'absolute',
-    top: 64,
-    left: space.xl,
-  },
+  back: { position: 'absolute', top: 56, left: space.xl },
   mark: { alignItems: 'center', marginBottom: space.xl },
   brand: {
     ...type.display,

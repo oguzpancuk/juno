@@ -257,7 +257,6 @@ export const t = {
   legal: {
     open: 'Gizlilik ve lisanslar',
     back: '‹ Ayarlar',
-    backToSignIn: '‹ Giriş',
     updated: (date: string) => `Son güncelleme: ${date}`,
   },
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene', close: 'Kapat' },

@@ -1,4 +1,3 @@
-import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
@@ -34,9 +33,9 @@ export default function Legal() {
       {session.status === 'signed-in' ? (
         <BackLink label={t.legal.back} fallback="/settings" />
       ) : session.status === 'signed-out' ? (
-        <Link href="/sign-in" style={styles.back}>
-          {t.legal.backToSignIn}
-        </Link>
+        // Pops to wherever the reader came from — welcome or sign-in —
+        // rather than pushing a second sign-in on top of this page.
+        <BackLink label={t.signIn.back} fallback="/sign-in" />
       ) : null}
       <Text style={styles.updated}>{t.legal.updated(LEGAL_UPDATED)}</Text>
       {legalSections.map((section) => (
@@ -65,7 +64,6 @@ export default function Legal() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 4, maxWidth: 720 },
-  back: { color: color.textMuted, fontSize: 14 },
   updated: { color: color.textFaint, fontSize: 12 },
   section: { marginTop: 20, gap: 8 },
   heading: { color: color.text, fontSize: 17, fontWeight: '700' },
