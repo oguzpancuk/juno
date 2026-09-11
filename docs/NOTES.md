@@ -2979,3 +2979,87 @@ The owner asked for inert Apple and Google buttons on 2026-09-11 ("arkası
 şimdilik boş kalsın"); Track A rewrites the comment to say so. The App
 Store review risk of a non-functional Sign in with Apple button stands
 and is flagged for the TestFlight item.
+
+## 2026-09-11 — The foundation: every screen under the tab bar
+
+The serial phase before the four tracks fork, as the plan entry above
+laid it out. Five commits on main.
+
+**The route tree.** `(tabs)/_layout.tsx` now names three group
+directories, `(profile)`, `(discover)`, `(matches)`, each with a
+`_layout.tsx` that renders one shared `components/TabStack.tsx` and
+statically exports `unstable_settings.initialRouteName` — static because
+expo-router reads it while building the route table, not at render.
+Every signed-in route moved under one of them; `person/[id]/*` sits in
+the shared `(discover,matches)` group so both tabs can push it, and
+`match/[id]` moved as a single copy into `(matches)` because Track D
+folds it into the chat, which lives there. The root stack holds exactly
+one signed-in route, `(tabs)`, and `lib/routes.test.ts` fails the battery
+if a signed-in screen ever reappears at the root. Watched on the
+simulator: settings, the legal page reached from settings, a chat, a
+match screen and the deck all render with the bar under them
+(`screenshots/c9-*`); a match arriving over Realtime while the Profil
+tab was focused jumped to Eşleşmeler and pushed the match screen there
+(`c9-realtime-match-lands-in-tab.png`).
+
+**What the restructure broke, and the fix.** Signing out from the chart
+screen produced a dev warning, "The action 'POP_TO_TOP' was not handled
+by any navigator". `leaveToSignIn` began with `dismissAll`, whose
+POP_TO_TOP the root stack — now one route long — could not take, and
+the nested stack it was meant for never saw it. The replace that follows
+removes the whole tab subtree by itself, so the dismiss is gone and the
+routes test is the guard. Before the fix the landing was still a
+one-route sign-in (an edge swipe revealed nothing), so the bug was a
+warning, not a regression; it is still the kind of thing that hides a
+real one later.
+
+The second sign-out, after the fix, revealed the welcome screen under
+sign-in on an edge swipe. Not the old bug — no signed-in screen was
+there — but history: `sign-in`'s "‹ Geri" was a `Link` to `/welcome`,
+which pushes, so every welcome ⇄ sign-in round trip grew the root stack
+by two, and the old `dismissAll` had been hiding that by popping the
+root on the way out. The link is a `BackLink` now (pops, falls back to
+`/welcome`), and the signed-out reader's way out of the legal page is
+the same control. The property this leaves is the one that matters:
+nothing signed-in ever sits under sign-in; what may sit under it is the
+door the person came through.
+
+**Shared pieces.** `components/Popup.tsx` (a native `Modal`, `color.scrim`
+backdrop, bottom sheet, exactly one closing button — the owner's rule),
+`components/Meter.tsx` (`Meter` + `BandMeter`, out of the deck screen),
+`components/BigThreeRow.tsx` (Sun, Moon, rising with their body glyphs —
+the owner's item 3.2, now on the deck card, the match page and the
+person page at once) and `components/CompatibilityDetail.tsx` (the union
+of the deck's inline detail and the match page's summary). `lib/routes.ts`
+builds the match-detail and person hrefs in one place, so the root
+layout's Realtime navigation never has to be edited by a track. The
+deck's "Uyum detayı" now opens the Popup — the first half of the owner's
+item 3.1 landed here because the Popup needed a real consumer to be
+photographed (`c9-popup.png`), and Track C's stub shrinks accordingly.
+
+**Config.** `[auth.email] enable_confirmations = false` in
+`supabase/config.toml`, restarted into the shared stack, so Track A's
+password sign-up yields a session at once. The hosted project must
+mirror it when it exists.
+
+Simulator lessons that cost time tonight, all recorded so the next
+session does not pay again:
+
+- Two simulators were booted (another product's session runs `pati` on
+  an iPhone 17). `xcrun simctl … booted` resolves to whichever it likes,
+  so half an hour of "Juno shows pati" screenshots were pictures of the
+  other device. Every simctl call now names the UDID
+  (`D667658A-CA77-431B-94E3-C106344B8DB3`, the iPhone 17 Pro), and the
+  simulator MCP takes `device` for the same reason.
+- HID typing drops trailing characters: "oguzpancuk@gmail.com" arrived
+  as "oguzpancuk@gma". With `shouldCreateUser: true` the OTP form then
+  created a local account for the truncated address before anything was
+  noticed. Type, crop-screenshot the field, then continue; the stray
+  `auth.users` row was deleted by hand (local stack only).
+- `contracts/init.sh` starts Metro with `CI=1`, which does not watch
+  files (already an upstream candidate above). For a session that edits
+  and looks, start Metro by hand without `CI=1` on 8082; the same env
+  lines as the script.
+- A seed user cannot be made to like a non-seed profile with
+  `seed-like.ts`; a session-scratch variant keyed by display name did
+  it for Derya. Not committed: one screenshot's worth of tooling.

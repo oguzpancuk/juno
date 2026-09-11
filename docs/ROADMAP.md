@@ -643,8 +643,23 @@ are peer-installed by expo-router, not dependencies of the app.
       hrefs — `.expo/` is ignored and `ci.yml` starts no dev server);
       screenshots `c9-chat-in-tab-bar.png`, `c9-settings-legal-in-tab-bar.png`,
       `c9-match-in-tab-bar.png`, `c9-realtime-match-lands-in-tab.png`,
-      `c9-sign-out-from-legal-lands-on-sign-in.png`, `c9-popup.png`;
+      `c9-sign-out-from-chart-lands-on-sign-in.png`, `c9-popup.png`;
       code-reviewer over the foundation range before the fork.
+      _Done. The tree is as described; `lib/routes.test.ts` guards the
+      root. Screenshots: `c9-deck.png` (glyph chips, band meter, the
+      detail button), `c9-popup.png` (the deck's detail as a sheet over a
+      dimmed deck, one Kapat), `c9-chat-in-tab-bar.png`,
+      `c9-settings-legal-in-tab-bar.png` (the deepest push in the profile
+      stack), `c9-match-in-tab-bar.png` (CompatibilityDetail's sections
+      on the match page), `c9-realtime-match-lands-in-tab.png` (a match
+      inserted while Profil was focused arrived on the Eşleşmeler stack),
+      `c9-sign-out-from-chart-lands-on-sign-in.png` — sign-out lives on
+      the chart until Track B moves it, so that is the deepest screen it
+      can be taken from. Two findings on the way, both in NOTES: the old
+      `dismissAll` before the sign-out replace became an unhandled
+      POP_TO_TOP and was removed; the welcome ⇄ sign-in links pushed and
+      are BackLinks now. The deck's "Uyum detayı" opens the Popup (item
+      3.1's first half), so Track C's stub starts from there._
 
 - [ ] **Track A — sign-up and sign-in with a password; inert Apple and
       Google buttons (item 1.3).** One screen, `sign-in.tsx`, with an
