@@ -178,15 +178,17 @@ const styles = StyleSheet.create({
   // large Dynamic Type setting a fixed single line would come back as
   // "Yakınlı…" on all five, which is the same complaint in a worse form.
   // `flexWrap` is kept as the escape hatch for a width that cannot hold
-  // five chips at all. Five basis widths and four gaps need 292pt; the
-  // narrowest layout this has to survive is a 360dp Android inside the
-  // page's 24pt padding and a popup's borders, which leaves 310. The
-  // basis is only the wrap threshold — `flexGrow` still spreads the five
-  // across whatever the device actually gives them.
+  // five chips at all, but the basis is set so that nothing this ships to
+  // reaches it: five of them and four gaps need 252pt, and the narrowest
+  // layout in reach is 270 — a 320pt viewport (an iPhone in Display Zoom,
+  // or Android with an enlarged display size) inside the page's 24pt
+  // padding and a popup's borders. The basis is only the wrap threshold;
+  // `flexGrow` still spreads the five across whatever a device actually
+  // gives them, which on a 402pt phone is 64pt each.
   dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   dimensionChip: {
     flexGrow: 1,
-    flexBasis: 52,
+    flexBasis: 44,
     alignItems: 'center',
     backgroundColor: color.surfaceSoft,
     borderRadius: radius.sm,

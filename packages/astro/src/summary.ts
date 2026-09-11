@@ -46,7 +46,7 @@ import {
 } from './content';
 import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
-import { degreeInSign, signOf } from './signs';
+import { degreeInSign, roundLongitude, signOf } from './signs';
 import {
   BODY_TR,
   SIGN_TR_LOCATIVE,
@@ -121,7 +121,12 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       aspect,
       text: natalAspectText(aspect.planetA, aspect.aspect, aspect.planetB),
     }));
-  const rising = signOf(chart.houses.ascendant);
+  // One value behind the Ascendant's sign, its degree and its reading:
+  // taking the sign from the raw longitude and the degree from the
+  // rounded one lets a point in the last arcsecond of a sign print as
+  // 0°00′ of that same sign, 30° from where it is.
+  const ascendantLongitude = roundLongitude(chart.houses.ascendant);
+  const rising = signOf(ascendantLongitude);
   const placements = PLACEMENTS.map((placement) => {
     const ascendant = placement === 'ascendant';
     const sign = ascendant ? rising : chart.planets[placement].sign;
@@ -130,7 +135,7 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
     // degree within its own sign that `toPublicChart` already reduced —
     // through the same helper, so the two cannot round differently.
     const degree = ascendant
-      ? degreeInSign(chart.houses.ascendant)
+      ? degreeInSign(ascendantLongitude)
       : chart.planets[placement].degree;
     return {
       placement,

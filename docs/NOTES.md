@@ -3747,3 +3747,37 @@ one stretched orphan on the second line — exactly the owner's complaint
 in a louder form; 52 needs 292 and holds. And the chat header's
 safe-area inset is floored at 44, because on the web client the inset is
 0 and the back link would sit against the top of the viewport.
+
+## 2026-09-12 — the ascendant's sign and its degree, read from one value
+
+The second review of the rounding fix found the guard had moved the
+error rather than removed it. `natalReading` took the Ascendant's sign
+from the raw longitude and its degree from the rounded one, so a point
+in the last arcsecond of Aries (29.99996) printed "Koç'ta 0°00′" — the
+_start_ of the sign it was leaving, thirty degrees from where it is, and
+unlike the malformed "30°00′" it replaced, nothing a reader could catch.
+
+Sign and degree now come from one value. `roundLongitude` lives in
+`signs.ts` beside `signOf` and `degreeInSign`; `toPublicChart`'s private
+`roundDeg` was the same function and is gone. `degreeInSign` rounds
+twice on purpose and the comment says why: the longitude first, so a
+boundary point lands in the same sign here and in `signOf`, and the
+reduction after, so `% 30` cannot eat an arcminute. Probed through
+`natalReading`: 29.99996 → Boğa 0°00′, 359.999961 → Koç 0°00′, 59.99999
+→ İkizler 0°00′, 30.2 → Boğa 0°12′.
+
+One thing deliberately left alone: `chart.ts` still computes its own
+`degree` as a raw `longitude % 30`. Routing it through `degreeInSign`
+broke four cases of `chart.test.ts`, which pins sign × 30 + degree back
+to the longitude at 5e-10 — the internal chart is meant to keep its full
+precision, and rounding belongs to `toPublicChart`, which every
+displayed degree goes through. The comment there now says so.
+
+The chips' basis went 52 → 44. At 52 the row still wrapped below 310pt,
+and a 320pt viewport is in reach without an old device (Display Zoom, or
+Android with an enlarged display size); at 44 five chips and four gaps
+need 252 against 270. Measured rather than calculated this time: the web
+client at a 320px viewport, in the deck's "Uyum detayı" popup, puts all
+five at the same offsetTop, 48px wide, each label on one line. The
+simulator screenshot stays what it was — at 402pt every basis in this
+discussion fits, so it cannot witness the change.

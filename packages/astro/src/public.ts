@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PLANETS, type Planet } from './bodies';
 import type { Chart } from './chart';
-import { SIGNS, degreeInSign, signOf } from './signs';
+import { SIGNS, degreeInSign, roundLongitude, signOf } from './signs';
 
 /**
  * The chart as stored in `profiles.chart` and shown to other users:
@@ -60,14 +60,13 @@ export const BigThreeSchema = z.object({
 export type BigThree = z.infer<typeof BigThreeSchema>;
 
 /** Round to 4 decimals (< 1″) and fold a rounded-up 360 back to 0. */
-const roundDeg = (value: number): number => Number(value.toFixed(4)) % 360;
 
 /** Strip the engine input and round to 4 decimals (< 1″) for storage. */
 export function toPublicChart(chart: Chart): PublicChart {
   const planets = {} as Record<Planet, z.infer<typeof PublicPlacementSchema>>; // why: filled for every PLANETS key below
   for (const planet of PLANETS) {
     const p = chart.planets[planet];
-    const longitude = roundDeg(p.longitude);
+    const longitude = roundLongitude(p.longitude);
     planets[planet] = {
       longitude,
       // Derived from the rounded longitude so sign, degree and longitude
@@ -82,9 +81,9 @@ export function toPublicChart(chart: Chart): PublicChart {
     version: 1,
     planets,
     houses: {
-      ascendant: roundDeg(chart.houses.ascendant),
-      mc: roundDeg(chart.houses.mc),
-      cusps: chart.houses.cusps.map(roundDeg),
+      ascendant: roundLongitude(chart.houses.ascendant),
+      mc: roundLongitude(chart.houses.mc),
+      cusps: chart.houses.cusps.map(roundLongitude),
     },
   });
 }

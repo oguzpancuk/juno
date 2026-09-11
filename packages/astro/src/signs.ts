@@ -43,6 +43,17 @@ export function signOf(longitude: number): Sign {
 }
 
 /**
+ * A longitude at the precision the product stores and shows: four
+ * decimals, folded into [0, 360). Sign and degree must both be read from
+ * this, never one from it and the other from the raw value — 29.99996
+ * rounds into the next sign, and a pair taken from either side of the
+ * rounding would name Aries at 0°00′ for a point at the very end of it.
+ */
+export function roundLongitude(longitude: number): number {
+  return Number(normalizeDegrees(longitude).toFixed(4)) % 360;
+}
+
+/**
  * Degrees into the sign for an ecliptic longitude, rounded to four
  * decimals. The rounding is the point: float modulo of a 4-decimal value
  * is inexact (30.15 % 30 = 0.14999999999999858, which `formatDegree`
@@ -50,11 +61,14 @@ export function signOf(longitude: number): Sign {
  * agree with astro.com (ADR-0009).
  */
 export function degreeInSign(longitude: number): number {
-  // The second modulo is not redundant: rounding can carry a value up to
-  // the sign boundary (29.99999 → 30.0000), and "Boğa'da 30°00′" is not
-  // a degree in a sign. `toPublicChart` rounds its longitudes first so
-  // its planets never reach it; an Ascendant is whatever the row holds.
-  return Number((normalizeDegrees(longitude) % 30).toFixed(4)) % 30;
+  // Both roundings earn their place. The longitude is rounded first so
+  // that a point in the last arcsecond of a sign lands in the next sign
+  // here and in `signOf` alike — never 0°00′ of the sign it just left.
+  // The reduction is rounded because float modulo of a 4-decimal value is
+  // inexact (30.15 % 30 = 0.14999999999999858, floored to 0°08′ instead
+  // of 0°09′). It cannot carry onto 30: a 4-decimal longitude's largest
+  // reduction is 29.9999.
+  return Number((roundLongitude(longitude) % 30).toFixed(4));
 }
 
 /** Signed angular difference folded into [-180, 180). */

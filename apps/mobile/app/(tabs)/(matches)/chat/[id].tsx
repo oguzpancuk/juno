@@ -251,8 +251,10 @@ function ChatView({
       <View
         style={[
           styles.header,
-          // The floor is for the web client, where the inset is 0 and
-          // the back link would sit against the top of the viewport.
+          // Floored, not raw: the inset is 0 on the web client and 20
+          // on a device without a notch, either of which would put the
+          // back link against the top of the viewport. 44 leaves this
+          // header in the neighbourhood of `Screen`'s own 68pt.
           { paddingTop: Math.max(insets.top, 44) + space.xs },
         ]}
       >

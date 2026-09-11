@@ -82,6 +82,10 @@ function place(planet: Planet, utc: Date, houses: Houses): Placement {
     body: planet,
     longitude,
     sign: signOf(longitude),
+    // Not `degreeInSign`: this field is the engine's own, and
+    // `chart.test.ts` pins sign * 30 + degree back to the longitude at
+    // 5e-10. Rounding is the public chart's job (`toPublicChart`), which
+    // is what every displayed degree goes through.
     degree: longitude % 30,
     retrograde: isRetrograde(planet, utc),
     house: houseOf(longitude, houses.cusps),

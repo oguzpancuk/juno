@@ -70,6 +70,7 @@ export {
   SIGNS,
   degreeInSign,
   normalizeDegrees,
+  roundLongitude,
   signOf,
   signedDelta,
   type Sign,

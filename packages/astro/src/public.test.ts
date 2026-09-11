@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { PublicChartSchema, bigThree, toPublicChart } from './public';
-import { degreeInSign } from './signs';
+import { degreeInSign, roundLongitude, signOf } from './signs';
 import { describeAspectTr, formatDegree, natalAspectTitleTr } from './tr';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
@@ -28,8 +28,12 @@ describe('degreeInSign', () => {
   it('folds a longitude into its own sign, and never onto the boundary', () => {
     expect(degreeInSign(0)).toBe(0);
     expect(degreeInSign(359.9)).toBe(29.9);
-    // Rounding can carry a value up to 30, which is the next sign's 0.
-    expect(degreeInSign(59.99999)).toBe(0);
+    expect(degreeInSign(-1)).toBe(29);
+    // A point in the last arcsecond of a sign rounds into the next one,
+    // and `signOf(roundLongitude(...))` agrees: Taurus at 0°00′, not
+    // Aries at 30°00′ and not Aries at 0°00′.
+    expect(degreeInSign(29.99996)).toBe(0);
+    expect(signOf(roundLongitude(29.99996))).toBe('taurus');
   });
 });
 
