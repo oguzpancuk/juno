@@ -47,12 +47,14 @@ export function useSession(): SessionState {
  *
  * Since 2026-09-11 every signed-in screen lives on a stack inside its
  * tab, so the root holds exactly one signed-in route, `(tabs)`, and the
- * replace lands on `[sign-in]` by construction. `dismissAll` is kept: it
- * pops the focused tab's stack to its top, which is still the right
- * thing to do with a session that no longer exists.
+ * replace lands on `[sign-in]` by construction — `lib/routes.test.ts`
+ * is what keeps the root that way. The `dismissAll` that used to precede
+ * the replace is gone: with `(tabs)` as the root's only route it was a
+ * POP_TO_TOP no navigator handled (a dev warning on every sign-out,
+ * watched on the simulator), and the replace removes the whole tab
+ * subtree, nested stacks included, on its own.
  */
 export function leaveToSignIn(): void {
-  if (router.canDismiss()) router.dismissAll();
   router.replace('/sign-in');
 }
 
