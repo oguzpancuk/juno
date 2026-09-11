@@ -3797,16 +3797,26 @@ complaint in a louder form. Wrap and shrink cannot both be the cushion.
 With the wrap gone the five always share the row and `flexShrink`
 absorbs a narrow width as a tighter chip and a two-line label.
 
-Measured after the change at a 300px viewport — narrower than anything
-the wrap version survived — the five sit at one offsetTop, 43.6px each,
-every label still a single line. That corroborates the arrangement rather than
+Measured after the change: at 375pt and at 360dp, the two narrowest
+widths that ship, the five sit at one offsetTop with the longest label
+(44pt) inside its chip's content box (48.6pt and 45.6pt). At 300px they
+still hold one row — but reading that as "the labels fit" would be the
+measurement backwards. They stay on one line because a single Turkish
+word has no break opportunity, and at that width they overflow their
+chips instead. The crossover is near 352pt: past every shipping device,
+short of an iPhone in Display Zoom, which is therefore the one place
+this arrangement looks wrong. Shrink can narrow a chip; it cannot make a
+name fit, and nothing here can wrap "Yakınlık". That corroborates the arrangement rather than
 proving the device: Chrome and CoreText do not measure the same string
 identically, and whether a label wraps is exactly a measurement
-question. (The first write-up of this blamed a `flex-shrink` default
-that Yoga and CSS supposedly disagree on. They do — but
-react-native-web's own `View` sets `flexShrink: 0`, so the web client
-had Yoga's default all along, and line collection ignores shrink in both
-engines. A note about evidence asserting an unchecked mechanism is the
-same fault it is warning about.) The simulator screenshot stays what it
+question. (Two write-ups of this went wrong before this one, both in
+the direction the entry is about. The first blamed a `flex-shrink`
+default that Yoga and CSS supposedly disagree on: they do, but
+react-native-web's own `View` sets `flexShrink: 0`, so the web client had
+Yoga's default all along, and line collection ignores shrink in either
+engine. The second read a measurement backwards, calling one-line labels
+a fit when they were an overflow. A note about evidence that asserts an
+unchecked mechanism, and then misreads its own numbers, is twice the
+fault it is warning about.) The simulator screenshot stays what it
 was; at 402pt every width in this discussion fits, so it witnesses the
 names and the meters, not the narrow case.

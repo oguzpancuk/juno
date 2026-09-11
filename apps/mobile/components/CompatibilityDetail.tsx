@@ -173,20 +173,26 @@ const styles = StyleSheet.create({
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
   // Five chips, one row, equal widths (owner, 2026-09-12: the longest
-  // name was pushing Gelişim onto a second line). The name may take two
-  // lines inside its chip rather than being clipped to one: at a large
-  // Dynamic Type setting a fixed single line comes back as "Yakınlı…" on
-  // all five, which is the same complaint in a worse form.
+  // name was pushing Gelişim onto a second line). No `numberOfLines`
+  // either: clipped to one line at a large Dynamic Type setting every
+  // name comes back as "Yakınlı…", which is the same complaint in a
+  // worse form.
   //
-  // No `flexWrap`: Yoga collects
-  // flex lines from the basis, before any shrink is resolved, so a
-  // wrapping row would break at 252pt however much the chips could have
-  // given up — and the chip that lands alone on the second line is then
-  // stretched across it by `flexGrow`, which is the complaint in a
-  // louder form. Without it the five share whatever a device gives them
-  // (64pt each on a 402pt phone, 47.6 inside a popup at 320pt) and
-  // `flexShrink` is what absorbs anything narrower, a tighter chip and a
-  // label over two lines rather than a broken row.
+  // No `flexWrap`: Yoga collects flex lines from the basis, before any
+  // shrink is resolved, so a wrapping row breaks at 252pt however much
+  // the chips could have given up — and the one left alone on the second
+  // line is then stretched across it by `flexGrow`. Wrap and shrink
+  // cannot both be the cushion; the owner asked for one row, so shrink
+  // is.
+  //
+  // What shrink cannot do is make a name fit: the five are single Turkish
+  // words with no break opportunity, so below the width where the longest
+  // one still fits its chip they spill over its border rather than
+  // wrapping. Measured on the web client: a label box of 44pt against a
+  // chip's 45.6pt of content at 360dp and 48.6 at 375pt, which is every
+  // width that ships; the crossover is around 352. A 320pt viewport (an
+  // iPhone in Display Zoom) is past it and looks it. Shortening a name
+  // buys width here, a larger `space` value costs it.
   dimensionRow: { flexDirection: 'row', gap: space.sm },
   dimensionChip: {
     flexGrow: 1,
