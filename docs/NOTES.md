@@ -3100,3 +3100,69 @@ session does not pay again:
 - A seed user cannot be made to like a non-seed profile with
   `seed-like.ts`; a session-scratch variant keyed by display name did
   it for Derya. Not committed: one screenshot's worth of tooling.
+
+## 2026-09-11 — Track C: the deck swipes, and a button beside the detail
+
+Item 3 of the five-item pass, in its own worktree on `track/c-discover`
+(base b80bcc1). The foundation had already put the glyph chips on the
+card and turned "Uyum detayı" into a popup; what was left was the button
+beside it and the gesture.
+
+**Profili gör.** The photo is no longer a `Link` — the plan entry's
+default for question 5: that area is the swipe surface. Two pills sit
+side by side under the why-line, "Uyum detayı" and "Profili gör"
+(`testID="open-person"`, `router.push(personHref(id))`), the same
+outlined style, `flex: 1` each.
+
+**The gesture.** Built-in `PanResponder` + `Animated`, nothing from the
+peer-installed gesture packages. The card is an `Animated.View` on an
+`Animated.ValueXY`; the responder claims only when `|dx| > 8 && |dx| >
+|dy|` (`onMoveShouldSetPanResponder`, never on touch start) and answers
+`false` to termination requests, so a vertical drag stays the scroll
+view's and a tap reaches the buttons — the two claims main checks on the
+simulator. While moving, the card follows dx and a quarter of dy and
+tilts up to ±12°; BEĞEN (pink) and GEÇ (muted) stamps on the photo's
+upper corners fade in with |dx| and are fully there exactly at the
+threshold. On release `decideSwipe` (`lib/swipe.ts`, pure, seven cases
+in `swipe.test.ts`) answers like, pass or null: past 30 % of the window
+width or a 0.5 pt/ms flick, symmetrically, and nothing when dx and vx
+disagree in sign — a change of mind. A decision flies the card out in
+220 ms and then calls the existing `act()`; null, busy, a platform
+cancel (`onPanResponderTerminate`: iOS cancels content touches when its
+scroll view starts moving) or a failed record all spring it back. The
+round ✕ / ♥ buttons are untouched and remain the accessible way; the
+stamps are hidden from VoiceOver.
+
+Two things decided on the way, both in comments where they bite:
+
+- `act()` now answers whether the card was dropped. The fly-out happens
+  before the network call (the spec's order), so when the record fails —
+  the error path, or `busy` — the card is off-screen and has to come
+  home; the round buttons ignore the answer. The fly-out's `finished`
+  flag is checked too: a card grabbed mid-flight belongs to that
+  gesture, not the previous one.
+- The responder is `useMemo`d on what its handlers close over (`act`,
+  `busy`, `current`, `pan`, `settle`, `width`), not created every render
+  and not fed a ref. A fresh `PanResponder` has an empty gesture state,
+  so recreating it mid-drag (the photo arriving) would snap the card to
+  the middle; and `react-hooks/refs` refuses a ref captured by a
+  function passed to `PanResponder.create` during render — it flagged
+  the first version, which read a `latest` ref written in an effect.
+  The listed values change only between gestures.
+
+Verified by the track battery (typecheck, lint, test for `apps/mobile`
+and `packages/*`, `prettier --check .`), not on the simulator: the
+worktree owns none. For main after the merge: `disc-card.png`,
+`disc-detail-popup.png`, `disc-after-swipe.png` (a `touch_path` past
+30 % of the width; the `likes` row), `disc-person.png`, and the two
+claims — vertical scroll still scrolls, a tap on "Uyum detayı" opens the
+popup without moving the card. One thing to watch there: a fast vertical
+scroll that begins with a horizontal wobble past 8 pt could claim the
+card; `|dx| > |dy|` is the guard, and the number is the spec's.
+
+Worktree note, for whoever runs the next parallel session: `.gitignore`
+says `node_modules/`, which does not match the symlinks a track makes to
+the main checkout's `node_modules`, so they showed as untracked in every
+worktree. `node_modules` (no slash) went into the repository's local
+`.git/info/exclude` — not a tracked file; the tracked `.gitignore` is
+main's to change.
