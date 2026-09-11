@@ -8,6 +8,7 @@ import {
 } from '@juno/astro';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LevelMeter } from '@/components/Meter';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -53,7 +54,10 @@ export function CompatibilityDetail({
                 testID={`dimension-${d.dimension}`}
               >
                 <Text style={styles.dimensionName}>{d.name}</Text>
-                <Text style={styles.dimensionLabel}>{d.label}</Text>
+                {/* Bars, not the level word; the word stays as the
+                    meter's accessibility label. No number reaches a Text
+                    (ADR-0009). */}
+                <LevelMeter level={d.level} label={d.label} />
               </View>
             ))}
           </View>
@@ -176,9 +180,9 @@ const styles = StyleSheet.create({
     borderColor: color.border,
     paddingVertical: space.sm,
     paddingHorizontal: space.md,
+    gap: space.xs,
   },
   dimensionName: { ...type.caption, color: color.textFaint },
-  dimensionLabel: { ...type.bodySmall, color: color.text },
   aspectLine: { gap: 2 },
   aspect: {
     backgroundColor: color.surface,
