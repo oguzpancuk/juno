@@ -197,36 +197,38 @@ export default function Discover() {
         </View>
       ) : (
         <View style={styles.card} testID={`card-${current.row.id}`}>
-          <View style={styles.photoWrap}>
-            {(() => {
-              const source = cardSource;
-              return source ? (
-                <Image
-                  source={source}
-                  style={styles.cardPhoto}
-                  resizeMode="cover"
-                  testID="card-photo"
-                />
-              ) : (
-                <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
-              );
-            })()}
-            {/* The name sits on the photo, as in the design; the chart
+          <Link href={`/person/${current.row.id}`} asChild>
+            <Pressable style={styles.photoWrap} testID="open-person">
+              {(() => {
+                const source = cardSource;
+                return source ? (
+                  <Image
+                    source={source}
+                    style={styles.cardPhoto}
+                    resizeMode="cover"
+                    testID="card-photo"
+                  />
+                ) : (
+                  <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
+                );
+              })()}
+              {/* The name sits on the photo, as in the design; the chart
                 below it is what the card is actually about. */}
-            <LinearGradient
-              colors={['transparent', color.scrim, color.bg]}
-              style={styles.photoScrim}
-            >
-              <Text style={styles.name}>
-                {current.row.display_name}, {current.row.age}
-              </Text>
-              <Text style={styles.distance}>
-                {current.row.distance_km === 0
-                  ? t.discover.under1km
-                  : `${current.row.distance_km} km`}
-              </Text>
-            </LinearGradient>
-          </View>
+              <LinearGradient
+                colors={['transparent', color.scrim, color.bg]}
+                style={styles.photoScrim}
+              >
+                <Text style={styles.name}>
+                  {current.row.display_name}, {current.row.age}
+                </Text>
+                <Text style={styles.distance}>
+                  {current.row.distance_km === 0
+                    ? t.discover.under1km
+                    : `${current.row.distance_km} km`}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </Link>
           {current.row.bio ? (
             <Text style={styles.bio} numberOfLines={3}>
               {current.row.bio}

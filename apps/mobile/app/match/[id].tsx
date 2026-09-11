@@ -317,6 +317,9 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
         </View>
       ) : null}
 
+      <Link href={`/person/${row.id}`} style={styles.link} testID="open-person">
+        {t.person.openProfile(row.display_name)}
+      </Link>
       <Link
         href={{ pathname: '/chat/[id]', params: { id: row.match_id } }}
         style={styles.chatLink}
