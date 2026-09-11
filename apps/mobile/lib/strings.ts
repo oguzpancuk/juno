@@ -60,6 +60,7 @@ export const t = {
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },
   chart: {
+    backToProfile: '‹ Profil',
     title: 'Doğum haritan',
     bigThree: 'BÜYÜK ÜÇLÜN',
     sun: 'Güneş',
@@ -73,20 +74,22 @@ export const t = {
     // this (PRD amendment 2026-09-10).
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
     houseMeaning: (house: number) => `${house}. EVDE NE ANLAMA GELİYOR`,
+    housesLabel: 'YÜKSELEN VE EVLER',
+    risingHasNoHouseTheirs:
+      'Yükselen bir evin içinde değil: 1. evin başlangıcı. Haritadaki bütün ev sınırları ondan hesaplanır.',
+    risingHasNoHouse:
+      'Yükselen bir evin içinde değil: 1. evin başlangıcı. Haritandaki bütün ev sınırları ondan hesaplanır, o yüzden doğum saatin en çok burayı etkiler.',
     fullChart: 'Tüm haritanı gör',
     hideFullChart: 'Haritayı kapat',
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
     signOut: 'Çıkış yap',
-    discover: 'Keşfet ›',
   },
+  tabs: { profile: 'Profil', discover: 'Keşfet', matches: 'Eşleşmeler' },
   discover: {
     completeProfile: 'Keşfette görünmek için bir fotoğraf ekle ›',
     title: 'Keşfet',
-    myChart: 'Haritam',
-    settings: 'Ayarlar',
-    matches: 'Eşleşmeler',
     // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
     like: 'Beğen',
@@ -154,7 +157,8 @@ export const t = {
   },
   profile: {
     title: 'Profilin',
-    back: '‹ Ayarlar',
+    chart: 'Doğum haritan',
+    chartHint: 'Gezegenlerin, evlerin ve ne anlama geldikleri',
     photos: 'FOTOĞRAFLAR',
     photosHint: (max: number) =>
       `En fazla ${max} fotoğraf. İlk fotoğrafın kartında görünür.`,
@@ -170,7 +174,6 @@ export const t = {
     saved: 'Kaydedildi.',
     failed: 'Kaydedilemedi, tekrar dene.',
     photoFailed: 'Fotoğraf yüklenemedi, tekrar dene.',
-    open: 'Profilini düzenle ›',
   },
   safety: {
     title: 'GÜVENLİK',
@@ -236,7 +239,7 @@ export const t = {
   },
   settings: {
     title: 'Ayarlar',
-    back: '‹ Keşfet',
+    back: '‹ Profil',
     radius: 'Keşif yarıçapı',
     customRadius: (km: number) => `Şu an ${km} km (özel değer).`,
     radiusHint:

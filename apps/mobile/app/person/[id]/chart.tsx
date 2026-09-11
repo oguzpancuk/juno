@@ -83,12 +83,18 @@ function TheirChart({ id }: { id: string | string[] | undefined }) {
               </View>
             </View>
             <Body>{text}</Body>
-            {houseText === null ? null : (
+            {houseText !== null ? (
               <View style={styles.houseBlock}>
                 <Text style={styles.houseLabel}>
                   {t.chart.houseMeaning(house ?? 1)}
                 </Text>
                 <Body small>{houseText}</Body>
+              </View>
+            ) : (
+              // The Ascendant has no house of its own; see app/chart.tsx.
+              <View style={styles.houseBlock}>
+                <Text style={styles.houseLabel}>{t.chart.housesLabel}</Text>
+                <Body small>{t.chart.risingHasNoHouseTheirs}</Body>
               </View>
             )}
           </Card>

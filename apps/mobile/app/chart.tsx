@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import {
+  BackLink,
   Body,
   Card,
   Display,
@@ -101,9 +102,11 @@ export default function ChartScreen() {
           <Display>{t.chart.title}</Display>
           <Body muted>{profile.display_name}</Body>
         </View>
-        <Link href="/discover" style={styles.navLink} testID="go-discover">
-          {t.chart.discover}
-        </Link>
+        <BackLink
+          label={t.chart.backToProfile}
+          fallback="/profile"
+          testID="go-profile"
+        />
       </View>
       {profile.photos.length === 0 ? (
         <Link href="/profile" style={styles.nudge} testID="add-photo-nudge">
@@ -139,12 +142,20 @@ export default function ChartScreen() {
             {/* The sign says how; the house says where in a life it shows
                 up. Both belong on the card — the house meant nothing while
                 it was a number in a subtitle. */}
-            {houseText === null ? null : (
+            {houseText !== null ? (
               <View style={styles.houseBlock}>
                 <Text style={styles.houseLabel}>
                   {t.chart.houseMeaning(house ?? 1)}
                 </Text>
                 <Body small>{houseText}</Body>
+              </View>
+            ) : (
+              // The Ascendant is the only card here without a house, and
+              // saying so is better than a card that is simply shorter
+              // than the other five for no visible reason.
+              <View style={styles.houseBlock}>
+                <Text style={styles.houseLabel}>{t.chart.housesLabel}</Text>
+                <Body small>{t.chart.risingHasNoHouse}</Body>
               </View>
             )}
           </Card>
@@ -185,7 +196,16 @@ export default function ChartScreen() {
                     </Text>
                   </View>
                   {isPrimary ? null : <Body>{signText}</Body>}
-                  <Body small>{houseText}</Body>
+                  {/* Labelled here too. Unlabelled it reads as the
+                      planet's own meaning — and on the six above, whose
+                      sign reading is hidden as a duplicate, it is the only
+                      paragraph on the card. */}
+                  <View style={styles.houseBlock}>
+                    <Text style={styles.houseLabel}>
+                      {t.chart.houseMeaning(p.house)}
+                    </Text>
+                    <Body small>{houseText}</Body>
+                  </View>
                   {retrogradeText ? <Body small>{retrogradeText}</Body> : null}
                 </Card>
               );
@@ -263,7 +283,6 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   headText: { flexShrink: 1 },
-  navLink: { ...type.body, color: color.textMuted, paddingTop: space.sm },
   nudge: { ...type.body, color: color.cool, paddingVertical: space.xs },
   trio: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
   trioChip: {

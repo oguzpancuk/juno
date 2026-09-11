@@ -1,4 +1,6 @@
-import { Link, Redirect } from 'expo-router';
+import type { BigThree } from '@juno/astro';
+import { SIGN_GLYPH, SIGN_TR } from '@juno/astro';
+import { Redirect, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 import {
   MAX_BIO_LENGTH,
   MAX_PHOTOS,
@@ -23,10 +26,66 @@ import {
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
+
+/** One of the big three, as the profile shows them. */
+function Trio({ label, sign }: { label: string; sign: keyof typeof SIGN_TR }) {
+  return (
+    <View style={styles.trioCell}>
+      <Text style={styles.trioLabel}>{label}</Text>
+      <Text style={styles.trioSign}>
+        {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Settings: three sliders, not a gear. A gear at this size is a circle
+ * with eight spokes, which is also a sun — and this app draws real suns.
+ */
+function SettingsIcon() {
+  return (
+    <Svg width={26} height={26} viewBox="0 0 24 24">
+      <Path
+        d="M3.5 7h17M3.5 12h17M3.5 17h17"
+        stroke={color.textMuted}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+      />
+      <Circle cx={9} cy={7} r={2.4} fill={color.bg} />
+      <Circle
+        cx={9}
+        cy={7}
+        r={2.4}
+        stroke={color.textMuted}
+        strokeWidth={1.6}
+        fill="none"
+      />
+      <Circle cx={15.5} cy={12} r={2.4} fill={color.bg} />
+      <Circle
+        cx={15.5}
+        cy={12}
+        r={2.4}
+        stroke={color.textMuted}
+        strokeWidth={1.6}
+        fill="none"
+      />
+      <Circle cx={7.5} cy={17} r={2.4} fill={color.bg} />
+      <Circle
+        cx={7.5}
+        cy={17}
+        r={2.4}
+        stroke={color.textMuted}
+        strokeWidth={1.6}
+        fill="none"
+      />
+    </Svg>
+  );
+}
 
 export default function Profile() {
   const session = useSession();
@@ -40,6 +99,7 @@ export default function Profile() {
   // wrong tile.
   const sources = usePhotoSources(photos ?? EMPTY);
   const [bio, setBio] = useState('');
+  const [three, setThree] = useState<BigThree | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,6 +112,7 @@ export default function Profile() {
       if (cancelled || state.status !== 'ready') return;
       setPhotos(state.profile.photos);
       setBio(state.profile.bio ?? '');
+      setThree(state.profile.big_three);
     });
     return () => {
       cancelled = true;
@@ -109,10 +170,35 @@ export default function Profile() {
       ]}
       testID="profile-screen"
     >
-      <Link href="/settings" style={styles.back}>
-        {t.profile.back}
-      </Link>
-      <Text style={styles.title}>{t.profile.title}</Text>
+      <View style={styles.head}>
+        <Text style={styles.title}>{t.profile.title}</Text>
+        <Pressable
+          testID="open-settings"
+          hitSlop={12}
+          onPress={() => router.push('/settings')}
+        >
+          <SettingsIcon />
+        </Pressable>
+      </View>
+
+      {three ? (
+        <View style={styles.trio}>
+          <Trio label={t.chart.sun} sign={three.sun} />
+          <Trio label={t.chart.moon} sign={three.moon} />
+          <Trio label={t.chart.rising} sign={three.rising} />
+        </View>
+      ) : null}
+      <Pressable
+        testID="open-chart"
+        style={styles.chartCard}
+        onPress={() => router.push('/chart')}
+      >
+        <View>
+          <Text style={styles.chartTitle}>{t.profile.chart}</Text>
+          <Text style={styles.hint}>{t.profile.chartHint}</Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
 
       <Text style={styles.label}>{t.profile.photos}</Text>
       <Text style={styles.hint}>{t.profile.photosHint(MAX_PHOTOS)}</Text>
@@ -185,8 +271,38 @@ export default function Profile() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 10 },
-  back: { color: color.textMuted, fontSize: 14 },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  trio: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
+  trioCell: {
+    flex: 1,
+    backgroundColor: color.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.md,
+    alignItems: 'center',
+    gap: 2,
+  },
+  trioLabel: { ...type.caption, color: color.textMuted },
+  trioSign: { ...type.body, color: color.text, fontWeight: '600' },
+  chartCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.border,
+    padding: space.lg,
+    marginTop: space.sm,
+  },
+  chartTitle: { ...type.heading, color: color.text },
+  chevron: { ...type.display, color: color.textMuted, fontSize: 26 },
   label: {
     color: color.textMuted,
     fontSize: 12,

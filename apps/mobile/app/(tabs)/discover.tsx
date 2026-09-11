@@ -158,20 +158,7 @@ export default function Discover() {
       contentContainerStyle={styles.scrollContent}
       testID="discover-screen"
     >
-      <View style={styles.nav}>
-        <Link href="/chart" style={styles.navLink}>
-          {t.discover.myChart}
-        </Link>
-        <Text style={styles.title}>{t.discover.title}</Text>
-        <View style={styles.navRight}>
-          <Link href="/matches" style={styles.navLink} testID="go-matches">
-            {t.discover.matches}
-          </Link>
-          <Link href="/settings" style={styles.navLink}>
-            {t.discover.settings}
-          </Link>
-        </View>
-      </View>
+      <Text style={styles.title}>{t.discover.title}</Text>
 
       {state.status === 'loading' ? (
         <View style={styles.center}>
@@ -387,15 +374,7 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  nav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: space.md,
-  },
-  navLink: { ...type.bodySmall, color: color.textMuted, flexShrink: 1 },
   title: { ...type.heading, color: color.text },
-  navRight: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   nudge: { ...type.bodySmall, color: color.cool, paddingBottom: space.sm },
   card: {
     backgroundColor: color.surface,

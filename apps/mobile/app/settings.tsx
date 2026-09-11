@@ -8,6 +8,7 @@ import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
 
 export default function Settings() {
@@ -68,13 +69,8 @@ export default function Settings() {
       style={[styles.screen, { paddingBottom: insets.bottom + 24 }]}
       testID="settings-screen"
     >
-      <Link href="/discover" style={styles.back}>
-        {t.settings.back}
-      </Link>
+      <BackLink label={t.settings.back} fallback="/profile" />
       <Text style={styles.title}>{t.settings.title}</Text>
-      <Link href="/profile" style={styles.link}>
-        {t.profile.open}
-      </Link>
       <Link href="/blocked" style={styles.link}>
         {t.blocked.open}
       </Link>

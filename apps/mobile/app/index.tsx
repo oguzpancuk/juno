@@ -39,7 +39,7 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
   if (session.status === 'signed-in' && profile.status === 'ready') {
-    return <Redirect href="/chart" />;
+    return <Redirect href="/discover" />;
   }
   if (profile.status === 'error') {
     return (

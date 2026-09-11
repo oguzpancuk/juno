@@ -46,9 +46,6 @@ export default function Matches() {
       contentContainerStyle={styles.content}
       testID="matches-screen"
     >
-      <Link href="/discover" style={styles.back}>
-        {t.settings.back}
-      </Link>
       <Text style={styles.title}>{t.matches.title}</Text>
       {rows === 'loading' ? (
         <ActivityIndicator color={color.textMuted} />
@@ -98,7 +95,6 @@ export default function Matches() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 12 },
-  back: { color: color.textMuted, fontSize: 14 },
   title: { color: color.text, fontSize: 26, fontWeight: '700' },
   muted: { color: color.textMuted },
   card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
