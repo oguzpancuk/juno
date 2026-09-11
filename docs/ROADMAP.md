@@ -998,11 +998,17 @@ each item lands with its own screenshot.
       a wrap left as the escape hatch for a width too narrow to hold
       five of them at all.
       — _Done. `s6-dimensions-one-row.png`: Yakınlık · Çekim · İletişim ·
-      İstikrar · Gelişim, each with its meter, on one line. The
-      screenshot is a 402pt device, where the old width fitted too; the
-      width that motivated the basis was measured on the web client at a
-      320px viewport, inside the deck's "Uyum detayı" popup — all five
-      chips at the same offsetTop, 48px each, every label one line._
+      İstikrar · Gelişim, each with its meter, on one line. That is a
+      402pt device, where every basis in this discussion fits, so it
+      cannot witness the narrow case. The narrow case is argued, not
+      photographed: five 44pt chips and four 8pt gaps need 252pt and the
+      narrowest layout in reach leaves 270, with `flexShrink` making
+      anything below that a narrower chip rather than a wrapped row. The
+      web client at a 320px viewport does hold the row (all five at one
+      offsetTop, 47.6px each, each label rendering as a single line
+      measured with `Range.getClientRects`), but Yoga and CSS disagree on
+      the default `flex-shrink`, so that run corroborates rather than
+      proves it._
 
 Owner decisions taken by default in this pass, each reversible: the full
 chart repeats the Sun, Moon and Ascendant cards the profile shows above

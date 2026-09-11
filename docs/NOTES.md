@@ -3759,7 +3759,13 @@ unlike the malformed "30°00′" it replaced, nothing a reader could catch.
 
 Sign and degree now come from one value. `roundLongitude` lives in
 `signs.ts` beside `signOf` and `degreeInSign`; `toPublicChart`'s private
-`roundDeg` was the same function and is gone. `degreeInSign` rounds
+`roundDeg` is gone. Not quite the same function: the new one normalises
+first, which matters only for input outside [0, 360) — which the schema
+rejects anyway — and at an exact 1e-5 tie, where the fold shifts the
+value by an ulp and flips the fourth decimal (29.99995 now rounds to 30,
+i.e. Boğa 0°00′ rather than Koç 29°59′). That is 0.36 of an arcsecond
+and on the correct side of the boundary, but it is a change to what a
+chart stores, not only to what one prints. `degreeInSign` rounds
 twice on purpose and the comment says why: the longitude first, so a
 boundary point lands in the same sign here and in `signOf`, and the
 reduction after, so `% 30` cannot eat an arcminute. Probed through
@@ -3776,8 +3782,13 @@ displayed degree goes through. The comment there now says so.
 The chips' basis went 52 → 44. At 52 the row still wrapped below 310pt,
 and a 320pt viewport is in reach without an old device (Display Zoom, or
 Android with an enlarged display size); at 44 five chips and four gaps
-need 252 against 270. Measured rather than calculated this time: the web
-client at a 320px viewport, in the deck's "Uyum detayı" popup, puts all
-five at the same offsetTop, 48px wide, each label on one line. The
-simulator screenshot stays what it was — at 402pt every basis in this
-discussion fits, so it cannot witness the change.
+need 252 against 270. The web client at a 320px viewport does hold the
+row — all five at one offsetTop, 47.6px each, each label a single line
+by `Range.getClientRects` — but that run cannot stand in for the native
+one: CSS shrinks a flex child by default and Yoga does not, so the web
+could hold a row the device would wrap. `flexShrink: 1` is now set
+explicitly, which both closes that gap and makes the failure mode below
+270 a narrower chip instead of a wrapped row with one stretched orphan
+beneath it. The simulator screenshot stays what it was; at 402pt every
+basis in this discussion fits, so it witnesses the names and the meters,
+not the width.

@@ -45,6 +45,29 @@ describe('natalReading', () => {
     expect(card?.degree).toBe('0°12′');
   });
 
+  // The sign and the degree have to come from one value. Read the sign
+  // from the raw longitude and the degree from a rounded one and a point
+  // in the last arcsecond of Aries prints as the *start* of Aries, 30°
+  // from where it is — and unlike a malformed "30°00′", nothing a reader
+  // can catch. 30.2 above cannot see this: both spellings agree there.
+  it('puts the Ascendant in the sign its rounded longitude is in', () => {
+    const chart = pub(istanbul);
+    const card = natalReading({
+      ...chart,
+      houses: { ...chart.houses, ascendant: 29.99996 },
+    });
+    const ascendant = card.placements.find((p) => p.placement === 'ascendant');
+    expect(ascendant?.technical).toContain('Boğa');
+    expect(ascendant?.degree).toBe('0°00′');
+    // The reading follows the same sign, not the one the raw value is in.
+    expect(card.risingText).toBe(
+      natalReading({
+        ...chart,
+        houses: { ...chart.houses, ascendant: 30 },
+      }).risingText,
+    );
+  });
+
   it('marks retrograde planets with a retrograde line and never the Sun or Moon', () => {
     const at = (body: string) =>
       reading.placements.find((p) => p.placement === body);

@@ -177,17 +177,21 @@ const styles = StyleSheet.create({
   // `flex: 1`, and the name may take two lines inside its chip: at a
   // large Dynamic Type setting a fixed single line would come back as
   // "Yakınlı…" on all five, which is the same complaint in a worse form.
-  // `flexWrap` is kept as the escape hatch for a width that cannot hold
-  // five chips at all, but the basis is set so that nothing this ships to
-  // reaches it: five of them and four gaps need 252pt, and the narrowest
-  // layout in reach is 270 — a 320pt viewport (an iPhone in Display Zoom,
-  // or Android with an enlarged display size) inside the page's 24pt
-  // padding and a popup's borders. The basis is only the wrap threshold;
-  // `flexGrow` still spreads the five across whatever a device actually
-  // gives them, which on a 402pt phone is 64pt each.
+  // One row on every width this ships to: five basis widths and four
+  // gaps need 252pt, and the narrowest layout in reach is 270 — a 320pt
+  // viewport (an iPhone in Display Zoom, or Android with an enlarged
+  // display size) inside the page's 24pt padding and a popup's borders.
+  // `flexGrow` spreads them across whatever a device actually gives them
+  // (64pt each on a 402pt phone); `flexShrink` is what makes the failure
+  // mode below 270 a narrower chip rather than a wrapped row with one
+  // stretched orphan under it. Yoga does not shrink a flex child by
+  // default the way CSS does, so it has to be asked for — and it is why
+  // a measurement on the web client cannot stand in for this one.
+  // `flexWrap` remains only for a width too narrow for five chips at all.
   dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   dimensionChip: {
     flexGrow: 1,
+    flexShrink: 1,
     flexBasis: 44,
     alignItems: 'center',
     backgroundColor: color.surfaceSoft,

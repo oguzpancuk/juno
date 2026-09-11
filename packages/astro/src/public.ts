@@ -59,8 +59,6 @@ export const BigThreeSchema = z.object({
 
 export type BigThree = z.infer<typeof BigThreeSchema>;
 
-/** Round to 4 decimals (< 1″) and fold a rounded-up 360 back to 0. */
-
 /** Strip the engine input and round to 4 decimals (< 1″) for storage. */
 export function toPublicChart(chart: Chart): PublicChart {
   const planets = {} as Record<Planet, z.infer<typeof PublicPlacementSchema>>; // why: filled for every PLANETS key below
@@ -94,6 +92,9 @@ export function bigThree(
   return {
     sun: chart.planets.sun.sign,
     moon: chart.planets.moon.sign,
-    rising: signOf(chart.houses.ascendant),
+    // Rounded like everything else that names this sign: the parameter
+    // is structural, so a caller can hand over a chart `toPublicChart`
+    // has not been through, and this one is stored in a column.
+    rising: signOf(roundLongitude(chart.houses.ascendant)),
   };
 }
