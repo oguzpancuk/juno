@@ -590,6 +590,197 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       — done when: `/deploy-checklist` passes and an external tester installs
       the build (manual). Ask-tier: never without the owner's yes.
 
+## The five-item pass (owner request 2026-09-11)
+
+<!-- The owner's list of 2026-09-11 in five sections: general (tab bar on
+     every screen, popups, sign-up/sign-in), profile, discover, matches.
+     Planned by four read-only scouts plus a partition critic; the file
+     claims below are the partition. Serial foundation first, then four
+     worktree tracks — the owner's explicit yes ("paralel worktreelerde
+     başlatalım"). Mechanics: `.claude/skills/parallel-tracks/SKILL.md`. -->
+
+Shared resources have one owner, the main session: the iOS simulator, the
+Metro server on 8082 and the local Supabase stack. A track therefore runs
+the battery WITHOUT the supabase workspace (`npm run typecheck/lint/test`
+for `apps/mobile`, `packages/*`, plus `npx prettier --check .`) and does not
+`db reset`; the full `verify.sh` and every screenshot named below are taken
+on main after that track's `--no-ff` merge. `lib/strings.ts` is written by
+every track, in disjoint top-level sections only (named per track).
+`docs/NOTES.md` is append-only and every track appends its own dated entry;
+`docs/ROADMAP.md` is edited only inside the track's own item below.
+Nothing here imports `react-native-gesture-handler` or `reanimated`: both
+are peer-installed by expo-router, not dependencies of the app.
+
+- [ ] **F — Foundation, serial on main (items 1.1, 1.2, 4.3).** Every
+      signed-in screen renders inside the tab bar: `(tabs)/_layout.tsx`
+      keeps three tabs named `(profile)`, `(discover)`, `(matches)`, each
+      a nested Stack (`components/TabStack.tsx`, per-group `_layout.tsx`
+      exporting `unstable_settings.initialRouteName`). Moves: profile,
+      chart, settings (→ `settings/index.tsx`, with `settings/legal.tsx`
+      re-exporting the root legal page), filters and blocked under
+      `(profile)`; discover under `(discover)`; matches, chat, starter
+      and a single copy of `match/[id]` under `(matches)`; `person/[id]/*`
+      in the shared group `(discover,matches)`. The root Stack then holds
+      exactly one signed-in route, so `leaveToSignIn` lands on a
+      one-route stack by construction. Chat loses its "‹ Eşleşmeler"
+      link; match loses its bottom "Tüm eşleşmeler / Keşfete dön" links
+      and its post-block `replace` becomes `dismissTo('/matches')`.
+      `lib/routes.ts` (`matchDetailHref`, `personHref`) replaces the five
+      inline `/match/[id]` hrefs so Track D retargets them in one file.
+      `components/Popup.tsx`: RN Modal, `color.scrim` backdrop, scrollable
+      sheet, exactly one closing button (`t.common.close`). Shared pieces
+      extracted before the fork: `components/Meter.tsx` (generic bars +
+      `BandMeter`), `components/BigThreeRow.tsx`,
+      `components/CompatibilityDetail.tsx` (union of the discover detail
+      block and the match summary). `supabase/config.toml` flips
+      `[auth.email] enable_confirmations` off for the stack the tracks
+      share (owner: "maili sonra ayarlarız"). `lib/routes.test.ts` asserts
+      the signed-out allowlist at the app root and a `_layout.tsx` with
+      `unstable_settings` per tab group.
+      — done when: battery green on a committed HEAD; `npx expo start`
+      once so the gitignored `.expo/types/router.d.ts` regenerates and
+      `npm run typecheck -w apps/mobile` still passes (CI never sees typed
+      hrefs — `.expo/` is ignored and `ci.yml` starts no dev server);
+      screenshots `c9-chat-in-tab-bar.png`, `c9-settings-legal-in-tab-bar.png`,
+      `c9-match-in-tab-bar.png`, `c9-realtime-match-lands-in-tab.png`,
+      `c9-sign-out-from-legal-lands-on-sign-in.png`, `c9-popup.png`;
+      code-reviewer over the foundation range before the fork.
+
+- [ ] **Track A — sign-up and sign-in with a password; inert Apple and
+      Google buttons (item 1.3).** One screen, `sign-in.tsx`, with an
+      `in | up` mode from a Zod-parsed route param; `signUp` /
+      `signInWithPassword`; a `session === null` result shows
+      "confirmation sent" instead of hanging (the hosted project, when
+      created, must mirror confirmations off — recorded in NOTES). OTP
+      removed. `lib/auth.ts` credentials schema (e-mail trimmed and
+      lowercased, password 8–72); `lib/errors.ts` maps `weak_password`,
+      `invalid_credentials`, `user_already_exists`/`email_exists`,
+      `email_not_confirmed`. `welcome.tsx` primary button opens sign-up,
+      a link opens sign-in, and two `OutlineButton`s (new in `ui.tsx`)
+      read "Apple ile giriş yap" / "Google ile giriş yap" with empty
+      handlers and a `// why:` naming the owner's 2026-09-11 decision;
+      the file's "a dead button is worse" comment is rewritten to say so.
+      `supabase/config.toml` `minimum_password_length` 6 → 8.
+      Claims: `app/sign-in.tsx`, `app/welcome.tsx`, `components/ui.tsx`,
+      `lib/auth.ts` (+test), `lib/errors.ts` (+test), `supabase/config.toml`,
+      `supabase/tests/auth.test.ts`; strings sections `welcome`, `signIn`,
+      `signUp` (new, right after `signIn`), `errors`.
+      — done when: track battery green; `lib/auth.test.ts` and
+      `lib/errors.test.ts` pass; on main after merge: `supabase/tests/
+    auth.test.ts` green (fresh sign-up yields a session, duplicate →
+      `user_already_exists`, 5-char password → `weak_password`, wrong
+      password → `invalid_credentials`); screenshots `auth-welcome.png`,
+      `auth-sign-up.png`, `auth-sign-in.png`, `auth-wrong-password.png`,
+      `auth-one-tab-bar.png` (sign in as a seed account, sign out from
+      `/settings/legal`, sign in again: one tab bar).
+
+- [ ] **Track B — one profile for you and for them, with an edit mode
+      (item 2, item 3's "tamamen aynı gözükmeli").** New
+      `components/ProfileView.tsx`, presentational: paged photo carousel
+      with name and age inside the photo on a scrim (the discover card's
+      pattern), `BigThreeRow`, bio card, the three primary cards (Çekirdek
+      benlik, Duygusal dünya, İlk izlenim) with their readings, then
+      "Tüm haritanı gör" / "Tüm haritasını gör" opening a `Popup` with
+      `components/ChartDetail.tsx` (wheel, the remaining three primary
+      cards, all ten planets, aspects). `chart.tsx`, `person/[id]/chart.tsx`
+      and `person/[id]/full.tsx` are deleted; sign-out moves to settings;
+      onboarding lands on the profile tab. Edit mode: a "Düzenle" pill
+      beside the settings control; while editing, the thumbnail strip
+      gets ‹ › and Kaldır per tile plus "Fotoğraf ekle", the bio becomes
+      a TextInput; the pill reads "Kaydet" and one `update({photos, bio})`
+      persists order and bio (`lib/photos.ts` `saveProfileEdits`; add and
+      remove stay immediate because the trigger needs the object to exist).
+      Reorder is buttons, not drag: six items at most, no gesture
+      dependency, and the rule is a pure tested function (`lib/photo-order.ts`).
+      Own age is computed by `lib/age.ts` mirroring the view's SQL `age()`.
+      Claims: `components/ProfileView.tsx`, `components/ChartDetail.tsx`,
+      `(profile)/profile.tsx`, `(profile)/chart.tsx` (delete),
+      `(profile)/settings/index.tsx`, `(discover,matches)/person/[id]/*`
+      (index edit, chart + full delete), `app/onboarding.tsx`,
+      `lib/photos.ts`, `lib/photo-order.ts` (+test), `lib/age.ts` (+test);
+      strings sections `profile`, `person`, `chart`, `settings`.
+      — done when: track battery green; `photo-order.test.ts` and
+      `age.test.ts` pass; no href to the deleted routes remains (grep);
+      on main after merge screenshots `p-profile.png`, `p-chart-popup.png`,
+      `p-edit.png`, `p-reordered.png` (order survives a relaunch and shows
+      on another account's discover card), `p-person.png` (same layout,
+      no edit control), `p-onboarding-lands-on-profile.png`,
+      `p-settings-sign-out.png`.
+
+- [ ] **Track C — discover: detail popup, profile button, glyph chips,
+      swipe to like or pass (item 3).** The card shows `BigThreeRow`
+      glyphs; under the band meter two buttons side by side, "Uyum
+      detayı" (opens `CompatibilityDetail` in a `Popup`) and "Profili gör"
+      (`personHref`); the photo is no longer a link — that area is the
+      swipe surface. Swipe with the built-in `PanResponder` + `Animated`:
+      claim only when |dx| > 8 and |dx| > |dy| so the vertical scroll
+      survives, rotate with dx, BEĞEN/GEÇ overlay, release decided by a
+      pure `lib/swipe.ts` (`decideSwipe`: past 30 % of the width or a
+      flick), fly out then the existing `act()`, spring back otherwise or
+      while busy. The round ✕ / ♥ buttons stay.
+      Claims: `(discover)/discover.tsx`, `lib/swipe.ts` (+test); strings
+      section `discover`.
+      — done when: track battery green; `swipe.test.ts` passes (like past
+      the threshold or a rightward flick, pass symmetrically, null below
+      both, null when dx and vx disagree); on main after merge screenshots
+      `disc-card.png`, `disc-detail-popup.png`, `disc-after-swipe.png`
+      (a `touch_path` drag past the threshold: card gone, count down, the
+      `likes` row present in the local database), `disc-person.png`; and
+      recorded in NOTES: vertical scroll still works, a tap on "Uyum
+      detayı" does not swipe.
+
+- [ ] **Track D — matches and chat: avatars, Okundu, Yanıtla, the
+      chat/match pager, level meters, plainer names (item 4).**
+      `components/Avatar.tsx` (round, initial-letter fallback); the
+      conversation list resolves first photos with ONE `usePhotoSources`
+      call (ADR-0006: never cached); the thread shows their avatar beside
+      the last bubble of a run. Okundu: `lastReadMine` picks my newest
+      read message and a faint caption sits under it; `useThread` adds a
+      Realtime UPDATE binding (publication already publishes updates;
+      DEFAULT replica identity suffices, asserted by a realtime test).
+      Yanıtla: migration `20260911000002_reply_to.sql` adds
+      `messages.reply_to` (FK, not self, same-match trigger, frozen after
+      insert), `MessageRowSchema` and `sendMessage` grow the field; long
+      press a bubble → reply bar above the composer; a replying bubble
+      shows a quote resolved from the loaded window. Pager: `chat/[id]`
+      becomes two pages in a horizontal paging ScrollView with a
+      two-segment header (Sohbet / Uyum); page 2 is
+      `components/MatchDetail.tsx` (what `match/[id]` renders today);
+      `match/[id].tsx` is deleted and `matchDetailHref` retargets to
+      `/chat/[id]?page=match` — a new match opens the chat on page 2.
+      Meters: `LevelMeter` (three steps) replaces the level word in
+      `CompatibilityDetail`, the word staying as the accessibility label;
+      no number reaches a Text (ADR-0009). Names in
+      `packages/astro/content/tr/dimensions.json`: Duygusal yakınlık,
+      Çekim, İletişim, İstikrar, Gelişim.
+      Claims: the migration, `supabase/tests/database.types.ts`
+      (regenerated on main), `supabase/tests/rls.test.ts`,
+      `supabase/tests/realtime.test.ts`, `supabase/scripts/seed-message.ts`,
+      `lib/chat.ts`, `lib/thread-view.ts` (+test), `lib/routes.ts`,
+      `components/Avatar.tsx`, `components/Meter.tsx`,
+      `components/CompatibilityDetail.tsx`, `components/MatchDetail.tsx`,
+      `(matches)/match/[id].tsx` (delete), `(matches)/chat/[id].tsx`,
+      `(matches)/matches.tsx`, `(matches)/starter/[id].tsx`,
+      `packages/astro/content/tr/dimensions.json`; strings sections
+      `chat`, `match`, `matches`, `starter`.
+      — done when: track battery green; `thread-view.test.ts` and the
+      astro content/calibration tests pass with the new names; on main
+      after merge and `db reset`: rls tests for reply_to (same match
+      accepted, cross-match refused, unknown id refused, frozen after
+      insert), the realtime UPDATE test, types-drift green; screenshots
+      `chat-matches-avatars.png`, `chat-thread.png` (avatar, Okundu, a
+      quoted reply, the reply bar, no back link), `chat-match-page.png`
+      (page 2 with the kicker, level meters and the five names),
+      `chat-meters-discover.png`, `chat-block-leaves-one-route.png`.
+
+Owner decisions taken by default on 2026-09-11, each reversible (the
+question and the default are in `docs/NOTES.md` under the same date): a
+popup dims the tab bar too; onboarding lands on the profile tab; photo
+order is moved with buttons; add/remove write immediately and Kaydet
+writes order + bio; the discover photo is not a tap target; the full-chart
+popup keeps the Mercury/Venus/Mars cards; the five dimension names above;
+reply by long press; no separate "EŞLEŞTİNİZ" screen; password minimum 8.
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

@@ -2879,3 +2879,103 @@ Three rounds of review on one range, and every round's most valuable
 finding was a sentence that had stopped being true rather than code that
 had never worked. Worth remembering the next time a comment feels
 finished.
+
+## 2026-09-11 — The five-item pass: plan and partition
+
+The owner's list of the evening — tab bar on every screen, dimmed popups
+with one closing button, sign-up and sign-in with a password plus inert
+Apple/Google buttons, the profile rebuilt around the photo with an edit
+mode, discover with a detail popup and swipe gestures, and the chat with
+avatars, read receipts, replies and a chat/match pager — went through
+four read-only scouts (nav, auth, profile+discover, matches+chat) and a
+partition critic before a line was written. The plan is the new
+"five-item pass" section of `docs/ROADMAP.md`: a serial foundation on
+main, then four worktree tracks, each with its file claims.
+
+What the scouts verified in `node_modules` rather than assumed, because
+each one decides the shape of the work:
+
+- expo-router 57.0.19 supports the array-group directory
+  `(discover,matches)/…` (`build/matchers.js` `matchArrayGroupName`,
+  `getRoutesCore.js` `extrapolateGroups`), reads `unstable_settings`
+  per group, and resolves `router.navigate` from the root layout against
+  the focused route's segments — so the Realtime match listener lands
+  inside whichever tab is open. Nested native stacks under bottom tabs
+  keep the bar.
+- `react-native-gesture-handler` and `reanimated` are in `node_modules`
+  only as expo-router peer dependencies auto-installed by npm; nothing in
+  the app depends on them and there is no babel config for worklets.
+  Importing them would be a phantom dependency. Swipe and the pager use
+  the built-in `PanResponder`, `Animated` and a paging `ScrollView`.
+- Typed routes are on, but `.expo/types/router.d.ts` is gitignored and
+  only the dev server writes it, so CI's `tsc` never sees a stale href.
+  Every track's done-when therefore carries a local `npx expo start`
+  regeneration plus a grep for the deleted paths. Worth a real fix later
+  (a generation step in the battery) — parked, not done.
+- `profiles_check_photos` (latest definition in
+  `20260909000005_photo_delete_fixes.sql`) checks count, owner folder and
+  storage existence only for paths not already in `old.photos`, so a
+  reorder of the same set in one update passes.
+- The Realtime publication already publishes `insert, update`; under
+  DEFAULT replica identity an UPDATE payload carries the full new row, so
+  read receipts reach the sender without `replica identity full`. The
+  track asserts it with a test rather than trusting this paragraph.
+
+Partition decisions the critic made, and why:
+
+- `match/[id]` moves as a single copy into the matches stack, not into
+  the shared group: Track D deletes the route and folds it into the chat
+  as page 2, and a chat belongs to the matches tab anyway. A like on the
+  deck therefore jumps to Eşleşmeler for the match screen. Only
+  `person/[id]/*` needs the shared group.
+- `lib/routes.ts` (`matchDetailHref`, `personHref`) exists so the five
+  places that link to the match detail change in one file when D
+  retargets them — and so `app/_layout.tsx` is read-only for every track.
+- `CompatibilityDetail`, `Meter`, `BigThreeRow` and `Popup` are extracted
+  in the foundation because two or three tracks would otherwise each
+  create them. After the fork D owns the first two, nobody edits the rest.
+- `lib/strings.ts` is the one file every track writes. Allowed under a
+  section partition (A: welcome/signIn/signUp/errors; B: profile/person/
+  chart/settings; C: discover; D: chat/match/matches/starter), new keys
+  inserted after a section's first key so adjacent sections do not share
+  diff context.
+- Shared resources — the simulator, Metro on 8082, the one local Supabase
+  stack — stay with the main session. Tracks run the battery without the
+  supabase workspace and never `db reset`; a track's DB tests and every
+  screenshot are taken on main after its `--no-ff` merge. The reason is
+  concrete: once D applies its migration to the shared stack, the
+  types-drift test fails in every other worktree.
+
+Owner questions, each answered by a default so the work does not wait
+(the owner can reverse any of them; the cost of each reversal is noted):
+
+1. A popup (RN `Modal`) dims and blocks the tab bar while open. Default:
+   accepted — the bar is on every page, a popup is not a page. Reversal:
+   an in-screen overlay per tab stack, more work.
+2. After onboarding the account lands on the profile tab (the chart is
+   now part of the profile). Default: yes.
+3. Photo order is changed with ‹ › buttons, not drag. Default: buttons;
+   drag is a separate PanResponder job.
+4. Adding and removing a photo write immediately (the trigger needs the
+   object to exist); Kaydet writes order and bio; there is no Vazgeç.
+   Default: yes; a full draft with cancel grows Track B.
+5. Tapping the discover photo no longer opens the profile — that area is
+   the swipe surface; "Profili gör" does. Default: button only.
+6. The full-chart popup keeps the Mercury/Venus/Mars cards above the
+   planet list. Default: keep, so no reading is lost.
+7. Dimension names become Duygusal yakınlık / Çekim / İletişim /
+   İstikrar / Gelişim. Default: ship these five.
+8. Reply is a long press on a bubble, not swipe-to-reply. Default: long
+   press — no dependency, no fight with the horizontal pager.
+9. No separate "EŞLEŞTİNİZ" screen remains; a new match opens the chat on
+   its Uyum page with the kicker there. Default: yes; a celebration popup
+   can be added to D.
+10. Password minimum is 8 (client and config); the welcome button opens
+    sign-up with a "Giriş yap" link under it. Default: yes.
+
+One owner decision is recorded as overriding a comment in the code:
+`app/welcome.tsx` says a button that does nothing is worse than none.
+The owner asked for inert Apple and Google buttons on 2026-09-11 ("arkası
+şimdilik boş kalsın"); Track A rewrites the comment to say so. The App
+Store review risk of a non-functional Sign in with Apple button stands
+and is flagged for the TestFlight item.
