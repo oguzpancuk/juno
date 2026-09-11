@@ -36,4 +36,4 @@ apps/mobile/android/
 *.pem
 
 # Written into the cwd by `packages/astro/scripts/content-audit.ts`.
-content-audit.md
+/content-audit.md

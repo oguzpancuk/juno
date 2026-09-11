@@ -3795,18 +3795,22 @@ however much the chips could have given up — and the chip left alone on
 the second line is then stretched across it by `flexGrow`, which is the
 complaint in a louder form. Wrap and shrink cannot both be the cushion.
 With the wrap gone the five always share the row and `flexShrink`
-absorbs a narrow width as a tighter chip and a two-line label.
+absorbs a narrow width as a tighter chip.
 
-Measured after the change: at 375pt and at 360dp, the two narrowest
+Measured after the change, in the popup — the narrower of the two
+containers this renders in: at 375pt and at 360dp, the two narrowest
 widths that ship, the five sit at one offsetTop with the longest label
 (44pt) inside its chip's content box (48.6pt and 45.6pt). At 300px they
 still hold one row — but reading that as "the labels fit" would be the
-measurement backwards. They stay on one line because a single Turkish
-word has no break opportunity, and at that width they overflow their
-chips instead. The crossover is near 352pt: past every shipping device,
-short of an iPhone in Display Zoom, which is therefore the one place
-this arrangement looks wrong. Shrink can narrow a chip; it cannot make a
-name fit, and nothing here can wrap "Yakınlık". That corroborates the arrangement rather than
+measurement backwards. They stay on one line because the browser will
+not break a single word, and at that width they overflow their chips
+instead; iOS and Android would break inside the word rather than
+overflow, which is no better to look at. The crossover is 352pt. Nothing
+in the iOS deployment range reaches it — Expo SDK 57 puts the 320pt
+iPhone SE out of range, so 375pt is the floor there — but an iPhone in
+Display Zoom does, and so would sub-360dp Android hardware. Shrink can
+narrow a chip; it cannot make a name fit, and nothing can wrap
+"Yakınlık". That corroborates the arrangement rather than
 proving the device: Chrome and CoreText do not measure the same string
 identically, and whether a label wraps is exactly a measurement
 question. (Two write-ups of this went wrong before this one, both in

@@ -185,14 +185,15 @@ const styles = StyleSheet.create({
   // cannot both be the cushion; the owner asked for one row, so shrink
   // is.
   //
-  // What shrink cannot do is make a name fit: the five are single Turkish
-  // words with no break opportunity, so below the width where the longest
-  // one still fits its chip they spill over its border rather than
-  // wrapping. Measured on the web client: a label box of 44pt against a
-  // chip's 45.6pt of content at 360dp and 48.6 at 375pt, which is every
-  // width that ships; the crossover is around 352. A 320pt viewport (an
-  // iPhone in Display Zoom) is past it and looks it. Shortening a name
-  // buys width here, a larger `space` value costs it.
+  // What shrink cannot do is make a name fit. The five are single words,
+  // so once the longest no longer fits its chip there is no good way to
+  // lay it out: the browser overflows it past the border, and iOS and
+  // Android break inside the word instead ("Yakınlı / k"). Measured on
+  // the web client in the popup, the narrower of the two containers: a
+  // 44pt label box against 45.6pt of chip content at 360dp and 48.6 at
+  // 375pt — the two narrowest widths that ship — with the crossover at
+  // 352. Below that it is ugly whichever way the platform breaks it.
+  // Shortening a name buys width here, a larger `space` value costs it.
   dimensionRow: { flexDirection: 'row', gap: space.sm },
   dimensionChip: {
     flexGrow: 1,

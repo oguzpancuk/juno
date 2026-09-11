@@ -1003,15 +1003,15 @@ each item lands with its own screenshot.
       cannot witness the narrow case. The row no longer wraps at all, so
       there is no threshold left to cross: below the 252pt the five chips
       would like, `flexShrink` takes the difference out of their width.
-      Measured on the web client: at 375pt and at 360dp — every width
-      that ships — the five sit at one offsetTop with the longest label
-      (44pt) inside its chip's content box (48.6 and 45.6). At 300px they
-      still hold one row, but the labels then overflow their chips rather
-      than wrapping, because the five names are single Turkish words with
-      no break opportunity; the crossover is near 352pt, past every
-      shipping device and short of an iPhone in Display Zoom. Web
-      measurements, so they corroborate rather than stand for the device:
-      Chrome and CoreText do not measure a string identically._
+      Measured on the web client, in the popup — the narrower of the two
+      containers: at 375pt and at 360dp, the two narrowest widths that
+      ship, the five sit at one offsetTop with the longest label (44pt)
+      inside its chip's content box (48.6 and 45.6). The crossover is
+      352pt. Below it the names, all single words, have nowhere good to
+      go — the browser overflows them past the chip border and the two
+      device platforms break inside the word. Web measurements, so they
+      corroborate rather than stand for the device: Chrome and CoreText
+      do not measure a string identically._
 
 Owner decisions taken by default in this pass, each reversible: the full
 chart repeats the Sun, Moon and Ascendant cards the profile shows above
