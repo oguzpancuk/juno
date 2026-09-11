@@ -3805,12 +3805,14 @@ still hold one row — but reading that as "the labels fit" would be the
 measurement backwards. They stay on one line because the browser will
 not break a single word, and at that width they overflow their chips
 instead; iOS and Android would break inside the word rather than
-overflow, which is no better to look at. The crossover is 352pt. Nothing
-in the iOS deployment range reaches it — Expo SDK 57 puts the 320pt
-iPhone SE out of range, so 375pt is the floor there — but an iPhone in
-Display Zoom does, and so would sub-360dp Android hardware. Shrink can
-narrow a chip; it cannot make a name fit, and nothing can wrap
-"Yakınlık". That corroborates the arrangement rather than
+overflow, which is no better to look at. The crossover follows from
+where those two numbers come from — a chip is `(W − 82) / 5` inside the
+popup and its content box is ten less — so it is 352pt exactly, not a
+bisected estimate. Nothing in the iOS deployment range reaches it: Expo
+SDK 57 requires iOS 16.4, which puts the 320pt iPhone SE out of range
+and makes 375pt the floor there. An iPhone in Display Zoom does reach
+it, and so would sub-360dp Android hardware. Shrink can narrow a chip;
+what it cannot do is make a name fit. That corroborates the arrangement rather than
 proving the device: Chrome and CoreText do not measure the same string
 identically, and whether a label wraps is exactly a measurement
 question. (Two write-ups of this went wrong before this one, both in

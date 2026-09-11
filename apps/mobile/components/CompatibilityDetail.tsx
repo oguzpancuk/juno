@@ -188,11 +188,13 @@ const styles = StyleSheet.create({
   // What shrink cannot do is make a name fit. The five are single words,
   // so once the longest no longer fits its chip there is no good way to
   // lay it out: the browser overflows it past the border, and iOS and
-  // Android break inside the word instead ("Yakınlı / k"). Measured on
+  // Android break inside the word instead — where exactly is theirs to
+  // decide, and nothing here has watched them do it. Measured on
   // the web client in the popup, the narrower of the two containers: a
   // 44pt label box against 45.6pt of chip content at 360dp and 48.6 at
-  // 375pt — the two narrowest widths that ship — with the crossover at
-  // 352. Below that it is ugly whichever way the platform breaks it.
+  // 375pt — the two narrowest widths that ship. A chip is `(W − 82) / 5`
+  // in here and its content box is ten less, which puts the crossover at
+  // 352 exactly. Below it the result is ugly either way.
   // Shortening a name buys width here, a larger `space` value costs it.
   dimensionRow: { flexDirection: 'row', gap: space.sm },
   dimensionChip: {

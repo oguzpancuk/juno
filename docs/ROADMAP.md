@@ -994,9 +994,9 @@ each item lands with its own screenshot.
 
 - [x] **6 — the dimension names fit one row.** (owner, mid-pass) The
       longest, "Duygusal yakınlık", pushed Gelişim onto a second line. It
-      is "Yakınlık" now, and the five chips share one row's width, with
-      a wrap left as the escape hatch for a width too narrow to hold
-      five of them at all.
+      is "Yakınlık" now, and the five chips share one row's width at
+      every width, `flexShrink` taking the difference rather than the row
+      breaking.
       — _Done. `s6-dimensions-one-row.png`: Yakınlık · Çekim · İletişim ·
       İstikrar · Gelişim, each with its meter, on one line. That is a
       402pt device, where every width in this discussion fits, so it
@@ -1006,8 +1006,9 @@ each item lands with its own screenshot.
       Measured on the web client, in the popup — the narrower of the two
       containers: at 375pt and at 360dp, the two narrowest widths that
       ship, the five sit at one offsetTop with the longest label (44pt)
-      inside its chip's content box (48.6 and 45.6). The crossover is
-      352pt. Below it the names, all single words, have nowhere good to
+      inside its chip's content box (48.6 and 45.6). Where those two
+      numbers come from puts the crossover at 352pt exactly: a chip is
+      `(W − 82) / 5` inside the popup and its content box is ten less. Below it the names, all single words, have nowhere good to
       go — the browser overflows them past the chip border and the two
       device platforms break inside the word. Web measurements, so they
       corroborate rather than stand for the device: Chrome and CoreText
