@@ -256,7 +256,6 @@ export const t = {
   },
   legal: {
     open: 'Gizlilik ve lisanslar',
-    back: '‹ Ayarlar',
     updated: (date: string) => `Son güncelleme: ${date}`,
   },
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene', close: 'Kapat' },

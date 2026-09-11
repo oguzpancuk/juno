@@ -2,7 +2,7 @@
 // own, and the app's tsconfig deliberately lists none: this is the one
 // file in the app that reads the filesystem, and it runs under Vitest.
 /// <reference types="node" />
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -56,9 +56,13 @@ describe('route tree', () => {
       const layout = readFileSync(join(tabs, group, '_layout.tsx'), 'utf8');
       // A static export: expo-router reads it while building the route
       // table, so a value computed at render time would be ignored.
-      expect(layout).toMatch(
-        /export const unstable_settings = \{ initialRouteName: '[a-z]+' \}/,
+      const anchor = layout.match(
+        /export const unstable_settings = \{ initialRouteName: '([a-z]+)' \}/,
       );
+      expect(anchor).not.toBeNull();
+      // The anchor must be a screen of that group: a misspelt one throws
+      // at startup on a cold deep link, which no other check would see.
+      expect(existsSync(join(tabs, group, `${anchor?.[1]}.tsx`))).toBe(true);
       expect(layout).toContain("from '@/components/TabStack'");
     }
   });

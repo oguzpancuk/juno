@@ -52,11 +52,13 @@ export function Popup({
       onRequestClose={onClose}
     >
       <View style={styles.layer} testID={testID}>
+        {/* A tap target for sighted users only: VoiceOver gets the one
+            Kapat button below, not a second full-screen one. */}
         <Pressable
           style={styles.backdrop}
           onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={closeLabel ?? t.common.close}
+          accessible={false}
+          importantForAccessibility="no"
         />
         <View
           style={[

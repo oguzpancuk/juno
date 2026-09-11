@@ -240,7 +240,7 @@ export default function Discover() {
           {/* The detail is a popup, not a disclosure (owner, 2026-09-11):
               the card stays a glance, the reading is a sheet over it. */}
           <Pressable
-            testID="toggle-detail"
+            testID="open-detail"
             accessibilityRole="button"
             style={styles.detailButton}
             onPress={() => setDetailFor(current.row.id)}

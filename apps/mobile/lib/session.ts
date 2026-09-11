@@ -47,8 +47,11 @@ export function useSession(): SessionState {
  *
  * Since 2026-09-11 every signed-in screen lives on a stack inside its
  * tab, so the root holds exactly one signed-in route, `(tabs)`, and the
- * replace lands on `[sign-in]` by construction — `lib/routes.test.ts`
- * is what keeps the root that way. The `dismissAll` that used to precede
+ * replace lands on `[door, sign-in]` at worst — `lib/routes.test.ts`
+ * keeps the tree that shape. The tree is necessary, not sufficient: two
+ * router calls in one handler that both target the tab tree can still
+ * add a second `(tabs)` before the first has mounted (see the comment in
+ * app/onboarding.tsx), so a handler makes ONE call into the tab tree. The `dismissAll` that used to precede
  * the replace is gone: with `(tabs)` as the root's only route it was a
  * POP_TO_TOP no navigator handled (a dev warning on every sign-out,
  * watched on the simulator), and the replace removes the whole tab

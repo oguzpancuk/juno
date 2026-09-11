@@ -28,7 +28,7 @@ import { color } from '@/theme/tokens';
 
 /**
  * Keyed by the match id, for the reason the match screen is (see
- * app/match/[id].tsx): everything below belongs to one conversation.
+ * (matches)/match/[id].tsx): everything below belongs to one conversation.
  *
  * This one can be re-parameterised without being re-entered. The starter
  * screen pops back to a thread with POP_TO, which finds a `chat/[id]`
@@ -309,5 +309,4 @@ const styles = StyleSheet.create({
   sendLabelDisabled: { color: color.textMuted },
   failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
   muted: { color: color.textMuted, textAlign: 'center' },
-  link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
 });

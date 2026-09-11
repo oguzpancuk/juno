@@ -123,11 +123,14 @@ export default function Onboarding() {
       });
       await heldFor(started);
       if (result.ok || result.reason === 'exists') {
-        // The profile tab, then the chart pushed on its stack. The chart
-        // belongs to the profile (owner, 2026-09-11), and `replace('/chart')`
-        // alone would leave a one-route stack with no tab bar under it.
-        router.replace('/profile');
-        router.push('/chart');
+        // ONE router call into the tab tree, never two. A replace followed
+        // by a push in the same handler both run in one queue flush, before
+        // the new tab navigator has mounted its nested stack — so the push
+        // diverges at the root and adds a second `(tabs)`, the two-navigator
+        // bug of docs/NOTES.md 2026-09-11. `withAnchor` loads the profile
+        // tab's anchor screen beneath the chart in that single action, so
+        // the chart arrives with the profile and the bar under it.
+        router.replace('/chart', { withAnchor: true });
         return;
       }
       setCalculating(false);

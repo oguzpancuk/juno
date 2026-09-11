@@ -109,7 +109,6 @@ export default function Blocked() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 10 },
-  back: { color: color.textMuted, fontSize: 14 },
   title: { color: color.text, fontSize: 26, fontWeight: '700' },
   hint: { color: color.textFaint, fontSize: 12 },
   row: {

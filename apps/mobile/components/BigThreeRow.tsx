@@ -6,9 +6,9 @@ import { color, radius, space, type } from '@/theme/tokens';
 /**
  * Sun, Moon and rising as three chips, each with the body's own glyph
  * (owner, 2026-09-11: the deck card carries the planet symbols the way
- * the profile does). One component so the deck, the profile and another
- * person's page cannot drift apart — the owner asked for the three to
- * look the same.
+ * the person page does). One component so the deck, the match page and
+ * another person's page cannot drift apart — the owner asked for the
+ * three to look the same; the profile itself joins in Track B.
  */
 const CELLS = [
   { key: 'sun', body: 'sun', label: () => t.chart.sun },

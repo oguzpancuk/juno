@@ -30,11 +30,13 @@ export default function Legal() {
       ]}
       testID="legal-screen"
     >
+      {/* One label for both: the control pops to wherever the reader came
+          from — settings, onboarding, welcome or sign-in — and a label
+          naming one of them would be wrong for the others. Only the
+          fallback, for a cold deep link, depends on the session. */}
       {session.status === 'signed-in' ? (
-        <BackLink label={t.legal.back} fallback="/settings" />
+        <BackLink label={t.signIn.back} fallback="/settings" />
       ) : session.status === 'signed-out' ? (
-        // Pops to wherever the reader came from — welcome or sign-in —
-        // rather than pushing a second sign-in on top of this page.
         <BackLink label={t.signIn.back} fallback="/sign-in" />
       ) : null}
       <Text style={styles.updated}>{t.legal.updated(LEGAL_UPDATED)}</Text>

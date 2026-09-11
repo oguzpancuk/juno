@@ -89,7 +89,7 @@ function TheirChart({ id }: { id: string | string[] | undefined }) {
                 <Body small>{houseText}</Body>
               </View>
             ) : (
-              // The Ascendant has no house of its own; see app/chart.tsx.
+              // The Ascendant has no house of its own; see (profile)/chart.tsx.
               <View style={styles.houseBlock}>
                 <Text style={styles.houseLabel}>{t.chart.housesLabel}</Text>
                 <Body small>{t.chart.risingHasNoHouseTheirs}</Body>
@@ -145,5 +145,4 @@ const styles = StyleSheet.create({
     paddingVertical: space.lg,
     marginTop: space.md,
   },
-  link: { ...type.body, color: color.textMuted, paddingVertical: space.md },
 });

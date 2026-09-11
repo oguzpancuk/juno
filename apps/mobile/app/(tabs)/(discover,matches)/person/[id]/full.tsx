@@ -196,5 +196,4 @@ const styles = StyleSheet.create({
   },
   aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
   orb: { ...type.caption, color: color.textFaint, fontWeight: '400' },
-  link: { ...type.body, color: color.textMuted, paddingVertical: space.md },
 });

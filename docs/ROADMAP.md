@@ -621,8 +621,9 @@ are peer-installed by expo-router, not dependencies of the app.
       `(profile)`; discover under `(discover)`; matches, chat, starter
       and a single copy of `match/[id]` under `(matches)`; `person/[id]/*`
       in the shared group `(discover,matches)`. The root Stack then holds
-      exactly one signed-in route, so `leaveToSignIn` lands on a
-      one-route stack by construction. Chat loses its "‹ Eşleşmeler"
+      exactly one signed-in route, so `leaveToSignIn` leaves nothing
+      signed-in under sign-in — as long as a handler makes one router
+      call into the tab tree, never two. Chat loses its "‹ Eşleşmeler"
       link; match loses its bottom "Tüm eşleşmeler / Keşfete dön" links
       and its post-block `replace` becomes `dismissTo('/matches')`.
       `lib/routes.ts` (`matchDetailHref`, `personHref`) replaces the five

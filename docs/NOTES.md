@@ -2900,8 +2900,8 @@ each one decides the shape of the work:
   `getRoutesCore.js` `extrapolateGroups`), reads `unstable_settings`
   per group, and resolves `router.navigate` from the root layout against
   the focused route's segments — so the Realtime match listener lands
-  inside whichever tab is open. Nested native stacks under bottom tabs
-  keep the bar.
+  inside a tab stack (the matches tab, once `match/[id]` became a single
+  copy there). Nested native stacks under bottom tabs keep the bar.
 - `react-native-gesture-handler` and `reanimated` are in `node_modules`
   only as expo-router peer dependencies auto-installed by npm; nothing in
   the app depends on them and there is no babel config for worklets.
@@ -2995,7 +2995,8 @@ the shared `(discover,matches)` group so both tabs can push it, and
 `match/[id]` moved as a single copy into `(matches)` because Track D
 folds it into the chat, which lives there. The root stack holds exactly
 one signed-in route, `(tabs)`, and `lib/routes.test.ts` fails the battery
-if a signed-in screen ever reappears at the root. Watched on the
+if a signed-in screen ever reappears at the root — and now also if a
+group's anchor names a screen that does not exist. Watched on the
 simulator: settings, the legal page reached from settings, a chat, a
 match screen and the deck all render with the bar under them
 (`screenshots/c9-*`); a match arriving over Realtime while the Profil
@@ -3023,6 +3024,24 @@ root on the way out. The link is a `BackLink` now (pops, falls back to
 the same control. The property this leaves is the one that matters:
 nothing signed-in ever sits under sign-in; what may sit under it is the
 door the person came through.
+
+**What the reviewer caught before the fork.** Onboarding's landing had
+become `replace('/profile'); push('/chart')`. Both calls sit in one
+routing-queue flush, and expo-router (`routingQueue.js`, `stateUtils.js`
+`findDivergentState`) creates the new `(tabs)` route from the REPLACE
+with no nested state yet — so the PUSH that follows diverges at the root
+and adds a _second_ `(tabs)`: the very bug this range exists to remove,
+on the first screen every new account sees. The old tree got away with
+the same two calls because `/chart` was a root route. It is one call
+now, `replace('/chart', { withAnchor: true })`, which loads the profile
+tab's anchor beneath the chart in a single action. The lesson is written
+next to `leaveToSignIn` and in `TabStack`: the tree is necessary, not
+sufficient — a handler makes one router call into the tab tree. Smaller
+catches from the same review, all fixed: five styles orphaned by the
+BackLink swaps, three comments pointing at old paths, the legal page
+telling an onboarding reader "‹ Ayarlar" (one neutral label now), the
+Popup backdrop announced to VoiceOver as a second Kapat, and the deck's
+`toggle-detail` testID that only opens.
 
 **Shared pieces.** `components/Popup.tsx` (a native `Modal`, `color.scrim`
 backdrop, bottom sheet, exactly one closing button — the owner's rule),

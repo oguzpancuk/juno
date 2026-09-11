@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
     paddingTop: 64,
     gap: 12,
   },
-  back: { color: color.textMuted, fontSize: 14 },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
   title: { color: color.text, fontSize: 26, fontWeight: '700' },
   label: { color: color.textMuted, fontSize: 14, marginTop: 12 },
