@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GradientButton } from '@/components/ui';
+import { GradientButton, SCREEN_PADDING } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -69,6 +69,12 @@ export function Popup({
           {title === undefined ? null : (
             <Text style={styles.title}>{title}</Text>
           )}
+          {/* The gutter belongs to the scroll view's content, not to the
+              sheet: on the sheet it clips, and a child that cancels it to
+              run edge to edge (ProfileView's carousel) would lose that
+              much of itself off both sides instead of growing into it.
+              Same measurement as `Screen`, so a component laid out for
+              one host is laid out for the other. */}
           <ScrollView
             style={styles.body}
             contentContainerStyle={styles.bodyContent}
@@ -107,12 +113,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.borderStrong,
     paddingTop: space.xl,
-    paddingHorizontal: space.xl,
+    overflow: 'hidden',
   },
-  title: { ...type.title, color: color.text, marginBottom: space.md },
+  title: {
+    ...type.title,
+    color: color.text,
+    marginBottom: space.md,
+    paddingHorizontal: SCREEN_PADDING,
+  },
   // `flexGrow: 0` so a short sheet is short; `flexShrink: 1` so a long one
   // scrolls inside the sheet instead of pushing the button off the screen.
   body: { flexGrow: 0, flexShrink: 1 },
-  bodyContent: { gap: space.md, paddingBottom: space.md },
-  action: { paddingTop: space.md },
+  bodyContent: {
+    gap: space.md,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingBottom: space.md,
+  },
+  action: { paddingTop: space.md, paddingHorizontal: SCREEN_PADDING },
 });

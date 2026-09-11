@@ -68,6 +68,7 @@ export {
 } from './houses';
 export {
   SIGNS,
+  degreeInSign,
   normalizeDegrees,
   signOf,
   signedDelta,

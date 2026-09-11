@@ -3664,15 +3664,17 @@ primary cards the profile had not shown — and then start again at the
 Sun as a second, differently shaped `PLANETLER` list. `PRIMARY_PLACEMENTS`
 (six) is gone; `PLACEMENTS` is all eleven bodies in profile order and
 `natalReading` returns one `placements` array in the card shape. The
-profile slices the first three, the popup renders all of them. Nothing
-was lost with the deleted list: the popup's cards carry the degree and
-the retrograde mark in their technical line (`degree` prop on
-`PlacementCard`), and the retrograde paragraph moved onto the card. The
+profile slices the first three, the popup renders all of them. Everything the
+deleted list carried but one thing is on the cards: the degree and the
+retrograde mark went into the technical line (`degree` prop on
+`PlacementCard`) and the retrograde paragraph onto the card. The one
+loss is the sign's glyph beside its name (♏ Akrep), which the card
+writes out in words instead. The
 outer five needed names in the product's own language, beside Çekirdek
 benlik and Duygusal dünya: Seni ne büyütür, Neyi ciddiye alırsın, Seni ne
 özgürleştirir, Neyi hayal edersin, Neyi dönüştürürsün. The section label
-started as "HARİTAN BAŞTAN SONA" and was neutralised to "HARİTA" the
-moment it appeared over someone else's chart.
+started as "HARİTAN BAŞTAN SONA" and lost the possessive — "HARİTA
+BAŞTAN SONA" — the moment it appeared over someone else's chart.
 
 **Edge to edge.** `Screen`'s gutter is now `SCREEN_PADDING`, exported so
 a child can cancel exactly it; the profile carousel does, and drops its
@@ -3697,3 +3699,37 @@ can push one down alone.
 **Left in the local database on purpose:** the report row filed against
 Selin at 16:09:09Z while proving item 5, and Sumeyye's placeholder photo.
 Both are test data the owner can clear; deleting rows is ask-tier.
+
+## 2026-09-12 — what the review of the second pass caught
+
+Two findings worth the round trip, both invisible to the battery.
+
+**A popup is not a screen, and the equal numbers hid it.** `Screen` keeps
+its gutter on the scroll view's _content container_, so `ProfileView`'s
+carousel with `marginHorizontal: -SCREEN_PADDING` grows into the frame.
+`Popup` kept the same measurement on the _sheet view_, with the scroll
+view inside it — so the same margin pushed the carousel 24pt out of the
+scroll view's bounds on each side, where `UIScrollView` clips it. The
+person popup therefore showed the gutter the owner had asked to remove
+_and_ cropped 12% off the photo's width, while the identical component
+on the profile tab was right. `Popup` now carries the gutter on its
+title, its scroll content and its action row, and `ProfileView` states
+the requirement it places on a host instead of leaving it to a matching
+number in two files.
+
+**The Ascendant's degree could print an arcminute low.** `toPublicChart`
+rounds `longitude % 30` to four decimals precisely because float modulo
+is inexact, and the new placement list reintroduced the raw modulo for
+the Ascendant alone — about one chart in 1,650 would have disagreed with
+astro.com by a minute, which ADR-0009 makes a real defect. Both paths go
+through `degreeInSign` now, and `public.test.ts` pins the trap value
+(30.15) rather than only the printed format.
+
+Smaller things taken in the same pass: the dimension chips use
+`flexBasis` and let a name wrap inside its chip, because a fixed single
+line came back as "Yakınlı…" on all five at a large Dynamic Type
+setting — the owner's complaint in a worse form; the chat header's top
+padding comes from the safe-area inset rather than a number that put the
+back link's hit area under the Dynamic Island; and
+`t.person.openProfile` lost the "›" it no longer earns now that it is
+only an accessibility label.

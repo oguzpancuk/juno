@@ -222,7 +222,7 @@ export const t = {
     back: '‹ Keşfet',
     gone: 'Bu profil artık görünmüyor.',
     openMatch: 'Uyum detayı ›',
-    openProfile: (name: string) => `${name} profilini aç ›`,
+    openProfile: (name: string) => `${name} profilini aç`,
     chartTitle: (name: string) => `${name} haritası`,
     fullChart: 'Tüm haritasını gör',
   },

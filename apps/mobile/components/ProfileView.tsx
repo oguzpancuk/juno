@@ -384,9 +384,13 @@ function Arrow({
 }
 
 const styles = StyleSheet.create({
-  // Edge to edge (owner, 2026-09-12): the photo cancels the screen's
-  // gutter on both sides, and loses its corner radius with it — a rounded
-  // corner against the screen edge reads as a mistake.
+  // Edge to edge (owner, 2026-09-12): the photo cancels the gutter on
+  // both sides, and loses its corner radius with it — a rounded corner
+  // against the screen edge reads as a mistake. This is a contract with
+  // whatever renders a ProfileView: the host must keep `SCREEN_PADDING`
+  // on a scroll view's *content*, as `Screen` and `Popup` both do, so
+  // the negative margin grows into the frame rather than out of it,
+  // where a scroll view would clip it.
   carousel: {
     alignSelf: 'stretch',
     marginHorizontal: -SCREEN_PADDING,

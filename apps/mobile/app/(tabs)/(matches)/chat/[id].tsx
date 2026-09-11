@@ -248,7 +248,7 @@ function ChatView({
 
   return (
     <View style={styles.screen} testID="chat-screen">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + space.xs }]}>
         <BackLink
           label={t.chat.backToMatches}
           fallback="/matches"
@@ -534,8 +534,10 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: color.bg,
   },
+  // `paddingTop` comes from the safe-area inset at the call site: the
+  // back link is the topmost thing on the screen now, and a hardcoded
+  // number puts its hit area under the Dynamic Island.
   header: {
-    paddingTop: 56,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: color.border,

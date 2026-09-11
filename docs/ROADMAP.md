@@ -953,8 +953,9 @@ each item lands with its own screenshot.
       _Done. `s2-person-popup.png` — the popup over the thread, photo,
       name and age, big three; scrolled, it carries the bio, the three
       cards and "Tüm haritasını gör", which opens the chart as a second
-      sheet over the first (nested `Modal`, checked on the device).
-      `s5-report-popup.png` shows the Uyum page without the old link._
+      sheet over the first (nested `Modal`, checked on the device). The
+      Uyum page's own evidence is `s5-uyum-no-profile-link.png`: safety
+      follows the elements section with nothing between them._
 
 - [x] **3 — the full chart reads once, from the start, in one format.**
       Today the popup opens on Mercury (the three primary cards the
@@ -965,7 +966,7 @@ each item lands with its own screenshot.
       three cards on the profile use. `ChartDetail` renders that one
       list and the separate `PLANETLER` section goes. The outer five
       need dating-language names of their own in
-      `packages/astro/content/placements.json`, beside Çekirdek benlik
+      `packages/astro/content/tr/placements.json`, beside Çekirdek benlik
       and Duygusal dünya.
       _Done. `PLACEMENTS` has eleven entries and `content.test.ts`
       asserts a distinct label for each; `summary.test.ts` asserts the

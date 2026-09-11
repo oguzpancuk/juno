@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { computeChart } from './chart';
 import { PublicChartSchema, bigThree, toPublicChart } from './public';
+import { degreeInSign } from './signs';
 import { describeAspectTr, formatDegree, natalAspectTitleTr } from './tr';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
@@ -9,6 +10,26 @@ const chart = computeChart({
   utc: new Date(istanbul.input.utc),
   latitude: istanbul.input.latitude,
   longitude: istanbul.input.longitude,
+});
+
+describe('degreeInSign', () => {
+  // Both the planet degrees in `toPublicChart` and the Ascendant's in
+  // `natalReading` go through this; raw `% 30` is inexact and
+  // `formatDegree` floors, so an arcminute goes missing about once in
+  // 1,650 charts. A displayed degree is meant to match astro.com
+  // (ADR-0009), so the rounding is part of the contract.
+  it('rounds away the float modulo that would print a minute low', () => {
+    expect(30.15 % 30).toBeLessThan(0.15); // the trap
+    expect(degreeInSign(30.15)).toBe(0.15);
+    expect(formatDegree(degreeInSign(30.15))).toBe('0°09′');
+    expect(formatDegree(30.15 % 30)).toBe('0°08′');
+  });
+
+  it('folds a longitude into its own sign', () => {
+    expect(degreeInSign(0)).toBe(0);
+    expect(degreeInSign(359.9)).toBe(29.9);
+    expect(degreeInSign(-1)).toBe(29);
+  });
 });
 
 describe('toPublicChart', () => {

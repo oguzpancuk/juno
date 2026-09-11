@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PLANETS, type Planet } from './bodies';
 import type { Chart } from './chart';
-import { SIGNS, signOf } from './signs';
+import { SIGNS, degreeInSign, signOf } from './signs';
 
 /**
  * The chart as stored in `profiles.chart` and shown to other users:
@@ -73,9 +73,7 @@ export function toPublicChart(chart: Chart): PublicChart {
       // Derived from the rounded longitude so sign, degree and longitude
       // stay mutually consistent at a sign boundary (29.99996 → 0 next sign).
       sign: signOf(longitude),
-      // Rounded again: float modulo of a 4-decimal value is inexact
-      // (30.15 % 30 = 0.14999999999999858 would print 0°08′).
-      degree: Number((longitude % 30).toFixed(4)),
+      degree: degreeInSign(longitude),
       house: p.house,
       retrograde: p.retrograde,
     };

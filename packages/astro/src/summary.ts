@@ -46,7 +46,7 @@ import {
 } from './content';
 import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
-import { signOf } from './signs';
+import { degreeInSign, signOf } from './signs';
 import {
   BODY_TR,
   SIGN_TR_LOCATIVE,
@@ -126,10 +126,11 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
     const ascendant = placement === 'ascendant';
     const sign = ascendant ? rising : chart.planets[placement].sign;
     const house = ascendant ? null : chart.planets[placement].house;
-    // The Ascendant is stored as an absolute longitude, a planet as its
-    // degree within its own sign; a sign is 30° wide.
+    // The Ascendant is stored as an absolute longitude, a planet as the
+    // degree within its own sign that `toPublicChart` already reduced —
+    // through the same helper, so the two cannot round differently.
     const degree = ascendant
-      ? chart.houses.ascendant % 30
+      ? degreeInSign(chart.houses.ascendant)
       : chart.planets[placement].degree;
     return {
       placement,

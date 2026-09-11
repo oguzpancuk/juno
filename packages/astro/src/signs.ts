@@ -42,6 +42,17 @@ export function signOf(longitude: number): Sign {
   return sign;
 }
 
+/**
+ * Degrees into the sign for an ecliptic longitude, rounded to four
+ * decimals. The rounding is the point: float modulo of a 4-decimal value
+ * is inexact (30.15 % 30 = 0.14999999999999858, which `formatDegree`
+ * floors to 0°08′ instead of 0°09′), and a degree on screen is meant to
+ * agree with astro.com (ADR-0009).
+ */
+export function degreeInSign(longitude: number): number {
+  return Number((normalizeDegrees(longitude) % 30).toFixed(4));
+}
+
 /** Signed angular difference folded into [-180, 180). */
 export function signedDelta(deg: number): number {
   const d = normalizeDegrees(deg);

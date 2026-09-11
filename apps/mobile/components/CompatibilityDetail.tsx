@@ -53,9 +53,7 @@ export function CompatibilityDetail({
                 style={styles.dimensionChip}
                 testID={`dimension-${d.dimension}`}
               >
-                <Text style={styles.dimensionName} numberOfLines={1}>
-                  {d.name}
-                </Text>
+                <Text style={styles.dimensionName}>{d.name}</Text>
                 {/* Bars, not the level word; the word stays as the
                     meter's accessibility label. No number reaches a Text
                     (ADR-0009). */}
@@ -175,11 +173,17 @@ const styles = StyleSheet.create({
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
   // Five chips, one row, equal widths (owner, 2026-09-12: the longest
-  // name was pushing Gelişim onto a second line). They share the width
-  // rather than wrapping, so the padding is what gives way.
-  dimensionRow: { flexDirection: 'row', gap: space.sm },
+  // name was pushing Gelişim onto a second line). `flexBasis` rather than
+  // `flex: 1`, and the name may take two lines inside its chip: at a
+  // large Dynamic Type setting a fixed single line would come back as
+  // "Yakınlı…" on all five, which is the same complaint in a worse form.
+  // `flexWrap` is kept as the escape hatch for a width that cannot hold
+  // five chips at all — five basis widths and four gaps need 322pt, and
+  // the narrowest phone this ships to leaves 327.
+  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   dimensionChip: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 58,
     alignItems: 'center',
     backgroundColor: color.surfaceSoft,
     borderRadius: radius.sm,
@@ -189,7 +193,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xs,
     gap: space.xs,
   },
-  dimensionName: { ...type.caption, color: color.textFaint },
+  dimensionName: {
+    ...type.caption,
+    color: color.textFaint,
+    textAlign: 'center',
+  },
   aspectLine: { gap: 2 },
   aspect: {
     backgroundColor: color.surface,
