@@ -780,7 +780,7 @@ are peer-installed by expo-router, not dependencies of the app.
       birth turns a year older on 1 March of a common year under `age()`,
       not on 28 Feb — `age.ts` mirrors the views, and the test says so._
 
-- [ ] **Track C — discover: detail popup, profile button, glyph chips,
+- [x] **Track C — discover: detail popup, profile button, glyph chips,
       swipe to like or pass (item 3).** The card shows `BigThreeRow`
       glyphs; under the band meter two buttons side by side, "Uyum
       detayı" (opens `CompatibilityDetail` in a `Popup`) and "Profili gör"
@@ -801,8 +801,7 @@ are peer-installed by expo-router, not dependencies of the app.
       `likes` row present in the local database), `disc-person.png`; and
       recorded in NOTES: vertical scroll still works, a tap on "Uyum
       detayı" does not swipe.
-      _Done in `track/c-discover`; the checkbox and the screenshots are
-      main's. `lib/swipe.ts` `decideSwipe` — past 30 % of the width or a
+      _Merged (`793d476`). `lib/swipe.ts` `decideSwipe` — past 30 % of the width or a
       0.5 pt/ms flick, symmetric, null when dx and vx disagree in sign
       and the opposing velocity is over 0.15 pt/ms (under it is the
       finger lifting, not a change of mind), a non-finite vx decides on
@@ -824,8 +823,13 @@ are peer-installed by expo-router, not dependencies of the app.
       the compiler lint rules refuse both a ref handed to a function
       called during render and a variable reassigned after render inside
       the component. Reviewed (code-reviewer, two findings, both landed);
-      verified by the track battery; the simulator claims are main's,
-      listed in the NOTES entry._
+      verified by the track battery. On the simulator: `disc-card.png`
+      (the two pills), `disc-person.png` ("Profili gör"),
+      `disc-detail-popup.png` (the pill opened the sheet and the card did
+      not move), `disc-scroll-works.png` (a vertical swipe on the card
+      scrolled the page and recorded nothing), `disc-after-swipe.png` (a
+      `touch_path` drag of 300 pt to the right: Ayşe gone, Melis up, the
+      `likes` row present, the count 4 → 5)._
 
 - [x] **Track D — matches and chat: avatars, Okundu, Yanıtla, the
       chat/match pager, level meters, plainer names (item 4).**

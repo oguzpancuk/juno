@@ -3550,3 +3550,25 @@ the main checkout's `node_modules`, so they showed as untracked in every
 worktree. `node_modules` (no slash) went into the repository's local
 `.git/info/exclude` — not a tracked file; the tracked `.gitignore` is
 main's to change.
+
+## 2026-09-11 — Track C merged; the five-item pass is on main
+
+Track C landed last (`793d476`), after its own reviewer's two findings
+were fixed on the branch: a velocity dead-band on the swipe veto (RN's
+`vx` is the last move event's instantaneous velocity, so a lift after a
+clear drag could carry a tiny opposing value and spring the card back)
+and a responder that remembers the card it was granted on, so a finger
+still down when a ♥ returns cannot swipe the next person. The one
+orphaned string Track B reported, `discover.completeProfile`, was pruned
+once C's section was merged. On the simulator, signed in with the
+password: the two pills, "Profili gör" opening the person page, "Uyum
+detayı" opening the sheet without moving the card, a vertical swipe
+scrolling the page and recording nothing, and a `touch_path` drag of
+300 pt recording a like on Ayşe (the `likes` row, count 4 → 5) with
+Melis's card up next — `screenshots/disc-*.png`.
+
+All four tracks are merged into main with `--no-ff`, each reviewed on
+main, the full battery green after each merge and after the prune
+(`80b85ea`). The four track branches and worktrees are still on disk
+for the owner to inspect; they are deleted once the branch has left the
+machine. Nothing has left the machine: that step is ask-tier.
