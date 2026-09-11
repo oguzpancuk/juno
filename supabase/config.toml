@@ -216,15 +216,19 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Confirmations on: a password sign-up cannot yield a session with an
-# unverified e-mail next to the OTP flow. OTP itself verifies the address.
+# Confirmations OFF (owner, 2026-09-11: "maili sonra ayarlarız, şimdilik
+# direkt kaydolsun"): a password sign-up yields a session at once and no
+# mail is sent, so an address is not verified at sign-up. The hosted
+# project, when it exists, must mirror this or the app shows "confirmation
+# sent" instead of signing the person in. Turn it back on together with
+# a verification step in the app.
 # Allow/disallow new user signups via email to your project.
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = true
+enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -253,8 +257,8 @@ otp_expiry = 600
 [auth.email.template.magic_link]
 subject = "Juno giriş kodun"
 content_path = "./supabase/templates/magic_link.html"
-# A brand-new address goes through the signup-confirmation template when
-# enable_confirmations is on; it must render the same code.
+# Only used while enable_confirmations is on (it is off above); kept so
+# turning confirmations back on sends the same code the OTP mail did.
 [auth.email.template.confirmation]
 subject = "Juno giriş kodun"
 content_path = "./supabase/templates/magic_link.html"
