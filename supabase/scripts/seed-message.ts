@@ -2,7 +2,11 @@
  * Local-only: post a message from a seeded user into their match with a
  * real tester, so the live-update path can be watched in the simulator.
  *
- *   npx tsx supabase/scripts/seed-message.ts <tester e-mail> <text> [seed name]
+ *   npx tsx supabase/scripts/seed-message.ts [--reply] <tester e-mail> <text> [seed name]
+ *
+ * `--reply` makes it a reply to the tester's latest message in that match,
+ * so the quote block can be watched too; it fails when the tester has not
+ * written yet, rather than posting a plain message and calling it a reply.
  *
  * Uses the local service-role key from `supabase status`; refuses any
  * non-local API URL.
@@ -11,11 +15,17 @@ import { execFileSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const email: string | undefined = process.argv[2];
-const text: string | undefined = process.argv[3];
-const seedName = process.argv[4] ?? 'deniz';
+const REPLY_FLAG = '--reply';
+const args = process.argv.slice(2);
+const asReply = args.includes(REPLY_FLAG);
+const positional = args.filter((arg) => arg !== REPLY_FLAG);
+const email: string | undefined = positional[0];
+const text: string | undefined = positional[1];
+const seedName = positional[2] ?? 'deniz';
 if (email === undefined || text === undefined)
-  throw new Error('usage: seed-message.ts <tester e-mail> <text> [seed name]');
+  throw new Error(
+    'usage: seed-message.ts [--reply] <tester e-mail> <text> [seed name]',
+  );
 // Narrowing does not survive into the async closure below.
 const testerEmail: string = email;
 const body: string = text;
@@ -42,6 +52,7 @@ const admin = createClient(status.API_URL, status.SERVICE_ROLE_KEY, {
 
 const Profile = z.object({ id: z.string().uuid(), display_name: z.string() });
 const Match = z.object({ id: z.string().uuid() });
+const MaybeMessage = z.object({ id: z.string().uuid() }).nullable();
 
 async function main(): Promise<void> {
   const users = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -66,13 +77,39 @@ async function main(): Promise<void> {
       .data,
   );
 
+  let replyTo: string | null = null;
+  if (asReply) {
+    // The same (created_at, id) order the app pages by.
+    const latest = MaybeMessage.parse(
+      (
+        await admin
+          .from('messages')
+          .select('id')
+          .eq('match_id', match.id)
+          .eq('sender_id', tester.id)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ).data,
+    );
+    if (latest === null)
+      throw new Error(
+        `${REPLY_FLAG}: ${testerEmail} has no message in this match yet`,
+      );
+    replyTo = latest.id;
+  }
+
   const sent = new Date();
-  const { error } = await admin
-    .from('messages')
-    .insert({ match_id: match.id, sender_id: seed.id, body });
+  const { error } = await admin.from('messages').insert({
+    match_id: match.id,
+    sender_id: seed.id,
+    body,
+    reply_to: replyTo,
+  });
   if (error) throw error;
   console.log(
-    `${seed.display_name} → ${testerEmail}: "${body}" at ${sent.toISOString()}`,
+    `${seed.display_name} → ${testerEmail}: "${body}"${replyTo === null ? '' : ` (reply to ${replyTo})`} at ${sent.toISOString()}`,
   );
 }
 

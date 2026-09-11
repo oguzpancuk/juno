@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { allCities } from '@juno/geo';
-import type { Json } from './database.types';
+import type { Database, Json } from './database.types';
 import {
   ANKARA,
   ISTANBUL,
@@ -82,6 +82,7 @@ const UNIQUE_VIOLATION = '23505';
 const NOT_NULL_VIOLATION = '23502';
 const INVALID_DATE = '22007';
 const CHECK_VIOLATION = '23514';
+const FOREIGN_KEY_VIOLATION = '23503';
 
 let alice: TestUser; // woman, wants men, Istanbul
 let bob: TestUser; // man, wants women, ~6 km away
@@ -732,6 +733,11 @@ describe('messages', () => {
   let ivan: TestUser; // man, wants women, nearby
   let jane: TestUser; // woman, wants men, nearby
   let matchId: string;
+  // A second thread, far from everyone else, for the cross-thread reply.
+  let kate: TestUser; // woman, wants men, South Pacific
+  let leo: TestUser; // man, wants women, same point
+  let otherThreadMessageId: string;
+  const FAR_PACIFIC: readonly [number, number] = [-150.0, -40.0];
 
   const MessageRows = z.array(
     z
@@ -740,11 +746,26 @@ describe('messages', () => {
         match_id: z.string().uuid(),
         sender_id: z.string().uuid(),
         body: z.string(),
+        reply_to: z.string().uuid().nullable(),
         read_at: z.string().nullable(),
         created_at: z.string(),
       })
       .strict(),
   );
+
+  // `tests/database.types.ts` is regenerated on main once the reply_to
+  // migration is applied to the shared stack, and the typed client
+  // rejects a column the generated file does not know. Until then the
+  // column is declared on the way in; both helpers stay correct after
+  // the regeneration and can be dropped for plain literals then.
+  type MessageInsert = Database['public']['Tables']['messages']['Insert'];
+  type MessageUpdate = Database['public']['Tables']['messages']['Update'];
+  const withReply = (
+    row: MessageInsert & { reply_to: string | null },
+  ): MessageInsert => row;
+  const replyPatch = (
+    patch: MessageUpdate & { reply_to: string | null },
+  ): MessageUpdate => patch;
 
   beforeAll(async () => {
     ivan = await user('ivan');
@@ -787,6 +808,59 @@ describe('messages', () => {
     const mine = rows.find((r) => r.id === jane.id);
     if (!mine) throw new Error('setup: ivan and jane are not matched');
     matchId = mine.match_id;
+
+    kate = await user('kate');
+    leo = await user('leo');
+    await insertProfile(
+      kate,
+      profileRow({
+        id: kate.id,
+        display_name: 'Kate',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: FAR_PACIFIC,
+        radius_km: 5,
+      }),
+    );
+    await insertProfile(
+      leo,
+      profileRow({
+        id: leo.id,
+        display_name: 'Leo',
+        gender: 'man',
+        interested_in: 'women',
+        lonLat: FAR_PACIFIC,
+        radius_km: 5,
+      }),
+    );
+    await kate.client.from('likes').insert({
+      from_id: kate.id,
+      to_id: leo.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    await leo.client.from('likes').insert({
+      from_id: leo.id,
+      to_id: kate.id,
+      kind: 'like',
+      starter_key: STARTER,
+    });
+    const theirs = MatchProfileRows.parse(
+      (await kate.client.from('match_profiles').select('*')).data,
+    ).find((r) => r.id === leo.id);
+    if (!theirs) throw new Error('setup: kate and leo are not matched');
+    const posted = await kate.client
+      .from('messages')
+      .insert({
+        match_id: theirs.match_id,
+        sender_id: kate.id,
+        body: 'Başka bir sohbet',
+      })
+      .select('id')
+      .single();
+    otherThreadMessageId = z
+      .object({ id: z.string().uuid() })
+      .parse(posted.data).id;
   });
 
   it('anon is denied the messages table outright', async () => {
@@ -992,6 +1066,114 @@ describe('messages', () => {
       .from('messages')
       .insert({ match_id: orphan, sender_id: ivan.id, body: 'boşluğa' });
     expect(error?.code).toBe(PERMISSION_DENIED);
+  });
+
+  it('a reply names an earlier message of the same thread and is echoed back', async () => {
+    const hers = MessageRows.parse(
+      (await ivan.client.from('messages').select('*')).data,
+    ).find((m) => m.sender_id === jane.id);
+    if (!hers) throw new Error('no message of Jane to reply to');
+    const sent = await ivan.client
+      .from('messages')
+      .insert(
+        withReply({
+          match_id: matchId,
+          sender_id: ivan.id,
+          body: 'Selam, seni duydum',
+          reply_to: hers.id,
+        }),
+      )
+      .select('*')
+      .single();
+    expect(sent.error).toBeNull();
+    expect(MessageRows.parse([sent.data])[0]?.reply_to).toBe(hers.id);
+
+    // The other side reads the pointer too: the quote is resolved from
+    // the loaded window on both phones, never fetched again.
+    const forJane = MessageRows.parse(
+      (await jane.client.from('messages').select('*')).data,
+    ).filter((m) => m.reply_to === hers.id);
+    expect(forJane.map((m) => m.body)).toEqual(['Selam, seni duydum']);
+  });
+
+  it('a reply cannot point into another thread', async () => {
+    // Kate's message exists, in a match Ivan is no part of. The foreign
+    // key alone would accept it; the trigger is what refuses it.
+    const { error } = await ivan.client.from('messages').insert(
+      withReply({
+        match_id: matchId,
+        sender_id: ivan.id,
+        body: 'yanlış sohbet',
+        reply_to: otherThreadMessageId,
+      }),
+    );
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('a reply to a message that does not exist is a foreign key error', async () => {
+    const ghost = '00000000-0000-4000-8000-00000000abcd';
+    const { error } = await ivan.client.from('messages').insert(
+      withReply({
+        match_id: matchId,
+        sender_id: ivan.id,
+        body: 'hayalete',
+        reply_to: ghost,
+      }),
+    );
+    expect(error?.code).toBe(FOREIGN_KEY_VIOLATION);
+  });
+
+  it('a message cannot quote itself', async () => {
+    const id = crypto.randomUUID();
+    const { error } = await ivan.client.from('messages').insert(
+      withReply({
+        id,
+        match_id: matchId,
+        sender_id: ivan.id,
+        body: 'kendime',
+        reply_to: id,
+      }),
+    );
+    expect(error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('reply_to is frozen after insert; the receipt still lands', async () => {
+    // Ivan's reply from above. Jane is its recipient, the only role the
+    // update policy admits, so a refusal here is the trigger's, not RLS's.
+    const reply = MessageRows.parse(
+      (await jane.client.from('messages').select('*')).data,
+    ).find((m) => m.reply_to !== null);
+    if (!reply) throw new Error('no reply to re-point');
+
+    const cleared = await jane.client
+      .from('messages')
+      .update(replyPatch({ reply_to: null }))
+      .eq('id', reply.id);
+    expect(cleared.error?.code).toBe(CHECK_VIOLATION);
+
+    const repointed = await jane.client
+      .from('messages')
+      .update(replyPatch({ reply_to: otherThreadMessageId }))
+      .eq('id', reply.id);
+    expect(repointed.error?.code).toBe(CHECK_VIOLATION);
+
+    const read = await jane.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', reply.id)
+      .select('read_at, reply_to');
+    expect(read.error).toBeNull();
+    expect(
+      z
+        .array(
+          z.object({
+            read_at: z.string(),
+            reply_to: z.string().uuid().nullable(),
+          }),
+        )
+        .parse(read.data)
+        .map((m) => m.reply_to),
+    ).toEqual([reply.reply_to]);
   });
 });
 
