@@ -100,9 +100,6 @@ export const t = {
       'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
     noAspectWhy: 'Haritalarınız birbirine değmiyor.',
     detail: 'Uyum detayı',
-    hideDetail: 'Detayı gizle',
-    dimensions: 'BAĞLANTININ TARAFLARI',
-    elements: 'Elementler',
     remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
   },
   match: {
@@ -263,7 +260,7 @@ export const t = {
     backToSignIn: '‹ Giriş',
     updated: (date: string) => `Son güncelleme: ${date}`,
   },
-  common: { loading: 'Yükleniyor…', retry: 'Tekrar dene' },
+  common: { loading: 'Yükleniyor…', retry: 'Tekrar dene', close: 'Kapat' },
   errors: {
     generic: 'Bir şeyler ters gitti, tekrar dene.',
     emailInvalid: 'E-posta adresi geçersiz görünüyor.',

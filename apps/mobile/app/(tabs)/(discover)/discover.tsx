@@ -1,11 +1,4 @@
-import {
-  BANDS,
-  SIGN_TR,
-  bandName,
-  bandOf,
-  synastryReading,
-  type Band,
-} from '@juno/astro';
+import { bandName, bandOf, synastryReading } from '@juno/astro';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -24,7 +17,12 @@ import {
   type DiscoverState,
 } from '@/lib/discover';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BigThreeRow } from '@/components/BigThreeRow';
+import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import { BandMeter } from '@/components/Meter';
+import { Popup } from '@/components/Popup';
 import { usePhotoSources } from '@/lib/photos';
+import { matchDetailHref, personHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -114,11 +112,7 @@ export default function Discover() {
       return;
     }
     drop();
-    if (result.matchId)
-      router.navigate({
-        pathname: '/match/[id]',
-        params: { id: result.matchId },
-      });
+    if (result.matchId) router.navigate(matchDetailHref(result.matchId));
   };
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
@@ -190,7 +184,7 @@ export default function Discover() {
         </View>
       ) : (
         <View style={styles.card} testID={`card-${current.row.id}`}>
-          <Link href={`/person/${current.row.id}`} asChild>
+          <Link href={personHref(current.row.id)} asChild>
             <Pressable style={styles.photoWrap} testID="open-person">
               {(() => {
                 const source = cardSource;
@@ -227,22 +221,12 @@ export default function Discover() {
               {current.row.bio}
             </Text>
           ) : null}
-          <View style={styles.row}>
-            <Chip
-              label={t.chart.sun}
-              value={SIGN_TR[current.row.big_three.sun]}
-            />
-            <Chip
-              label={t.chart.moon}
-              value={SIGN_TR[current.row.big_three.moon]}
-            />
-            <Chip
-              label={t.chart.rising}
-              value={SIGN_TR[current.row.big_three.rising]}
-            />
-          </View>
+          <BigThreeRow three={current.row.big_three} />
           <View style={styles.bandBox}>
-            <BandMeter band={bandOf(current.match.score)} />
+            <BandMeter
+              band={bandOf(current.match.score)}
+              label={bandName(current.match.score)}
+            />
             <View>
               <Text style={styles.bandName} testID="band">
                 {bandName(current.match.score)}
@@ -253,47 +237,29 @@ export default function Discover() {
           <Text style={styles.why} testID="why">
             {current.why ?? t.discover.noAspectWhy}
           </Text>
+          {/* The detail is a popup, not a disclosure (owner, 2026-09-11):
+              the card stays a glance, the reading is a sheet over it. */}
           <Pressable
             testID="toggle-detail"
-            onPress={() =>
-              setDetailFor(showDetail ? null : (current.row.id ?? null))
-            }
+            accessibilityRole="button"
+            style={styles.detailButton}
+            onPress={() => setDetailFor(current.row.id)}
           >
-            <Text style={styles.link}>
-              {showDetail ? t.discover.hideDetail : t.discover.detail}
-            </Text>
+            <Text style={styles.detailButtonText}>{t.discover.detail}</Text>
           </Pressable>
-          {showDetail && detail ? (
-            <View style={styles.detail} testID="detail">
-              <Text style={styles.detailText}>{detail.bandText}</Text>
-              {detail.dimensions.length === 0 ? null : (
-                <Text style={styles.detailLabel}>{t.discover.dimensions}</Text>
-              )}
-              <View style={styles.dimensionRow}>
-                {detail.dimensions.map((d) => (
-                  <View
-                    key={d.dimension}
-                    style={styles.dimensionChip}
-                    testID={`dimension-${d.dimension}`}
-                  >
-                    <Text style={styles.dimensionName}>{d.name}</Text>
-                    <Text style={styles.dimensionLabel}>{d.label}</Text>
-                  </View>
-                ))}
+          {detail ? (
+            <Popup
+              visible={showDetail}
+              onClose={() => setDetailFor(null)}
+              title={t.discover.detail}
+              testID="detail"
+            >
+              <View style={styles.popupBand}>
+                <BandMeter band={detail.band} label={detail.bandName} />
+                <Text style={styles.bandName}>{detail.bandName}</Text>
               </View>
-              <Text style={styles.detailLabel}>{t.discover.elements}</Text>
-              <Text style={styles.detailMuted}>{detail.sunElements}</Text>
-              <Text style={styles.detailMuted}>{detail.moonElements}</Text>
-              {detail.aspects.map((a) => (
-                <View
-                  key={`${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`}
-                  style={styles.detailAspect}
-                >
-                  <Text style={styles.detailLabel}>{a.headline}</Text>
-                  <Text style={styles.detailText}>{a.meaning}</Text>
-                </View>
-              ))}
-            </View>
+              <CompatibilityDetail reading={detail} />
+            </Popup>
           ) : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.actions}>
@@ -329,39 +295,6 @@ export default function Discover() {
         </View>
       )}
     </ScrollView>
-  );
-}
-
-/**
- * Four steps, not a number. It keeps cards comparable at a glance without
- * asserting a precision the method does not have (ADR-0009 §3). The order
- * comes from the engine's own BANDS, so a reorder there cannot silently
- * fill the wrong number of bars here.
- */
-function BandMeter({ band }: { band: Band }) {
-  const filled = BANDS.indexOf(band) + 1;
-  return (
-    <View style={styles.meter} testID={`band-meter-${band}`}>
-      {BANDS.map((step, i) => (
-        <View
-          key={step}
-          style={[
-            styles.meterStep,
-            { height: 10 + i * 5 },
-            i < filled && styles.meterStepOn,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.chip}>
-      <Text style={styles.chipLabel}>{label}</Text>
-      <Text style={styles.chipValue}>{value}</Text>
-    </View>
   );
 }
 
@@ -416,19 +349,6 @@ const styles = StyleSheet.create({
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
   bio: { ...type.bodySmall, color: color.textMuted },
-  row: { flexDirection: 'row', gap: space.sm },
-  chip: {
-    flex: 1,
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.sm,
-    alignItems: 'center',
-    gap: 1,
-  },
-  chipLabel: { ...type.caption, color: color.textFaint },
-  chipValue: { ...type.bodySmall, color: color.text, fontWeight: '600' },
   bandBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -438,13 +358,6 @@ const styles = StyleSheet.create({
   },
   bandName: { ...type.title, color: color.text },
   scoreLabel: { ...type.label, color: color.textFaint },
-  meter: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
-  meterStep: {
-    width: 7,
-    borderRadius: 3,
-    backgroundColor: color.track,
-  },
-  meterStepOn: { backgroundColor: color.pink },
   why: { ...type.body, color: color.textMuted, textAlign: 'center' },
   link: {
     ...type.bodySmall,
@@ -452,25 +365,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: space.sm,
   },
-  detail: {
+  detailButton: {
     backgroundColor: color.surfaceSoft,
-    borderRadius: radius.md,
-    padding: space.md,
-    gap: space.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    paddingVertical: space.md,
+    alignItems: 'center',
+    marginTop: space.xs,
   },
-  detailLabel: { ...type.label, color: color.textFaint, marginTop: space.sm },
-  detailText: { ...type.bodySmall, color: color.text },
-  detailMuted: { ...type.bodySmall, color: color.textMuted },
-  detailAspect: { gap: 2, marginTop: space.sm },
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
-  dimensionChip: {
-    backgroundColor: color.surfaceHigh,
-    borderRadius: radius.sm,
-    paddingVertical: 5,
-    paddingHorizontal: space.sm,
-  },
-  dimensionName: { ...type.caption, color: color.textFaint, fontSize: 11 },
-  dimensionLabel: { ...type.caption, color: color.text },
+  detailButtonText: { ...type.body, color: color.text, fontWeight: '600' },
+  popupBand: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },
   actions: {
     flexDirection: 'row',

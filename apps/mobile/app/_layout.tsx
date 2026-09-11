@@ -3,6 +3,7 @@ import { color } from '@/theme/tokens';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback } from 'react';
 import { useMatchListener } from '@/lib/matches';
+import { matchDetailHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
 
 export default function RootLayout() {
@@ -10,7 +11,7 @@ export default function RootLayout() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const onMatch = useCallback((matchId: string) => {
-    router.navigate({ pathname: '/match/[id]', params: { id: matchId } });
+    router.navigate(matchDetailHref(matchId));
   }, []);
   useMatchListener(userId, onMatch);
 

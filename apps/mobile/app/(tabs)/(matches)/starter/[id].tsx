@@ -20,6 +20,7 @@ import {
 import { sendMessage } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
+import { matchDetailHref } from '@/lib/routes';
 import { starterOptions } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -157,7 +158,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
           a small phone, and the send button was laid out below the bottom
           of the display, where nothing can reach it. */}
       <ScrollView contentContainerStyle={styles.content}>
-        <BackLink label={t.starter.back} fallback={`/match/${matchId}`} />
+        <BackLink label={t.starter.back} fallback={matchDetailHref(matchId)} />
         <Text style={styles.title}>{t.starter.title(row.display_name)}</Text>
         {current ? (
           <>

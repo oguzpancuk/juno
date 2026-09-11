@@ -1,4 +1,4 @@
-import { BODY_GLYPH, SIGN_GLYPH, SIGN_TR } from '@juno/astro';
+import { BODY_GLYPH } from '@juno/astro';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -10,9 +10,11 @@ import {
   Text,
   View,
 } from 'react-native';
+import { BigThreeRow } from '@/components/BigThreeRow';
 import { BackLink, Body, Card, Screen, SectionLabel } from '@/components/ui';
 import { fetchPerson, type PersonState } from '@/lib/person';
 import { usePhotoSources } from '@/lib/photos';
+import { matchDetailHref } from '@/lib/routes';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -69,7 +71,6 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
   }
 
   const { person } = state;
-  const three = person.big_three;
 
   return (
     <Screen testID="person-screen">
@@ -106,9 +107,7 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
       ) : null}
 
       <View style={styles.trio}>
-        <Trio label={t.chart.sun} sign={three.sun} />
-        <Trio label={t.chart.moon} sign={three.moon} />
-        <Trio label={t.chart.rising} sign={three.rising} />
+        <BigThreeRow three={person.big_three} />
       </View>
 
       {person.bio ? (
@@ -136,25 +135,11 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
       </Link>
 
       {person.matchId === null ? null : (
-        <Link
-          href={{ pathname: '/match/[id]', params: { id: person.matchId } }}
-          style={styles.link}
-        >
+        <Link href={matchDetailHref(person.matchId)} style={styles.link}>
           {t.person.openMatch}
         </Link>
       )}
     </Screen>
-  );
-}
-
-function Trio({ label, sign }: { label: string; sign: keyof typeof SIGN_TR }) {
-  return (
-    <View style={styles.trioChip}>
-      <Text style={styles.trioLabel}>{label}</Text>
-      <Text style={styles.trioValue}>
-        {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
-      </Text>
-    </View>
   );
 }
 
@@ -170,19 +155,7 @@ const styles = StyleSheet.create({
   photo: { width: 230, height: 300, borderRadius: radius.lg },
   name: { ...type.display, color: color.text, marginTop: space.sm },
   distance: { ...type.bodySmall, color: color.textMuted },
-  trio: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
-  trioChip: {
-    flex: 1,
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.md,
-    alignItems: 'center',
-    gap: 2,
-  },
-  trioLabel: { ...type.caption, color: color.textFaint },
-  trioValue: { ...type.body, color: color.text, fontWeight: '600' },
+  trio: { marginTop: space.md },
   chartRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   glyphs: { flexDirection: 'row', gap: space.sm },
   glyph: { fontSize: 19, color: color.pink },

@@ -19,6 +19,7 @@ import {
   useThread,
 } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
+import { matchDetailHref } from '@/lib/routes';
 import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -146,10 +147,7 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
     >
       <View style={styles.header}>
         <Text style={styles.title}>{row.display_name}</Text>
-        <Link
-          href={{ pathname: '/match/[id]', params: { id: matchId } }}
-          style={styles.detail}
-        >
+        <Link href={matchDetailHref(matchId)} style={styles.detail}>
           {t.chat.viewMatch}
         </Link>
       </View>

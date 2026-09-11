@@ -1,11 +1,4 @@
-import {
-  SIGN_TR,
-  aspectGlyphs,
-  formatDegree,
-  houseOverlays,
-  matchSections,
-  synastryReading,
-} from '@juno/astro';
+import { houseOverlays, matchSections, synastryReading } from '@juno/astro';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -18,9 +11,12 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BigThreeRow } from '@/components/BigThreeRow';
+import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { starterFor } from '@/lib/starter';
 import { usePhotoSources } from '@/lib/photos';
+import { personHref } from '@/lib/routes';
 import {
   REPORT_REASONS,
   blockUser,
@@ -63,7 +59,6 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   // they sit under the home indicator and do not take a tap.
   const insets = useSafeAreaInsets();
   const [reporting, setReporting] = useState(false);
-  const [showOverlays, setShowOverlays] = useState(false);
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = useRef(false);
@@ -206,11 +201,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
         </ScrollView>
       ) : null}
       {row.bio ? <Text style={styles.bio}>{row.bio}</Text> : null}
-      <View style={styles.row}>
-        <Chip label={t.chart.sun} value={SIGN_TR[row.big_three.sun]} />
-        <Chip label={t.chart.moon} value={SIGN_TR[row.big_three.moon]} />
-        <Chip label={t.chart.rising} value={SIGN_TR[row.big_three.rising]} />
-      </View>
+      <BigThreeRow three={row.big_three} />
 
       <Text style={styles.label}>{t.match.starterLabel}</Text>
       {starter ? (
@@ -238,91 +229,15 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
           <Text style={styles.bandName} testID="band">
             {reading.bandName}
           </Text>
-          <Text style={styles.body}>{reading.bandText}</Text>
-
-          {reading.dimensions.length === 0 ? null : (
-            <>
-              <Text style={styles.label}>{t.match.dimensions}</Text>
-              <View style={styles.dimensionRow}>
-                {reading.dimensions.map((d) => (
-                  <View
-                    key={d.dimension}
-                    style={styles.dimensionChip}
-                    testID={`dimension-${d.dimension}`}
-                  >
-                    <Text style={styles.dimensionName}>{d.name}</Text>
-                    <Text style={styles.dimensionLabel}>{d.label}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-
-          {/* A section with nothing to show is omitted with its heading,
-              never padded and never filled with a verdict (ADR-0009 §5). */}
-          {sections.drawn.length > 0 ? (
-            <View testID="drawn">
-              <Text style={styles.label}>{t.match.drawn}</Text>
-              {sections.drawn.map((a) => (
-                <AspectCard key={aspectKey(a)} card={a} />
-              ))}
-            </View>
-          ) : null}
-
-          {sections.interesting.length > 0 ? (
-            <View testID="interesting">
-              <Text style={styles.label}>{t.match.interesting}</Text>
-              {sections.interesting.map((a) => (
-                <AspectCard key={aspectKey(a)} card={a} />
-              ))}
-            </View>
-          ) : null}
-
-          {/* A deeper layer: one card by default, the rest disclosed. */}
-          {overlays.length > 0 ? (
-            <View testID="overlays">
-              <Text style={styles.label}>{t.match.overlays}</Text>
-              {(showOverlays ? overlays : overlays.slice(0, 1)).map((o) => (
-                <View
-                  key={`${o.direction}-${o.house}`}
-                  style={styles.aspect}
-                  testID={`overlay-${o.direction}-${o.house}`}
-                >
-                  <Text style={styles.aspectTitle}>{o.theme}</Text>
-                  <Text style={styles.aspectHead}>
-                    {o.direction === 'theirs'
-                      ? t.match.overlayTheirs
-                      : t.match.overlayYours}
-                  </Text>
-                  {o.placements.map((placement) => (
-                    <Text key={placement.planet} style={styles.body}>
-                      {placement.text}
-                    </Text>
-                  ))}
-                </View>
-              ))}
-              {overlays.length > 1 ? (
-                <Pressable
-                  testID="toggle-overlays"
-                  onPress={() => setShowOverlays((v) => !v)}
-                >
-                  <Text style={styles.link}>
-                    {showOverlays
-                      ? t.match.fewerOverlays
-                      : t.match.moreOverlays(overlays.length - 1)}
-                  </Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ) : null}
-
-          <Text style={styles.label}>{t.match.elements}</Text>
-          <Text style={styles.bodyMuted}>{reading.sunElements}</Text>
-          <Text style={styles.bodyMuted}>{reading.moonElements}</Text>
+          <CompatibilityDetail
+            reading={reading}
+            sections={sections}
+            overlays={overlays}
+          />
         </View>
       ) : null}
 
-      <Link href={`/person/${row.id}`} style={styles.link} testID="open-person">
+      <Link href={personHref(row.id)} style={styles.link} testID="open-person">
         {t.person.openProfile(row.display_name)}
       </Link>
       <Link
@@ -395,50 +310,6 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   );
 }
 
-type AspectCardProps = {
-  card: {
-    readonly title: string;
-    readonly headline: string;
-    readonly meaning: string;
-    readonly aspect: Parameters<typeof aspectGlyphs>[0] & {
-      readonly orb: number;
-    };
-  };
-};
-
-/** Title first, then the astrology, then the reading: show the calculation. */
-function AspectCard({ card }: AspectCardProps) {
-  return (
-    <View style={styles.aspect}>
-      <Text style={styles.aspectTitle}>{card.title}</Text>
-      <Text style={styles.aspectGlyphs}>
-        {aspectGlyphs(card.aspect)}
-        <Text style={styles.aspectOrb}>
-          {'  '}
-          {formatDegree(card.aspect.orb)}
-        </Text>
-      </Text>
-      <Text style={styles.aspectHead}>{card.headline}</Text>
-      <Text style={styles.body}>{card.meaning}</Text>
-    </View>
-  );
-}
-
-function aspectKey(a: {
-  readonly aspect: { planetA: string; aspect: string; planetB: string };
-}): string {
-  return `${a.aspect.planetA}-${a.aspect.aspect}-${a.aspect.planetB}`;
-}
-
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.chip}>
-      <Text style={styles.chipLabel}>{label}</Text>
-      <Text style={styles.chipValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: space.xl, paddingTop: 68, gap: space.sm },
@@ -454,19 +325,6 @@ const styles = StyleSheet.create({
   photoStrip: { gap: space.sm, paddingVertical: space.sm },
   photo: { width: 132, height: 176, borderRadius: radius.lg },
   bio: { ...type.body, color: color.textMuted, marginBottom: space.sm },
-  row: { flexDirection: 'row', gap: space.sm, marginBottom: space.sm },
-  chip: {
-    flex: 1,
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    padding: space.md,
-    alignItems: 'center',
-    gap: 2,
-  },
-  chipLabel: { ...type.caption, color: color.textFaint },
-  chipValue: { ...type.body, color: color.text, fontWeight: '600' },
   label: {
     ...type.label,
     color: color.textFaint,
@@ -486,30 +344,6 @@ const styles = StyleSheet.create({
   starterQuestion: { ...type.heading, color: color.text, lineHeight: 26 },
   summary: { gap: space.sm },
   bandName: { ...type.display, color: color.text },
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  dimensionChip: {
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
-  },
-  dimensionName: { ...type.caption, color: color.textFaint },
-  dimensionLabel: { ...type.bodySmall, color: color.text },
-  aspect: {
-    backgroundColor: color.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: color.border,
-    padding: space.lg,
-    gap: space.xs,
-    marginBottom: space.sm,
-  },
-  aspectTitle: { ...type.heading, color: color.text },
-  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
-  aspectOrb: { ...type.caption, color: color.textFaint, letterSpacing: 0 },
-  aspectHead: { ...type.caption, color: color.textMuted },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
   chatLink: {
