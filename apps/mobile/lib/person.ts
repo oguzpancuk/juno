@@ -31,7 +31,9 @@ export async function fetchPerson(id: string): Promise<PersonState> {
     .select('*')
     .eq('id', id)
     .maybeSingle();
-  if (match.error) return { status: 'error' };
+  // A failed `match_profiles` query is not the end of the lookup: most
+  // profiles opened here are deck members, whose row is in `discover` a
+  // query away. Reporting an error for them would be wrong.
   if (match.data) {
     const parsed = MatchProfileRowSchema.safeParse(match.data);
     if (!parsed.success) return { status: 'error' };
@@ -50,7 +52,9 @@ export async function fetchPerson(id: string): Promise<PersonState> {
     .eq('id', id)
     .maybeSingle();
   if (row.error) return { status: 'error' };
-  if (!row.data) return { status: 'gone' };
+  // Neither view has them: blocked, deleted, or out of the deck's reach.
+  // Unless the first query failed too, in which case nothing was learned.
+  if (!row.data) return { status: match.error ? 'error' : 'gone' };
   const parsed = DiscoverRowSchema.safeParse(row.data);
   if (!parsed.success) return { status: 'error' };
   return { status: 'ready', person: { ...parsed.data, matchId: null } };

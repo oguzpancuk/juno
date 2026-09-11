@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { router, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import {
   Image,
@@ -138,6 +139,38 @@ export function LinkText({
 }
 
 /**
+ * The back affordance for a screen reached from somewhere else.
+ *
+ * A `Link` back to where you came from pushes another screen, so bouncing
+ * between a profile and its chart grows the stack without bound and the
+ * screen you left is still behind you. This pops instead, and only falls
+ * back to `fallback` when there is nothing to pop — a deep link, or a
+ * fresh web tab opened straight onto this route.
+ */
+export function BackLink({
+  label,
+  fallback,
+  testID,
+}: {
+  label: string;
+  fallback: Href;
+  testID?: string;
+}) {
+  return (
+    <Text
+      testID={testID}
+      style={s.back}
+      onPress={() => {
+        if (router.canGoBack()) router.back();
+        else router.replace(fallback);
+      }}
+    >
+      {label}
+    </Text>
+  );
+}
+
+/**
  * The brand mark: the orbit, two spheres on a gradient ring.
  *
  * Source of truth is the owner's icon of 2026-09-11, keyed to transparency
@@ -188,4 +221,5 @@ const s = StyleSheet.create({
     gap: space.sm,
   },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
+  back: { ...type.body, color: color.textMuted, paddingVertical: space.xs },
 });

@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Body, Card, Screen, SectionLabel } from '@/components/ui';
+import { BackLink, Body, Card, Screen, SectionLabel } from '@/components/ui';
 import { fetchPerson, type PersonState } from '@/lib/person';
 import { usePhotoSources } from '@/lib/photos';
 import { t } from '@/lib/strings';
@@ -75,9 +75,7 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
 
   return (
     <Screen testID="person-screen">
-      <Link href="/discover" style={styles.back}>
-        {t.person.back}
-      </Link>
+      <BackLink label={t.person.back} fallback="/discover" />
 
       {sources.some((source) => source !== null) ? (
         <ScrollView
@@ -170,7 +168,6 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  back: { ...type.body, color: color.textMuted, marginBottom: space.sm },
   strip: { gap: space.sm, paddingVertical: space.sm },
   photo: { width: 230, height: 300, borderRadius: radius.lg },
   name: { ...type.display, color: color.text, marginTop: space.sm },

@@ -140,6 +140,9 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       text: signText(placement, sign),
       // The sign says how; the house says where in a life it shows up.
       // Leaving this behind a disclosure made the house mean nothing.
+      // why: `house` is null only for the ascendant, which this branch has
+      // already excluded; for a planet it is the chart's own HouseNumber,
+      // widened to `number | null` by the ternary above.
       houseText: ascendant ? null : houseText(placement, house as HouseNumber),
       house,
     };

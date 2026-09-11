@@ -2,7 +2,7 @@ import { BODY_GLYPH, natalReading } from '@juno/astro';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Body, Card, Screen } from '@/components/ui';
+import { BackLink, Body, Card, Screen } from '@/components/ui';
 import { fetchPerson, type PersonState } from '@/lib/person';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
@@ -62,9 +62,10 @@ function TheirChart({ id }: { id: string | string[] | undefined }) {
 
   return (
     <Screen testID="their-chart-screen">
-      <Link href={`/person/${person.id}`} style={styles.back}>
-        {t.person.backToProfile}
-      </Link>
+      <BackLink
+        label={t.person.backToProfile}
+        fallback={`/person/${person.id}`}
+      />
       <Text style={styles.title}>
         {t.person.chartTitle(person.display_name)}
       </Text>
@@ -109,7 +110,6 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  back: { ...type.body, color: color.textMuted },
   title: { ...type.display, color: color.text, marginBottom: space.sm },
   cardHead: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   cardHeadText: { flexShrink: 1 },

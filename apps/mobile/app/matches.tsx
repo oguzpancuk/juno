@@ -7,7 +7,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { fetchMatches, starterFor, type MatchProfileRow } from '@/lib/matches';
+import { fetchMatches, type MatchProfileRow } from '@/lib/matches';
+import { starterFor } from '@/lib/starter';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';

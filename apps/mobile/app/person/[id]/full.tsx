@@ -18,7 +18,7 @@ import {
   View,
 } from 'react-native';
 import { ChartWheel } from '@/components/ChartWheel';
-import { Body, Card, Screen, SectionLabel } from '@/components/ui';
+import { BackLink, Body, Card, Screen, SectionLabel } from '@/components/ui';
 import { fetchPerson, type PersonState } from '@/lib/person';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
@@ -82,15 +82,22 @@ function FullChart({ id }: { id: string | string[] | undefined }) {
 
   return (
     <Screen testID="their-full-chart-screen">
-      <Link href={`/person/${person.id}/chart`} style={styles.back}>
-        {t.person.backToChart}
-      </Link>
+      <BackLink
+        label={t.person.backToChart}
+        fallback={`/person/${person.id}/chart`}
+      />
       <Text style={styles.title}>
         {t.person.fullTitle(person.display_name)}
       </Text>
 
       <View style={styles.wheelWrap} testID="chart-wheel">
-        <ChartWheel chart={chart} size={320} />
+        {/* The same aspects as the cards below, so a line on the wheel
+            always has a card to explain it. */}
+        <ChartWheel
+          chart={chart}
+          aspects={reading.aspects.map((a) => a.aspect)}
+          size={320}
+        />
       </View>
 
       <View style={styles.tabs}>
@@ -158,7 +165,6 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  back: { ...type.body, color: color.textMuted },
   title: { ...type.display, color: color.text, marginBottom: space.sm },
   wheelWrap: { alignItems: 'center', paddingVertical: space.lg },
   tabs: {

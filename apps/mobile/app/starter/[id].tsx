@@ -1,25 +1,28 @@
-import { isLesserId, parseStarterKey, synastryReading } from '@juno/astro';
-import type { SynastryAspectReading } from '@juno/astro';
 import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Body, Card, GradientButton, SectionLabel } from '@/components/ui';
+import {
+  BackLink,
+  Body,
+  Card,
+  GradientButton,
+  SectionLabel,
+} from '@/components/ui';
 import { sendMessage } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
+import { starterOptions } from '@/lib/starter';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
-
-/** How many aspects to offer before the list starts over. */
-const OFFERED = 5;
 
 /**
  * The conversation starter as its own surface: one question at a time,
@@ -44,6 +47,10 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     typeof id === 'string' ? 'loading' : null,
   );
   const [me, setMe] = useState<OwnProfile | null>(null);
+  // Separate from `me`: a failed own-profile read also leaves `me` null,
+  // and treating that as "still loading" spun for ever on a screen with no
+  // way back. The starter itself only needs the key on the match row.
+  const [loaded, setLoaded] = useState(typeof id !== 'string');
   const [shown, setShown] = useState(0);
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -57,6 +64,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
         if (cancelled) return;
         setRow(r);
         setMe(p.status === 'ready' ? p.profile : null);
+        setLoaded(true);
       },
     );
     return () => {
@@ -66,22 +74,22 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
 
   const options = useMemo(
     () =>
-      me && row && row !== 'loading' && userId
-        ? starterOptions(me, row, userId)
+      row && row !== 'loading' && userId
+        ? starterOptions(me?.chart ?? null, row, userId)
         : [],
     [me, row, userId],
   );
 
   if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
 
-  if (row === 'loading' || (row && !me)) {
+  if (!loaded) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={color.textMuted} />
       </View>
     );
   }
-  if (!row || !userId) {
+  if (!row || row === 'loading' || !userId) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{t.errors.generic}</Text>
@@ -107,124 +115,95 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
         setFailed(true);
         return;
       }
-      // Replace, not push: coming back to a question already sent would
-      // only invite sending it twice.
-      router.replace(`/chat/${matchId}`);
+      // `navigate`, not `push` or `replace`: this screen is opened both
+      // from the match screen and from the thread itself, and navigate
+      // returns to the thread already on the stack rather than stacking a
+      // second copy of it. Either way the question just sent is not left
+      // behind to be sent again.
+      router.navigate(`/chat/${matchId}`);
     });
   };
 
   return (
-    <View
-      style={[styles.screen, { paddingBottom: insets.bottom + space.xl }]}
-      testID="starter-screen"
-    >
-      <Link href={`/match/${matchId}`} style={styles.back}>
-        {t.starter.back}
-      </Link>
-      <Text style={styles.title}>{t.starter.title(row.display_name)}</Text>
-      {current ? (
-        <>
-          <View style={styles.headRow}>
-            <SectionLabel>{t.starter.label}</SectionLabel>
-            {options.length > 1 ? (
-              <Text style={styles.counter} testID="starter-counter">
-                {t.starter.counter(
-                  (shown % options.length) + 1,
-                  options.length,
-                )}
+    <View style={styles.screen} testID="starter-screen">
+      {/* The question and its explanation scroll; the two buttons do not.
+          A long question at a large accessibility text size is taller than
+          a small phone, and the send button was laid out below the bottom
+          of the display, where nothing can reach it. */}
+      <ScrollView contentContainerStyle={styles.content}>
+        <BackLink label={t.starter.back} fallback={`/match/${matchId}`} />
+        <Text style={styles.title}>{t.starter.title(row.display_name)}</Text>
+        {current ? (
+          <>
+            <View style={styles.headRow}>
+              <SectionLabel>{t.starter.label}</SectionLabel>
+              {options.length > 1 ? (
+                <Text style={styles.counter} testID="starter-counter">
+                  {t.starter.counter(
+                    (shown % options.length) + 1,
+                    options.length,
+                  )}
+                </Text>
+              ) : null}
+            </View>
+            <Card testID="starter-card">
+              <Text style={styles.aspect}>{current.headline}</Text>
+              <Text style={styles.question} testID="starter-question">
+                {current.question}
               </Text>
-            ) : null}
-          </View>
-          <Card testID="starter-card">
-            <Text style={styles.aspect}>{current.headline}</Text>
-            <Text style={styles.question} testID="starter-question">
-              {current.question}
-            </Text>
-            <Text style={styles.meaning}>{current.meaning}</Text>
-          </Card>
-          <Text style={styles.hint}>{t.starter.hint}</Text>
-          <View style={styles.actions}>
-            <GradientButton
-              testID="starter-send"
-              label={sending ? t.starter.sending : t.starter.send}
-              disabled={sending}
-              onPress={send}
-            />
-            {options.length > 1 ? (
-              <Pressable
-                testID="starter-next"
-                style={styles.secondary}
-                disabled={sending}
-                onPress={() => {
-                  setFailed(false);
-                  setShown((n) => n + 1);
-                }}
-              >
-                <Text style={styles.secondaryText}>{t.starter.another}</Text>
-              </Pressable>
-            ) : null}
-          </View>
+              <Text style={styles.meaning}>{current.meaning}</Text>
+            </Card>
+            <Text style={styles.hint}>{t.starter.hint}</Text>
+          </>
+        ) : (
+          <>
+            <Body muted>{t.match.noStarter}</Body>
+            <Link href={`/chat/${matchId}`} style={styles.link}>
+              {t.chat.open}
+            </Link>
+          </>
+        )}
+      </ScrollView>
+      {current ? (
+        <View
+          style={[styles.actions, { paddingBottom: insets.bottom + space.lg }]}
+        >
           {failed ? (
             <Text style={styles.error} testID="starter-failed">
               {t.starter.sendFailed}
             </Text>
           ) : null}
-        </>
-      ) : (
-        <>
-          <Body muted>{t.match.noStarter}</Body>
-          <Link href={`/chat/${matchId}`} style={styles.link}>
-            {t.chat.open}
-          </Link>
-        </>
-      )}
+          <GradientButton
+            testID="starter-send"
+            label={sending ? t.starter.sending : t.starter.send}
+            disabled={sending}
+            onPress={send}
+          />
+          {options.length > 1 ? (
+            <Pressable
+              testID="starter-next"
+              style={styles.secondary}
+              disabled={sending}
+              onPress={() => {
+                setFailed(false);
+                setShown((n) => n + 1);
+              }}
+            >
+              <Text style={styles.secondaryText}>{t.starter.another}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
 
-/**
- * The questions to offer, best first.
- *
- * `synastryReading` ranks the aspects between the two charts viewer-first;
- * the like stored one of them in uuid order, which is the same aspect seen
- * from the other side when this viewer is the greater id. Matching it back
- * up puts the stored question first instead of offering it twice.
- */
-function starterOptions(
-  me: OwnProfile,
-  row: MatchProfileRow,
-  userId: string,
-): readonly SynastryAspectReading[] {
-  const { aspects } = synastryReading(me.chart, row.chart, OFFERED);
-  const key = parseStarterKey(row.starter_key);
-  if (!key) return aspects;
-  const viewerIsA = isLesserId(userId, row.id);
-  const mine = viewerIsA ? key.planetA : key.planetB;
-  const theirs = viewerIsA ? key.planetB : key.planetA;
-  const stored = aspects.findIndex(
-    (reading) =>
-      reading.aspect.planetA === mine &&
-      reading.aspect.planetB === theirs &&
-      reading.aspect.aspect === key.aspect,
-  );
-  // Outside the top `OFFERED`: `strongestOf` prefers a harmonious aspect
-  // over a slightly stronger tense one, so the stored aspect is not always
-  // the first by magnitude, and with a long aspect list it can fall off the
-  // end. Leaving the list alone is right — it still leads with the
-  // strongest — and costs only the guarantee that the match screen's
-  // question appears here.
-  if (stored <= 0) return aspects;
-  const first = aspects[stored];
-  if (!first) return aspects;
-  return [first, ...aspects.filter((_, at) => at !== stored)];
-}
-
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: color.bg,
+  screen: { flex: 1, backgroundColor: color.bg },
+  content: {
     padding: space.xl,
     paddingTop: 64,
+    paddingBottom: space.md,
     gap: space.md,
   },
   center: {
@@ -234,7 +213,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.md,
   },
-  back: { ...type.body, color: color.textMuted },
   title: { ...type.display, color: color.text },
   headRow: {
     flexDirection: 'row',
@@ -253,7 +231,14 @@ const styles = StyleSheet.create({
   },
   meaning: { ...type.body, color: color.textMuted, marginTop: space.md },
   hint: { ...type.bodySmall, color: color.textFaint },
-  actions: { gap: space.sm, marginTop: 'auto' },
+  actions: {
+    gap: space.sm,
+    paddingHorizontal: space.xl,
+    paddingTop: space.md,
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    backgroundColor: color.bg,
+  },
   secondary: {
     borderRadius: radius.pill,
     borderWidth: 1,

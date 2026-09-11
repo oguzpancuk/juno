@@ -133,6 +133,9 @@ export type CreateProfileResult =
 /** One retry, then give up: the round trip is on the sign-up path. */
 const BIRTH_INSTANT_TIMEOUT_MS = 8000;
 
+/** Longer than the birth-instant call: this one writes, and writes retry. */
+const PROFILE_INSERT_TIMEOUT_MS = 15000;
+
 /**
  * The instant a wall clock in a city refers to, as the server computes
  * it. Asked rather than computed here, because a phone's zone database
@@ -201,23 +204,31 @@ export async function createProfile(
     latitude: birth.latitude,
     longitude: birth.longitude,
   };
-  const { error } = await supabase.from('profiles').insert({
-    id: input.userId,
-    display_name: input.displayName,
-    birth_date: `${local.year}-${pad(local.month)}-${pad(local.day)}`,
-    birth_local: birthLocal,
-    birth_city_id: input.cityId,
-    birth_utc: utc.toISOString(),
-    chart,
-    big_three: bigThree(chart),
-    gender: input.gender,
-    interested_in: input.interestedIn,
-    location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
-    // Which version of the privacy notice was accepted. The column has no
-    // default, so a profile cannot be created without one; the timestamp
-    // is stamped by the server.
-    consent_version: LEGAL_VERSION,
-  });
+  const { error } = await supabase
+    .from('profiles')
+    .insert({
+      id: input.userId,
+      display_name: input.displayName,
+      birth_date: `${local.year}-${pad(local.month)}-${pad(local.day)}`,
+      birth_local: birthLocal,
+      birth_city_id: input.cityId,
+      birth_utc: utc.toISOString(),
+      chart,
+      big_three: bigThree(chart),
+      gender: input.gender,
+      interested_in: input.interestedIn,
+      location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
+      // Which version of the privacy notice was accepted. The column has no
+      // default, so a profile cannot be created without one; the timestamp
+      // is stamped by the server.
+      consent_version: LEGAL_VERSION,
+    })
+    // supabase-js has no request timeout of its own. Without this a
+    // connection that stalls mid-insert leaves the caller awaiting for
+    // ever — and the caller is the onboarding screen, which by then has
+    // replaced the form with a full-screen "your chart is being
+    // calculated" that has no way out.
+    .abortSignal(AbortSignal.timeout(PROFILE_INSERT_TIMEOUT_MS));
   if (error) {
     // A lost response after a committed insert: the profile exists, move on.
     if (error.code === '23505') return { ok: false, reason: 'exists' };

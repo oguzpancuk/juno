@@ -5,12 +5,13 @@ import {
   SIGNS,
   natalAspects,
   type Body,
-  type Planet,
+  type InterAspect,
   type PublicChart,
 } from '@juno/astro';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+import { glyphLevels } from '@/lib/wheel';
 import { color } from '@/theme/tokens';
 
 /**
@@ -21,15 +22,18 @@ import { color } from '@/theme/tokens';
  * from the ascendant and rotating to put zero on the left — every position
  * on this wheel goes through `angleOf`, and nothing else does the maths.
  *
- * Aspects come from the engine (`natalAspects`), not from a second
- * calculation here: a wheel that disagreed with the list under it would be
- * worse than no wheel.
+ * Aspects are passed in rather than computed here: the screen shows the
+ * same aspects as a list under the wheel, and a wheel that drew a line
+ * with no card beneath it would be worse than no wheel. Left out, the
+ * whole set is drawn.
  */
 export function ChartWheel({
   chart,
+  aspects,
   size = 320,
 }: {
   chart: PublicChart;
+  aspects?: readonly InterAspect[];
   size?: number;
 }) {
   const centre = size / 2;
@@ -54,45 +58,11 @@ export function ChartWheel({
       ? chart.houses.ascendant
       : chart.planets[body].longitude;
 
-  const aspects = useMemo(() => natalAspects(chart), [chart]);
+  const drawn = useMemo(() => aspects ?? natalAspects(chart), [aspects, chart]);
 
-  /**
-   * Where each planet's glyph is drawn, which is not always where it is.
-   * A conjunction puts two bodies within a degree of each other and their
-   * glyphs land on top of one another; this pushes them apart just enough
-   * to read. The tick line still runs to the true longitude, so nothing is
-   * misplaced — only the label moves.
-   */
-  const glyphAngles = useMemo(() => {
-    const MIN_GAP = 7;
-    const ordered = [...PLANETS].sort(
-      (a, b) => chart.planets[a].longitude - chart.planets[b].longitude,
-    );
-    const placed = new Map<Planet, number>();
-    let previous: number | null = null;
-    for (const planet of ordered) {
-      const wanted = chart.planets[planet].longitude;
-      const shifted: number =
-        previous !== null && wanted - previous < MIN_GAP
-          ? previous + MIN_GAP
-          : wanted;
-      placed.set(planet, shifted);
-      previous = shifted;
-    }
-    // The circle wraps: if the last one has been pushed past the first,
-    // give up on spreading rather than drawing a planet in the wrong sign.
-    const first = ordered[0];
-    const last = ordered[ordered.length - 1];
-    if (
-      first &&
-      last &&
-      (placed.get(last) ?? 0) - 360 > (placed.get(first) ?? 0) - MIN_GAP
-    ) {
-      for (const planet of PLANETS)
-        placed.set(planet, chart.planets[planet].longitude);
-    }
-    return placed;
-  }, [chart]);
+  // Conjunct planets would draw their glyphs on the same pixel; each one
+  // keeps its angle and steps inwards instead (see lib/wheel).
+  const levels = useMemo(() => glyphLevels(chart), [chart]);
 
   return (
     <View>
@@ -195,7 +165,7 @@ export function ChartWheel({
 
         {/* Aspects, drawn first so the planets sit on top of them. */}
         <G>
-          {aspects.map((aspect) => {
+          {drawn.map((aspect) => {
             const a = at(longitudeOf(aspect.planetA), aspectRing);
             const b = at(longitudeOf(aspect.planetB), aspectRing);
             return (
@@ -216,10 +186,8 @@ export function ChartWheel({
         <G>
           {PLANETS.map((planet) => {
             const placement = chart.planets[planet];
-            const spot = at(
-              glyphAngles.get(planet) ?? placement.longitude,
-              planetRing,
-            );
+            const level = levels.get(planet) ?? 0;
+            const spot = at(placement.longitude, planetRing - level * 15);
             const tick = at(placement.longitude, aspectRing);
             return (
               <G key={planet}>

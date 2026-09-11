@@ -18,7 +18,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
+import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
+import { starterFor } from '@/lib/starter';
 import { usePhotoSources } from '@/lib/photos';
 import {
   REPORT_REASONS,

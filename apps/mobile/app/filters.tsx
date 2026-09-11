@@ -1,6 +1,6 @@
 import { BANDS, bandName, type Band } from '@juno/astro';
 import { Link } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
@@ -46,18 +46,33 @@ export default function FiltersScreen() {
     };
   }, [userId]);
 
-  /** Optimistic: the control moves, and reverts only if the write fails. */
-  const save = async (patch: Record<string, unknown>, revert: () => void) => {
+  /**
+   * Optimistic: the control moves, and reverts only if the write fails.
+   *
+   * Only the newest write may revert. Holding a stepper fires one write
+   * per tap, each closing over the value it read; an older one failing
+   * would otherwise put the screen back to a number the database has since
+   * moved past, leaving the two disagreeing with no error in sight.
+   */
+  const writes = useRef(0);
+  const save = async (
+    // why: the columns are unrelated and each caller passes its own; the
+    // shapes that matter are checked where they are built, and the server
+    // has the CHECK constraints either way.
+    patch: Record<string, unknown>,
+    revert: () => void,
+  ) => {
     if (!userId) return;
+    writes.current += 1;
+    const mine = writes.current;
     setError(null);
     const { error: failed } = await supabase
       .from('profiles')
       .update(patch)
       .eq('id', userId);
-    if (failed) {
-      revert();
-      setError(t.filters.failed);
-    }
+    if (!failed) return;
+    setError(t.filters.failed);
+    if (mine === writes.current) revert();
   };
 
   const setAge = (min: number, max: number) => {

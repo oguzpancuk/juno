@@ -23,7 +23,8 @@ import {
   markThreadRead,
   useThread,
 } from '@/lib/chat';
-import { fetchMatch, starterFor, type MatchProfileRow } from '@/lib/matches';
+import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
+import { starterFor } from '@/lib/starter';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
@@ -174,7 +175,10 @@ export default function ChatScreen() {
         // in the way — and after sending the starter from /starter it was
         // the same sentence twice, one line apart.
         ListFooterComponent={
-          ordered.length === 0 ? (
+          // `messages === null` is a failed load, not an empty thread: the
+          // card would be claiming the conversation has not started when
+          // the app does not know that.
+          ordered.length === 0 && messages !== null ? (
             <View style={styles.starterBox} testID="chat-starter">
               <Text style={styles.starterLabel}>{t.match.starterLabel}</Text>
               <Text style={styles.starterQuestion}>

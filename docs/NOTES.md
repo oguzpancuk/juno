@@ -2717,3 +2717,39 @@ start` command line (the `.env` write was refused by the tool
   about 2.8:1 against the background and is used for hints on six
   screens. That is a palette decision for the design session, not a
   per-screen fix, so it was left consistent rather than patched here.
+
+## 2026-09-11 — C7 review round
+
+`code-reviewer` on `717000e..HEAD` returned NEEDS_WORK; every finding is
+answered in the commit that follows it. The two that mattered:
+
+- The starter screen had **two ways to become unusable**. A failed read of
+  the viewer's _own_ profile left `me === null`, which the render treated
+  as "still loading" — a permanent spinner on a screen whose spinner
+  branch has no back link and whose stack has no header. And the actions
+  were laid out with `marginTop: 'auto'` inside a plain `View`: with the
+  longest question in the content set at an accessibility text size, the
+  send button was positioned below the bottom of a small phone. Both are
+  fixed, and the second was checked at 320×568, narrower than any phone
+  the app will meet.
+- The wheel **drew lines with no card beneath them**. The list under it
+  comes from `natalReading`, which filters impossible pairs and keeps
+  eight; the wheel called `natalAspects` raw and drew all fifteen to
+  twenty-five. It now takes the aspects as a prop, which is what its own
+  doc comment always claimed.
+
+Two pieces of logic moved out of components into `lib/wheel.ts` and
+`lib/starter.ts` so they could be tested; thirteen tests came with them,
+and one of them found the glyph spreading putting a planet in the wrong
+sign. The angular spread is gone — glyphs now step _inwards_ by a ring
+instead of sideways, so a glyph's angle is always its true longitude.
+`starterFor` moved to `lib/starter.ts` as part of this: it is pure, and
+leaving it next to the Supabase client made the module untestable outside
+a React Native runtime.
+
+**For the owner:** `person/[id]/full` shows exact ascendant, midheaven and
+cusp degrees for anyone in the deck, not only for matches. `PublicChart`
+has always designated that data as shown to other users, so this is not a
+new leak — but it is the first screen that makes a stranger's birth _time_
+inferable at a glance. Worth a decision before TestFlight: either accept
+it, or restrict the wheel's exact degrees to matches.

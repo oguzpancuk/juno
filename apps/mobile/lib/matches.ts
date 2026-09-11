@@ -1,9 +1,7 @@
 import {
   BigThreeSchema,
   PublicChartSchema,
-  isLesserId,
   parseStarterKey,
-  starterFromKey,
 } from '@juno/astro';
 import { useEffect } from 'react';
 import { z } from 'zod';
@@ -34,16 +32,6 @@ export const MatchProfileRowSchema = z.object({
 });
 
 export type MatchProfileRow = z.infer<typeof MatchProfileRowSchema>;
-
-/** Starter parts for a match, from my side (a < b by uuid). */
-export function starterFor(
-  row: MatchProfileRow,
-  myId: string,
-): { headline: string; meaning: string; question: string } | null {
-  const key = parseStarterKey(row.starter_key);
-  if (!key) return null;
-  return starterFromKey(key, isLesserId(myId, row.id));
-}
 
 export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
   const { data, error } = await supabase
