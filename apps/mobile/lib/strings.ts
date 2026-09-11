@@ -217,7 +217,8 @@ export const t = {
     tabs: { planets: 'Burçlar', houses: 'Evler' },
   },
   filters: {
-    back: '‹ Keşfet',
+    // Settings is the only way in, and the control goes back there.
+    back: '‹ Ayarlar',
     title: 'Keşif ayarları',
     age: 'Yaş aralığı',
     ageHint:

@@ -174,6 +174,10 @@ export default function Profile() {
         <Text style={styles.title}>{t.profile.title}</Text>
         <Pressable
           testID="open-settings"
+          accessibilityRole="button"
+          // The child is an <Svg> of paths, which announces nothing, and
+          // this is the only route into Settings.
+          accessibilityLabel={t.settings.title}
           hitSlop={12}
           onPress={() => router.push('/settings')}
         >

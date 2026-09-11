@@ -29,8 +29,23 @@ import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
 
+/**
+ * Keyed by the match id, for the reason the match screen is (see
+ * app/match/[id].tsx): everything below belongs to one conversation.
+ *
+ * This one can be re-parameterised without being re-entered. The starter
+ * screen pops back to a thread with POP_TO, which finds a `chat/[id]`
+ * route by name and overwrites its params while keeping its key — so with
+ * a thread to someone else already on the stack, this component would
+ * re-render for a different match holding the first one's half-typed
+ * message, and the next tap on Gönder would send it to the wrong person.
+ */
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  return <ChatView key={typeof id === 'string' ? id : 'none'} id={id} />;
+}
+
+function ChatView({ id }: { id: string | string[] | undefined }) {
   const matchId = typeof id === 'string' ? id : null;
   const session = useSession();
   const userId =

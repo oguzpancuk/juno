@@ -123,7 +123,13 @@ export default function Onboarding() {
       });
       await heldFor(started);
       if (result.ok || result.reason === 'exists') {
-        router.replace('/chart');
+        // The deck, then the chart on top of it. `replace('/chart')` alone
+        // left the whole stack as that one screen: the chart is not in the
+        // tab group, so the first thing a new account saw was a screen
+        // with no tab bar under it and nowhere to go but a back chevron
+        // to a tab it had never seen.
+        router.replace('/discover');
+        router.push('/chart');
         return;
       }
       setCalculating(false);

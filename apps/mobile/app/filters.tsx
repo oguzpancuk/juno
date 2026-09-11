@@ -1,5 +1,4 @@
 import { BANDS, bandName, type Band } from '@juno/astro';
-import { Link } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
@@ -123,7 +122,7 @@ export default function FiltersScreen() {
       contentContainerStyle={styles.content}
       testID="filters-screen"
     >
-      <BackLink label={t.filters.back} fallback="/discover" />
+      <BackLink label={t.filters.back} fallback="/settings" />
       <Text style={styles.title}>{t.filters.title}</Text>
 
       <Text style={styles.label}>{t.settings.radius}</Text>

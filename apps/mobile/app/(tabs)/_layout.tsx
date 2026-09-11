@@ -17,6 +17,10 @@ export default function TabLayout() {
       // Keşfet is the middle tab and the one the app opens on; the order
       // is you, then them, then the ones who answered.
       initialRouteName="discover"
+      // Not the default `firstRoute`, which is `profile` by declaration
+      // order: Android back from the tab the app opens on would switch to
+      // a tab nobody had visited instead of leaving the app.
+      backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: color.text,

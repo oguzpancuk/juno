@@ -2753,3 +2753,45 @@ has always designated that data as shown to other users, so this is not a
 new leak — but it is the first screen that makes a stranger's birth _time_
 inferable at a glance. Worth a decision before TestFlight: either accept
 it, or restrict the wheel's exact degrees to matches.
+
+## 2026-09-11 — Seven-lens audit of C7/C8
+
+A workflow ran seven review lenses over `b730683..HEAD` — navigation,
+React correctness, wheel geometry, data/RLS, content coverage,
+accessibility/layout, and the project's own standards — and put every
+finding in front of three independent refuters, each told to kill it and
+to default to refuted when unsure. Twenty-eight raised, five survived,
+and a completeness critic found three more that no lens had looked for.
+
+The one that mattered: **the chat screen was the only `[id]` route
+without `key={id}`**, and the `dismissTo` landed earlier in the day made
+that reachable. `POP_TO` finds a route by name and rewrites its params
+while keeping its key, so with a thread to someone else already on the
+stack the screen would re-render for a different match still holding the
+first one's half-typed message — and the next tap on Gönder would send it
+to the wrong person. The reducer was run against a real stack to confirm
+the key survives. Keyed now, like every sibling.
+
+The critic caught what seven lenses missed, twice by reading a file none
+of them opened:
+
+- Onboarding still did `router.replace('/chart')`. After the tab move
+  that left a new account's very first screen outside the tab group with
+  a one-route stack: no tab bar, no way forward. It replaces to the deck
+  and pushes the chart, so the chart arrives with the app underneath it.
+- `@react-navigation/bottom-tabs` was a dependency nothing imports —
+  expo-router vendors its own fork of it, so the package was never
+  resolved. Removed.
+
+Also fixed: `backBehavior="initialRoute"`, without which Android back
+from the opening tab would have switched to a tab nobody had visited;
+the settings control announced nothing to VoiceOver and is the only route
+into Settings; and the filters back label said "Keşfet" while the control
+went to Ayarlar, which is also its only entry point.
+
+**Gate change.** Dead imports, styles and strings left by a refactor have
+now reached review twice. The cause is that `eslint-config-expo` reports
+unused declarations as a _warning_ and the battery treats a warning as a
+pass, so nothing ever failed. `apps/mobile/eslint.config.js` now raises
+`@typescript-eslint/no-unused-vars` to an error, with the usual
+underscore escape for a deliberately unused argument.
