@@ -78,7 +78,6 @@ export const t = {
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },
   chart: {
-    backToProfile: '‹ Profil',
     title: 'Doğum haritan',
     sun: 'Güneş',
     moon: 'Ay',
@@ -87,8 +86,9 @@ export const t = {
     house: 'ev',
     retrograde: 'R',
     aspects: 'AÇILAR',
-    // The chart screen leads with six placements; everything else is behind
-    // this (PRD amendment 2026-09-10).
+    // The profile leads with three placements; the other three and the
+    // rest of the chart are behind the popup (PRD amendment 2026-09-10,
+    // owner 2026-09-11).
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
     houseMeaning: (house: number) => `${house}. EVDE NE ANLAMA GELİYOR`,
     housesLabel: 'YÜKSELEN VE EVLER',
@@ -97,11 +97,9 @@ export const t = {
     risingHasNoHouse:
       'Yükselen bir evin içinde değil: 1. evin başlangıcı. Haritandaki bütün ev sınırları ondan hesaplanır, o yüzden doğum saatin en çok burayı etkiler.',
     fullChart: 'Tüm haritanı gör',
-    hideFullChart: 'Haritayı kapat',
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
-    signOut: 'Çıkış yap',
   },
   tabs: { profile: 'Profil', discover: 'Keşfet', matches: 'Eşleşmeler' },
   discover: {
@@ -167,9 +165,10 @@ export const t = {
   },
   profile: {
     title: 'Profilin',
-    chart: 'Doğum haritan',
-    chartHint: 'Gezegenlerin, evlerin ve ne anlama geldikleri',
-    photos: 'FOTOĞRAFLAR',
+    edit: 'Düzenle',
+    saving: 'Kaydediliyor…',
+    moveLeft: 'Sola al',
+    moveRight: 'Sağa al',
     photosHint: (max: number) =>
       `En fazla ${max} fotoğraf. İlk fotoğrafın kartında görünür.`,
     addPhoto: 'Fotoğraf ekle',
@@ -177,11 +176,9 @@ export const t = {
     remove: 'Kaldır',
     noPhotos:
       'Henüz fotoğrafın yok. En az bir tane eklemeden keşfette görünmezsin.',
-    bio: 'HAKKINDA',
     bioPlaceholder: 'Birkaç cümle yaz…',
     bioHint: (max: number) => `${max} karaktere kadar.`,
     save: 'Kaydet',
-    saved: 'Kaydedildi.',
     failed: 'Kaydedilemedi, tekrar dene.',
     photoFailed: 'Fotoğraf yüklenemedi, tekrar dene.',
   },
@@ -215,16 +212,10 @@ export const t = {
   person: {
     back: '‹ Keşfet',
     gone: 'Bu profil artık görünmüyor.',
-    chartLabel: 'HARİTASI',
-    openChart: (name: string) => `${name} haritasına bak ›`,
     openMatch: 'Uyum detayı ›',
     openProfile: (name: string) => `${name} profilini aç ›`,
-    backToProfile: '‹ Profil',
     chartTitle: (name: string) => `${name} haritası`,
     fullChart: 'Tüm haritasını gör',
-    backToChart: '‹ Harita',
-    fullTitle: (name: string) => `${name} tam haritası`,
-    tabs: { planets: 'Burçlar', houses: 'Evler' },
   },
   filters: {
     // Settings is the only way in, and the control goes back there.
@@ -250,6 +241,7 @@ export const t = {
   },
   settings: {
     title: 'Ayarlar',
+    signOut: 'Çıkış yap',
     back: '‹ Profil',
     radius: 'Keşif yarıçapı',
     radiusHint:

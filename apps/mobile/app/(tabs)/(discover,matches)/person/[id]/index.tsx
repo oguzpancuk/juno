@@ -1,29 +1,23 @@
-import { BODY_GLYPH } from '@juno/astro';
+import { natalReading } from '@juno/astro';
 import { Link, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { BigThreeRow } from '@/components/BigThreeRow';
-import { BackLink, Body, Card, Screen, SectionLabel } from '@/components/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ProfileView } from '@/components/ProfileView';
+import { BackLink, Body, Screen } from '@/components/ui';
 import { fetchPerson, type PersonState } from '@/lib/person';
 import { usePhotoSources } from '@/lib/photos';
 import { matchDetailHref } from '@/lib/routes';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 const EMPTY: readonly string[] = [];
 
 /**
- * Someone else, at length. The deck card is a glance; this is the page you
- * open when the glance was interesting — photos, what they wrote, and the
- * way into their chart.
+ * Someone else, at length — laid out exactly as your own page is
+ * (`ProfileView`, owner 2026-09-11: "tamamen aynı gözükmeli"), without the
+ * edit control. The deck card is a glance; this is the page you open when
+ * the glance was interesting: photos, the big three, what they wrote,
+ * their three primary placements, and their whole chart as a popup.
  *
  * Keyed by id like the match screen, for the same reason: everything here
  * is about one person.
@@ -52,6 +46,13 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
   const photos = state.status === 'ready' ? state.person.photos : EMPTY;
   const sources = usePhotoSources(photos);
 
+  // The same engine call as the owner's page; nothing here knows whose
+  // chart it is.
+  const reading = useMemo(
+    () => (state.status === 'ready' ? natalReading(state.person.chart) : null),
+    [state],
+  );
+
   if (state.status === 'loading') {
     return (
       <View style={styles.center}>
@@ -59,7 +60,7 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
       </View>
     );
   }
-  if (state.status !== 'ready') {
+  if (state.status !== 'ready' || !reading) {
     return (
       <View style={styles.center}>
         <Body muted>
@@ -74,77 +75,42 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
 
   return (
     <Screen testID="person-screen">
-      <BackLink label={t.person.back} fallback="/discover" />
-
-      {sources.some((source) => source !== null) ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.strip}
-        >
-          {sources.map((source, index) =>
-            source ? (
-              <Image
-                key={photos[index] ?? index}
-                source={source}
-                style={styles.photo}
-                resizeMode="cover"
-              />
-            ) : null,
-          )}
-        </ScrollView>
-      ) : null}
-
-      <Text style={styles.name}>
-        {person.display_name}, {person.age}
-      </Text>
-      {person.matchId === null ? (
-        <Text style={styles.distance}>
-          {person.distance_km === 0
-            ? t.discover.under1km
-            : `${person.distance_km} km`}
-        </Text>
-      ) : null}
-
-      <View style={styles.trio}>
-        <BigThreeRow three={person.big_three} />
-      </View>
-
-      {person.bio ? (
-        <Card testID="person-bio">
-          <Body>{person.bio}</Body>
-        </Card>
-      ) : null}
-
-      <SectionLabel>{t.person.chartLabel}</SectionLabel>
-      <Link href={`/person/${person.id}/chart`} asChild>
-        <Pressable testID="open-their-chart">
-          <Card>
-            <View style={styles.chartRow}>
-              <View style={styles.glyphs}>
-                <Text style={styles.glyph}>{BODY_GLYPH.sun}</Text>
-                <Text style={styles.glyph}>{BODY_GLYPH.moon}</Text>
-                <Text style={styles.glyph}>{BODY_GLYPH.ascendant}</Text>
-              </View>
-              <Text style={styles.chartCta}>
-                {t.person.openChart(person.display_name)}
-              </Text>
-            </View>
-          </Card>
-        </Pressable>
-      </Link>
-
-      {person.matchId === null ? null : (
-        <Link
-          href={matchDetailHref(person.matchId)}
-          // This page has a copy in each tab; from the deck's copy the
-          // matches stack may not exist yet (see INTO_MATCHES).
-          withAnchor
-          style={styles.link}
-        >
-          {t.person.openMatch}
-        </Link>
-      )}
+      <ProfileView
+        header={<BackLink label={t.person.back} fallback="/discover" />}
+        name={person.display_name}
+        age={person.age}
+        // `match_profiles` has no distance: a match keeps its thread
+        // wherever either of them moves to. The deck member's stays.
+        caption={
+          person.matchId === null
+            ? person.distance_km === 0
+              ? t.discover.under1km
+              : `${person.distance_km} km`
+            : undefined
+        }
+        photos={person.photos}
+        sources={sources}
+        three={person.big_three}
+        bio={person.bio}
+        reading={reading}
+        chart={person.chart}
+        fullChartLabel={t.person.fullChart}
+        fullChartTitle={t.person.chartTitle(person.display_name)}
+        footer={
+          person.matchId === null ? null : (
+            <Link
+              href={matchDetailHref(person.matchId)}
+              // This page has a copy in each tab; from the deck's copy the
+              // matches stack may not exist yet (see INTO_MATCHES).
+              withAnchor
+              style={styles.link}
+              testID="open-match"
+            >
+              {t.person.openMatch}
+            </Link>
+          )
+        }
+      />
     </Screen>
   );
 }
@@ -157,14 +123,10 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  strip: { gap: space.sm, paddingVertical: space.sm },
-  photo: { width: 230, height: 300, borderRadius: radius.lg },
-  name: { ...type.display, color: color.text, marginTop: space.sm },
-  distance: { ...type.bodySmall, color: color.textMuted },
-  trio: { marginTop: space.md },
-  chartRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  glyphs: { flexDirection: 'row', gap: space.sm },
-  glyph: { fontSize: 19, color: color.pink },
-  chartCta: { ...type.heading, color: color.text, flexShrink: 1 },
-  link: { ...type.body, color: color.textMuted, paddingVertical: space.md },
+  link: {
+    ...type.body,
+    color: color.textMuted,
+    textAlign: 'center',
+    paddingVertical: space.md,
+  },
 });

@@ -742,6 +742,24 @@ are peer-installed by expo-router, not dependencies of the app.
       on another account's discover card), `p-person.png` (same layout,
       no edit control), `p-onboarding-lands-on-profile.png`,
       `p-settings-sign-out.png`.
+      _Built on `track/b-profile`, awaiting the merge and the screenshots.
+      `ProfileView` (carousel with the name on the scrim, dots, the strip
+      with ‹ › / Kaldır / Fotoğraf ekle in edit mode, the bio as a card or
+      a `TextInput`, the first three primary cards, the popup button) and
+      `ChartDetail` (wheel at 300, Mercury/Venus/Mars, ten planets, aspects;
+      exports `PrimaryCard` so the page and the popup draw one card) are
+      the two new components; `profile.tsx` and `person/[id]/index.tsx`
+      both render `ProfileView`, the person page with `header` = BackLink
+      and `footer` = the match link. `saveProfileEdits` replaces `saveBio`
+      (one `update({ photos, bio })`); `movePhoto` and `ageOn` are pure and
+      tested (13 tests). The three chart routes are deleted, sign-out is a
+      button under GÜVENLİK in settings (`testID="sign-out"`), onboarding
+      lands with `router.replace('/profile')`. Dead keys removed from
+      `chart`, `profile`, `person`; `discover.completeProfile` is now
+      orphaned but lives in Track C's section — main prunes it. One
+      correction to this stub, verified on the local Postgres: a 29 Feb
+      birth turns a year older on 1 March of a common year under `age()`,
+      not on 28 Feb — `age.ts` mirrors the views, and the test says so._
 
 - [ ] **Track C — discover: detail popup, profile button, glyph chips,
       swipe to like or pass (item 3).** The card shows `BigThreeRow`

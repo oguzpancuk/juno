@@ -1,47 +1,32 @@
-import type { BigThree } from '@juno/astro';
-import { SIGN_GLYPH, SIGN_TR } from '@juno/astro';
+import { natalReading } from '@juno/astro';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { ProfileView } from '@/components/ProfileView';
+import { Body, LinkText, Screen } from '@/components/ui';
+import { ageOn } from '@/lib/age';
+import { movePhoto } from '@/lib/photo-order';
 import {
-  MAX_BIO_LENGTH,
-  MAX_PHOTOS,
   addPhoto,
   pickPhoto,
   removePhoto,
-  saveBio,
+  saveProfileEdits,
   usePhotoSources,
 } from '@/lib/photos';
-import { fetchOwnProfile } from '@/lib/profile';
+import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
-
-/** One of the big three, as the profile shows them. */
-function Trio({ label, sign }: { label: string; sign: keyof typeof SIGN_TR }) {
-  return (
-    <View style={styles.trioCell}>
-      <Text style={styles.trioLabel}>{label}</Text>
-      <Text style={styles.trioSign}>
-        {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
-      </Text>
-    </View>
-  );
-}
 
 /**
  * Settings: three sliders, not a gear. A gear at this size is a circle
@@ -87,46 +72,67 @@ function SettingsIcon() {
   );
 }
 
+/**
+ * Your own page, laid out exactly as another person's is (`ProfileView`),
+ * plus one pill beside the settings control: "Düzenle" opens the edit
+ * mode, where it reads "Kaydet" and one update persists the photo order
+ * and the bio. Adding and removing a photo write at once — the trigger
+ * needs the object to exist before the profile may list it — so the
+ * draft is only the order and the text (owner default, 2026-09-11: no
+ * Vazgeç).
+ */
 export default function Profile() {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const insets = useSafeAreaInsets();
-  const [photos, setPhotos] = useState<string[] | null>(null);
-  // Aligned with `photos` by index, always the same length: null while a
-  // set is being fetched and where a photo cannot be shown, so a missing
-  // one never shifts the rest and a removed one never lingers in the
-  // wrong tile.
-  const sources = usePhotoSources(photos ?? EMPTY);
+  const [state, setState] = useState<ProfileState>({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  // The list on screen. Starts as the row's, then follows every add,
+  // remove and move; a move is a draft until "Kaydet".
+  const [photos, setPhotos] = useState<readonly string[]>(EMPTY);
+  const sources = usePhotoSources(photos);
   const [bio, setBio] = useState('');
-  const [three, setThree] = useState<BigThree | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  // A ref, not the rendered state: two taps in one frame both read the
+  // old value and would start two writes.
   const working = useRef(false);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    void fetchOwnProfile(userId).then((state) => {
-      if (cancelled || state.status !== 'ready') return;
-      setPhotos(state.profile.photos);
-      setBio(state.profile.bio ?? '');
-      setThree(state.profile.big_three);
+    void fetchOwnProfile(userId).then((next) => {
+      if (cancelled) return;
+      if (next.status === 'missing') {
+        router.replace('/onboarding');
+        return;
+      }
+      setState(next);
+      if (next.status === 'ready') {
+        setPhotos(next.profile.photos);
+        setBio(next.profile.bio ?? '');
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, attempt]);
+
+  // Interpretation is computed by the engine; the screen only renders it.
+  const reading = useMemo(
+    () => (state.status === 'ready' ? natalReading(state.profile.chart) : null),
+    [state],
+  );
 
   if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   const add = () => {
-    if (!userId || working.current || photos === null) return;
+    if (!userId || working.current) return;
     working.current = true;
-    setBusy(true);
+    setAdding(true);
     setError(null);
-    setNotice(null);
     void pickPhoto()
       .then(async (file) => {
         if (!file) return;
@@ -136,13 +142,15 @@ export default function Profile() {
       })
       .finally(() => {
         working.current = false;
-        setBusy(false);
+        setAdding(false);
       });
   };
 
-  const drop = (path: string) => {
-    if (!userId || working.current || photos === null) return;
+  const remove = (index: number) => {
+    const path = photos[index];
+    if (!userId || working.current || path === undefined) return;
     working.current = true;
+    setError(null);
     void removePhoto(userId, photos, path).then((next) => {
       working.current = false;
       if (next === null) setError(t.profile.failed);
@@ -150,193 +158,153 @@ export default function Profile() {
     });
   };
 
-  const store = () => {
+  const move = (index: number, direction: 'left' | 'right') => {
+    setPhotos((list) => movePhoto(list, index, direction));
+  };
+
+  // One control, two meanings: it opens the edit mode, then saves it.
+  const toggle = () => {
     if (!userId || working.current) return;
+    if (!editing) {
+      setError(null);
+      setEditing(true);
+      return;
+    }
     working.current = true;
+    setSaving(true);
     setError(null);
-    void saveBio(userId, bio).then((ok) => {
+    void saveProfileEdits(userId, { photos, bio }).then((ok) => {
       working.current = false;
-      if (ok) setNotice(t.profile.saved);
-      else setError(t.profile.failed);
+      setSaving(false);
+      if (!ok) {
+        // Stay in the edit mode: the draft is still on screen to retry.
+        setError(t.profile.failed);
+        return;
+      }
+      setBio(bio.trim());
+      setEditing(false);
     });
   };
 
+  const pillLabel = saving
+    ? t.profile.saving
+    : editing
+      ? t.profile.save
+      : t.profile.edit;
+
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: insets.bottom + 32 },
-      ]}
-      testID="profile-screen"
-    >
+    <Screen testID="profile-screen">
+      {/* Always on screen, even before the row arrives: settings is the
+          only way out when the fetch fails. */}
       <View style={styles.head}>
         <Text style={styles.title}>{t.profile.title}</Text>
-        <Pressable
-          testID="open-settings"
-          accessibilityRole="button"
-          // The child is an <Svg> of paths, which announces nothing, and
-          // this is the only route into Settings.
-          accessibilityLabel={t.settings.title}
-          hitSlop={12}
-          onPress={() => router.push('/settings')}
-        >
-          <SettingsIcon />
-        </Pressable>
-      </View>
-
-      {three ? (
-        <View style={styles.trio}>
-          <Trio label={t.chart.sun} sign={three.sun} />
-          <Trio label={t.chart.moon} sign={three.moon} />
-          <Trio label={t.chart.rising} sign={three.rising} />
-        </View>
-      ) : null}
-      <Pressable
-        testID="open-chart"
-        style={styles.chartCard}
-        onPress={() => router.push('/chart')}
-      >
-        <View>
-          <Text style={styles.chartTitle}>{t.profile.chart}</Text>
-          <Text style={styles.hint}>{t.profile.chartHint}</Text>
-        </View>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
-
-      <Text style={styles.label}>{t.profile.photos}</Text>
-      <Text style={styles.hint}>{t.profile.photosHint(MAX_PHOTOS)}</Text>
-      {photos === null ? (
-        <ActivityIndicator color={color.textMuted} />
-      ) : (
-        <>
-          {photos.length === 0 ? (
-            <Text style={styles.hint}>{t.profile.noPhotos}</Text>
-          ) : null}
-          <View style={styles.grid}>
-            {photos.map((path, index) => (
-              <View key={path} style={styles.tile}>
-                {sources[index] ? (
-                  <Image
-                    source={sources[index] ?? { uri: '' }}
-                    style={styles.photo}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={[styles.photo, styles.photoEmpty]} />
-                )}
-                <Pressable
-                  testID={`remove-photo-${index}`}
-                  onPress={() => {
-                    drop(path);
-                  }}
-                >
-                  <Text style={styles.removeText}>{t.profile.remove}</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
-          {photos.length < MAX_PHOTOS ? (
+        <View style={styles.controls}>
+          {state.status === 'ready' ? (
             <Pressable
-              testID="add-photo"
-              style={[styles.button, busy && styles.buttonBusy]}
-              disabled={busy}
-              onPress={add}
+              testID="edit-profile"
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={toggle}
+              style={({ pressed }) => [
+                styles.pill,
+                editing && styles.pillOn,
+                (pressed || saving) && styles.dim,
+              ]}
             >
-              <Text style={styles.buttonText}>
-                {busy ? t.profile.adding : t.profile.addPhoto}
+              <Text style={[styles.pillText, editing && styles.pillTextOn]}>
+                {pillLabel}
               </Text>
             </Pressable>
           ) : null}
-        </>
-      )}
+          <Pressable
+            testID="open-settings"
+            accessibilityRole="button"
+            // The child is an <Svg> of paths, which announces nothing, and
+            // this is the only route into Settings.
+            accessibilityLabel={t.settings.title}
+            hitSlop={12}
+            onPress={() => router.push('/settings')}
+          >
+            <SettingsIcon />
+          </Pressable>
+        </View>
+      </View>
+      {error ? (
+        <Text style={styles.error} testID="profile-error">
+          {error}
+        </Text>
+      ) : null}
 
-      <Text style={styles.label}>{t.profile.bio}</Text>
-      <TextInput
-        testID="bio"
-        style={styles.bio}
-        value={bio}
-        onChangeText={setBio}
-        placeholder={t.profile.bioPlaceholder}
-        placeholderTextColor={color.textFaint}
-        multiline
-        maxLength={MAX_BIO_LENGTH}
-      />
-      <Text style={styles.hint}>{t.profile.bioHint(MAX_BIO_LENGTH)}</Text>
-      <Pressable testID="save-bio" style={styles.button} onPress={store}>
-        <Text style={styles.buttonText}>{t.profile.save}</Text>
-      </Pressable>
-      {notice ? <Text style={styles.ok}>{notice}</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </ScrollView>
+      {state.status === 'error' ? (
+        <View style={styles.center}>
+          <Body muted>{t.errors.generic}</Body>
+          <Pressable
+            testID="retry"
+            onPress={() => {
+              setState({ status: 'loading' });
+              setAttempt((n) => n + 1);
+            }}
+          >
+            <LinkText>{t.common.retry}</LinkText>
+          </Pressable>
+        </View>
+      ) : state.status !== 'ready' || !reading ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={color.textMuted} />
+        </View>
+      ) : (
+        <ProfileView
+          name={state.profile.display_name}
+          age={ageOn(state.profile.birth_date)}
+          photos={photos}
+          sources={sources}
+          three={state.profile.big_three}
+          bio={bio.length > 0 ? bio : null}
+          reading={reading}
+          chart={state.profile.chart}
+          fullChartLabel={t.chart.fullChart}
+          fullChartTitle={t.chart.title}
+          edit={{
+            active: editing,
+            bio,
+            onBioChange: setBio,
+            onMove: move,
+            onRemove: remove,
+            onAdd: add,
+            adding,
+          }}
+        />
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: color.bg },
-  content: { padding: 24, paddingTop: 64, gap: 10 },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: space.md,
   },
-  title: { color: color.text, fontSize: 26, fontWeight: '700' },
-  trio: { flexDirection: 'row', gap: space.sm, marginTop: space.md },
-  trioCell: {
-    flex: 1,
-    backgroundColor: color.surface,
-    borderRadius: radius.md,
+  title: { ...type.title, color: color.text, flexShrink: 1 },
+  controls: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
+  pill: {
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.md,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    paddingVertical: 7,
+    paddingHorizontal: space.lg,
+  },
+  pillOn: { backgroundColor: color.cool, borderColor: color.cool },
+  pillText: { ...type.bodySmall, color: color.text, fontWeight: '600' },
+  pillTextOn: { color: color.onBright },
+  dim: { opacity: 0.6 },
+  error: { ...type.bodySmall, color: color.danger },
+  center: {
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
+    gap: space.md,
+    paddingVertical: space.xxl,
   },
-  trioLabel: { ...type.caption, color: color.textMuted },
-  trioSign: { ...type.body, color: color.text, fontWeight: '600' },
-  chartCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: color.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: color.border,
-    padding: space.lg,
-    marginTop: space.sm,
-  },
-  chartTitle: { ...type.heading, color: color.text },
-  chevron: { ...type.display, color: color.textMuted, fontSize: 26 },
-  label: {
-    color: color.textMuted,
-    fontSize: 12,
-    letterSpacing: 1,
-    marginTop: 16,
-  },
-  hint: { color: color.textFaint, fontSize: 12 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: { width: 96, gap: 4 },
-  photo: { width: 96, height: 128, borderRadius: 12 },
-  photoEmpty: { backgroundColor: color.surface },
-  removeText: { color: color.textMuted, fontSize: 12, textAlign: 'center' },
-  button: {
-    backgroundColor: color.surface,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonBusy: { opacity: 0.6 },
-  buttonText: { color: color.text, fontSize: 15, fontWeight: '600' },
-  bio: {
-    backgroundColor: color.surface,
-    borderRadius: 14,
-    padding: 14,
-    minHeight: 96,
-    color: color.text,
-    fontSize: 15,
-    textAlignVertical: 'top',
-  },
-  ok: { color: color.ok, fontSize: 13 },
-  error: { color: color.danger, fontSize: 13 },
 });

@@ -3228,3 +3228,84 @@ params: { mode } }` links. No dev server was started: the disk had
 about 2 GB free and Metro's cache lives in the shared `node_modules`.
 Not done here, main's after the merge: the five `auth-*.png`
 screenshots and the auth DB test run.
+
+## 2026-09-11 — Track B: one profile for you and for them
+
+Branch `track/b-profile`, worktree
+`.claude/worktrees/agent-a601c5bf39360f3a4`, base b80bcc1. The stub in
+`docs/ROADMAP.md` ("The five-item pass", Track B) is the spec; this is
+what was built against it and what was found on the way.
+
+**The shape.** `components/ProfileView.tsx` is the one page: a paged
+carousel (`ScrollView pagingEnabled`, one page per photo, the width
+measured with `onLayout` so the carousel does not know the screen's
+padding, 3:4 like the picker's crop) with the name and age inside the
+picture on the discover card's scrim and a dot per photo; `BigThreeRow`;
+the bio as a `Card` (a `TextInput` while editing, the placeholder hint
+for an owner without one, nothing for another person without one); the
+first three of `reading.primary` as cards; one `GradientButton` opening a
+`Popup` whose body is `components/ChartDetail.tsx` — the wheel at 300,
+Mercury/Venus/Mars, the ten planets, the aspects. `PrimaryCard` lives in
+`ChartDetail` and is imported by `ProfileView`, not the other way round,
+so the two files do not import each other. The presence of the `edit`
+prop is what marks a page as the viewer's own: it decides the bio hint,
+the empty-carousel hint and which Ascendant note is shown. Another
+person's page never passes it.
+
+**Edit mode.** `profile.tsx` keeps the row's `photos` and `bio` as state;
+"Düzenle" flips `editing`, the pill reads "Kaydet" (cool fill) and
+"Kaydediliyor…" while `saveProfileEdits` runs — one
+`update({ photos, bio })`, which the trigger accepts because it checks
+storage only for paths not already in `old.photos`. Add and remove keep
+writing at once through `addPhoto` / `removePhoto`, and since both take
+the on-screen list, an unsaved reorder rides along with them — the
+order is never lost to an add. `saveBio` is gone; nothing else used it.
+A failed save shows `t.profile.failed` and stays in the edit mode with
+the draft intact. The header row is rendered outside `ProfileView` on
+the owner's page so settings stays reachable while the fetch is loading
+or failed; the edit pill only appears once the row is there.
+
+**What the stub got wrong, checked rather than copied.** It said a 29
+February birth "counts on 28 Feb" in a common year. A read-only
+`select extract(year from age(...))` on the local Postgres (the very
+expression `discover` and `match_profiles` use) says otherwise:
+`age('2025-02-28', '2000-02-29')` is 24 years 11 months 28 days, so the
+birthday falls on 1 March. The 28-Feb rule is the CHECK constraint's
+(`current_date - interval '18 years'` clamps), a different operation.
+`lib/age.ts` mirrors the views — the owner must read the number others
+see — and `age.test.ts` carries the observed values with the reason.
+`ageOn` returns null for a string it cannot read (the row schema only
+promises a string); the name then stands alone rather than "NaN".
+
+**Smaller decisions.**
+
+- The popup titles reuse two keys that were about to die:
+  `chart.title` ("Doğum haritan") for the owner and
+  `person.chartTitle(name)` for another person. `chart.fullChart` stays
+  as the owner's button label, `person.fullChart` as theirs.
+- `profile.bio` ("HAKKINDA"), `profile.photos`, `profile.saved`,
+  `profile.chart*`, `chart.backToProfile/hideFullChart/signOut`,
+  `person.chartLabel/openChart/backToProfile/backToChart/fullTitle/tabs`
+  are deleted. Four keys are new after `profile.title`: `edit`,
+  `saving`, `moveLeft`, `moveRight` (the ‹ › buttons need a spoken
+  label). `settings.signOut` sits after `settings.title`.
+- `discover.completeProfile` was used only by the deleted chart screen.
+  It is Track C's section, so it is left in place and named here for
+  main to prune after the merges.
+- The empty carousel shows `t.profile.noPhotos` for the owner; the deck
+  requires a photo, but a match may have removed theirs, so another
+  person's empty page is a plain surface with the name on it.
+- `git status` in a fresh worktree lists the two `node_modules` symlinks
+  the track setup asks for (`.gitignore` says `node_modules/`, which
+  matches directories, not symlinks); they are not committed and are
+  the only untracked entries when this track reports.
+
+**Verified here (the track battery, from the worktree root):**
+`npm run typecheck -w apps/mobile -w packages/astro -w packages/geo`
+clean, after `.expo/types/router.d.ts` was regenerated on port 8092
+and named no chart route; `npm run lint …` 0 errors (one pre-existing
+`exhaustive-deps` warning in discover.tsx, Track C's file);
+`npm run test …` mobile 8 files / 88 tests, astro 13 / 282, geo 2 / 36,
+all passing; `npx prettier --check .` clean. `grep -rn "/chart"` over
+app, components and lib finds no href. Not verified here, by design: every
+`p-*.png` screenshot, which main takes after the `--no-ff` merge.
