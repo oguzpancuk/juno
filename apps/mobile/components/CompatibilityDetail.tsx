@@ -53,7 +53,9 @@ export function CompatibilityDetail({
                 style={styles.dimensionChip}
                 testID={`dimension-${d.dimension}`}
               >
-                <Text style={styles.dimensionName}>{d.name}</Text>
+                <Text style={styles.dimensionName} numberOfLines={1}>
+                  {d.name}
+                </Text>
                 {/* Bars, not the level word; the word stays as the
                     meter's accessibility label. No number reaches a Text
                     (ADR-0009). */}
@@ -172,14 +174,19 @@ const styles = StyleSheet.create({
   },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
-  dimensionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  // Five chips, one row, equal widths (owner, 2026-09-12: the longest
+  // name was pushing Gelişim onto a second line). They share the width
+  // rather than wrapping, so the padding is what gives way.
+  dimensionRow: { flexDirection: 'row', gap: space.sm },
   dimensionChip: {
+    flex: 1,
+    alignItems: 'center',
     backgroundColor: color.surfaceSoft,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: color.border,
     paddingVertical: space.sm,
-    paddingHorizontal: space.md,
+    paddingHorizontal: space.xs,
     gap: space.xs,
   },
   dimensionName: { ...type.caption, color: color.textFaint },

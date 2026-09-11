@@ -19,6 +19,14 @@ import { color, gradient, radius, space, type } from '@/theme/tokens';
  * and a screen importing five things from five files reads worse than this.
  */
 
+/**
+ * The gutter every `Screen` keeps down each side. Exported so a child that
+ * has to run edge to edge — a photo (owner, 2026-09-12: "fotoğrafların
+ * sağında ve solunda boşluk görmek istemiyorum") — can cancel exactly it
+ * rather than guessing at a number.
+ */
+export const SCREEN_PADDING = space.xl;
+
 export function Screen({
   children,
   testID,
@@ -248,7 +256,7 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   screenContent: {
-    padding: space.xl,
+    padding: SCREEN_PADDING,
     paddingTop: 68,
     paddingBottom: 56,
     gap: space.md,

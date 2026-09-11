@@ -12,10 +12,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import { Popup } from '@/components/Popup';
 import type { MatchProfileRow } from '@/lib/matches';
 import type { PhotoSource } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
-import { personHref } from '@/lib/routes';
 import {
   REPORT_REASONS,
   blockUser,
@@ -28,9 +28,10 @@ import { color, radius, space, type } from '@/theme/tokens';
 
 /**
  * The match page — "EŞLEŞTİNİZ", the photos, the starter, the compatibility
- * summary, the way to their profile and the safety block — as the second
- * page of the chat (owner, 2026-09-11: chat and match detail are two tabs
- * of one screen). It was `(matches)/match/[id].tsx`; the chat owns the
+ * summary and the safety block — as the second page of the chat (owner,
+ * 2026-09-11: chat and match detail are two tabs of one screen). Their
+ * profile is not down here any more: it opens from the name in the chat
+ * header (owner, 2026-09-12). It was `(matches)/match/[id].tsx`; the chat owns the
  * match row and the photo sources now and hands them down, so the first
  * photo is requested once for the header, the bubbles and this strip
  * (ADR-0006: every photo request is authorised, none is cached).
@@ -202,10 +203,6 @@ export function MatchDetail({
         </View>
       ) : null}
 
-      <Link href={personHref(row.id)} style={styles.link} testID="open-person">
-        {t.person.openProfile(row.display_name)}
-      </Link>
-
       <Text style={styles.label}>{t.safety.title}</Text>
       {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       <View style={styles.safetyRow}>
@@ -225,7 +222,8 @@ export function MatchDetail({
           style={styles.safetyButton}
           onPress={() => {
             setNotice(null);
-            setReporting((open) => !open);
+            setConfirmingBlock(false);
+            setReporting(true);
           }}
         >
           <Text style={styles.safetyText}>{t.safety.report}</Text>
@@ -247,23 +245,25 @@ export function MatchDetail({
           </Pressable>
         </View>
       ) : null}
-      {reporting ? (
-        <View style={styles.reasons} testID="report-reasons">
-          <Text style={styles.bodyMuted}>{t.safety.reportTitle}</Text>
-          {REPORT_REASONS.map((reason) => (
-            <Pressable
-              key={reason.value}
-              testID={`reason-${reason.value}`}
-              style={styles.reason}
-              onPress={() => {
-                file(reason.value);
-              }}
-            >
-              <Text style={styles.body}>{reason.label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+      <Popup
+        visible={reporting}
+        onClose={() => setReporting(false)}
+        title={t.safety.reportTitle}
+        testID="report-reasons"
+      >
+        {REPORT_REASONS.map((reason) => (
+          <Pressable
+            key={reason.value}
+            testID={`reason-${reason.value}`}
+            style={({ pressed }) => [styles.reason, pressed && styles.dim]}
+            onPress={() => {
+              file(reason.value);
+            }}
+          >
+            <Text style={styles.body}>{reason.label}</Text>
+          </Pressable>
+        ))}
+      </Popup>
     </ScrollView>
   );
 }
@@ -311,7 +311,10 @@ const styles = StyleSheet.create({
   },
   safetyText: { ...type.body, color: color.textMuted },
   reasons: { gap: space.xs },
+  // A row in the report popup; the sheet's own button is the only way out,
+  // so a reason is a plain tap target rather than a second one.
   reason: { paddingVertical: space.md },
+  dim: { opacity: 0.6 },
   danger: { paddingVertical: space.md },
   dangerText: { ...type.body, color: color.danger },
 });

@@ -82,8 +82,7 @@ export const t = {
     sun: 'Güneş',
     moon: 'Ay',
     rising: 'Yükselen',
-    planets: 'GEZEGENLER',
-    house: 'ev',
+    placements: 'HARİTA BAŞTAN SONA',
     retrograde: 'R',
     aspects: 'AÇILAR',
     // The profile leads with three placements; the other three and the

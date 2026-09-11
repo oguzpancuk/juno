@@ -1,3 +1,4 @@
+import { natalReading } from '@juno/astro';
 import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -20,6 +21,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { Avatar } from '@/components/Avatar';
 import { MatchDetail } from '@/components/MatchDetail';
+import { Popup } from '@/components/Popup';
+import { ProfileView } from '@/components/ProfileView';
 import { BackLink } from '@/components/ui';
 import {
   MAX_MESSAGE_LENGTH,
@@ -54,7 +57,8 @@ const EMPTY: readonly string[] = [];
 /**
  * One conversation as two pages — the thread and the match detail — under
  * a two-segment header, swiped or tapped between (owner, 2026-09-11).
- * There is no back link: the tab bar and the edge swipe are the exits.
+ * The header carries the way back to the list and, on the name itself,
+ * the way into their profile (owner, 2026-09-12).
  *
  * Keyed by the match id: everything below belongs to one conversation.
  * The starter screen pops back to a thread with POP_TO, which finds a
@@ -138,6 +142,15 @@ function ChatView({
       void markThreadRead(matchId, userId);
     }
   }, [messages, matchId, userId]);
+
+  // Their page, opened from the header rather than from a link at the
+  // foot of Uyum (owner, 2026-09-12). The row the chat already holds
+  // carries everything the page needs, so opening it fetches nothing.
+  const [showPerson, setShowPerson] = useState(false);
+  const theirReading = useMemo(
+    () => (row !== 'loading' && row ? natalReading(row.chart) : null),
+    [row],
+  );
 
   const list = useMemo(
     () => (messages === 'loading' || messages === null ? [] : messages),
@@ -236,7 +249,18 @@ function ChatView({
   return (
     <View style={styles.screen} testID="chat-screen">
       <View style={styles.header}>
-        <View style={styles.titleRow}>
+        <BackLink
+          label={t.chat.backToMatches}
+          fallback="/matches"
+          testID="chat-back"
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.person.openProfile(row.display_name)}
+          onPress={() => setShowPerson(true)}
+          style={({ pressed }) => [styles.titleRow, pressed && styles.dim]}
+          testID="open-person"
+        >
           <Avatar
             name={row.display_name}
             source={avatar}
@@ -246,7 +270,7 @@ function ChatView({
           <Text style={styles.title} numberOfLines={1}>
             {row.display_name}
           </Text>
-        </View>
+        </Pressable>
         <View style={styles.segments} accessibilityRole="tablist">
           {PAGES.map((p) => {
             const on = active === p;
@@ -476,6 +500,27 @@ function ChatView({
           <MatchDetail row={row} userId={userId} sources={sources} />
         </View>
       </ScrollView>
+
+      {theirReading === null ? null : (
+        <Popup
+          visible={showPerson}
+          onClose={() => setShowPerson(false)}
+          testID="person-popup"
+        >
+          <ProfileView
+            name={row.display_name}
+            age={row.age}
+            photos={row.photos}
+            sources={sources}
+            three={row.big_three}
+            bio={row.bio}
+            reading={theirReading}
+            chart={row.chart}
+            fullChartLabel={t.person.fullChart}
+            fullChartTitle={t.person.chartTitle(row.display_name)}
+          />
+        </Popup>
+      )}
     </View>
   );
 }
@@ -490,7 +535,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.bg,
   },
   header: {
-    paddingTop: 64,
+    paddingTop: 56,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: color.border,
@@ -499,8 +544,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
+    paddingTop: space.xs,
     paddingBottom: space.md,
   },
+  dim: { opacity: 0.6 },
   title: { ...type.title, color: color.text, flexShrink: 1 },
   segments: { flexDirection: 'row' },
   // 44pt targets; the underline is the last 2pt of each.

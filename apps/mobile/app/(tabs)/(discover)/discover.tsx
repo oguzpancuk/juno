@@ -572,23 +572,28 @@ const styles = StyleSheet.create({
     backgroundColor: color.bg,
   },
   title: { ...type.heading, color: color.text },
+  // Edge to edge (owner, 2026-09-12): the card cancels the screen's
+  // gutter so its photo touches both edges, and gives up the side border
+  // and the corner radius that only made sense inset.
   card: {
+    marginHorizontal: -space.lg,
+    // The title needs air: with the card full width there is no inset
+    // left to read as a gap.
+    marginTop: space.sm,
     backgroundColor: color.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     borderColor: color.border,
     padding: space.lg,
     gap: space.sm,
   },
-  // The photo is what needs clipping, for the card's top corners — not the
-  // card, which has to be free to grow past the viewport and scroll.
+  // The photo still needs its own clip: it is the child that overflows the
+  // card's padding, and the card has to stay free to grow past the
+  // viewport and scroll.
   photoWrap: {
     marginHorizontal: -space.lg,
     marginTop: -space.lg,
     marginBottom: space.xs,
-    // The card has a 1pt border, so its padding box is one point tighter.
-    borderTopLeftRadius: radius.xl - 1,
-    borderTopRightRadius: radius.xl - 1,
     overflow: 'hidden',
   },
   cardPhoto: { width: '100%', height: 380 },

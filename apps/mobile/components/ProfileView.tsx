@@ -14,10 +14,10 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import {
   ChartDetail,
   PROFILE_PRIMARY_COUNT,
-  PrimaryCard,
+  PlacementCard,
 } from '@/components/ChartDetail';
 import { Popup } from '@/components/Popup';
-import { Body, Card, GradientButton } from '@/components/ui';
+import { Body, Card, GradientButton, SCREEN_PADDING } from '@/components/ui';
 import { MAX_BIO_LENGTH, MAX_PHOTOS, type PhotoSource } from '@/lib/photos';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
@@ -135,12 +135,12 @@ export function ProfileView({
         </Card>
       ) : null}
 
-      {reading.primary.slice(0, PROFILE_PRIMARY_COUNT).map((primary) => (
-        <PrimaryCard
-          key={primary.placement}
-          reading={primary}
+      {reading.placements.slice(0, PROFILE_PRIMARY_COUNT).map((placement) => (
+        <PlacementCard
+          key={placement.placement}
+          reading={placement}
           own={own}
-          testID={`primary-${primary.placement}`}
+          testID={`primary-${placement.placement}`}
         />
       ))}
 
@@ -384,9 +384,12 @@ function Arrow({
 }
 
 const styles = StyleSheet.create({
+  // Edge to edge (owner, 2026-09-12): the photo cancels the screen's
+  // gutter on both sides, and loses its corner radius with it — a rounded
+  // corner against the screen edge reads as a mistake.
   carousel: {
     alignSelf: 'stretch',
-    borderRadius: radius.xl,
+    marginHorizontal: -SCREEN_PADDING,
     overflow: 'hidden',
     backgroundColor: color.surfaceHigh,
   },
@@ -408,7 +411,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: space.lg,
+    // The gutter the carousel cancelled: the name lines up with the cards.
+    paddingHorizontal: SCREEN_PADDING,
     paddingTop: space.xxl,
     paddingBottom: space.md,
     gap: 2,
