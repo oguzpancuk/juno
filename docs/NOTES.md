@@ -3100,3 +3100,116 @@ session does not pay again:
 - A seed user cannot be made to like a non-seed profile with
   `seed-like.ts`; a session-scratch variant keyed by display name did
   it for Derya. Not committed: one screenshot's worth of tooling.
+
+## 2026-09-11 — Track A: the password door, and two buttons that do nothing
+
+Branch `track/a-auth`, worked in its own worktree off `b80bcc1` while
+the other three tracks ran beside it; main merges. Item 1.3 of the
+owner's list: sign-up and sign-in with a password, the Apple and Google
+buttons visible with nothing behind them.
+
+**OTP is gone, not kept beside the password.** The owner's default of
+the plan entry above. Two flows on one screen would have meant two
+sets of strings, two error mappings and a choice on every visit for a
+product that has no real users yet; the mail the code arrived by was
+the thing being deferred ("maili sonra ayarlarız"). What left with it:
+`signInWithOtp`/`verifyOtp`, the code step, the five `signIn` strings
+it used, `errors.otpInvalid`, and in `lib/errors.ts` the `otp_*` cases
+and the bare-403 fallback (a 403 with no code was read as a wrong code;
+there is no such request now, so it reads as unnamed). The
+`magic_link` template stays in `config.toml` with its comment reworded:
+it renders `{{ .Token }}` and nothing in the app reads one any more.
+
+**The screen.** `sign-in.tsx` has two modes, `in | up`, from a route
+param parsed with `z.enum(['in','up']).catch('up')` — a mistyped deep
+link opens sign-up, the cheaper mistake for a newcomer. The param is
+read once into state and the bottom link flips it in place, keeping
+what was typed; `router.setParams` would have kept the URL honest too,
+but its typed-routes signature infers the route through a conditional
+type and I did not want the screen's one flip to depend on that
+inference holding across expo-router upgrades. Welcome pushes a fresh
+instance per tap, so a stale param cannot reach a mounted screen.
+Submit stays dimmed until `parseCredentials` passes; a field's own
+sentence appears once there is something in it to be wrong, so an
+empty form is not shouted at. Success is `dismissAll` then
+`replace('/')`, exactly as the plan wrote it: the dismiss is a
+POP_TO_TOP on the root stack (welcome and sign-in are root routes, so
+it is handled — the one `leaveToSignIn` lost was aimed at a one-route
+root), and it is what keeps welcome from sitting under `(tabs)` after a
+sign-in, which today is why Android back from the deck lands on
+welcome while signed in. One call into the tab tree; the dismiss
+touches only root routes.
+
+**A null session is a sentence, not a spinner.** `signUp` on a project
+that confirms addresses answers with a user and no session and no
+error. The screen shows `signUp.confirmSent` and stays. The local
+stack cannot produce that state (`enable_confirmations = false` since
+the foundation), so the branch is written, not watched. **The hosted
+project, when it exists, must set Confirm email = off** (Authentication
+→ Providers → Email) or every sign-up ends on that sentence; and its
+confirmation template must not be the local one, which mails a 6-digit
+code the app has nowhere to accept. Turning confirmations on is a
+feature (a verification step in the app), not a switch.
+
+**The inert buttons and the App Store.** Two `OutlineButton`s on
+welcome, "Apple ile giriş yap" and "Google ile giriş yap", with
+`onPress={() => {}}` and a `// why:` naming the owner's decision. The
+file's doc comment said a button that does nothing is worse than none;
+it now records that the owner overrode this on 2026-09-11 and why. The
+risk stands and is the TestFlight item's to clear: App Store Review
+Guideline 4.8 requires Sign in with Apple wherever a third-party login
+is offered, and a visible Sign in with Apple button that does nothing
+is a reason to reject a build — reviewers tap it. Before the first
+TestFlight, either the providers work or the two buttons go back
+behind the ROADMAP item; there is no third state that passes review.
+
+**Password rules.** 8 to 72 on the client (`lib/auth.ts`; 72 is
+bcrypt's input cap, which GoTrue enforces with `weak_password`) and
+`minimum_password_length = 8` in `config.toml`. `credentialsSchema`
+trims and lowercases the address — the HID lesson of the foundation
+entry showed how easily a stray character reaches a field — and does
+not trim the password, because a leading space is part of a secret.
+
+**What the auth DB test asserts, and that it was not run.**
+`supabase/tests/auth.test.ts`: fresh sign-up → session with
+`email_confirmed_at` set (the line that goes red if the stack's config
+drifts back to mailing); same address → `user_already_exists`; 5-char
+password → `weak_password` with status 422; wrong password and an
+unregistered address → `invalid_credentials` (the API does not say
+which half was wrong, and neither does the app); the right password →
+a session. Cleanup through `deleteUsers`. Typechecked and linted with
+the supabase workspace's strict type-aware rules; not run — the stack is
+main's, and a track that starts one breaks the types-drift test in
+every other worktree. Main runs it after the merge, with the five
+screenshots.
+
+**Legal text.** "Giriş tek kullanımlık kod ile yapılır; parola
+saklanmaz" became false and is reworded: sign-in is by e-mail and
+password, the password is stored only as a hash by the auth provider
+and shown to no one, and the address is not verified at sign-up for
+now. `LEGAL_UPDATED` is 11 Eylül 2026. `LEGAL_VERSION` stays at
+2026-09-09 on purpose: it is written once into `profiles.consent_version`
+at onboarding and nothing anywhere compares a stored version against
+the current one or asks anyone to accept a newer text — so a bump would
+record a re-consent that never happened. Its doc comment said "bump
+both together"; it now says why not. The open question this leaves for
+the owner: a profile created after today records 2026-09-09 while the
+person read the 11 Eylül text. Harmless while every account is local
+and seeded, but the first hosted sign-up makes it a wrong record. The
+fix is a re-consent step (compare `consent_version` to `LEGAL_VERSION`
+at app start, show the notice, update the row — the trigger already
+refuses a backwards move) and a bump in the same change; or, if the
+owner judges this wording change immaterial to consent, leave both as
+they are and say so in an ADR.
+
+**Verification.** Track battery on the worktree (typecheck, lint, test
+for `apps/mobile`, `packages/astro`, `packages/geo`; `prettier --check .`)
+green on the committed HEAD. `.expo/types/router.d.ts` is gitignored
+and absent in a fresh worktree, which makes `Href` loosely typed; the
+main checkout's copy was placed in the worktree's `.expo/types/`
+(same route tree — this track adds no route) and `tsc` passed against
+the typed hrefs too, including the two `{ pathname: '/sign-in',
+params: { mode } }` links. No dev server was started: the disk had
+about 2 GB free and Metro's cache lives in the shared `node_modules`.
+Not done here, main's after the merge: the five `auth-*.png`
+screenshots and the auth DB test run.
