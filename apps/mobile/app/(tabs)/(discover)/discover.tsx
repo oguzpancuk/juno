@@ -497,8 +497,9 @@ function createDeckResponder({
     // architecture the native scroll view can still cancel a content
     // touch once its own pan begins on a steep diagonal; that arrives as
     // a terminate below and settles the card — no decision, no write. A
-    // 300 pt drag with 90 pt of vertical travel recorded fine on the
-    // simulator (NOTES 2026-09-11); if testers report lost swipes,
+    // 300 pt drag with 90 pt of vertical travel, and one of 200 pt with
+    // 180 pt, both recorded fine on the simulator (NOTES 2026-09-11); if
+    // testers report lost swipes,
     // `scrollEnabled={false}` on the scroll view for the length of a
     // drag is the no-dependency remedy.
     onPanResponderTerminationRequest: () => false,

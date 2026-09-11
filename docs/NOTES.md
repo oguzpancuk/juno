@@ -3617,3 +3617,15 @@ gesture claims — vertical scroll survives, a tap on the pill does not
 swipe, re-tapping the focused tab pops to the list, an edge swipe after
 sign-out reveals nothing — rest on this session's device runs and the
 PNGs and rows they left behind.
+
+## 2026-09-11 — The steep diagonal, and the battery on the final HEAD
+
+The last review left one thing documented rather than tested: a drag
+steep enough to worry the native scroll view but still claimable by the
+card (|dx| > |dy|). Done on the simulator on a fresh candidate: a drag
+of 200 pt right with 180 pt of downward travel, about forty degrees,
+recorded a like (the `likes` row on the web-onboarded test account, the
+count 6 → 7). So on this device the card keeps the touch at both angles
+tried, and `scrollEnabled={false}` stays a remedy in reserve rather than
+a change. The full battery is green on `c23d177` with a clean tree (this
+entry and the comment beside the responder are the only change since).
