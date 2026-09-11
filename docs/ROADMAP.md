@@ -788,6 +788,31 @@ are peer-installed by expo-router, not dependencies of the app.
       quoted reply, the reply bar, no back link), `chat-match-page.png`
       (page 2 with the kicker, level meters and the five names),
       `chat-meters-discover.png`, `chat-block-leaves-one-route.png`.
+      _Built on `track/d-chat`, awaiting main's merge, DB tests and
+      screenshots. `components/Avatar.tsx` (photo or the Turkish initial,
+      `initialOf` in `lib/thread-view.ts`); the list resolves first photos
+      with one `usePhotoSources` call keyed by path; the chat requests its
+      photos once and hands the sources to the header, the bubbles and
+      page 2. `lib/thread-view.ts` holds `lastReadMine`, `showsAvatar`
+      (inverted-list direction), `quoteFor`, `excerpt`, all in
+      `thread-view.test.ts`. `useThread` merges an UPDATE binding by id;
+      `MessageRowSchema`, `sendMessage` and `Thread.send` carry
+      `reply_to`. Migration `20260911000002_reply_to.sql`: FK, not-self
+      check, partial index, a security-definer BEFORE INSERT trigger
+      (cross-thread → 23514, unknown id → the FK's 23503 — invoker RLS
+      would have folded the two), `forbid_message_edit` re-created with
+      `reply_to` frozen. Long press (and a VoiceOver custom action) opens
+      the reply bar; a replying bubble quotes from the loaded window or
+      says "Önceki bir mesaj". The pager is a paging `ScrollView` with a
+      `page` param (`z.enum(['thread','match']).catch('thread')`) applied
+      via `contentOffset` and `onLayout`; `match/[id].tsx` is deleted and
+      `matchDetailHref` retargets to `/chat/[id]?page=match` with the
+      `INTO_MATCHES` call sites untouched; `chatHref` joins it for the
+      list and the starter's fallback. `LevelMeter` replaces the level
+      word in the chips. Five names in `dimensions.json`. Battery green
+      on the track; `npm run typecheck -w supabase` green with the new
+      tests (`tests/database.types.ts` still needs main's regeneration —
+      two helpers in `rls.test.ts` declare the column until then)._
 
 Owner decisions taken by default on 2026-09-11, each reversible (the
 question and the default are in `docs/NOTES.md` under the same date): a
