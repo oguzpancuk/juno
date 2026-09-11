@@ -929,6 +929,84 @@ writes order + bio; the discover photo is not a tap target; the full-chart
 popup keeps the Mercury/Venus/Mars cards; the five dimension names above;
 reply by long press; no separate "EŞLEŞTİNİZ" screen; password minimum 8.
 
+## The second pass (owner request 2026-09-11, same day)
+
+Five corrections to the pass above, in this order. One session, serial;
+each item lands with its own screenshot.
+
+- [x] **1 — the chat keeps a back link.** The first pass removed it on
+      the owner's instruction ("sohbetin içinde eşleşmelere geri dön
+      butonu olmasın"); the owner has reversed that. `‹ Eşleşmeler`
+      (`t.chat.backToMatches`, still in `strings.ts`) goes back above the
+      title row in `(matches)/chat/[id].tsx`. The tab bar stays where it
+      is — this is a second exit, not a replacement.
+      _Done. `s1-chat-back-link.png` shows "‹ Eşleşmeler" above the
+      name; tapping it landed on the conversation list with the tab bar
+      still in place._
+
+- [x] **2 — their profile opens from the header, not from a link at the
+      foot of Uyum.** `MatchDetail` loses its `open-person` link; the
+      chat header's avatar and name become one tap target that opens the
+      person as a `Popup`. The body is the same `ProfileView` the profile
+      tab and the person page render, fed from the `match_profiles` row
+      the chat already holds — no second fetch.
+      _Done. `s2-person-popup.png` — the popup over the thread, photo,
+      name and age, big three; scrolled, it carries the bio, the three
+      cards and "Tüm haritasını gör", which opens the chart as a second
+      sheet over the first (nested `Modal`, checked on the device).
+      `s5-report-popup.png` shows the Uyum page without the old link._
+
+- [x] **3 — the full chart reads once, from the start, in one format.**
+      Today the popup opens on Mercury (the three primary cards the
+      profile did not show) and then starts again at the Sun as a
+      second, differently-shaped list. `natalReading` gains
+      `placements`: all ten planets plus the Ascendant, in profile
+      order, each carrying the same label/technical/sign/house shape the
+      three cards on the profile use. `ChartDetail` renders that one
+      list and the separate `PLANETLER` section goes. The outer five
+      need dating-language names of their own in
+      `packages/astro/content/placements.json`, beside Çekirdek benlik
+      and Duygusal dünya.
+      _Done. `PLACEMENTS` has eleven entries and `content.test.ts`
+      asserts a distinct label for each; `summary.test.ts` asserts the
+      reading cards every body once, in that order, each with a degree.
+      `s3-chart-starts-at-sun.png`: the wheel, "HARİTA BAŞTAN SONA",
+      then Çekirdek benlik — Güneş Boğa'da 18°55′ · 5. ev. Scrolled, the
+      outer five read under their new names with the retrograde mark
+      (Uranüs Oğlak'ta 26°18′ · 2. ev · R)._
+
+- [x] **4 — photos run edge to edge.** The deck card and the profile
+      carousel both sit inside their screen's 16/24pt padding, so a
+      photo has a gutter down each side. Both bleed to the screen edges;
+      the card loses its side border and its corner radius with them.
+      _Done. `s4-discover-bleed.png` and `s4-profile-bleed.png` — the
+      photo touches both edges on each, the name sitting at the gutter
+      the cards below keep. The deck card gained a small top margin: with
+      no inset left, the title had nothing to sit off._
+
+- [x] **5 — Şikâyet et opens a popup.** The reason list expands inline
+      under the safety row today. It moves into `Popup`, like the
+      compatibility detail and the full chart.
+      _Done. `s5-report-popup.png`; filing "Diğer" on the device wrote
+      `reports(other, Selin, 16:09:09Z)` and the sheet closed onto the
+      page's own confirmation. That row is still in the local database._
+
+- [x] **6 — the dimension names fit one row.** (owner, mid-pass) The
+      longest, "Duygusal yakınlık", pushed Gelişim onto a second line. It
+      is "Yakınlık" now, and the five chips share the row's width instead
+      of wrapping.
+      — _Done. `s6-dimensions-one-row.png`: Yakınlık · Çekim · İletişim ·
+      İstikrar · Gelişim, each with its meter, on one line._
+
+Owner decisions taken by default in this pass, each reversible: the full
+chart repeats the Sun, Moon and Ascendant cards the profile shows above
+it, because "baştan sona, bir kez" describes a whole chart rather than a
+remainder; inside the popup each card's technical line gains the degree
+and the retrograde note, so nothing the deleted `PLANETLER` list carried
+is lost; the profile popup in the chat opens from both the avatar and the
+name; Engelle keeps its inline confirmation, because its confirm is a
+second, destructive button and `Popup` has exactly one.
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

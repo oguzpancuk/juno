@@ -3629,3 +3629,71 @@ count 6 → 7). So on this device the card keeps the touch at both angles
 tried, and `scrollEnabled={false}` stays a remedy in reserve rather than
 a change. The full battery is green on `c23d177` with a clean tree (this
 entry and the comment beside the responder are the only change since).
+
+## 2026-09-12 — the second pass: five corrections and a name that fits
+
+The owner watched the first pass on the simulator and sent five
+corrections, then a sixth mid-session. All six are on main.
+
+**The deck was empty, and it was not a bug.** Before any of it: the owner
+asked for a full account on the simulator and then for someone on the
+deck. `oguzpancuk@gmail.com` was already signed in with four matches, six
+messages and two photos, but Keşfet said nobody was left. The `discover`
+view was right — that account is interested in women, and every woman
+with a photo had already been liked or passed; the rest were men or had
+no photo. Rather than delete a decision, `Sumeyye Ayan` was given a
+placeholder photo with a one-profile copy of `seed-photos.ts`. The real
+script rewrites `photos` for every profile, which would have destroyed
+the ordered pair the reorder evidence rests on — worth remembering
+before anyone runs it again on a live local stack.
+
+**The chat has a back link again, and the header is the way in.** The
+first pass removed the link on the owner's instruction; the owner
+reversed it. `t.chat.backToMatches` was still in `strings.ts`, so this
+was one `BackLink` above the title row. The name and avatar became one
+`Pressable` that opens the person as a `Popup` — the same `ProfileView`
+the profile tab renders, fed from the `match_profiles` row the chat
+already holds, so opening it fetches nothing. `MatchDetail` lost its
+`open-person` link. The popup inside the popup ("Tüm haritasını gör")
+is a nested RN `Modal`; it works on iOS under the new architecture,
+checked on the device, and it is the reason the chart is still one tap
+from a profile wherever that profile is rendered.
+
+**One chart, read once.** The popup used to open on Mercury — the three
+primary cards the profile had not shown — and then start again at the
+Sun as a second, differently shaped `PLANETLER` list. `PRIMARY_PLACEMENTS`
+(six) is gone; `PLACEMENTS` is all eleven bodies in profile order and
+`natalReading` returns one `placements` array in the card shape. The
+profile slices the first three, the popup renders all of them. Nothing
+was lost with the deleted list: the popup's cards carry the degree and
+the retrograde mark in their technical line (`degree` prop on
+`PlacementCard`), and the retrograde paragraph moved onto the card. The
+outer five needed names in the product's own language, beside Çekirdek
+benlik and Duygusal dünya: Seni ne büyütür, Neyi ciddiye alırsın, Seni ne
+özgürleştirir, Neyi hayal edersin, Neyi dönüştürürsün. The section label
+started as "HARİTAN BAŞTAN SONA" and was neutralised to "HARİTA" the
+moment it appeared over someone else's chart.
+
+**Edge to edge.** `Screen`'s gutter is now `SCREEN_PADDING`, exported so
+a child can cancel exactly it; the profile carousel does, and drops its
+corner radius with it. The deck card cancels the deck screen's `space.lg`
+and gives up its side border and radius too — a rounded corner against
+the screen edge reads as a mistake. The carousel's scrim picks up
+`SCREEN_PADDING` so the name still lines up with the cards below. One
+thing the change costs: the card had nothing to sit off once it ran full
+width, so it took a small top margin under the "Keşfet" title.
+
+**Şikâyet et is a popup.** The reason list moved into `Popup`; filing
+still writes and the sheet closes onto the page's own confirmation.
+Engelle keeps its inline confirmation — its confirm is a second,
+destructive button, and `Popup` has exactly one.
+
+**"Yakınlık", not "Duygusal yakınlık".** Mid-session the owner reported
+Gelişim wrapping to a second line on the Uyum page. The name is shorter
+now and the five chips share the row (`flex: 1`, `paddingHorizontal:
+space.xs`, `numberOfLines={1}`) rather than wrapping, so no future name
+can push one down alone.
+
+**Left in the local database on purpose:** the report row filed against
+Selin at 16:09:09Z while proving item 5, and Sumeyye's placeholder photo.
+Both are test data the owner can clear; deleting rows is ask-tier.
