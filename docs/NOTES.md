@@ -2675,3 +2675,45 @@ start` command line (the `.env` write was refused by the tool
   still has no accent.
 - Verified: PNG dimensions and alpha with `sips` (icon opaque, adaptive
   layers transparent), a contact sheet of every asset at real size.
+
+## 2026-09-11 — The screens the design session needs (C7)
+
+- The owner redirected mid-session: rather than implementing the mockups
+  by hand, Claude Design will style the app, so this session's job was to
+  complete the screen set first ("önce Claude Design'a designi
+  yaptıracağım, ama onun için eksik sayfaları tamamlamamız lazım").
+  Eight screens are now photographed under `screenshots/c7-*`.
+- Three owner decisions taken here: no notifications screen, discovery
+  filters expressed as a minimum band rather than a percentage (which
+  ADR-0009 §3 would have forbidden anyway), and the age range built.
+- The natal chart explains houses now. The owner asked for it directly:
+  "kişinin yıldız haritası daha açıklayıcı olmalı, örneğin gezegenlerin
+  hangi evde olduğu da bir şey ifade etmeli". Each chart card carries the
+  planet's house alongside its sign, with a line on what that house
+  means.
+- `ChartWheel` draws a real wheel in SVG. Two things it does that are not
+  obvious from the code: every longitude lookup goes through
+  `longitudeOf`, because `natalAspects` can involve the Ascendant, which
+  is not a planet and lives on `houses`; and the planet glyphs are spread
+  to a minimum angular gap while their ticks stay on the true longitude,
+  because a conjunction otherwise stacks two glyphs on the same pixel.
+  The spreading gives up and falls back to true positions if the last
+  planet would be pushed past the first, rather than drawing a planet in
+  the wrong sign.
+- The calculating screen's minimum hold is derived from the copy
+  sequence (`steps.length * STEP_MS`), not set on its own. With the two
+  independent, the hold was exactly one line long and the other lines
+  never appeared — caught by watching it rather than by reading it.
+  Location permission is requested _before_ the screen goes up, which the
+  simulator run confirmed: the system prompt appears over the form, not
+  over a screen claiming to be working.
+- Verification note: the simulator's text injection is lossy. Typing
+  `tester@seed.local` produced `tester@seed`, and `Ece` produced `Eve`.
+  Type in short runs and screenshot to confirm rather than trusting the
+  "typed N characters" result.
+- Deep links into Expo Go work and are much faster than tapping through:
+  `xcrun simctl openurl booted "exp://127.0.0.1:8082/--/<route>"`.
+- Still open from earlier: `color.textFaint` (#6E6890 on #0C0A14) is
+  about 2.8:1 against the background and is used for hints on six
+  screens. That is a palette decision for the design session, not a
+  per-screen fix, so it was left consistent rather than patched here.

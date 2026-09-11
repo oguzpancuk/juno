@@ -529,6 +529,32 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       2026-09-11) and the third by ADR-0004 — `astronomy-engine` has no
       asteroids. The design's visual language was taken; those three
       elements were not.
+- [x] **C7 — the screens the design session needs.** The owner's plan is
+      to have Claude Design style the app, which needs the screen set to be
+      complete first: a sign-in/sign-up entry, the other person's profile
+      and chart, the conversation starter as a surface of its own, and the
+      beat between onboarding and the chart. Three owner decisions on
+      2026-09-11 shaped it: no notifications screen ("1. olmadan girelim"),
+      discovery filters by band rather than by percentage ("2. bant
+      üzerinden yapalım"), and build the age range ("3. yap").
+      — done when: every screen below renders against seeded data in the
+      simulator (screenshot per screen under `screenshots/c7-*`) and the
+      battery is green on a committed HEAD.
+      _Done. `welcome` (`c7-welcome.png`) and the existing `sign-in` are
+      the entry pair; `filters` (`c7-filters.png`) carries the age range,
+      the minimum band and the Sun-element preference, with the age range
+      filtering `discover` in both directions. `person/[id]`
+      (`c7-person.png`), `person/[id]/chart.png` (`c7-person-chart.png`)
+      and `person/[id]/full` (`c7-person-full.png`) are the other side of
+      a match; the last draws the chart as a wheel. `starter/[id]`
+      (`c7-starter.png`) is one question at a time with "Bunu gönder" and
+      "Başka bir tane". `Calculating` (`c7-calculating.png`) is the beat
+      after onboarding — captured mid-hold from a frame burst, since the
+      hold is shorter than a screenshot round trip. `c7-onboarding.png`
+      finally photographs onboarding itself, which the design pass could
+      not reach. The natal chart also gained the house reading the owner
+      asked for ("gezegenlerin hangi evde olduğu da bir şey ifade
+      etmeli"): every card now says what its planet's house means._
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.juno`, check App Store name availability; hosted
