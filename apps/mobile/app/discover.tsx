@@ -56,7 +56,10 @@ export default function Discover() {
             return { status: 'missing' as const, me: null };
           if (profile.status !== 'ready')
             return { status: 'error' as const, me: null };
-          const next = await fetchCandidates(profile.profile.chart);
+          const next = await fetchCandidates(profile.profile.chart, {
+            minBand: profile.profile.min_band,
+            sunElements: profile.profile.sun_elements,
+          });
           return { ...next, me: profile.profile };
         })
         .then((result) => {

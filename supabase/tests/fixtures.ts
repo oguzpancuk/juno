@@ -15,6 +15,8 @@ export interface ProfileInput {
   readonly birth_date?: string;
   /** Discover hides a profile without one, so the default is one photo. */
   readonly photos?: readonly string[];
+  readonly age_min?: number;
+  readonly age_max?: number;
 }
 
 export const ISTANBUL: readonly [number, number] = [28.9784, 41.0082];
@@ -80,6 +82,10 @@ export function profileRow(input: ProfileInput) {
     interested_in: input.interested_in,
     location: `SRID=4326;POINT(${lon} ${lat})`,
     radius_km: input.radius_km ?? 50,
+    // Wide by default: a test that does not care about age must not be
+    // filtered by it.
+    age_min: input.age_min ?? 18,
+    age_max: input.age_max ?? 99,
     // The version of the privacy notice the profile accepted. The column
     // has no default: a row without it is refused.
     consent_version: '2026-09-09',

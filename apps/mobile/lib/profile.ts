@@ -1,4 +1,5 @@
 import {
+  BANDS,
   BigThreeSchema,
   PublicChartSchema,
   bigThree,
@@ -16,6 +17,10 @@ import { z } from 'zod';
 import { LEGAL_VERSION } from './legal';
 import { supabase } from './supabase';
 
+/** The four elements a Sun sign can have, as the filter offers them. */
+export const ELEMENTS = ['fire', 'earth', 'air', 'water'] as const;
+export type SunElement = (typeof ELEMENTS)[number];
+
 export const GENDERS = ['woman', 'man', 'unspecified'] as const;
 export const INTERESTS = ['women', 'men', 'everyone'] as const;
 export type Gender = (typeof GENDERS)[number];
@@ -32,6 +37,16 @@ export const OwnProfileSchema = z.object({
   gender: z.enum(GENDERS),
   interested_in: z.enum(INTERESTS),
   radius_km: z.number().int(),
+  age_min: z.number().int(),
+  age_max: z.number().int(),
+  /**
+   * Applied on the device, not by `discover`: the band comes from a score
+   * this app computes from two charts, and the element from the same
+   * chart. The server can only keep the value inside its domain.
+   */
+  min_band: z.enum(BANDS),
+  /** null means every element — an empty list would mean nobody. */
+  sun_elements: z.array(z.enum(ELEMENTS)).nullable(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
 });
@@ -48,7 +63,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, bio, photos',
+      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos',
     )
     .eq('id', userId)
     .maybeSingle();

@@ -1,16 +1,21 @@
 import {
+  bandOf,
+  BANDS,
   BigThreeSchema,
-  PublicChartSchema,
   compatibility,
   describeAspectTr,
+  elementOf,
   isLesserId,
+  PublicChartSchema,
   starterKey,
+  type Band,
   type Compatibility,
   type PublicChart,
 } from '@juno/astro';
 import { z } from 'zod';
 import { GENDERS } from './profile';
 import { parseRows, warnDropped } from './rows';
+import type { SunElement } from './profile';
 import { supabase } from './supabase';
 
 /** A row of the `discover` view (public columns only), Zod at the boundary. */
@@ -43,9 +48,15 @@ export type DiscoverState =
 /**
  * Fetch candidates and score them on device against the caller's chart.
  * Sorted by score, then distance — the view itself orders by distance.
+ *
+ * Two of the filters cannot run in `discover`: the band comes from a score
+ * computed here from two charts, and the element from a chart the view
+ * only carries as JSON. They are applied after scoring, over rows the
+ * server has already filtered by radius, gender and age.
  */
 export async function fetchCandidates(
   myChart: PublicChart,
+  filters: DiscoverFilters = { minBand: 'quiet', sunElements: null },
 ): Promise<DiscoverState> {
   const { data, error } = await supabase.from('discover').select('*');
   if (error) return { status: 'error' };
@@ -59,6 +70,8 @@ export async function fetchCandidates(
     rows.data,
     warnDropped('discover'),
   );
+  const floor = BANDS.indexOf(filters.minBand);
+  const wanted = filters.sunElements;
   const candidates = parsed
     .map((row) => {
       const match = compatibility(myChart, row.chart);
@@ -67,6 +80,13 @@ export async function fetchCandidates(
         match,
         why: match.strongest ? describeAspectTr(match.strongest) : null,
       };
+    })
+    .filter(({ row, match }) => {
+      if (BANDS.indexOf(bandOf(match.score)) < floor) return false;
+      // null means every element; the column forbids an empty list, which
+      // would mean nobody.
+      if (wanted === null || wanted.length === 0) return true;
+      return wanted.includes(elementOf(row.big_three.sun));
     })
     .sort(
       (a, b) =>
@@ -162,4 +182,11 @@ export async function updateLocation(
     })
     .eq('id', userId);
   return !error;
+}
+
+/** What the discovery screen filters by, beyond what `discover` can do. */
+export interface DiscoverFilters {
+  readonly minBand: Band;
+  /** null means every element. */
+  readonly sunElements: readonly SunElement[] | null;
 }

@@ -1,10 +1,9 @@
 import { Link, router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RADIUS_OPTIONS, updateLocation, updateRadius } from '@/lib/discover';
+import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
-import { fetchOwnProfile } from '@/lib/profile';
 import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { useSession } from '@/lib/session';
@@ -15,19 +14,6 @@ export default function Settings() {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const [radius, setRadius] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    void fetchOwnProfile(userId).then((p) => {
-      if (!cancelled && p.status === 'ready') setRadius(p.profile.radius_km);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
 
   type LocationState = 'idle' | 'working' | 'done' | 'denied' | 'failed';
   const [locating, setLocating] = useState<LocationState>('idle');
@@ -77,21 +63,6 @@ export default function Settings() {
     });
   };
 
-  const [saving, setSaving] = useState(false);
-  const choose = async (km: number) => {
-    if (!userId || saving) return; // one request in flight at a time
-    setError(null);
-    setSaving(true);
-    const previous = radius;
-    setRadius(km);
-    const ok = await updateRadius(userId, km);
-    setSaving(false);
-    if (!ok) {
-      setRadius(previous);
-      setError(t.errors.generic);
-    }
-  };
-
   return (
     <View
       style={[styles.screen, { paddingBottom: insets.bottom + 24 }]}
@@ -110,26 +81,9 @@ export default function Settings() {
       <Link href="/legal" style={styles.link}>
         {t.legal.open}
       </Link>
-      <Text style={styles.label}>{t.settings.radius}</Text>
-      <View style={styles.row}>
-        {RADIUS_OPTIONS.map((km) => (
-          <Pressable
-            key={km}
-            testID={`radius-${km}`}
-            style={[styles.chip, radius === km && styles.chipOn]}
-            onPress={() => void choose(km)}
-          >
-            <Text style={[styles.chipText, radius === km && styles.chipTextOn]}>
-              {km} km
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {radius !== null && !RADIUS_OPTIONS.some((km) => km === radius) ? (
-        <Text style={styles.hint}>{t.settings.customRadius(radius)}</Text>
-      ) : null}
-      <Text style={styles.hint}>{t.settings.radiusHint}</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Link href="/filters" style={styles.link}>
+        {t.filters.open}
+      </Link>
       <Text style={styles.label}>{t.settings.location}</Text>
       <Pressable
         testID="refresh-location"

@@ -179,6 +179,27 @@ export const t = {
     sendFailed: 'Mesaj gönderilemedi, tekrar dene.',
     open: 'Sohbeti aç ›',
   },
+  filters: {
+    back: '‹ Keşfet',
+    title: 'Keşif ayarları',
+    age: 'Yaş aralığı',
+    ageHint:
+      'Bu aralığın dışındakiler sana gösterilmez; sen de onların aralığının dışındaysan onlara görünmezsin.',
+    minBand: 'En az uyum',
+    minBandHint:
+      'Seçtiğin bandın altındaki eşleşmeler keşfette çıkmaz. Düşük bir bant kötü bir eşleşme demek değil, sadece haritalarınızın az noktada kesiştiği anlamına gelir.',
+    elements: 'Güneş elementi',
+    elementsHint:
+      'Hiçbirini seçmezsen hepsi gösterilir. Bu bir uyum ölçüsü değil, bir tercih.',
+    elementNames: {
+      fire: 'Ateş',
+      earth: 'Toprak',
+      air: 'Hava',
+      water: 'Su',
+    },
+    open: 'Keşif ayarları ›',
+    failed: 'Kaydedilemedi, tekrar dene.',
+  },
   settings: {
     title: 'Ayarlar',
     back: '‹ Keşfet',

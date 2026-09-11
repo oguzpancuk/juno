@@ -312,6 +312,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_max: number
+          age_min: number
           big_three: Json
           bio: string | null
           birth_city_id: number
@@ -327,11 +329,15 @@ export type Database = {
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
           location: unknown
+          min_band: string
           photos: string[]
           radius_km: number
+          sun_elements: string[] | null
           updated_at: string
         }
         Insert: {
+          age_max?: number
+          age_min?: number
           big_three: Json
           bio?: string | null
           birth_city_id: number
@@ -347,11 +353,15 @@ export type Database = {
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
           location: unknown
+          min_band?: string
           photos?: string[]
           radius_km?: number
+          sun_elements?: string[] | null
           updated_at?: string
         }
         Update: {
+          age_max?: number
+          age_min?: number
           big_three?: Json
           bio?: string | null
           birth_city_id?: number
@@ -367,8 +377,10 @@ export type Database = {
           id?: string
           interested_in?: Database["public"]["Enums"]["interest"]
           location?: unknown
+          min_band?: string
           photos?: string[]
           radius_km?: number
+          sun_elements?: string[] | null
           updated_at?: string
         }
         Relationships: []

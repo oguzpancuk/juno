@@ -332,6 +332,95 @@ describe('discover', () => {
     );
   });
 
+  it('honours the age range in both directions', async () => {
+    // Mine: narrow my range past Bob's age and he goes.
+    const bobAge = (
+      await alice.client.from('discover').select('id, age')
+    ).data?.find((r) => r.id === bob.id)?.age;
+    expect(bobAge).toBeGreaterThan(0);
+
+    await alice.client
+      .from('profiles')
+      .update({ age_min: (bobAge ?? 0) + 1, age_max: 99 })
+      .eq('id', alice.id);
+    const narrowed = await alice.client.from('discover').select('id');
+    expect(narrowed.data?.map((r) => r.id)).not.toContain(bob.id);
+
+    await alice.client
+      .from('profiles')
+      .update({ age_min: 18, age_max: 99 })
+      .eq('id', alice.id);
+    const restored = await alice.client.from('discover').select('id');
+    expect(restored.data?.map((r) => r.id)).toContain(bob.id);
+
+    // Theirs: Bob narrowing past *my* age takes me out of his deck and him
+    // out of mine. A one-way filter would put me in front of someone who
+    // asked not to see me.
+    const aliceAge = (
+      await bob.client.from('discover').select('id, age')
+    ).data?.find((r) => r.id === alice.id)?.age;
+    expect(aliceAge).toBeGreaterThan(0);
+    await bob.client
+      .from('profiles')
+      .update({ age_min: (aliceAge ?? 0) + 1 })
+      .eq('id', bob.id);
+
+    const mine = await alice.client.from('discover').select('id');
+    expect(mine.data?.map((r) => r.id)).not.toContain(bob.id);
+    const theirs = await bob.client.from('discover').select('id');
+    expect(theirs.data?.map((r) => r.id)).not.toContain(alice.id);
+
+    await bob.client.from('profiles').update({ age_min: 18 }).eq('id', bob.id);
+  });
+
+  it('refuses a range that is inverted or under eighteen', async () => {
+    const inverted = await alice.client
+      .from('profiles')
+      .update({ age_min: 40, age_max: 30 })
+      .eq('id', alice.id);
+    expect(inverted.error?.code).toBe(CHECK_VIOLATION);
+
+    const underage = await alice.client
+      .from('profiles')
+      .update({ age_min: 17 })
+      .eq('id', alice.id);
+    expect(underage.error?.code).toBe(CHECK_VIOLATION);
+  });
+
+  it('keeps the two client-side preferences inside their domains', async () => {
+    // The band and the element are applied on the device, so the database
+    // can only guarantee the value is one the client knows how to read.
+    const badBand = await alice.client
+      .from('profiles')
+      .update({ min_band: 'excellent' })
+      .eq('id', alice.id);
+    expect(badBand.error?.code).toBe(CHECK_VIOLATION);
+
+    const badElement = await alice.client
+      .from('profiles')
+      .update({ sun_elements: ['fire', 'plasma'] })
+      .eq('id', alice.id);
+    expect(badElement.error?.code).toBe(CHECK_VIOLATION);
+
+    // Empty would mean nobody, which nobody intends; null means everyone.
+    const empty = await alice.client
+      .from('profiles')
+      .update({ sun_elements: [] })
+      .eq('id', alice.id);
+    expect(empty.error?.code).toBe(CHECK_VIOLATION);
+
+    const ok = await alice.client
+      .from('profiles')
+      .update({ min_band: 'strong', sun_elements: ['fire', 'air'] })
+      .eq('id', alice.id);
+    expect(ok.error).toBeNull();
+
+    await alice.client
+      .from('profiles')
+      .update({ min_band: 'quiet', sun_elements: null })
+      .eq('id', alice.id);
+  });
+
   it('refuses filters on columns it does not expose', async () => {
     const { error } = await alice.client
       .from('discover')
