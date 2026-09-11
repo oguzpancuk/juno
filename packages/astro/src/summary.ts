@@ -45,7 +45,7 @@ import {
   type Band,
   type RetroPlanet,
 } from './content';
-import { houseOf, type Cusps } from './houses';
+import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
 import { signOf } from './signs';
 import { BODY_TR, SIGN_TR_LOCATIVE, describeAspectTr } from './tr';
@@ -72,9 +72,17 @@ export interface PrimaryReading {
   readonly placement: PrimaryPlacement;
   /** "Nasıl seversin". */
   readonly label: string;
-  /** "Venüs Akrep'te" — the astrology, kept visible. */
+  /** "Venüs Akrep'te · 7. ev" — the astrology, kept visible. */
   readonly technical: string;
+  /** What the sign says. */
   readonly text: string;
+  /**
+   * What the house says — where in a life this placement plays out. The
+   * Ascendant has none: it *is* the first cusp, so there is no house it
+   * falls in.
+   */
+  readonly houseText: string | null;
+  readonly house: HouseNumber | null;
 }
 
 export interface NatalAspectReading {
@@ -119,13 +127,21 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
     }));
   const rising = signOf(chart.houses.ascendant);
   const primary = PRIMARY_PLACEMENTS.map((placement) => {
-    const sign =
-      placement === 'ascendant' ? rising : chart.planets[placement].sign;
+    const ascendant = placement === 'ascendant';
+    const sign = ascendant ? rising : chart.planets[placement].sign;
+    const house = ascendant ? null : chart.planets[placement].house;
     return {
       placement,
       label: placementLabel(placement),
-      technical: `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]}`,
+      technical:
+        house === null
+          ? `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]}`
+          : `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]} · ${house}. ev`,
       text: signText(placement, sign),
+      // The sign says how; the house says where in a life it shows up.
+      // Leaving this behind a disclosure made the house mean nothing.
+      houseText: ascendant ? null : houseText(placement, house as HouseNumber),
+      house,
     };
   });
   return {

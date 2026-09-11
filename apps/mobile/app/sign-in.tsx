@@ -62,11 +62,12 @@ export default function SignIn() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <Link href="/welcome" style={styles.back}>
+        {t.signIn.back}
+      </Link>
       <View style={styles.mark}>
-        <OrbitMark size={112} />
+        <OrbitMark size={72} />
       </View>
-      <Text style={styles.brand}>{t.appName}</Text>
-      <Text style={styles.tagline}>{t.signIn.tagline}</Text>
       <Text style={styles.title}>{t.signIn.title}</Text>
       {step.kind === 'email' ? (
         <View style={styles.form}>
@@ -141,6 +142,13 @@ const styles = StyleSheet.create({
     padding: space.xl,
     justifyContent: 'center',
     gap: space.sm,
+  },
+  back: {
+    ...type.body,
+    color: color.textMuted,
+    position: 'absolute',
+    top: 64,
+    left: space.xl,
   },
   mark: { alignItems: 'center', marginBottom: space.xl },
   brand: {

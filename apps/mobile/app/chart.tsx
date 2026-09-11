@@ -123,20 +123,33 @@ export default function ChartScreen() {
 
       {/* The six the screen leads with, titled by what they mean for
           dating. The astrology stays under the label, never instead. */}
-      {reading.primary.map(({ placement, label, technical, text }) => (
-        <Card key={placement} testID={`primary-${placement}`}>
-          <View style={styles.cardHead}>
-            <View style={styles.glyphBadge}>
-              <Text style={styles.glyph}>{BODY_GLYPH[placement]}</Text>
+      {reading.primary.map(
+        ({ placement, label, technical, text, houseText, house }) => (
+          <Card key={placement} testID={`primary-${placement}`}>
+            <View style={styles.cardHead}>
+              <View style={styles.glyphBadge}>
+                <Text style={styles.glyph}>{BODY_GLYPH[placement]}</Text>
+              </View>
+              <View style={styles.cardHeadText}>
+                <Text style={styles.cardTitle}>{label}</Text>
+                <Text style={styles.cardTechnical}>{technical}</Text>
+              </View>
             </View>
-            <View style={styles.cardHeadText}>
-              <Text style={styles.cardTitle}>{label}</Text>
-              <Text style={styles.cardTechnical}>{technical}</Text>
-            </View>
-          </View>
-          <Body>{text}</Body>
-        </Card>
-      ))}
+            <Body>{text}</Body>
+            {/* The sign says how; the house says where in a life it shows
+                up. Both belong on the card — the house meant nothing while
+                it was a number in a subtitle. */}
+            {houseText === null ? null : (
+              <View style={styles.houseBlock}>
+                <Text style={styles.houseLabel}>
+                  {t.chart.houseMeaning(house ?? 1)}
+                </Text>
+                <Body small>{houseText}</Body>
+              </View>
+            )}
+          </Card>
+        ),
+      )}
 
       <Pressable
         testID="toggle-full-chart"
@@ -280,6 +293,14 @@ const styles = StyleSheet.create({
   glyph: { fontSize: 19, color: color.pink },
   cardTitle: { ...type.heading, color: color.text },
   cardTechnical: { ...type.caption, color: color.textMuted, marginTop: 2 },
+  houseBlock: {
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    paddingTop: space.md,
+    marginTop: space.xs,
+    gap: 2,
+  },
+  houseLabel: { ...type.label, color: color.textFaint },
   disclosure: { marginTop: space.xl, alignItems: 'center', padding: space.md },
   disclosureText: { ...type.body, color: color.textMuted },
   full: { gap: space.md },

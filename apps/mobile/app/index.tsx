@@ -34,7 +34,7 @@ export default function Index() {
     };
   }, [userId, attempt]);
 
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <Redirect href="/welcome" />;
   if (session.status === 'signed-in' && profile.status === 'missing') {
     return <Redirect href="/onboarding" />;
   }

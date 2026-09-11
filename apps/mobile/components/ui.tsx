@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import {
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +11,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
  * The shared pieces every screen is built from. One file: the set is small
@@ -83,6 +85,40 @@ export function Card({
   );
 }
 
+/** The one filled button in the product: warm peach into cool lavender. */
+export function GradientButton({
+  label,
+  onPress,
+  disabled = false,
+  testID,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        s.buttonWrap,
+        (pressed || disabled) && s.buttonDim,
+      ]}
+    >
+      <LinearGradient
+        colors={[...gradient]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={s.button}
+      >
+        <Text style={s.buttonText}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 export function LinkText({
   children,
   onPress,
@@ -101,45 +137,24 @@ export function LinkText({
   );
 }
 
+/**
+ * The brand mark: the orbit, two spheres on a gradient ring.
+ *
+ * Source of truth is the owner's icon of 2026-09-11, keyed to transparency
+ * as `assets/brand/orbit-mark.png`. NOT `assets/brand/mark.svg`, which is
+ * the previous gold-glyph mark and no longer the logo — it and
+ * `scripts/brand-assets.py` are stale until the new mark exists as a
+ * vector. Drawing this in views is what the first attempt did and it
+ * showed.
+ */
 export function OrbitMark({ size = 96 }: { size?: number }) {
-  const dot = size * 0.3;
   return (
-    <View style={{ width: size, height: size }}>
-      <View
-        style={[
-          s.orbit,
-          {
-            width: size * 0.92,
-            height: size * 0.62,
-            borderRadius: size,
-            top: size * 0.19,
-            left: size * 0.04,
-          },
-        ]}
-      />
-      <LinearGradient
-        colors={[color.warm, color.pink]}
-        style={{
-          position: 'absolute',
-          width: dot,
-          height: dot,
-          borderRadius: dot,
-          left: size * 0.06,
-          top: size * 0.5,
-        }}
-      />
-      <LinearGradient
-        colors={[color.cool, color.coolLight]}
-        style={{
-          position: 'absolute',
-          width: dot * 0.86,
-          height: dot * 0.86,
-          borderRadius: dot,
-          right: size * 0.04,
-          top: size * 0.16,
-        }}
-      />
-    </View>
+    <Image
+      source={require('../assets/brand/orbit-mark.png')}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+      accessibilityLabel="Juno"
+    />
   );
 }
 
@@ -160,6 +175,10 @@ const s = StyleSheet.create({
   },
   body: { ...type.body, color: color.text },
   bodySmall: { ...type.bodySmall, color: color.textMuted },
+  buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },
+  buttonDim: { opacity: 0.6 },
+  button: { paddingVertical: 16, alignItems: 'center' },
+  buttonText: { ...type.heading, color: color.onBright },
   card: {
     backgroundColor: color.surface,
     borderRadius: radius.lg,
@@ -169,11 +188,4 @@ const s = StyleSheet.create({
     gap: space.sm,
   },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
-  orbit: {
-    position: 'absolute',
-    borderWidth: 2,
-    borderColor: color.pink,
-    transform: [{ rotate: '-18deg' }],
-    opacity: 0.85,
-  },
 });

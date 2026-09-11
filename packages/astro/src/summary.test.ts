@@ -88,3 +88,32 @@ describe('starterFromKey', () => {
     expect(asA.question).toBe(asB.question);
   });
 });
+
+describe('the house says something too', () => {
+  it('gives every primary placement but the Ascendant a house reading', () => {
+    const chart = toPublicChart(
+      computeChart({
+        utc: new Date('1995-07-14T00:30:00Z'),
+        latitude: 41.01,
+        longitude: 28.98,
+      }),
+    );
+    const reading = natalReading(chart);
+    expect(reading.primary).toHaveLength(6);
+    for (const card of reading.primary) {
+      expect(card.text.length).toBeGreaterThan(20);
+      if (card.placement === 'ascendant') {
+        // It is the first cusp, so there is no house it falls in.
+        expect(card.house).toBeNull();
+        expect(card.houseText).toBeNull();
+        expect(card.technical).not.toContain('. ev');
+      } else {
+        expect(card.house).not.toBeNull();
+        expect(card.houseText?.length ?? 0).toBeGreaterThan(20);
+        expect(card.technical).toContain(`${String(card.house)}. ev`);
+        // The sign reading and the house reading are different claims.
+        expect(card.houseText).not.toBe(card.text);
+      }
+    }
+  });
+});

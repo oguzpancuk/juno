@@ -1,6 +1,10 @@
 /** All Turkish UI strings in one place (PRD: single-language, one file). */
 export const t = {
   appName: 'Juno',
+  welcome: {
+    pitch: 'İki haritanın\narasında ne var,\nonu gör.',
+    withEmail: 'E-posta ile devam et',
+  },
   signIn: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
     tagline: 'ARANIZDAKİNİ GÖR',
@@ -12,6 +16,7 @@ export const t = {
     verify: 'Doğrula',
     sending: 'Gönderiliyor…',
     resend: 'Kodu tekrar gönder',
+    back: '‹ Geri',
     consent:
       'Devam ederek doğum bilgilerinin ve konumunun uyum hesaplamak için işlenmesini kabul edersin.',
   },
@@ -66,6 +71,8 @@ export const t = {
     aspects: 'AÇILAR',
     // The chart screen leads with six placements; everything else is behind
     // this (PRD amendment 2026-09-10).
+    // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
+    houseMeaning: (house: number) => `${house}. EVDE NE ANLAMA GELİYOR`,
     fullChart: 'Tüm haritanı gör',
     hideFullChart: 'Haritayı kapat',
     orb: (deg: string) => `${deg} orb`,
