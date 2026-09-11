@@ -269,12 +269,28 @@ export async function removePhoto(
 
 export const MAX_BIO_LENGTH = 300;
 
-export async function saveBio(userId: string, bio: string): Promise<boolean> {
-  const trimmed = bio.trim();
-  if (trimmed.length > MAX_BIO_LENGTH) return false;
+/**
+ * What "Kaydet" persists: the photo order and the bio, in ONE update.
+ *
+ * The order is the whole list written back as a permutation of the set
+ * the row already holds. `profiles_check_photos` (latest definition in
+ * `20260909000005_photo_delete_fixes.sql`) checks count, owner folder and
+ * storage existence only for paths not already in `old.photos`, so a
+ * reorder of the same set passes without touching storage. Adding and
+ * removing are not part of this call on purpose: a path can only be
+ * listed once its object exists, so those write at once (`addPhoto`,
+ * `removePhoto`) and this call carries whatever order they left.
+ */
+export async function saveProfileEdits(
+  userId: string,
+  edits: { readonly photos: readonly string[]; readonly bio: string },
+): Promise<boolean> {
+  const bio = edits.bio.trim();
+  if (bio.length > MAX_BIO_LENGTH) return false;
+  if (edits.photos.length > MAX_PHOTOS) return false;
   const { error } = await supabase
     .from('profiles')
-    .update({ bio: trimmed.length > 0 ? trimmed : null })
+    .update({ photos: [...edits.photos], bio: bio.length > 0 ? bio : null })
     .eq('id', userId);
   return !error;
 }

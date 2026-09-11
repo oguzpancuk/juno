@@ -111,6 +111,22 @@ export default function Settings() {
 
       <Text style={styles.label}>{t.safety.title}</Text>
       <Pressable
+        testID="sign-out"
+        style={styles.button}
+        onPress={() => {
+          // Best-effort: a failed sign-out must still leave the screen,
+          // and the session hook clears on the next auth event either way.
+          void supabase.auth
+            .signOut()
+            .catch(() => undefined)
+            .then(() => {
+              leaveToSignIn();
+            });
+        }}
+      >
+        <Text style={styles.buttonText}>{t.settings.signOut}</Text>
+      </Pressable>
+      <Pressable
         testID="delete-account"
         style={[styles.button, deleting && styles.buttonBusy]}
         disabled={deleting}

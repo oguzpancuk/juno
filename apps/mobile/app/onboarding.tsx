@@ -127,10 +127,11 @@ export default function Onboarding() {
         // by a push in the same handler both run in one queue flush, before
         // the new tab navigator has mounted its nested stack — so the push
         // diverges at the root and adds a second `(tabs)`, the two-navigator
-        // bug of docs/NOTES.md 2026-09-11. `withAnchor` loads the profile
-        // tab's anchor screen beneath the chart in that single action, so
-        // the chart arrives with the profile and the bar under it.
-        router.replace('/chart', { withAnchor: true });
+        // bug of docs/NOTES.md 2026-09-11. The profile is the profile tab's
+        // own anchor screen, so this one call lands on it with the bar
+        // underneath and nothing to seat beneath it; the chart the new
+        // account came for is on that page (owner default, 2026-09-11).
+        router.replace('/profile');
         return;
       }
       setCalculating(false);
