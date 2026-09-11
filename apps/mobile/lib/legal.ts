@@ -20,12 +20,18 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '9 Eylül 2026';
+export const LEGAL_UPDATED = '11 Eylül 2026';
 
 /**
- * The same date, machine-readable: it is stored on the profile as the
- * version of the notice the member accepted, so a later version can be
- * told apart from this one. Bump both together.
+ * Machine-readable: it is stored on the profile as the version of the
+ * notice the member accepted (`profiles.consent_version`, written once at
+ * onboarding), so a later version can be told apart from this one.
+ *
+ * Deliberately NOT moved with `LEGAL_UPDATED` on 2026-09-11. Nothing in
+ * the app compares a stored version against this one or asks anyone to
+ * accept a newer text, so a bump would record a re-consent that never
+ * happened. It moves the day a re-consent step exists, and only then —
+ * docs/NOTES.md, Track A, has the reasoning and the open question.
  */
 export const LEGAL_VERSION = '2026-09-09';
 
@@ -48,7 +54,7 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       'Uygulama aşağıdaki verileri saklar.',
       'Hesap',
-      '• E-posta adresin. Giriş tek kullanımlık kod ile yapılır; parola saklanmaz.',
+      '• E-posta adresin ve parolan. Giriş e-posta ve parola ile yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-posta adresin kayıt sırasında şimdilik doğrulanmıyor.',
       '• Giriş kayıtları: kimlik altyapısı, her oturum için bağlandığın IP adresini ve kullandığın uygulama/tarayıcı bilgisini tutar. Bunlar güvenlik ve kötüye kullanımı önleme amacıyla saklanır.',
       'Profil',
       '• Görünen adın.',
