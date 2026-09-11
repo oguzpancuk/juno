@@ -3398,3 +3398,71 @@ not seen, since no track can run it. The screenshots named in the stub,
 and the check the foundation review deferred to this merge: whether
 re-tapping the focused Eşleşmeler tab pops its stack back to the list,
 now that the chat is the only screen above it.
+
+## 2026-09-11 — Three tracks merged, reviewed and photographed
+
+The four tracks were resumed after an API session limit stopped all of
+them mid-work (their worktrees and uncommitted edits survived; a message
+to each agent picked up where it left off). Merge order A, B, D, each
+`--no-ff`; the one conflict every time was `docs/NOTES.md`, the accepted
+append-only case, resolved by keeping both entries in merge order. The
+full battery was green after each merge, with the shared stack restarted
+once for Track A's config (`minimum_password_length`) and Track D's
+migration applied with `supabase migration up` — not a reset, which
+would have wiped the tester and the matches the screenshots use — then
+`gen types` regenerated (`npm run gen:types -w supabase` wrote a truncated
+file because the CLI's warning went through the same redirect; running
+the CLI directly from `supabase/` and copying the output worked).
+
+Each merge got its own code-reviewer pass on main, and each found
+something the track battery could not:
+
+- **A** (NEEDS_WORK → fixed): the Zod password cap counted UTF-16 units
+  while bcrypt and GoTrue count bytes, so a password of forty `ş` passed
+  the form and came back as `validation_failed`, which the screen read as
+  a bad e-mail address — the cap is measured in UTF-8 now
+  (`lib/auth.ts` `utf8Length`, tests). `leaveToSignIn` reached the screen
+  without a mode, so every sign-out and expired token opened the
+  newcomer's Kaydol; it passes `mode: 'in'`. The reviewer also argued
+  `LEGAL_VERSION` should move with the text: it is written once at
+  onboarding as the version the person read, nothing re-asks existing
+  members, so leaving it at 2026-09-09 made every new profile record a
+  text it had not seen. Bumped. `supabase/tests/auth.test.ts` ran green
+  on main (6/6).
+- **B** (PASS with one important): `move` was the one edit control not
+  behind the working gate, so a photo moved during Kaydet's update or an
+  upload showed an order that was never written. Gated; the bio input is
+  read-only and the pill disabled while either write is in flight.
+- **D**: its own reviewer ran on the track; the merge's DB tests
+  (reply_to RLS, the realtime UPDATE receipt, types-drift) passed on main.
+
+Simulator evidence, all on the iPhone 17 Pro by UDID: `auth-welcome`,
+`auth-sign-up`, `auth-sign-in`, `auth-wrong-password` ("E-posta ya da
+parola yanlış."), `auth-one-tab-bar` (an edge swipe on the deck after a
+password sign-in reveals nothing), `p-profile`, `p-profile-cards`,
+`p-chart-popup`, `p-edit`, `p-reordered` (a second photo given to the
+tester by a scratch script, moved first with ‹, Kaydet, relaunch: the
+row is `[2.png, 1.png]` and the teal photo leads), `p-person`,
+`p-settings`, `p-settings-sign-out` (lands on sign-in in Giriş yap mode
+after the fix; an edge swipe reveals nothing), `chat-matches-avatars`,
+`chat-thread` (avatar on the last bubble of a run, Okundu under my last
+read message after Selin's side was marked read by SQL, the quoted reply
+posted with `seed-message.ts --reply`), `chat-thread-reply` (the reply bar
+after a long press), `chat-match-page`, `chat-match-meters` (the five new
+names as three-step meters), `chat-meters-discover` (the same inside the
+deck's popup), `chat-block-leaves-one-route` (a block from page 2 lands
+on the list, `dismissTo` handled inside the nested stack; the block row
+was deleted by hand afterwards to keep the test data).
+
+Two navigation questions the reviews had left open are settled on the
+device: re-tapping the focused Eşleşmeler tab pops its stack to the list
+(so a chat has a way back without a button, as the owner wanted), and
+`dismissTo('/matches')` after a block is handled inside the nested stack.
+Onboarding's landing was checked on the web client with a fresh
+password sign-up (`onb-test2@seed.local`): no mail step, the form, then
+"Profilin" with one tab bar — there is no PNG for that clause, the
+browser tool does not save one.
+
+Not merged yet: Track C (its reviewer asked for a velocity dead-band on
+the swipe veto and a guard against a responder recreated mid-touch; the
+fixes are committed on the branch and its battery is re-running).

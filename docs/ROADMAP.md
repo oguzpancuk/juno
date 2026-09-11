@@ -201,7 +201,10 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `screenshots/v1-blocked.png` shows the screen in the simulator.
       Undoing a block restores the thread on both sides, which is a
       recorded trade: ADR-0007._
-- [ ] **Sign in with Apple (Apple).** Alongside email OTP.
+- [ ] **Sign in with Apple (Apple).** Alongside e-mail and password.
+      The welcome screen already shows an inert "Apple ile giriş yap"
+      button (owner, 2026-09-11); App Store Review Guideline 4.8 means it
+      must work, or go, before the first TestFlight submission.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
@@ -588,7 +591,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       Supabase project (EU), EAS project, first `eas build` + `eas submit`;
       refs recorded in `docs/NOTES.md`.
       — done when: `/deploy-checklist` passes and an external tester installs
-      the build (manual). Ask-tier: never without the owner's yes.
+      the build (manual). Ask-tier: never without the owner's yes. Before
+      submitting: the two inert provider buttons on welcome either work or
+      come out (Guideline 4.8 — reviewers tap them).
 
 ## The five-item pass (owner request 2026-09-11)
 
@@ -662,7 +667,7 @@ are peer-installed by expo-router, not dependencies of the app.
       is a BackLink now (welcome's forward button still pushes, rightly). The deck's "Uyum detayı" opens the Popup (item
       3.1's first half), so Track C's stub starts from there._
 
-- [ ] **Track A — sign-up and sign-in with a password; inert Apple and
+- [x] **Track A — sign-up and sign-in with a password; inert Apple and
       Google buttons (item 1.3).** One screen, `sign-in.tsx`, with an
       `in | up` mode from a Zod-parsed route param; `signUp` /
       `signInWithPassword`; a `session === null` result shows
@@ -689,7 +694,7 @@ are peer-installed by expo-router, not dependencies of the app.
       `auth-sign-up.png`, `auth-sign-in.png`, `auth-wrong-password.png`,
       `auth-one-tab-bar.png` (sign in as a seed account, sign out from
       `/settings/legal`, sign in again: one tab bar).
-      _Done on the track branch, awaiting the merge. `sign-in.tsx` is the
+      _Merged (`9bea465`) and reviewed on main. `sign-in.tsx` is the
       one screen in two modes, the mode read once from the route param
       (`lib/auth.ts` `modeParamSchema`, sign-up for anything unreadable)
       and flipped in place by the bottom link; submit is dimmed until
@@ -703,14 +708,20 @@ are peer-installed by expo-router, not dependencies of the app.
       maps the five password codes and drops the OTP cases and the bare-403
       fallback; `lib/auth.test.ts` and `lib/errors.test.ts` pass (25
       cases). `minimum_password_length` is 8; `supabase/tests/auth.test.ts`
-      (six cases, typechecked and linted, not run — the stack is main's)
+      (six cases, green on main's stack after the merge)
       covers the four clauses plus a right-password sign-in. The privacy
-      notice now describes password sign-in; `LEGAL_UPDATED` moved,
-      `LEGAL_VERSION` did not (nothing re-asks consent — NOTES). Not
-      taken here: the five screenshots and the DB test run, both main's
-      after the merge._
+      notice now describes password sign-in; `LEGAL_UPDATED` moved and,
+      after the merge review, `LEGAL_VERSION` with it — the value is
+      written once at onboarding as the text the person read. The same
+      review moved the password cap from UTF-16 units to bytes (a Turkish
+      password past ~37 letters was refused by the server with a code the
+      screen blamed on the e-mail) and made `leaveToSignIn` open the
+      sign-in mode. Screenshots `auth-welcome.png`, `auth-sign-up.png`,
+      `auth-sign-in.png`, `auth-wrong-password.png` and
+      `auth-one-tab-bar.png` (an edge swipe on the deck after the new
+      sign-in reveals nothing beneath the tabs) are on main._
 
-- [ ] **Track B — one profile for you and for them, with an edit mode
+- [x] **Track B — one profile for you and for them, with an edit mode
       (item 2, item 3's "tamamen aynı gözükmeli").** New
       `components/ProfileView.tsx`, presentational: paged photo carousel
       with name and age inside the photo on a scrim (the discover card's
@@ -742,7 +753,15 @@ are peer-installed by expo-router, not dependencies of the app.
       on another account's discover card), `p-person.png` (same layout,
       no edit control), `p-onboarding-lands-on-profile.png`,
       `p-settings-sign-out.png`.
-      _Built on `track/b-profile`, awaiting the merge and the screenshots.
+      _Merged (`6079c11`), reviewed on main (one race closed: a photo
+      moved while a save or upload was in flight is now gated, the bio
+      read-only and the pill disabled for the duration). Screenshots
+      `p-profile.png`, `p-profile-cards.png`, `p-chart-popup.png`,
+      `p-edit.png`, `p-reordered.png` (the order survived a relaunch and
+      the row reads `[2.png, 1.png]`), `p-person.png`, `p-settings.png`,
+      `p-settings-sign-out.png`; the onboarding landing was checked on the
+      web client with a fresh password sign-up — "Profilin" under one tab
+      bar — rather than photographed.
       `ProfileView` (carousel with the name on the scrim, dots, the strip
       with ‹ › / Kaldır / Fotoğraf ekle in edit mode, the bio as a card or
       a `TextInput`, the first three primary cards, the popup button) and
@@ -783,7 +802,7 @@ are peer-installed by expo-router, not dependencies of the app.
       recorded in NOTES: vertical scroll still works, a tap on "Uyum
       detayı" does not swipe.
 
-- [ ] **Track D — matches and chat: avatars, Okundu, Yanıtla, the
+- [x] **Track D — matches and chat: avatars, Okundu, Yanıtla, the
       chat/match pager, level meters, plainer names (item 4).**
       `components/Avatar.tsx` (round, initial-letter fallback); the
       conversation list resolves first photos with ONE `usePhotoSources`
@@ -826,8 +845,13 @@ are peer-installed by expo-router, not dependencies of the app.
       quoted reply, the reply bar, no back link), `chat-match-page.png`
       (page 2 with the kicker, level meters and the five names),
       `chat-meters-discover.png`, `chat-block-leaves-one-route.png`.
-      _Built on `track/d-chat`, awaiting main's merge, DB tests and
-      screenshots. `components/Avatar.tsx` (photo or the Turkish initial,
+      _Merged (`ce7758f`); on main the migration was applied, the types
+      regenerated, and the reply_to RLS tests, the realtime UPDATE receipt
+      and types-drift all passed. Screenshots `chat-matches-avatars.png`,
+      `chat-thread.png`, `chat-thread-reply.png`, `chat-match-page.png`,
+      `chat-match-meters.png`, `chat-meters-discover.png`,
+      `chat-block-leaves-one-route.png`; re-tapping the focused tab pops
+      the chat back to the list, checked on the device. `components/Avatar.tsx` (photo or the Turkish initial,
       `initialOf` in `lib/thread-view.ts`); the list resolves first photos
       with one `usePhotoSources` call keyed by path; the chat requests its
       photos once and hands the sources to the header, the bubbles and
@@ -849,8 +873,8 @@ are peer-installed by expo-router, not dependencies of the app.
       list and the starter's fallback. `LevelMeter` replaces the level
       word in the chips. Five names in `dimensions.json`. Battery green
       on the track; `npm run typecheck -w supabase` green with the new
-      tests (`tests/database.types.ts` still needs main's regeneration —
-      two helpers in `rls.test.ts` declare the column until then)._
+      tests (`tests/database.types.ts` regenerated on main at merge; the
+      two helpers in `rls.test.ts` that declared the column can go)._
 
 - [ ] **Dead-style gate (follow-up).** Two reviews in a row found
       StyleSheet keys nothing references (five orphaned by the foundation,
