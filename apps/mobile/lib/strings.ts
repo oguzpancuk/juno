@@ -104,6 +104,11 @@ export const t = {
   tabs: { profile: 'Profil', discover: 'Keşfet', matches: 'Eşleşmeler' },
   discover: {
     completeProfile: 'Keşfette görünmek için bir fotoğraf ekle ›',
+    openProfile: 'Profili gör',
+    // The stamps a drag reveals. Pre-uppercased: RN textTransform maps
+    // Turkish i → I, not İ.
+    swipeLike: 'BEĞEN',
+    swipePass: 'GEÇ',
     title: 'Keşfet',
     // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
