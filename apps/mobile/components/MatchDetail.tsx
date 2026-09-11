@@ -1,0 +1,317 @@
+import { houseOverlays, matchSections, synastryReading } from '@juno/astro';
+import { Link, router } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BigThreeRow } from '@/components/BigThreeRow';
+import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import type { MatchProfileRow } from '@/lib/matches';
+import type { PhotoSource } from '@/lib/photos';
+import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
+import { personHref } from '@/lib/routes';
+import {
+  REPORT_REASONS,
+  blockUser,
+  reportUser,
+  type ReportReason,
+} from '@/lib/safety';
+import { starterFor } from '@/lib/starter';
+import { t } from '@/lib/strings';
+import { color, radius, space, type } from '@/theme/tokens';
+
+/**
+ * The match page — "EŞLEŞTİNİZ", the photos, the starter, the compatibility
+ * summary, the way to their profile and the safety block — as the second
+ * page of the chat (owner, 2026-09-11: chat and match detail are two tabs
+ * of one screen). It was `(matches)/match/[id].tsx`; the chat owns the
+ * match row and the photo sources now and hands them down, so the first
+ * photo is requested once for the header, the bubbles and this strip
+ * (ADR-0006: every photo request is authorised, none is cached).
+ *
+ * Own profile is loaded here, not in the chat: only the synastry needs
+ * it, and a failed read degrades this page alone.
+ */
+export function MatchDetail({
+  row,
+  userId,
+  sources,
+}: {
+  row: MatchProfileRow;
+  userId: string;
+  sources: readonly (PhotoSource | null)[];
+}) {
+  const [me, setMe] = useState<OwnProfile | null>(null);
+  const [meFailed, setMeFailed] = useState(false);
+  // The safety buttons are the last thing on the page; without the inset
+  // they sit under the home indicator and do not take a tap.
+  const insets = useSafeAreaInsets();
+  const [reporting, setReporting] = useState(false);
+  const [confirmingBlock, setConfirmingBlock] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const busy = useRef(false);
+  // The chat is keyed by match id, so a swap unmounts this — but a request
+  // already in flight still resolves. Its result belongs to whoever is gone.
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOwnProfile(userId).then((p) => {
+      if (cancelled) return;
+      setMe(p.status === 'ready' ? p.profile : null);
+      setMeFailed(p.status !== 'ready');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const reading = useMemo(
+    () => (me ? synastryReading(me.chart, row.chart, 5) : null),
+    [me, row],
+  );
+  const sections = useMemo(
+    () =>
+      reading
+        ? matchSections(
+            reading.match,
+            reading.dimensions.map((d) => d.label),
+          )
+        : null,
+    [reading],
+  );
+  const overlays = useMemo(
+    () => (me ? houseOverlays(me.chart, row.chart) : []),
+    [me, row],
+  );
+
+  const starter = starterFor(row, userId);
+  const other = row.id;
+  const name = row.display_name;
+
+  // An in-page confirmation rather than Alert.alert: react-native-web
+  // renders Alert as a no-op, so on the web client the block simply never
+  // happened. This works on both.
+  const doBlock = () => {
+    if (busy.current) return;
+    busy.current = true;
+    void blockUser(userId, other).then((ok) => {
+      busy.current = false;
+      if (!live.current) return;
+      setConfirmingBlock(false);
+      if (!ok) {
+        setNotice(t.safety.failed);
+        return;
+      }
+      // POP_TO, not replace: the chat sits on the matches stack, and a
+      // replace there would leave the list twice on it.
+      router.dismissTo('/matches');
+    });
+  };
+
+  const file = (reason: ReportReason) => {
+    if (busy.current) return;
+    busy.current = true;
+    void reportUser(userId, other, reason).then((ok) => {
+      busy.current = false;
+      if (!live.current) return;
+      setReporting(false);
+      setNotice(ok ? t.safety.reported : t.safety.failed);
+    });
+  };
+
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: insets.bottom + 32 },
+      ]}
+      testID="match-screen"
+    >
+      <Text style={styles.kicker}>{t.match.kicker}</Text>
+      <Text style={styles.title}>{t.match.title(row.display_name)}</Text>
+      {sources.some((source) => source !== null) ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.photoStrip}
+        >
+          {sources.map((source, index) =>
+            source === null ? null : (
+              <Image
+                key={source.uri}
+                testID={`match-photo-${index}`}
+                source={source}
+                style={styles.photo}
+                resizeMode="cover"
+              />
+            ),
+          )}
+        </ScrollView>
+      ) : null}
+      {row.bio ? <Text style={styles.bio}>{row.bio}</Text> : null}
+      <BigThreeRow three={row.big_three} />
+
+      <Text style={styles.label}>{t.match.starterLabel}</Text>
+      {starter ? (
+        <View style={styles.starterBox} testID="starter">
+          <Text style={styles.starterHead}>{starter.headline}</Text>
+          <Text style={styles.starterMeaning}>{starter.meaning}</Text>
+          <Text style={styles.starterQuestion}>{starter.question}</Text>
+        </View>
+      ) : (
+        <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
+      )}
+      <Link
+        href={{ pathname: '/starter/[id]', params: { id: row.match_id } }}
+        style={styles.link}
+      >
+        {t.starter.open}
+      </Link>
+
+      {meFailed ? (
+        <Text style={styles.notice} testID="synastry-failed">
+          {t.match.synastryFailed}
+        </Text>
+      ) : null}
+      {reading && sections ? (
+        <View style={styles.summary} testID="synastry">
+          <Text style={styles.label}>{t.match.summary}</Text>
+          {/* The band, never the number (ADR-0009 §3). */}
+          <Text style={styles.bandName} testID="band">
+            {reading.bandName}
+          </Text>
+          <CompatibilityDetail
+            reading={reading}
+            sections={sections}
+            overlays={overlays}
+          />
+        </View>
+      ) : null}
+
+      <Link href={personHref(row.id)} style={styles.link} testID="open-person">
+        {t.person.openProfile(row.display_name)}
+      </Link>
+
+      <Text style={styles.label}>{t.safety.title}</Text>
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      <View style={styles.safetyRow}>
+        <Pressable
+          testID="block"
+          style={styles.safetyButton}
+          onPress={() => {
+            setNotice(null);
+            setReporting(false);
+            setConfirmingBlock((open) => !open);
+          }}
+        >
+          <Text style={styles.safetyText}>{t.safety.block}</Text>
+        </Pressable>
+        <Pressable
+          testID="report"
+          style={styles.safetyButton}
+          onPress={() => {
+            setNotice(null);
+            setReporting((open) => !open);
+          }}
+        >
+          <Text style={styles.safetyText}>{t.safety.report}</Text>
+        </Pressable>
+      </View>
+      {confirmingBlock ? (
+        <View style={styles.reasons} testID="block-confirm">
+          <Text style={styles.bodyMuted}>{t.safety.blockConfirm(name)}</Text>
+          <Pressable testID="block-yes" style={styles.danger} onPress={doBlock}>
+            <Text style={styles.dangerText}>{t.safety.blockConfirmTitle}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.reason}
+            onPress={() => {
+              setConfirmingBlock(false);
+            }}
+          >
+            <Text style={styles.body}>{t.safety.cancel}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {reporting ? (
+        <View style={styles.reasons} testID="report-reasons">
+          <Text style={styles.bodyMuted}>{t.safety.reportTitle}</Text>
+          {REPORT_REASONS.map((reason) => (
+            <Pressable
+              key={reason.value}
+              testID={`reason-${reason.value}`}
+              style={styles.reason}
+              onPress={() => {
+                file(reason.value);
+              }}
+            >
+              <Text style={styles.body}>{reason.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.xl, paddingTop: space.lg, gap: space.sm },
+  kicker: { ...type.label, color: color.pink },
+  title: { ...type.display, color: color.text, marginBottom: space.md },
+  photoStrip: { gap: space.sm, paddingVertical: space.sm },
+  photo: { width: 132, height: 176, borderRadius: radius.lg },
+  bio: { ...type.body, color: color.textMuted, marginBottom: space.sm },
+  label: {
+    ...type.label,
+    color: color.textFaint,
+    marginTop: space.xl,
+    marginBottom: space.xs,
+  },
+  starterBox: {
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    padding: space.lg,
+    gap: space.sm,
+  },
+  starterHead: { ...type.caption, color: color.textMuted },
+  starterMeaning: { ...type.body, color: color.textMuted },
+  starterQuestion: { ...type.heading, color: color.text, lineHeight: 26 },
+  summary: { gap: space.sm },
+  bandName: { ...type.display, color: color.text },
+  body: { ...type.body, color: color.text },
+  bodyMuted: { ...type.bodySmall, color: color.textMuted },
+  link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
+  notice: { ...type.bodySmall, color: color.pink, paddingVertical: space.sm },
+  safetyRow: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
+  safetyButton: {
+    flex: 1,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: color.border,
+    paddingVertical: space.md,
+    alignItems: 'center',
+  },
+  safetyText: { ...type.body, color: color.textMuted },
+  reasons: { gap: space.xs },
+  reason: { paddingVertical: space.md },
+  danger: { paddingVertical: space.md },
+  dangerText: { ...type.body, color: color.danger },
+});
