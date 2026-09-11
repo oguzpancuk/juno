@@ -6,49 +6,90 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { z } from 'zod';
+import { Avatar } from '@/components/Avatar';
+import { MatchDetail } from '@/components/MatchDetail';
+import { BackLink } from '@/components/ui';
 import {
   MAX_MESSAGE_LENGTH,
   isSendable,
   markThreadRead,
   useThread,
+  type MessageRow,
 } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
-import { matchDetailHref } from '@/lib/routes';
-import { starterFor } from '@/lib/starter';
+import { usePhotoSources } from '@/lib/photos';
 import { RedirectToSignIn, useSession } from '@/lib/session';
+import { starterFor } from '@/lib/starter';
 import { t } from '@/lib/strings';
-import { BackLink } from '@/components/ui';
-import { color } from '@/theme/tokens';
+import {
+  excerpt,
+  indexById,
+  lastReadMine,
+  quoteFor,
+  showsAvatar,
+} from '@/lib/thread-view';
+import { color, radius, space, type } from '@/theme/tokens';
+
+/** The two pages, in pager order. */
+const PAGES = ['thread', 'match'] as const;
+type Page = (typeof PAGES)[number];
+/** The `page` param: anything but "match" opens the thread. */
+const PageParam = z.enum(PAGES).catch('thread');
+
+/** Stable identity while the row is still loading. */
+const EMPTY: readonly string[] = [];
 
 /**
- * Keyed by the match id, for the reason the match screen is (see
- * (matches)/match/[id].tsx): everything below belongs to one conversation.
+ * One conversation as two pages — the thread and the match detail — under
+ * a two-segment header, swiped or tapped between (owner, 2026-09-11).
+ * There is no back link: the tab bar and the edge swipe are the exits.
  *
- * This one can be re-parameterised without being re-entered. The starter
- * screen pops back to a thread with POP_TO, which finds a `chat/[id]`
- * route by name and overwrites its params while keeping its key — so with
- * a thread to someone else already on the stack, this component would
- * re-render for a different match holding the first one's half-typed
- * message, and the next tap on Gönder would send it to the wrong person.
+ * Keyed by the match id: everything below belongs to one conversation.
+ * The starter screen pops back to a thread with POP_TO, which finds a
+ * `chat/[id]` route by name and overwrites its params while keeping its
+ * key — so with a thread to someone else already on the stack, this
+ * component would re-render for a different match holding the first
+ * one's half-typed message, and the next tap on Gönder would send it to
+ * the wrong person. The same key discards an open block confirmation on
+ * page 2 when a match arriving over Realtime swaps the id.
  */
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  return <ChatView key={typeof id === 'string' ? id : 'none'} id={id} />;
+  const { id, page } = useLocalSearchParams<{ id: string; page?: string }>();
+  return (
+    <ChatView
+      key={typeof id === 'string' ? id : 'none'}
+      id={id}
+      page={PageParam.parse(page)}
+    />
+  );
 }
 
-function ChatView({ id }: { id: string | string[] | undefined }) {
+function ChatView({
+  id,
+  page,
+}: {
+  id: string | string[] | undefined;
+  page: Page;
+}) {
   const matchId = typeof id === 'string' ? id : null;
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const [row, setRow] = useState<MatchProfileRow | null | 'loading'>('loading');
   const [draft, setDraft] = useState('');
+  const [replyTo, setReplyTo] = useState<MessageRow | null>(null);
   const [sending, setSending] = useState(false);
   const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
@@ -56,6 +97,9 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
   // Without the inset the send button sits under the home indicator and
   // the bottom of it is not tappable.
   const insets = useSafeAreaInsets();
+  // Portrait only (app.json), so the page width does not change under a
+  // mounted pager.
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     if (!matchId || !userId) return;
@@ -67,6 +111,13 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
       cancelled = true;
     };
   }, [matchId, userId]);
+
+  // Photos come from an endpoint that authorises every request
+  // (ADR-0006), so they are fetched per visit and never cached. One call
+  // for the header avatar, the bubbles and page 2's strip.
+  const photos = row !== 'loading' && row ? row.photos : EMPTY;
+  const sources = usePhotoSources(photos);
+  const avatar = sources[0] ?? null;
 
   // Read receipts only while the thread is on screen: the Realtime
   // subscription keeps running when the user navigates away.
@@ -88,14 +139,51 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
     }
   }, [messages, matchId, userId]);
 
-  // Newest first: the list is inverted so the thread grows upward.
-  const ordered = useMemo(
-    () =>
-      messages === 'loading' || messages === null
-        ? []
-        : [...messages].reverse(),
+  const list = useMemo(
+    () => (messages === 'loading' || messages === null ? [] : messages),
     [messages],
   );
+  // Newest first: the list is inverted so the thread grows upward.
+  const ordered = useMemo(() => [...list].reverse(), [list]);
+  const byId = useMemo(() => indexById(list), [list]);
+  const readId = useMemo(
+    () => (userId ? lastReadMine(list, userId) : null),
+    [list, userId],
+  );
+
+  // The pager. `active` is what the segments show; the ScrollView is the
+  // truth and reports back on `onMomentumScrollEnd`.
+  const pager = useRef<ScrollView>(null);
+  const [active, setActive] = useState<Page>(page);
+  const [pageHeight, setPageHeight] = useState<number | null>(null);
+  const applied = useRef<Page | null>(null);
+  const xFor = (target: Page): number => (target === 'match' ? width : 0);
+  const goTo = (target: Page, animated: boolean) => {
+    pager.current?.scrollTo({ x: xFor(target), y: 0, animated });
+    setActive(target);
+  };
+  // The param is applied once the pager has a size — a scrollTo before
+  // layout is dropped — and again when a navigate to this same chat swaps
+  // it: a match arriving over Realtime while its thread is open.
+  const onPagerLayout = (event: LayoutChangeEvent) => {
+    setPageHeight(event.nativeEvent.layout.height);
+    if (applied.current === page) return;
+    applied.current = page;
+    goTo(page, false);
+  };
+  useEffect(() => {
+    if (pageHeight === null || applied.current === page) return;
+    applied.current = page;
+    pager.current?.scrollTo({
+      x: page === 'match' ? width : 0,
+      animated: false,
+    });
+    setActive(page);
+  }, [page, pageHeight, width]);
+  const onPageSettled = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const x = event.nativeEvent.contentOffset.x;
+    setActive(Math.round(x / width) >= 1 ? 'match' : 'thread');
+  };
 
   // After every hook: hooks must run in the same order on each render.
   if (session.status === 'signed-out') return <RedirectToSignIn />;
@@ -124,120 +212,271 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
     // the old state and would post the message twice.
     if (!isSendable(draft) || inFlight.current) return;
     const body = draft;
+    const quoting = replyTo;
     inFlight.current = true;
     setSending(true);
     setFailed(false);
-    void send(body).then((ok) => {
+    void send(body, quoting?.id).then((ok) => {
       inFlight.current = false;
       setSending(false);
       if (!ok) {
         setFailed(true);
         return;
       }
-      // Keep whatever the user typed while the insert was in flight.
+      // Keep whatever the user typed while the insert was in flight, and
+      // the reply target if they picked another one meanwhile.
       setDraft((current) => (current === body ? '' : current));
+      setReplyTo((current) => (current?.id === quoting?.id ? null : current));
     });
   };
 
+  const pageStyle =
+    pageHeight === null ? { width } : { width, height: pageHeight };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      testID="chat-screen"
-    >
+    <View style={styles.screen} testID="chat-screen">
       <View style={styles.header}>
-        <Text style={styles.title}>{row.display_name}</Text>
-        <Link href={matchDetailHref(matchId)} style={styles.detail}>
-          {t.chat.viewMatch}
-        </Link>
-      </View>
-
-      <FlatList
-        inverted
-        data={ordered}
-        keyExtractor={(m) => m.id}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        testID="chat-messages"
-        // Inverted: the end of the list is the top of the thread, so this
-        // is "scrolled back far enough, fetch older messages".
-        onEndReached={() => void loadOlder()}
-        onEndReachedThreshold={0.4}
-        renderItem={({ item }) => {
-          const mine = item.sender_id === userId;
-          return (
-            <View
-              style={[styles.bubble, mine ? styles.mine : styles.theirs]}
-              testID={mine ? 'message-mine' : 'message-theirs'}
-            >
-              <Text style={styles.bubbleText}>{item.body}</Text>
-            </View>
-          );
-        }}
-        // The footer is the head of an inverted list, so this card sits at
-        // the very start of the thread. Once anything has been said it is
-        // in the way — and after sending the starter from /starter it was
-        // the same sentence twice, one line apart.
-        ListFooterComponent={
-          // `messages === null` is a failed load, not an empty thread: the
-          // card would be claiming the conversation has not started when
-          // the app does not know that.
-          ordered.length === 0 && messages !== null ? (
-            <View style={styles.starterBox} testID="chat-starter">
-              <Text style={styles.starterLabel}>{t.match.starterLabel}</Text>
-              <Text style={styles.starterQuestion}>
-                {starter?.question ?? t.match.noStarter}
-              </Text>
-              <Link
-                href={{ pathname: '/starter/[id]', params: { id: matchId } }}
-                style={styles.starterLink}
-              >
-                {t.starter.open}
-              </Link>
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          messages === null ? (
-            <Text style={styles.muted}>{t.errors.generic}</Text>
-          ) : null
-        }
-      />
-
-      {failed ? <Text style={styles.failed}>{t.chat.sendFailed}</Text> : null}
-      <View
-        style={[
-          styles.composer,
-          { paddingBottom: Math.max(insets.bottom, 12) + 12 },
-        ]}
-      >
-        <TextInput
-          style={styles.input}
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={t.chat.placeholder}
-          placeholderTextColor={color.textFaint}
-          multiline
-          maxLength={MAX_MESSAGE_LENGTH}
-          testID="chat-input"
-        />
-        <Pressable
-          onPress={onSend}
-          disabled={!canSend}
-          style={[styles.sendButton, canSend ? null : styles.sendDisabled]}
-          testID="chat-send"
-        >
-          <Text
-            style={[
-              styles.sendLabel,
-              canSend ? null : styles.sendLabelDisabled,
-            ]}
-          >
-            {t.chat.send}
+        <View style={styles.titleRow}>
+          <Avatar
+            name={row.display_name}
+            source={avatar}
+            size={32}
+            testID="chat-avatar"
+          />
+          <Text style={styles.title} numberOfLines={1}>
+            {row.display_name}
           </Text>
-        </Pressable>
+        </View>
+        <View style={styles.segments} accessibilityRole="tablist">
+          {PAGES.map((p) => {
+            const on = active === p;
+            return (
+              <Pressable
+                key={p}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                onPress={() => goTo(p, true)}
+                style={styles.segment}
+                testID={`page-${p}`}
+              >
+                <Text
+                  style={[styles.segmentLabel, on && styles.segmentLabelOn]}
+                >
+                  {p === 'thread' ? t.chat.tabThread : t.chat.tabMatch}
+                </Text>
+                <View style={[styles.underline, on && styles.underlineOn]} />
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
-    </KeyboardAvoidingView>
+
+      <ScrollView
+        ref={pager}
+        horizontal
+        pagingEnabled
+        bounces={false}
+        showsHorizontalScrollIndicator={false}
+        // iOS reads this before the first frame, so a chat opened on its
+        // Uyum page never shows the thread first; onLayout covers the rest.
+        contentOffset={{ x: xFor(page), y: 0 }}
+        onLayout={onPagerLayout}
+        onMomentumScrollEnd={onPageSettled}
+        // The send button is under this ScrollView too; without this a tap
+        // on it with the keyboard up only dismisses the keyboard.
+        keyboardShouldPersistTaps="handled"
+        style={styles.pager}
+        testID="chat-pager"
+      >
+        <View style={pageStyle} testID="chat-page-thread">
+          <KeyboardAvoidingView
+            style={styles.page}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <FlatList
+              inverted
+              data={ordered}
+              keyExtractor={(m) => m.id}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              testID="chat-messages"
+              // Inverted: the end of the list is the top of the thread, so
+              // this is "scrolled back far enough, fetch older messages".
+              onEndReached={() => void loadOlder()}
+              onEndReachedThreshold={0.4}
+              renderItem={({ item, index }) => {
+                const mine = item.sender_id === userId;
+                const quoted =
+                  item.reply_to === null ? null : quoteFor(byId, item.reply_to);
+                return (
+                  <View style={[styles.row, mine ? styles.rowMine : null]}>
+                    {mine ? null : (
+                      // The slot is always there so a run's bubbles line
+                      // up; only its last bubble fills it.
+                      <View style={styles.avatarSlot}>
+                        {showsAvatar(ordered, index, userId) ? (
+                          <Avatar
+                            name={row.display_name}
+                            source={avatar}
+                            size={28}
+                            testID="bubble-avatar"
+                          />
+                        ) : null}
+                      </View>
+                    )}
+                    <View style={styles.bubbleColumn}>
+                      <Pressable
+                        onLongPress={() => setReplyTo(item)}
+                        // VoiceOver users cannot long-press a bubble; the
+                        // custom action offers the same reply.
+                        accessibilityActions={[
+                          { name: 'longpress', label: t.chat.reply },
+                        ]}
+                        onAccessibilityAction={(event) => {
+                          if (event.nativeEvent.actionName === 'longpress')
+                            setReplyTo(item);
+                        }}
+                        style={[
+                          styles.bubble,
+                          mine ? styles.mine : styles.theirs,
+                        ]}
+                        testID={mine ? 'message-mine' : 'message-theirs'}
+                      >
+                        {item.reply_to === null ? null : (
+                          <View style={styles.quote} testID="quote">
+                            {quoted ? (
+                              <>
+                                <Text style={styles.quoteWho}>
+                                  {quoted.sender_id === userId
+                                    ? t.chat.you
+                                    : row.display_name}
+                                </Text>
+                                <Text
+                                  style={styles.quoteText}
+                                  numberOfLines={2}
+                                >
+                                  {excerpt(quoted.body)}
+                                </Text>
+                              </>
+                            ) : (
+                              <Text style={styles.quoteText}>
+                                {t.chat.replyUnavailable}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                        <Text style={styles.bubbleText}>{item.body}</Text>
+                      </Pressable>
+                      {item.id === readId ? (
+                        <Text style={styles.read} testID="read-receipt">
+                          {t.chat.read}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              }}
+              // The footer is the head of an inverted list, so this card
+              // sits at the very start of the thread. Once anything has
+              // been said it is in the way — and after sending the starter
+              // from /starter it was the same sentence twice, one line apart.
+              ListFooterComponent={
+                // `messages === null` is a failed load, not an empty thread:
+                // the card would be claiming the conversation has not
+                // started when the app does not know that.
+                ordered.length === 0 && messages !== null ? (
+                  <View style={styles.starterBox} testID="chat-starter">
+                    <Text style={styles.starterLabel}>
+                      {t.match.starterLabel}
+                    </Text>
+                    <Text style={styles.starterQuestion}>
+                      {starter?.question ?? t.match.noStarter}
+                    </Text>
+                    <Link
+                      href={{
+                        pathname: '/starter/[id]',
+                        params: { id: matchId },
+                      }}
+                      style={styles.starterLink}
+                    >
+                      {t.starter.open}
+                    </Link>
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                messages === null ? (
+                  <Text style={styles.muted}>{t.errors.generic}</Text>
+                ) : null
+              }
+            />
+
+            {failed ? (
+              <Text style={styles.failed}>{t.chat.sendFailed}</Text>
+            ) : null}
+            {replyTo ? (
+              <View style={styles.replyBar} testID="reply-bar">
+                <View style={styles.replyBarText}>
+                  <Text style={styles.replyBarLabel}>{t.chat.reply}</Text>
+                  <Text style={styles.replyBarExcerpt} numberOfLines={1}>
+                    {excerpt(replyTo.body)}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setReplyTo(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.chat.cancelReply}
+                  hitSlop={12}
+                  style={styles.replyCancel}
+                  testID="reply-cancel"
+                >
+                  <Text style={styles.replyCancelGlyph}>✕</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <View
+              style={[
+                styles.composer,
+                { paddingBottom: Math.max(insets.bottom, 12) + 12 },
+              ]}
+            >
+              <TextInput
+                style={styles.input}
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={t.chat.placeholder}
+                placeholderTextColor={color.textFaint}
+                multiline
+                maxLength={MAX_MESSAGE_LENGTH}
+                testID="chat-input"
+              />
+              <Pressable
+                onPress={onSend}
+                disabled={!canSend}
+                style={[
+                  styles.sendButton,
+                  canSend ? null : styles.sendDisabled,
+                ]}
+                testID="chat-send"
+              >
+                <Text
+                  style={[
+                    styles.sendLabel,
+                    canSend ? null : styles.sendLabelDisabled,
+                  ]}
+                >
+                  {t.chat.send}
+                </Text>
+              </Pressable>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+
+        <View style={pageStyle} testID="chat-page-match">
+          <MatchDetail row={row} userId={userId} sources={sources} />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -253,19 +492,55 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 64,
     paddingHorizontal: 20,
-    paddingBottom: 12,
-    gap: 4,
     borderBottomWidth: 1,
     borderBottomColor: color.border,
   },
-  detail: { color: color.textMuted, fontSize: 14 },
-  title: { color: color.text, fontSize: 22, fontWeight: '700' },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingBottom: space.md,
+  },
+  title: { ...type.title, color: color.text, flexShrink: 1 },
+  segments: { flexDirection: 'row' },
+  // 44pt targets; the underline is the last 2pt of each.
+  segment: { flex: 1, minHeight: 44, justifyContent: 'flex-end' },
+  segmentLabel: {
+    ...type.heading,
+    color: color.textMuted,
+    textAlign: 'center',
+    paddingBottom: space.sm,
+  },
+  segmentLabelOn: { color: color.text },
+  underline: { height: 2, backgroundColor: 'transparent' },
+  underlineOn: { backgroundColor: color.pink },
+  pager: { flex: 1 },
+  page: { flex: 1 },
   list: { flex: 1 },
   listContent: { padding: 16, gap: 8 },
-  bubble: { maxWidth: '82%', borderRadius: 16, padding: 12 },
-  mine: { alignSelf: 'flex-end', backgroundColor: color.mine },
-  theirs: { alignSelf: 'flex-start', backgroundColor: color.surface },
+  row: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
+  rowMine: { justifyContent: 'flex-end' },
+  avatarSlot: { width: 28, height: 28 },
+  bubbleColumn: { maxWidth: '82%', flexShrink: 1 },
+  bubble: { borderRadius: 16, padding: 12, gap: space.sm },
+  mine: { backgroundColor: color.mine },
+  theirs: { backgroundColor: color.surface },
   bubbleText: { color: color.text, fontSize: 15, lineHeight: 21 },
+  quote: {
+    borderLeftWidth: 2,
+    borderLeftColor: color.borderStrong,
+    paddingLeft: space.sm,
+    gap: 2,
+  },
+  quoteWho: { ...type.caption, color: color.textMuted, fontWeight: '600' },
+  quoteText: { ...type.bodySmall, color: color.textMuted },
+  read: {
+    ...type.caption,
+    color: color.textFaint,
+    alignSelf: 'flex-end',
+    paddingTop: space.xs,
+    paddingRight: space.xs,
+  },
   starterBox: {
     backgroundColor: color.surface,
     borderRadius: 16,
@@ -276,6 +551,23 @@ const styles = StyleSheet.create({
   starterLabel: { color: color.textMuted, fontSize: 11, letterSpacing: 1 },
   starterQuestion: { color: color.text, fontSize: 17, lineHeight: 24 },
   starterLink: { color: color.textMuted, fontSize: 14, paddingTop: 10 },
+  replyBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    marginHorizontal: 16,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.md,
+    borderLeftWidth: 2,
+    borderLeftColor: color.pink,
+    backgroundColor: color.surface,
+    borderRadius: radius.sm,
+  },
+  replyBarText: { flex: 1, gap: 2 },
+  replyBarLabel: { ...type.caption, color: color.pink, fontWeight: '600' },
+  replyBarExcerpt: { ...type.bodySmall, color: color.textMuted },
+  replyCancel: { padding: space.xs },
+  replyCancelGlyph: { color: color.textMuted, fontSize: 17 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',

@@ -3,14 +3,20 @@ import type { Href } from 'expo-router';
 /**
  * The two links that more than one screen builds, built in one place.
  *
- * Five screens link to the match detail. When that detail moves — it is
- * becoming the second page of the chat (ROADMAP, Track D) — the target
- * changes here and nowhere else, and `app/_layout.tsx`, which navigates
- * to it when a match arrives over Realtime, never has to be touched by
- * a feature track at all.
+ * The match detail is the second page of the chat — the "Uyum" tab of
+ * `(matches)/chat/[id]` — and this is the one place that knows it. The
+ * root layout (a match arriving over Realtime), the deck after a like and
+ * the person page all land there through this function; a new match
+ * therefore opens the chat on its Uyum page, kicker and all (owner
+ * default of 2026-09-11: no separate "EŞLEŞTİNİZ" screen).
  */
 export function matchDetailHref(matchId: string): Href {
-  return { pathname: '/match/[id]', params: { id: matchId } };
+  return { pathname: '/chat/[id]', params: { id: matchId, page: 'match' } };
+}
+
+/** The chat itself, on its thread page. */
+export function chatHref(matchId: string): Href {
+  return { pathname: '/chat/[id]', params: { id: matchId } };
 }
 
 /**

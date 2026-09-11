@@ -146,7 +146,7 @@ export const t = {
     ],
   },
   starter: {
-    back: '‹ Eşleşme',
+    back: '‹ Sohbet',
     title: (name: string) => `${name} ile sohbeti başlat`,
     label: 'SOHBET BAŞLATICIN',
     counter: (n: number, total: number) => `${n} / ${total}`,
@@ -203,7 +203,13 @@ export const t = {
   },
   chat: {
     backToMatches: '‹ Eşleşmeler',
-    viewMatch: 'Uyum detayı ›',
+    tabThread: 'Sohbet',
+    tabMatch: 'Uyum',
+    read: 'Okundu',
+    reply: 'Yanıtla',
+    cancelReply: 'Yanıtlamaktan vazgeç',
+    you: 'Sen',
+    replyUnavailable: 'Önceki bir mesaj',
     placeholder: 'Bir şeyler yaz…',
     send: 'Gönder',
     sendFailed: 'Mesaj gönderilemedi, tekrar dene.',

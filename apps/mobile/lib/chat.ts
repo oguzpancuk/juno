@@ -8,6 +8,8 @@ export const MessageRowSchema = z.object({
   match_id: z.string().uuid(),
   sender_id: z.string().uuid(),
   body: z.string(),
+  /** The message this one quotes; always in the same match (a trigger). */
+  reply_to: z.string().uuid().nullable(),
   read_at: z.string().nullable(),
   created_at: z.string(),
 });
@@ -58,17 +60,25 @@ export async function fetchMessages(
 
 /**
  * Insert one message. `sender_id` is also enforced by RLS; sending it
- * explicitly keeps the row valid without a server default.
+ * explicitly keeps the row valid without a server default. `replyTo`
+ * names the quoted message; the server refuses one from another thread
+ * or none at all, and both come back here as a failed send.
  */
 export async function sendMessage(
   matchId: string,
   senderId: string,
   body: string,
+  replyTo?: string,
 ): Promise<MessageRow | null> {
   if (!isSendable(body)) return null;
   const { data, error } = await supabase
     .from('messages')
-    .insert({ match_id: matchId, sender_id: senderId, body: body.trim() })
+    .insert({
+      match_id: matchId,
+      sender_id: senderId,
+      body: body.trim(),
+      reply_to: replyTo ?? null,
+    })
     .select('*')
     // Bounded like the reads: a connection that is accepted and never
     // answers otherwise leaves the button saying "Gönderiliyor…" for ever,
@@ -115,17 +125,23 @@ function merge(list: readonly MessageRow[], row: MessageRow): MessageRow[] {
 
 export interface Thread {
   readonly messages: MessageRow[] | null | 'loading';
-  readonly send: (body: string) => Promise<boolean>;
+  readonly send: (body: string, replyTo?: string) => Promise<boolean>;
   /** Pull the page before the oldest message held; no-op once exhausted. */
   readonly loadOlder: () => Promise<void>;
 }
 
 /**
- * One match's thread: initial load plus live inserts. Read receipts are
- * NOT sent here: the subscription outlives the screen's visibility, and a
- * message must not count as read while the thread sits in the background.
- * The screen marks read while it is focused. Realtime postgres_changes
- * respects RLS, so only this match's rows reach a member.
+ * One match's thread: initial load plus live inserts and updates. Read
+ * receipts are NOT sent here: the subscription outlives the screen's
+ * visibility, and a message must not count as read while the thread sits
+ * in the background. The screen marks read while it is focused. Realtime
+ * postgres_changes respects RLS, so only this match's rows reach a member.
+ *
+ * Updates are the other side's read receipts arriving on my messages.
+ * The publication publishes them and the table's DEFAULT replica
+ * identity carries the full new row, so the same schema parses both
+ * events and `merge` replaces the row by id (supabase/tests/realtime.test.ts
+ * measures this path).
  */
 export function useThread(matchId: string | null, myId: string | null): Thread {
   const [messages, setMessages] = useState<MessageRow[] | null | 'loading'>(
@@ -152,6 +168,13 @@ export function useThread(matchId: string | null, myId: string | null): Thread {
       if (!cancelled) setMessages(rows);
     });
 
+    const onRow = (payload: { new: unknown }) => {
+      const row = MessageRowSchema.safeParse(payload.new);
+      if (!row.success || cancelled) return;
+      setMessages((prev) =>
+        merge(prev === 'loading' || prev === null ? [] : prev, row.data),
+      );
+    };
     const channel = supabase
       .channel(`messages:${matchId}`)
       .on(
@@ -162,13 +185,17 @@ export function useThread(matchId: string | null, myId: string | null): Thread {
           table: 'messages',
           filter: `match_id=eq.${matchId}`,
         },
-        (payload) => {
-          const row = MessageRowSchema.safeParse(payload.new);
-          if (!row.success || cancelled) return;
-          setMessages((prev) =>
-            merge(prev === 'loading' || prev === null ? [] : prev, row.data),
-          );
+        onRow,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `match_id=eq.${matchId}`,
         },
+        onRow,
       )
       .subscribe((status, err) => {
         // A dead socket degrades to "no live updates", never to a wrong
@@ -185,9 +212,9 @@ export function useThread(matchId: string | null, myId: string | null): Thread {
   }, [matchId, myId]);
 
   const send = useCallback(
-    async (body: string): Promise<boolean> => {
+    async (body: string, replyTo?: string): Promise<boolean> => {
       if (!matchId || !myId) return false;
-      const row = await sendMessage(matchId, myId, body);
+      const row = await sendMessage(matchId, myId, body, replyTo);
       if (!row) return false;
       setMessages((prev) =>
         merge(prev === 'loading' || prev === null ? [] : prev, row),

@@ -1,8 +1,7 @@
 import { houseOverlays, matchSections, synastryReading } from '@juno/astro';
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -13,9 +12,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
-import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
-import { starterFor } from '@/lib/starter';
-import { usePhotoSources } from '@/lib/photos';
+import type { MatchProfileRow } from '@/lib/matches';
+import type { PhotoSource } from '@/lib/photos';
+import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { personHref } from '@/lib/routes';
 import {
   REPORT_REASONS,
@@ -23,38 +22,33 @@ import {
   reportUser,
   type ReportReason,
 } from '@/lib/safety';
-import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
-import { RedirectToSignIn, useSession } from '@/lib/session';
+import { starterFor } from '@/lib/starter';
 import { t } from '@/lib/strings';
-import { BackLink } from '@/components/ui';
 import { color, radius, space, type } from '@/theme/tokens';
 
-/** Stable identity while the row is still loading. */
-const EMPTY: readonly string[] = [];
-
 /**
- * The root layout navigates to this route when a match arrives over
- * Realtime, and navigating to the route you are already on swaps the params
- * without remounting. Everything below is about one person — the row, the
- * photos, the open report sheet, the open block confirmation — so the id
- * keys the view and React discards all of it. Without this, an open block
- * confirmation survived the swap and its next tap blocked whoever arrived.
+ * The match page — "EŞLEŞTİNİZ", the photos, the starter, the compatibility
+ * summary, the way to their profile and the safety block — as the second
+ * page of the chat (owner, 2026-09-11: chat and match detail are two tabs
+ * of one screen). It was `(matches)/match/[id].tsx`; the chat owns the
+ * match row and the photo sources now and hands them down, so the first
+ * photo is requested once for the header, the bubbles and this strip
+ * (ADR-0006: every photo request is authorised, none is cached).
+ *
+ * Own profile is loaded here, not in the chat: only the synastry needs
+ * it, and a failed read degrades this page alone.
  */
-export default function MatchScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  return <MatchView key={typeof id === 'string' ? id : 'none'} id={id} />;
-}
-
-function MatchView({ id }: { id: string | string[] | undefined }) {
-  const session = useSession();
-  const userId =
-    session.status === 'signed-in' ? session.session.user.id : null;
-  // A route param that is not a string can never resolve, so it starts as
-  // the error state rather than spinning for ever.
-  const [row, setRow] = useState<MatchProfileRow | null | 'loading'>(
-    typeof id === 'string' ? 'loading' : null,
-  );
+export function MatchDetail({
+  row,
+  userId,
+  sources,
+}: {
+  row: MatchProfileRow;
+  userId: string;
+  sources: readonly (PhotoSource | null)[];
+}) {
   const [me, setMe] = useState<OwnProfile | null>(null);
+  const [meFailed, setMeFailed] = useState(false);
   // The safety buttons are the last thing on the page; without the inset
   // they sit under the home indicator and do not take a tap.
   const insets = useSafeAreaInsets();
@@ -62,8 +56,8 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = useRef(false);
-  // The view is keyed by id, so a swap unmounts it — but a request already
-  // in flight still resolves. Its result belongs to the person who is gone.
+  // The chat is keyed by match id, so a swap unmounts this — but a request
+  // already in flight still resolves. Its result belongs to whoever is gone.
   const live = useRef(true);
   useEffect(() => {
     live.current = true;
@@ -72,35 +66,20 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
     };
   }, []);
 
-  const [meFailed, setMeFailed] = useState(false);
-
   useEffect(() => {
-    if (!userId || typeof id !== 'string') return;
     let cancelled = false;
-    void Promise.all([fetchMatch(id), fetchOwnProfile(userId)]).then(
-      ([r, p]) => {
-        if (cancelled) return;
-        setRow(r);
-        setMe(p.status === 'ready' ? p.profile : null);
-        setMeFailed(p.status !== 'ready');
-      },
-    );
+    void fetchOwnProfile(userId).then((p) => {
+      if (cancelled) return;
+      setMe(p.status === 'ready' ? p.profile : null);
+      setMeFailed(p.status !== 'ready');
+    });
     return () => {
       cancelled = true;
     };
-  }, [userId, id]);
+  }, [userId]);
 
-  // Photos come from an endpoint that authorises every request
-  // (ADR-0006), so they are fetched per visit and never cached.
-  const photos = row !== 'loading' && row ? row.photos : EMPTY;
-  const sources = usePhotoSources(photos);
-
-  // After every hook: hooks must run in the same order on each render.
   const reading = useMemo(
-    () =>
-      me && row && row !== 'loading'
-        ? synastryReading(me.chart, row.chart, 5)
-        : null,
+    () => (me ? synastryReading(me.chart, row.chart, 5) : null),
     [me, row],
   );
   const sections = useMemo(
@@ -114,27 +93,10 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
     [reading],
   );
   const overlays = useMemo(
-    () =>
-      me && row && row !== 'loading' ? houseOverlays(me.chart, row.chart) : [],
+    () => (me ? houseOverlays(me.chart, row.chart) : []),
     [me, row],
   );
-  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
-  if (row === 'loading') {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={color.textMuted} />
-      </View>
-    );
-  }
-  if (!row || !userId) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.muted}>{t.errors.generic}</Text>
-        <BackLink label={t.chat.backToMatches} fallback="/matches" />
-      </View>
-    );
-  }
   const starter = starterFor(row, userId);
   const other = row.id;
   const name = row.display_name;
@@ -153,7 +115,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
         setNotice(t.safety.failed);
         return;
       }
-      // POP_TO, not replace: this screen sits on the matches stack, and a
+      // POP_TO, not replace: the chat sits on the matches stack, and a
       // replace there would leave the list twice on it.
       router.dismissTo('/matches');
     });
@@ -213,7 +175,10 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
       ) : (
         <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
       )}
-      <Link href={`/starter/${row.match_id}`} style={styles.link}>
+      <Link
+        href={{ pathname: '/starter/[id]', params: { id: row.match_id } }}
+        style={styles.link}
+      >
         {t.starter.open}
       </Link>
 
@@ -239,13 +204,6 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
 
       <Link href={personHref(row.id)} style={styles.link} testID="open-person">
         {t.person.openProfile(row.display_name)}
-      </Link>
-      <Link
-        href={{ pathname: '/chat/[id]', params: { id: row.match_id } }}
-        style={styles.chatLink}
-        testID="open-chat"
-      >
-        {t.chat.open}
       </Link>
 
       <Text style={styles.label}>{t.safety.title}</Text>
@@ -312,14 +270,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
-  content: { padding: space.xl, paddingTop: 68, gap: space.sm },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.md,
-    backgroundColor: color.bg,
-  },
+  content: { padding: space.xl, paddingTop: space.lg, gap: space.sm },
   kicker: { ...type.label, color: color.pink },
   title: { ...type.display, color: color.text, marginBottom: space.md },
   photoStrip: { gap: space.sm, paddingVertical: space.sm },
@@ -346,20 +297,7 @@ const styles = StyleSheet.create({
   bandName: { ...type.display, color: color.text },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
-  chatLink: {
-    ...type.heading,
-    color: color.text,
-    backgroundColor: color.surfaceHigh,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    textAlign: 'center',
-    paddingVertical: 15,
-    marginTop: space.xl,
-    overflow: 'hidden',
-  },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
-  muted: { ...type.body, color: color.textMuted },
   notice: { ...type.bodySmall, color: color.pink, paddingVertical: space.sm },
   safetyRow: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
   safetyButton: {
@@ -372,26 +310,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   safetyText: { ...type.body, color: color.textMuted },
-  sheet: {
-    backgroundColor: color.surfaceHigh,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    padding: space.lg,
-    gap: space.sm,
-    marginTop: space.sm,
-  },
-  sheetTitle: { ...type.body, color: color.text },
-  sheetOption: { paddingVertical: space.md },
-  sheetOptionText: { ...type.body, color: color.text },
-  sheetDanger: { ...type.body, color: color.danger },
-  sheetCancel: { ...type.body, color: color.textFaint, paddingTop: space.sm },
   reasons: { gap: space.xs },
   reason: { paddingVertical: space.md },
-  reasonText: { ...type.body, color: color.text },
   danger: { paddingVertical: space.md },
   dangerText: { ...type.body, color: color.danger },
-  cancel: { paddingVertical: space.md, alignItems: 'center' },
-  cancelText: { ...type.body, color: color.textFaint },
-  confirmTitle: { ...type.body, color: color.text },
 });

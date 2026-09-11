@@ -3309,3 +3309,92 @@ and named no chart route; `npm run lint …` 0 errors (one pre-existing
 all passing; `npx prettier --check .` clean. `grep -rn "/chart"` over
 app, components and lib finds no href. Not verified here, by design: every
 `p-*.png` screenshot, which main takes after the `--no-ff` merge.
+
+## 2026-09-11 — Track D: avatars, Okundu, Yanıtla, the pager, level meters, plainer names
+
+Built on `track/d-chat` in a worktree; main merges, runs the DB tests
+and takes the screenshots. What is here is the code, its tests and the
+decisions that were not written down in the stub.
+
+**What the thread screen became.** One screen, two pages: a two-segment
+header (Sohbet / Uyum, 44pt targets, a pink underline) over a paging
+`ScrollView`. Page 1 is the thread as it was, with three additions; page
+2 is `components/MatchDetail.tsx`, the body of the old `match/[id]`
+without its "Sohbeti aç" link — you are already in the chat. The old
+route is deleted and `matchDetailHref` now answers
+`/chat/[id]?page=match`, so the Realtime listener, the deck after a like
+and the person page open the chat on its Uyum page with the kicker
+there (owner default 9). The three call sites outside the matches stack
+still pass `INTO_MATCHES`; nothing about the anchor changed. The `page`
+param is Zod-parsed (`z.enum(['thread','match']).catch('thread')`) and
+applied through `contentOffset` (iOS reads it before the first frame)
+and `onLayout` (everything else, and a scrollTo before layout is
+dropped); a `[page]` effect covers a same-chat param swap. The chat
+keeps `key={id}`, which now also discards an open block confirmation on
+page 2 when a match arriving over Realtime swaps the id.
+
+**The three additions, and the direction each one hides.**
+`lib/thread-view.ts` is pure and tested because each rule had a way to
+be wrong by one sign: the FlatList is inverted, so "the last bubble of a
+run" — the one that gets their avatar — is the LOWEST index of its run,
+not the highest (`showsAvatar`); "Okundu" sits under my newest read
+message only, found order-agnostically by (created_at, id)
+(`lastReadMine`); a reply quotes from the loaded window or says "Önceki
+bir mesaj", never fetching (`quoteFor`); the excerpt counts code points
+so an emoji at the cut is not split (`excerpt`). `useThread` gained an
+UPDATE binding merged by id — the read receipt arriving on my message.
+Reply is a long press (owner default 8) plus a VoiceOver custom action
+with the same label, because a long press is not a gesture VoiceOver
+users have.
+
+**reply_to on the server.** `20260911000002_reply_to.sql`: a nullable
+self-reference, a not-self check, a partial index, a BEFORE INSERT
+trigger that keeps the quoted message inside the thread, and
+`forbid_message_edit` re-created with `reply_to` frozen. One deviation
+from the stub, deliberate: the trigger is security definer, not invoker.
+Under the sender's RLS a message of another match is invisible, so an
+invoker trigger cannot tell "another thread" from "no such message" and
+both would come out 23514. With the definer lookup a cross-thread reply
+is 23514 and an unknown id falls through to the foreign key's 23503 —
+the two refusals the stub asked the tests to assert separately. The
+function reads one `match_id` by primary key and returns a verdict;
+nothing from the definer context reaches the caller. The trigger
+function has no grant or revoke: a function returning `trigger` cannot
+be called, only fired.
+
+**What the typed client would not let me write.** `tests/database.types.ts`
+is generated from the running stack, which the tracks share and must
+not migrate, so it still lacks `reply_to` on this branch — and the
+typed client rejects an unknown column on insert and update. Two small
+helpers in `rls.test.ts` (`withReply`, `replyPatch`) declare the column
+on the way in; they stay correct after main regenerates the file and can
+then be replaced by plain literals. `supabase/scripts/seed-message.ts`
+is untyped and simply gained `--reply`.
+
+**Smaller choices.** The chat requests its photos once
+(`usePhotoSources(row.photos)`) and hands the sources to the header
+avatar, the bubble avatars and page 2's strip — one authorised request
+per photo per mount rather than two for the first photo (ADR-0006 says
+never cache, not fetch twice). The conversation list resolves each row's
+first photo with one call and maps back by path, never by index — the
+alignment bug of `photo-alignment.ts` again. `lib/routes.ts` gained
+`chatHref` beside `matchDetailHref`; the list and the starter's BackLink
+fallback use it, and the starter's label is "‹ Sohbet" — the fallback
+is the thread the label names, not the Uyum page. `Avatar` falls back
+to the Turkish initial (`initialOf`: `i` → `İ`, which `toUpperCase`
+gets wrong) on `surfaceHigh`. `LevelMeter` is three steps from
+`LEVELS`, the level word kept as the accessibility label; no number
+reaches a `Text`. The five names are Duygusal yakınlık, Çekim,
+İletişim, İstikrar, Gelişim (owner default 7).
+
+**For main, after the merge.** `db reset`, then `npm run gen:types -w
+supabase` (types-drift fails until it runs), the reply_to tests in
+`rls.test.ts`, and the new UPDATE test in `realtime.test.ts`. That test
+runs after the INSERT one, so the primer that warms the socket has
+already fired; if the first UPDATE binding after a container restart
+drops its event the way the first INSERT binding does, the test will
+say so on its first run and the warm-up needs an UPDATE primer too —
+not seen, since no track can run it. The screenshots named in the stub,
+and the check the foundation review deferred to this merge: whether
+re-tapping the focused Eşleşmeler tab pops its stack back to the list,
+now that the chat is the only screen above it.

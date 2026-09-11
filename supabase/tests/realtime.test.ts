@@ -14,6 +14,14 @@ import { adminClient, createUser, deleteUsers, type TestUser } from './local';
  * match while the thread is open, and reaches nobody else. This is the
  * same path `apps/mobile/lib/chat.ts` uses — postgres_changes on
  * `messages`, filtered by match, under the sender's own RLS.
+ *
+ * The second test is the read receipt going the other way: the recipient
+ * stamps `read_at`, and the sender's UPDATE binding must see the new row.
+ * The publication publishes updates (20260909000002_safety.sql) and the
+ * table keeps DEFAULT replica identity, so the payload carries the full
+ * new row — which is what the match filter and the subscriber's RLS are
+ * evaluated against. The plan entry of 2026-09-11 asserted that from the
+ * docs; this is the measurement.
  */
 
 const admin = adminClient();
@@ -31,6 +39,7 @@ const Message = z.object({
   id: z.string().uuid(),
   body: z.string(),
   match_id: z.string().uuid(),
+  read_at: z.string().nullable(),
 });
 
 async function user(tag: string): Promise<TestUser> {
@@ -44,6 +53,7 @@ function waitForMessage(
   as: TestUser,
   match: string,
   budgetMs: number,
+  event: 'INSERT' | 'UPDATE' = 'INSERT',
 ): { ready: Promise<void>; got: Promise<z.infer<typeof Message> | null> } {
   let onReady: () => void;
   const ready = new Promise<void>((resolve) => {
@@ -55,11 +65,11 @@ function waitForMessage(
       resolve(null);
     }, budgetMs);
     const channel = as.client
-      .channel(`test-messages:${match}:${as.id}`)
+      .channel(`test-messages:${event}:${match}:${as.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event,
           schema: 'public',
           table: 'messages',
           filter: `match_id=eq.${match}`,
@@ -169,4 +179,38 @@ it('a message reaches the other member within the budget and nobody else', async
   // Cem is in no match: RLS must keep the row off his socket too.
   expect(await outsider.got).toBeNull();
   console.log(`message crossed in ${elapsed} ms`);
+}, 30_000);
+
+it('a read receipt reaches the sender within the budget and nobody else', async () => {
+  const posted = await bora.client
+    .from('messages')
+    .insert({ match_id: matchId, sender_id: bora.id, body: 'Okudun mu?' })
+    .select('id')
+    .single();
+  expect(posted.error).toBeNull();
+  const sentId = z.object({ id: z.string().uuid() }).parse(posted.data).id;
+
+  // The sender listens for updates the way `useThread` does; the outsider
+  // listens the same way and must hear nothing.
+  const sender = waitForMessage(bora, matchId, CROSSING_BUDGET_MS, 'UPDATE');
+  const outsider = waitForMessage(cem, matchId, CROSSING_BUDGET_MS, 'UPDATE');
+  await Promise.all([sender.ready, outsider.ready]);
+
+  const readAt = Date.now();
+  const marked = await ada.client
+    .from('messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', sentId);
+  expect(marked.error).toBeNull();
+
+  const received = await sender.got;
+  const elapsed = Date.now() - readAt;
+  expect(received?.id).toBe(sentId);
+  // The full new row, not just the key: DEFAULT replica identity is enough.
+  expect(received?.body).toBe('Okudun mu?');
+  expect(received?.read_at).not.toBeNull();
+  expect(elapsed).toBeLessThan(CROSSING_BUDGET_MS);
+
+  expect(await outsider.got).toBeNull();
+  console.log(`read receipt crossed in ${elapsed} ms`);
 }, 30_000);
