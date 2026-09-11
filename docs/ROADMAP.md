@@ -574,9 +574,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `c8-back-from-chart-is-the-deck.png` are the first-run path: the
       chart arrives with the deck underneath it, which `replace('/chart')`
       alone did not do once the deck moved into the tab group.
-      `c8-sign-out-leaves-one-route.png` is an edge swipe on the sign-in
-      screen revealing nothing — before `leaveToSignIn`, signing out and
-      back in left two tab navigators in the same stack._
+      `c8-sign-out-lands-on-sign-in.png` is where signing out ends up.
+      It is deliberately not offered as proof of the stack being one route
+      deep: a mid-drag frame with nothing behind it is pixel-identical to
+      one taken without a gesture at all, so the image cannot tell those
+      two apart. What it shows is the landing; the single-route stack was
+      read off the reducer and watched in the simulator (an edge swipe
+      revealing nothing), and holds by construction because every route to
+      sign-in now goes through `leaveToSignIn`._
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.juno`, check App Store name availability; hosted

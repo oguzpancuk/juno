@@ -58,8 +58,11 @@ export default function Settings() {
         setDeleteError(t.safety.deleteFailed);
         return;
       }
-      // The account is gone; the stored session is now worthless.
-      await supabase.auth.signOut();
+      // The account is gone; the stored session is now worthless. A
+      // failure here must not strand the person on a screen for an
+      // account that no longer exists, so the sign-out is best-effort and
+      // the navigation happens either way.
+      await supabase.auth.signOut().catch(() => undefined);
       leaveToSignIn();
     });
   };

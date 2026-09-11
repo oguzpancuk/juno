@@ -49,3 +49,20 @@ export function leaveToSignIn(): void {
   if (router.canDismiss()) router.dismissAll();
   router.replace('/sign-in');
 }
+
+/**
+ * The signed-out guard every screen behind the session uses.
+ *
+ * `<Redirect href="/sign-in" />` is `router.replace`, which is the call
+ * that leaves the old tab group on the stack — and this guard fires on
+ * its own when a refresh token expires while the app is backgrounded, so
+ * it is the likeliest way into that state, not the rarest. Going through
+ * `leaveToSignIn` makes the property hold wherever the guard is written
+ * rather than at each place someone remembered.
+ */
+export function RedirectToSignIn(): null {
+  useEffect(() => {
+    leaveToSignIn();
+  }, []);
+  return null;
+}

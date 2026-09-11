@@ -1,9 +1,4 @@
-import {
-  Link,
-  Redirect,
-  useFocusEffect,
-  useLocalSearchParams,
-} from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,7 +20,7 @@ import {
 } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { starterFor } from '@/lib/starter';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
 
@@ -101,7 +96,7 @@ function ChatView({ id }: { id: string | string[] | undefined }) {
   );
 
   // After every hook: hooks must run in the same order on each render.
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   if (row === 'loading' || messages === 'loading') {
     return (

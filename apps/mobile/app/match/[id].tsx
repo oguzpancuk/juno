@@ -6,7 +6,7 @@ import {
   matchSections,
   synastryReading,
 } from '@juno/astro';
-import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,7 +28,7 @@ import {
   type ReportReason,
 } from '@/lib/safety';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -122,7 +122,7 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
       me && row && row !== 'loading' ? houseOverlays(me.chart, row.chart) : [],
     [me, row],
   );
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   if (row === 'loading') {
     return (

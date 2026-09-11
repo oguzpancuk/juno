@@ -1,4 +1,4 @@
-import { Link, Redirect, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchBlocked, unblockUser, type BlockedPerson } from '@/lib/safety';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
 
@@ -51,7 +51,7 @@ export default function Blocked() {
     }, []),
   );
 
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   const undo = (person: BlockedPerson) => {
     if (!userId || working.current) return;

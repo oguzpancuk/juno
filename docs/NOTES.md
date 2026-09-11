@@ -2838,8 +2838,44 @@ the two lint-gate holes above:
 - `sendMessage` was the one blocking call left without a timeout, beside
   two reads that had just been given one.
 
-`READ_TIMEOUT_MS` now lives in `lib/supabase.ts`, not `lib/matches.ts`:
-`lib/profile.ts` and `lib/matches.ts` already import each other, and a
-third edge into that cycle is how a module ends up half-initialised. The
-cycle itself is still there and is worth breaking — the shared enums
-(`GENDERS`, `INTERESTS`, `ELEMENTS`) want a module of their own.
+`READ_TIMEOUT_MS` now lives in `lib/supabase.ts`. The reason recorded at
+the time — that `lib/profile.ts` and `lib/matches.ts` import each other —
+stopped being true the moment the move landed, because the import it
+removed _was_ the cycle: `profile.ts` now imports neither, and the only
+remaining edge is `matches → profile`. The placement is still right for a
+duller reason: every consumer already imports `supabase.ts` and it
+imports nothing of theirs, so nobody has to reason about which module
+initialises first. Recorded because a rationale that quietly went stale
+is the second one this session, and both were caught by review rather
+than by anything in the battery.
+
+## 2026-09-11 — Pre-push review, round two
+
+The first fix closed the three places that sign out on purpose and missed
+the one that signs out on its own. `<Redirect href="/sign-in" />` is
+`router.replace` — the very call the fix was written against — and that
+guard fires unprompted when a refresh token expires while the app is
+backgrounded, which makes it the likeliest way into the two-tab-navigator
+state rather than the rarest. There is one `RedirectToSignIn` component
+now and every guard uses it, so the property holds by construction
+instead of at each place someone remembered.
+
+Writing that turned up a screen nobody had guarded at all: the deck. Its
+load effect begins `if (!userId) return`, so a session expiring while
+someone is on it left them on a spinner with a tab bar and no way out —
+reproduced by deep-linking `/discover` signed out, and fixed by the same
+guard. The linter caught the first attempt at placing it, which sat above
+six more hooks despite a comment claiming otherwise.
+
+Two more dead rationales came out with it. A screenshot named
+`c8-sign-out-leaves-one-route.png` could not show what its name claimed:
+a mid-drag frame of a stack with nothing behind it is pixel-identical to
+one taken without a gesture. Renamed to what it does show, with the
+actual claim attributed to the reducer and the simulator. And the
+`READ_TIMEOUT_MS` placement comment cited a cycle that the move itself
+had deleted.
+
+Three rounds of review on one range, and every round's most valuable
+finding was a sentence that had stopped being true rather than code that
+had never worked. Worth remembering the next time a comment feels
+finished.

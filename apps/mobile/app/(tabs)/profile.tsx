@@ -1,6 +1,6 @@
 import type { BigThree } from '@juno/astro';
 import { SIGN_GLYPH, SIGN_TR } from '@juno/astro';
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,7 +24,7 @@ import {
   usePhotoSources,
 } from '@/lib/photos';
 import { fetchOwnProfile } from '@/lib/profile';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -119,7 +119,7 @@ export default function Profile() {
     };
   }, [userId]);
 
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   const add = () => {
     if (!userId || working.current || photos === null) return;

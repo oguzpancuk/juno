@@ -1,4 +1,4 @@
-import { Link, Redirect, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { fetchMatches, type MatchProfileRow } from '@/lib/matches';
 import { starterFor } from '@/lib/starter';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
 
@@ -38,7 +38,7 @@ export default function Matches() {
   );
 
   // After every hook: hooks must run in the same order on each render.
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   return (
     <ScrollView

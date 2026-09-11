@@ -26,7 +26,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePhotoSources } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
@@ -150,6 +150,12 @@ export default function Discover() {
   useEffect(() => {
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, [currentId]);
+
+  // After every hook, like its siblings. The deck was the one signed-in
+  // screen with no guard: `if (!userId) return` in the load effect leaves
+  // it on its spinner for ever, so a session expiring while someone is on
+  // the deck used to end there.
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   return (
     <ScrollView

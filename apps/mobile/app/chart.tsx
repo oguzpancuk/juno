@@ -240,9 +240,14 @@ export default function ChartScreen() {
         testID="sign-out"
         style={styles.signOut}
         onPress={() => {
-          void supabase.auth.signOut().then(() => {
-            leaveToSignIn();
-          });
+          // Best-effort: a failed sign-out must still leave the screen,
+          // and the session hook clears on the next auth event either way.
+          void supabase.auth
+            .signOut()
+            .catch(() => undefined)
+            .then(() => {
+              leaveToSignIn();
+            });
         }}
       >
         <Body muted>{t.chart.signOut}</Body>

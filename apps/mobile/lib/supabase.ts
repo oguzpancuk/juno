@@ -29,9 +29,11 @@ AppState.addEventListener('change', (state) => {
  *
  * supabase-js has no request timeout of its own, so a connection that is
  * accepted and then never answers waits for ever — and several screens
- * show nothing but a spinner until their first read resolves. It lives
- * here, next to the client, because `lib/profile.ts` and `lib/matches.ts`
- * already import each other and a third edge into that cycle is how a
- * module ends up half-initialised.
+ * show nothing but a spinner until their first read resolves.
+ *
+ * It lives here, next to the client, rather than in whichever module
+ * happened to need it first: every consumer already imports this one, and
+ * this one imports nothing of theirs, so no reader has to work out which
+ * module initialises before which.
  */
 export const READ_TIMEOUT_MS = 10000;

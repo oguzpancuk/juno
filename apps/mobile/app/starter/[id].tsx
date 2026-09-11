@@ -1,4 +1,4 @@
-import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +21,7 @@ import { sendMessage } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { starterOptions } from '@/lib/starter';
-import { useSession } from '@/lib/session';
+import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -88,7 +88,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     [me, row, userId],
   );
 
-  if (session.status === 'signed-out') return <Redirect href="/sign-in" />;
+  if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   if (!loaded) {
     return (
@@ -116,7 +116,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     sendingNow.current = true;
     setSending(true);
     setFailed(false);
-    void sendMessage(matchId, userId, current.question).then((sent) => {
+    const done = (sent: boolean) => {
       sendingNow.current = false;
       // Cleared on success too. POP_TO removes this route either way, so
       // today nothing sees the cleared state — but a screen that leaves
@@ -135,7 +135,21 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
       // `navigate` does neither — it only reuses a route of the same name
       // as the current one, so from here it always pushed a second copy.
       router.dismissTo(`/chat/${matchId}`);
-    });
+    };
+    // The catch is the point of the `done` indirection: `sendMessage`
+    // resolves false on every error postgrest reports, but a throw from
+    // beneath it — a runtime without `AbortSignal.timeout`, say — would
+    // otherwise leave the button disabled and reading "Gönderiliyor…" for
+    // the life of the screen, which is the state the timeout exists to
+    // prevent.
+    void sendMessage(matchId, userId, current.question).then(
+      (sent) => {
+        done(sent !== null);
+      },
+      () => {
+        done(false);
+      },
+    );
   };
 
   return (
