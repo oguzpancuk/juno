@@ -58,7 +58,10 @@ export function useSession(): SessionState {
  * subtree, nested stacks included, on its own.
  */
 export function leaveToSignIn(): void {
-  router.replace('/sign-in');
+  // Everyone who arrives here had an account a moment ago — a sign-out,
+  // an expired token — so the door opens in sign-in mode; without the
+  // param the screen defaults to sign-up, the newcomer's door.
+  router.replace({ pathname: '/sign-in', params: { mode: 'in' } });
 }
 
 /**

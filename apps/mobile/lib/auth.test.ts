@@ -4,6 +4,7 @@ import {
   PASSWORD_MIN,
   modeParamSchema,
   parseCredentials,
+  utf8Length,
 } from './auth';
 
 const PASSWORD = 'p'.repeat(PASSWORD_MIN);
@@ -89,5 +90,30 @@ describe('modeParamSchema', () => {
     expect(modeParamSchema.parse(undefined)).toBe('up');
     expect(modeParamSchema.parse('signin')).toBe('up');
     expect(modeParamSchema.parse(['in'])).toBe('up');
+  });
+});
+
+describe('the password cap counts bytes, as bcrypt does', () => {
+  it('measures UTF-8, not code units', () => {
+    expect(utf8Length('a')).toBe(1);
+    expect(utf8Length('ş')).toBe(2);
+    expect(utf8Length('€')).toBe(3);
+    expect(utf8Length('😀')).toBe(4);
+  });
+
+  it('accepts 72 bytes of ASCII and 36 two-byte letters, refuses 40', () => {
+    const email = 'ayse@example.com';
+    expect(
+      parseCredentials({ email, password: 'a'.repeat(PASSWORD_MAX) }).ok,
+    ).toBe(true);
+    expect(
+      parseCredentials({ email, password: 'ş'.repeat(PASSWORD_MAX / 2) }).ok,
+    ).toBe(true);
+    // Forty code units, eighty bytes: the server would refuse it with a
+    // code the screen used to blame on the e-mail field.
+    expect(parseCredentials({ email, password: 'ş'.repeat(40) })).toEqual({
+      ok: false,
+      field: 'password',
+    });
   });
 });

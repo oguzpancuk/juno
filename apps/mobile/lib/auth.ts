@@ -22,14 +22,32 @@ export type AuthMode = (typeof AUTH_MODES)[number];
 export const modeParamSchema = z.enum(AUTH_MODES).catch('up');
 
 export const PASSWORD_MIN = 8;
-/** bcrypt hashes the first 72 bytes and GoTrue refuses anything longer. */
+/** bcrypt hashes the first 72 BYTES and GoTrue refuses anything longer. */
 export const PASSWORD_MAX = 72;
+
+/**
+ * UTF-8 length, which is what bcrypt and GoTrue count. A Zod `.max()`
+ * counts UTF-16 code units, so a password of forty `ş` (eighty bytes)
+ * passed the schema and came back from the server as `validation_failed`
+ * — which the screen read as an invalid e-mail address.
+ */
+export function utf8Length(s: string): number {
+  let n = 0;
+  for (const ch of s) {
+    const cp = ch.codePointAt(0) ?? 0;
+    n += cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
+  }
+  return n;
+}
 
 export const credentialsSchema = z.object({
   // Trimmed and lowercased before the format check, so a trailing space
   // from the keyboard or a capitalised address is not a rejection.
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  password: z
+    .string()
+    .min(PASSWORD_MIN)
+    .refine((p) => utf8Length(p) <= PASSWORD_MAX, 'longer than 72 bytes'),
 });
 
 export type Credentials = z.infer<typeof credentialsSchema>;

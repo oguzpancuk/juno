@@ -27,13 +27,14 @@ export const LEGAL_UPDATED = '11 Eylül 2026';
  * notice the member accepted (`profiles.consent_version`, written once at
  * onboarding), so a later version can be told apart from this one.
  *
- * Deliberately NOT moved with `LEGAL_UPDATED` on 2026-09-11. Nothing in
- * the app compares a stored version against this one or asks anyone to
- * accept a newer text, so a bump would record a re-consent that never
- * happened. It moves the day a re-consent step exists, and only then —
- * docs/NOTES.md, Track A, has the reasoning and the open question.
+ * Moves with `LEGAL_UPDATED`: the value is written once, at onboarding,
+ * as the version of the text the person read before agreeing, so a
+ * profile created after the 11 Eylül wording must say so. It does not
+ * touch existing members — nothing re-asks consent yet, and the DB
+ * trigger refuses moving a stored version backwards — so a re-consent
+ * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-09';
+export const LEGAL_VERSION = '2026-09-11';
 
 export const legalSections: readonly LegalSection[] = [
   {

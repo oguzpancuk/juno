@@ -127,7 +127,7 @@ export default function SignIn() {
           autoCorrect={false}
           keyboardType="email-address"
           textContentType="emailAddress"
-          returnKeyType="next"
+          autoComplete="email"
         />
         {emailHint ? <Text style={styles.fieldError}>{emailHint}</Text> : null}
         <Text style={styles.label}>{t.signIn.passwordLabel}</Text>
@@ -142,6 +142,7 @@ export default function SignIn() {
           // Tells the keychain whether to offer a saved password or to
           // generate one.
           textContentType={mode === 'up' ? 'newPassword' : 'password'}
+          autoComplete={mode === 'up' ? 'new-password' : 'password'}
           returnKeyType="done"
           onSubmitEditing={() => {
             if (canSubmit) void submit();
@@ -175,7 +176,13 @@ export default function SignIn() {
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-      <LinkText testID="flip-mode" style={styles.flip} onPress={flip}>
+      {/* Not while a request is in flight: its answer would land under
+          the other mode's title. */}
+      <LinkText
+        testID="flip-mode"
+        style={styles.flip}
+        {...(busy ? {} : { onPress: flip })}
+      >
         {mode === 'up' ? t.signUp.toSignIn : t.signIn.toSignUp}
       </LinkText>
     </KeyboardAvoidingView>
