@@ -217,6 +217,19 @@ export function natalAspectText(a: Body, aspect: Aspect, b: Body): string {
   return must(natalAspects, pairKey(a, aspect, b), 'natal-aspects.json');
 }
 
+/**
+ * Whether a pairing has a synastry text at all.
+ *
+ * The engine only ever emits pairings the dimension table scores, and
+ * every one of those is covered — but a stored `likes.starter_key` is
+ * only checked against a format, and the format admits 605 keys against
+ * 255 written ones. A key from outside that set must read as "no starter"
+ * rather than throwing on a screen that was only trying to render a row.
+ */
+export function hasSynastryText(a: Body, aspect: Aspect, b: Body): boolean {
+  return synastry[pairKey(a, aspect, b)] !== undefined;
+}
+
 export function synastryText(
   a: Body,
   aspect: Aspect,

@@ -31,6 +31,7 @@ export {
   houseKey,
   houseText,
   natalAspectText,
+  hasSynastryText,
   pairKey,
   retrogradeText,
   signKey,

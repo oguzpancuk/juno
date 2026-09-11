@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
+import { BackLink } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { supabase } from '@/lib/supabase';
 import { color, radius as r, space, type } from '@/theme/tokens';
@@ -54,7 +55,9 @@ export default function FiltersScreen() {
    * would otherwise put the screen back to a number the database has since
    * moved past, leaving the two disagreeing with no error in sight.
    */
-  const writes = useRef(0);
+  const order = useRef(0);
+  /** The sequence number of the newest write issued for each column. */
+  const newest = useRef(new Map<string, number>());
   const save = async (
     // why: the columns are unrelated and each caller passes its own; the
     // shapes that matter are checked where they are built, and the server
@@ -63,16 +66,28 @@ export default function FiltersScreen() {
     revert: () => void,
   ) => {
     if (!userId) return;
-    writes.current += 1;
-    const mine = writes.current;
-    setError(null);
+    order.current += 1;
+    const mine = order.current;
+    const columns = Object.keys(patch);
+    for (const column of columns) newest.current.set(column, mine);
     const { error: failed } = await supabase
       .from('profiles')
       .update(patch)
       .eq('id', userId);
-    if (!failed) return;
+    if (!failed) {
+      // Only this write's own columns are known to be good now, but the
+      // banner names no column, so the honest move is to clear it and let
+      // any still-failing column say so on its next attempt.
+      if (columns.every((column) => newest.current.get(column) === mine))
+        setError(null);
+      return;
+    }
     setError(t.filters.failed);
-    if (mine === writes.current) revert();
+    // Per column, not per screen: a newer write to a *different* control
+    // used to suppress this revert, leaving the failed control showing a
+    // value the database never took.
+    if (columns.every((column) => newest.current.get(column) === mine))
+      revert();
   };
 
   const setAge = (min: number, max: number) => {
@@ -108,9 +123,7 @@ export default function FiltersScreen() {
       contentContainerStyle={styles.content}
       testID="filters-screen"
     >
-      <Link href="/discover" style={styles.back}>
-        {t.filters.back}
-      </Link>
+      <BackLink label={t.filters.back} fallback="/discover" />
       <Text style={styles.title}>{t.filters.title}</Text>
 
       <Text style={styles.label}>{t.settings.radius}</Text>
@@ -258,7 +271,6 @@ function Stepper({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: space.xl, paddingTop: 68, paddingBottom: 56 },
-  back: { ...type.body, color: color.textMuted, marginBottom: space.sm },
   title: { ...type.display, color: color.text, marginBottom: space.sm },
   label: {
     ...type.label,

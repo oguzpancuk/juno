@@ -3,7 +3,6 @@ import {
   PLANETS,
   SIGN_GLYPH,
   SIGNS,
-  natalAspects,
   type Body,
   type InterAspect,
   type PublicChart,
@@ -11,7 +10,7 @@ import {
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
-import { glyphLevels } from '@/lib/wheel';
+import { MAX_GLYPH_LEVEL, glyphGapDegrees, glyphLevels } from '@/lib/wheel';
 import { color } from '@/theme/tokens';
 
 /**
@@ -22,10 +21,10 @@ import { color } from '@/theme/tokens';
  * from the ascendant and rotating to put zero on the left — every position
  * on this wheel goes through `angleOf`, and nothing else does the maths.
  *
- * Aspects are passed in rather than computed here: the screen shows the
- * same aspects as a list under the wheel, and a wheel that drew a line
- * with no card beneath it would be worse than no wheel. Left out, the
- * whole set is drawn.
+ * Aspects are passed in rather than computed here, and the prop is
+ * required: the screen shows the same aspects as a list under the wheel,
+ * and a wheel that drew a line with no card beneath it would be worse
+ * than no wheel. A default would leave that trap set for the next caller.
  */
 export function ChartWheel({
   chart,
@@ -33,15 +32,20 @@ export function ChartWheel({
   size = 320,
 }: {
   chart: PublicChart;
-  aspects?: readonly InterAspect[];
+  aspects: readonly InterAspect[];
   size?: number;
 }) {
+  // Proportional, so the wheel is the same drawing at any size. The
+  // planet band is the widest because the glyphs stack in it.
   const centre = size / 2;
   const rim = centre - 2;
-  const signRing = rim - 16;
-  const houseRing = signRing - 24;
-  const planetRing = houseRing - 22;
-  const aspectRing = planetRing - 20;
+  const signRing = rim - size * 0.05;
+  const houseRing = signRing - size * 0.075;
+  const planetRing = houseRing - size * 0.056;
+  const aspectRing = planetRing - size * 0.106;
+  /** One step in, with the innermost ring still clear of the aspect ring. */
+  const levelStep = (planetRing - aspectRing) / (MAX_GLYPH_LEVEL + 1);
+  const glyphSize = Math.max(9, size * 0.041);
 
   const ascendant = chart.houses.ascendant;
   const angleOf = (longitude: number): number =>
@@ -58,11 +62,15 @@ export function ChartWheel({
       ? chart.houses.ascendant
       : chart.planets[body].longitude;
 
-  const drawn = useMemo(() => aspects ?? natalAspects(chart), [aspects, chart]);
-
   // Conjunct planets would draw their glyphs on the same pixel; each one
-  // keeps its angle and steps inwards instead (see lib/wheel).
-  const levels = useMemo(() => glyphLevels(chart), [chart]);
+  // keeps its angle and steps inwards instead (see lib/wheel). The gap
+  // is measured at the innermost ring, where the same angle is the least
+  // distance, so no ring overlaps.
+  const minGap = glyphGapDegrees(
+    glyphSize * 1.15,
+    planetRing - MAX_GLYPH_LEVEL * levelStep,
+  );
+  const levels = useMemo(() => glyphLevels(chart, minGap), [chart, minGap]);
 
   return (
     <View>
@@ -165,7 +173,7 @@ export function ChartWheel({
 
         {/* Aspects, drawn first so the planets sit on top of them. */}
         <G>
-          {drawn.map((aspect) => {
+          {aspects.map((aspect) => {
             const a = at(longitudeOf(aspect.planetA), aspectRing);
             const b = at(longitudeOf(aspect.planetB), aspectRing);
             return (
@@ -187,7 +195,10 @@ export function ChartWheel({
           {PLANETS.map((planet) => {
             const placement = chart.planets[planet];
             const level = levels.get(planet) ?? 0;
-            const spot = at(placement.longitude, planetRing - level * 15);
+            const spot = at(
+              placement.longitude,
+              planetRing - level * levelStep,
+            );
             const tick = at(placement.longitude, aspectRing);
             return (
               <G key={planet}>
@@ -201,9 +212,9 @@ export function ChartWheel({
                 />
                 <SvgText
                   x={spot.x}
-                  y={spot.y + 5}
+                  y={spot.y + glyphSize * 0.38}
                   fill={color.text}
-                  fontSize={13}
+                  fontSize={glyphSize}
                   textAnchor="middle"
                 >
                   {BODY_GLYPH[planet]}

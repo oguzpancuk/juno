@@ -58,9 +58,36 @@ describe('starterOptions', () => {
     for (const userId of [LESSER, GREATER]) {
       const row = rowFor(userId);
       const stored = starterOptions(null, row, userId)[0];
-      const offered = starterOptions(mine, row, userId)[0];
-      expect(offered?.question).toBe(stored?.question);
+      const options = starterOptions(mine, row, userId);
+      expect(options[0]?.question).toBe(stored?.question);
+      // The length is what makes this able to fail. Both fixtures rank
+      // their stored aspect inside the top OFFERED, so a correct mapping
+      // finds it in the list and reorders — length OFFERED. Get
+      // `viewerIsA` backwards and the lookup misses, the stored question
+      // is prepended instead, and the list is one longer.
+      expect(options).toHaveLength(OFFERED);
     }
+  });
+
+  it('still leads with the stored question when the aspect is not ranked', () => {
+    // A written pairing these two charts do not have among their top
+    // OFFERED: the lookup misses, so it is put in front rather than lost,
+    // and the screen still opens on what the match screen shows.
+    const row = { ...rowFor(LESSER), starter_key: 'sun-opposition-sun' };
+    const options = starterOptions(mine, row, LESSER);
+    expect(options).toHaveLength(OFFERED + 1);
+    expect(options[0]?.question).toBe(
+      starterOptions(null, row, LESSER)[0]?.question,
+    );
+  });
+
+  it('survives a key the column allows but the content set does not cover', () => {
+    // The CHECK on `likes.starter_key` admits every body-aspect-body
+    // triple; the content covers only the scored pairings. An uncovered
+    // one used to throw out of the render.
+    const row = { ...rowFor(LESSER), starter_key: 'pluto-opposition-pluto' };
+    expect(starterOptions(null, row, LESSER)).toHaveLength(0);
+    expect(starterOptions(mine, row, LESSER)).toHaveLength(OFFERED);
   });
 
   it('offers alternatives once the viewer has a chart', () => {

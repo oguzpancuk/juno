@@ -86,6 +86,16 @@ export function Card({
   );
 }
 
+/**
+ * The cap on how far a label may scale with the system text size.
+ *
+ * Everything else on a screen may grow without limit; a pill cannot. At
+ * the largest accessibility size an uncapped label overflowed its own
+ * gradient and the two buttons together took two thirds of the display.
+ * 1.6 keeps them legible and still leaves the page usable.
+ */
+export const MAX_LABEL_SCALE = 1.6;
+
 /** The one filled button in the product: warm peach into cool lavender. */
 export function GradientButton({
   label,
@@ -114,7 +124,9 @@ export function GradientButton({
         end={{ x: 1, y: 1 }}
         style={s.button}
       >
-        <Text style={s.buttonText}>{label}</Text>
+        <Text style={s.buttonText} maxFontSizeMultiplier={MAX_LABEL_SCALE}>
+          {label}
+        </Text>
       </LinearGradient>
     </Pressable>
   );
@@ -146,6 +158,11 @@ export function LinkText({
  * screen you left is still behind you. This pops instead, and only falls
  * back to `fallback` when there is nothing to pop — a deep link, or a
  * fresh web tab opened straight onto this route.
+ *
+ * The label names `fallback` while the tap pops wherever you came from,
+ * so the two can disagree. That is the platform's own bargain — an iOS
+ * back button pops, whatever its title — and the alternative, always
+ * replacing with `fallback`, is the stack growth this exists to stop.
  */
 export function BackLink({
   label,
@@ -157,16 +174,21 @@ export function BackLink({
   testID?: string;
 }) {
   return (
-    <Text
+    <Pressable
       testID={testID}
-      style={s.back}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      // The text is one line of 15pt inside 8pt of padding; the slop is
+      // what carries it over the 44pt minimum target.
+      hitSlop={{ top: 10, bottom: 10, left: 16, right: 24 }}
       onPress={() => {
         if (router.canGoBack()) router.back();
         else router.replace(fallback);
       }}
+      style={({ pressed }) => [s.backHit, pressed && s.buttonDim]}
     >
-      {label}
-    </Text>
+      <Text style={s.back}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -210,8 +232,12 @@ const s = StyleSheet.create({
   bodySmall: { ...type.bodySmall, color: color.textMuted },
   buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },
   buttonDim: { opacity: 0.6 },
-  button: { paddingVertical: 16, alignItems: 'center' },
-  buttonText: { ...type.heading, color: color.onBright },
+  button: {
+    paddingVertical: 16,
+    paddingHorizontal: space.lg,
+    alignItems: 'center',
+  },
+  buttonText: { ...type.heading, color: color.onBright, textAlign: 'center' },
   card: {
     backgroundColor: color.surface,
     borderRadius: radius.lg,
@@ -221,5 +247,6 @@ const s = StyleSheet.create({
     gap: space.sm,
   },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
-  back: { ...type.body, color: color.textMuted, paddingVertical: space.xs },
+  backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
+  back: { ...type.body, color: color.textMuted },
 });

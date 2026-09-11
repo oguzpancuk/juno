@@ -15,6 +15,7 @@ import {
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { LEGAL_VERSION } from './legal';
+import { READ_TIMEOUT_MS } from './matches';
 import { supabase } from './supabase';
 
 /** The four elements a Sun sign can have, as the filter offers them. */
@@ -66,6 +67,9 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
       'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos',
     )
     .eq('id', userId)
+    // Bounded for the same reason as `fetchMatch`: several screens show
+    // nothing but a spinner until this resolves.
+    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS))
     .maybeSingle();
   if (error) return { status: 'error', message: error.message };
   if (!data) return { status: 'missing' };

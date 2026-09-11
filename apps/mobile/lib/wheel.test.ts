@@ -4,10 +4,18 @@ import {
   MAX_GLYPH_LEVEL,
   MIN_GLYPH_GAP,
   circularGap,
+  glyphGapDegrees,
   glyphLevels,
 } from './wheel';
 
-/** A chart carrying nothing but the longitudes under test. */
+/**
+ * A chart carrying nothing but the longitudes under test.
+ *
+ * why: `glyphLevels` reads exactly one field per planet, and a real chart
+ * would have to be computed from a birth instant chosen to produce the
+ * conjunction each case is about — which would test the ephemeris, not
+ * this.
+ */
 const chartWith = (
   longitudes: Partial<Record<Planet, number>>,
 ): PublicChart => {
@@ -83,5 +91,31 @@ describe('glyphLevels', () => {
       chartWith({ sun: 50, mercury: 51, venus: 50 + MIN_GLYPH_GAP }),
     );
     expect(levels.get('venus')).toBe(0);
+  });
+});
+
+describe('glyphGapDegrees', () => {
+  it('asks for more degrees the closer in a glyph is drawn', () => {
+    expect(glyphGapDegrees(15, 60)).toBeGreaterThan(glyphGapDegrees(15, 100));
+  });
+
+  it('is the angle that actually spans the glyph', () => {
+    const radius = 80;
+    const degrees = glyphGapDegrees(15, radius);
+    const arc = radius * degrees * (Math.PI / 180);
+    expect(arc).toBeCloseTo(15, 6);
+  });
+
+  it('never asks for more than the whole circle', () => {
+    expect(glyphGapDegrees(1000, 1)).toBe(360);
+    expect(glyphGapDegrees(15, 0)).toBe(360);
+  });
+});
+
+describe('glyphLevels with a measured gap', () => {
+  it('separates a pair that a wider gap would catch and a narrower one would not', () => {
+    const pair = { sun: 50, mercury: 58 };
+    expect(glyphLevels(chartWith(pair), 6).get('mercury')).toBe(0);
+    expect(glyphLevels(chartWith(pair), 12).get('mercury')).toBe(1);
   });
 });

@@ -51,6 +51,13 @@ export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
   );
 }
 
+/**
+ * supabase-js has no request timeout of its own, so a connection that is
+ * accepted and then never answers hangs for ever. Every screen that reads
+ * a row before it can render anything needs a bound on that.
+ */
+export const READ_TIMEOUT_MS = 10000;
+
 export async function fetchMatch(
   matchId: string,
 ): Promise<MatchProfileRow | null> {
@@ -58,6 +65,7 @@ export async function fetchMatch(
     .from('match_profiles')
     .select('*')
     .eq('match_id', matchId)
+    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS))
     .maybeSingle();
   if (error || !data) return null;
   const parsed = MatchProfileRowSchema.safeParse(data);

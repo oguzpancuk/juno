@@ -1,4 +1,5 @@
 import {
+  hasSynastryText,
   isLesserId,
   parseStarterKey,
   starterFromKey,
@@ -26,6 +27,12 @@ export function starterFor(
 ): StarterOption | null {
   const key = parseStarterKey(row.starter_key);
   if (!key) return null;
+  // Parsing is not enough. The column's CHECK admits every body-aspect-body
+  // triple, 605 of them, while the content set covers the 255 pairings the
+  // engine can actually score. A key from outside that set used to throw
+  // out of the render — on the match screen, the matches list and the
+  // thread, all of which only wanted to show a row.
+  if (!hasSynastryText(key.planetA, key.aspect, key.planetB)) return null;
   return starterFromKey(key, isLesserId(myId, row.id));
 }
 

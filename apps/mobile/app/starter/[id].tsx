@@ -14,6 +14,7 @@ import {
   Body,
   Card,
   GradientButton,
+  MAX_LABEL_SCALE,
   SectionLabel,
 } from '@/components/ui';
 import { sendMessage } from '@/lib/chat';
@@ -59,14 +60,21 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
   useEffect(() => {
     if (!userId || typeof id !== 'string') return;
     let cancelled = false;
-    void Promise.all([fetchMatch(id), fetchOwnProfile(userId)]).then(
-      ([r, p]) => {
+    void Promise.all([fetchMatch(id), fetchOwnProfile(userId)])
+      .then(([r, p]) => {
         if (cancelled) return;
         setRow(r);
         setMe(p.status === 'ready' ? p.profile : null);
-        setLoaded(true);
-      },
-    );
+      })
+      // Both reads carry their own timeout, so this catches a throw rather
+      // than a hang — but either one leaves `loaded` false, and the
+      // spinner branch of this screen has no way out of it.
+      .catch(() => {
+        if (!cancelled) setRow(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -110,17 +118,22 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     setFailed(false);
     void sendMessage(matchId, userId, current.question).then((sent) => {
       sendingNow.current = false;
+      // Cleared either way. Under `dismissTo` this screen survives a
+      // successful send when it was reached from the thread — the send
+      // pops back to the thread, and coming forward again must not find
+      // two disabled buttons and a button that still says "Gönderiliyor…".
+      setSending(false);
       if (!sent) {
-        setSending(false);
         setFailed(true);
         return;
       }
-      // `navigate`, not `push` or `replace`: this screen is opened both
-      // from the match screen and from the thread itself, and navigate
-      // returns to the thread already on the stack rather than stacking a
-      // second copy of it. Either way the question just sent is not left
-      // behind to be sent again.
-      router.navigate(`/chat/${matchId}`);
+      // `dismissTo` (POP_TO), not `push` or `navigate`: this screen is
+      // opened both from the match screen and from the thread itself.
+      // With a thread already below it the stack pops back to that one;
+      // with no thread in the stack POP_TO replaces this screen with it.
+      // `navigate` does neither — it only reuses a route of the same name
+      // as the current one, so from here it always pushed a second copy.
+      router.dismissTo(`/chat/${matchId}`);
     });
   };
 
@@ -189,7 +202,12 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
                 setShown((n) => n + 1);
               }}
             >
-              <Text style={styles.secondaryText}>{t.starter.another}</Text>
+              <Text
+                style={styles.secondaryText}
+                maxFontSizeMultiplier={MAX_LABEL_SCALE}
+              >
+                {t.starter.another}
+              </Text>
             </Pressable>
           ) : null}
         </View>
@@ -244,9 +262,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.border,
     paddingVertical: 16,
+    paddingHorizontal: space.lg,
     alignItems: 'center',
   },
-  secondaryText: { ...type.heading, color: color.text },
+  secondaryText: { ...type.heading, color: color.text, textAlign: 'center' },
   muted: { ...type.body, color: color.textMuted },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.md },
   error: { ...type.body, color: color.danger },
