@@ -3123,36 +3123,54 @@ view's and a tap reaches the buttons — the two claims main checks on the
 simulator. While moving, the card follows dx and a quarter of dy and
 tilts up to ±12°; BEĞEN (pink) and GEÇ (muted) stamps on the photo's
 upper corners fade in with |dx| and are fully there exactly at the
-threshold. On release `decideSwipe` (`lib/swipe.ts`, pure, seven cases
+threshold. On release `decideSwipe` (`lib/swipe.ts`, pure, nine cases
 in `swipe.test.ts`) answers like, pass or null: past 30 % of the window
 width or a 0.5 pt/ms flick, symmetrically, and nothing when dx and vx
-disagree in sign — a change of mind. A decision flies the card out in
-220 ms and then calls the existing `act()`; null, busy, a platform
-cancel (`onPanResponderTerminate`: iOS cancels content touches when its
-scroll view starts moving) or a failed record all spring it back. The
-round ✕ / ♥ buttons are untouched and remain the accessible way; the
-stamps are hidden from VoiceOver.
+disagree in sign — a change of mind — provided the opposing velocity is
+over 0.15 pt/ms: `vx` is the last move event's instantaneous speed, and
+a finger lifting after a clear drag carries a few hundredths the other
+way (a review finding; the first version sprang the card back from a
+swipe plainly made). A non-finite `vx` decides on distance. A decision
+flies the card out in 220 ms and then calls the existing `act()`; null,
+busy or flying, a platform cancel (`onPanResponderTerminate`: iOS
+cancels content touches when its scroll view starts moving) or a failed
+record all spring it back. The round ✕ / ♥ buttons are untouched, inert
+during the fly-out, and remain the accessible way; the stamps are hidden
+from VoiceOver.
 
 Two things decided on the way, both in comments where they bite:
 
-- `act()` now answers whether the card was dropped. The fly-out happens
-  before the network call (the spec's order), so when the record fails —
-  the error path, or `busy` — the card is off-screen and has to come
-  home; the round buttons ignore the answer. The fly-out's `finished`
-  flag is checked too: a card grabbed mid-flight belongs to that
-  gesture, not the previous one.
+- `act()` now answers whether the card was dropped, and never rejects
+  (a thrown network failure is a refused write, so `busy` cannot stay
+  set). The fly-out happens before the network call (the spec's order),
+  so when the record fails — the error path, or `busy` — the card is
+  off-screen and has to come home; the round buttons ignore the answer.
+  The successor's reset is a layout effect on the card id, before paint.
+  The fly-out's `finished` flag is checked too: a card grabbed
+  mid-flight belongs to that gesture, not the previous one; a `flying`
+  flag keeps the round buttons inert meanwhile, because a tap on ♥ in
+  those 220 ms would start a second record through a closure that still
+  believed nothing was busy.
 - The responder is `useMemo`d on what its handlers close over (`act`,
-  `busy`, `current`, `pan`, `settle`, `width`), not created every render
-  and not fed a ref. A fresh `PanResponder` has an empty gesture state,
-  so recreating it mid-drag (the photo arriving) would snap the card to
-  the middle; and `react-hooks/refs` refuses a ref captured by a
-  function passed to `PanResponder.create` during render — it flagged
-  the first version, which read a `latest` ref written in an effect.
-  The listed values change only between gestures.
+  `busy`, `current`, `flying`, `pan`, `settle`, `width`), not created
+  every render and not fed a ref. A fresh `PanResponder` has an empty
+  gesture state, so recreating it mid-drag (the photo arriving) would
+  snap the card to the middle; and `react-hooks/refs` refuses a ref
+  captured by a function passed to `PanResponder.create` during render
+  — it flagged the first version, which read a `latest` ref written in
+  an effect. The memo is still remade when a record returns, which can
+  happen with a finger down after a tap on ♥ (the review's second
+  finding): the remade responder took the rest of that drag as a swipe
+  on the next candidate, someone never seen. So the responder is built
+  by a module-level factory that remembers the id of the card it was
+  granted on and settles a release on any other; a factory rather than a
+  `let` in the memo because `react-hooks/immutability` refuses a
+  variable reassigned after render inside the component.
 
-Verified by the track battery (typecheck, lint, test for `apps/mobile`
-and `packages/*`, `prettier --check .`), not on the simulator: the
-worktree owns none. For main after the merge: `disc-card.png`,
+Reviewed (code-reviewer over `main..HEAD`, two findings, both landed
+above) and verified by the track battery (typecheck, lint, test for
+`apps/mobile` and `packages/*`, `prettier --check .`), not on the
+simulator: the worktree owns none. For main after the merge: `disc-card.png`,
 `disc-detail-popup.png`, `disc-after-swipe.png` (a `touch_path` past
 30 % of the width; the `likes` row), `disc-person.png`, and the two
 claims — vertical scroll still scrolls, a tap on "Uyum detayı" opens the

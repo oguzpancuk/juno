@@ -746,22 +746,29 @@ are peer-installed by expo-router, not dependencies of the app.
       detayı" does not swipe.
       _Done in `track/c-discover`; the checkbox and the screenshots are
       main's. `lib/swipe.ts` `decideSwipe` — past 30 % of the width or a
-      0.5 pt/ms flick, symmetric, null when dx and vx disagree in sign —
-      with seven cases in `swipe.test.ts`. The card is an `Animated.View`
-      on a `PanResponder` that claims only when |dx| > 8 and |dx| > |dy|
-      and refuses termination requests; it follows dx and a quarter of dy,
-      tilts ±12°, reveals BEĞEN / GEÇ stamps that reach full opacity at
-      the threshold, flies out in 220 ms before the existing `act()`, and
-      springs back on a null decision, while busy, on a platform cancel,
-      or when the record failed and the card is still on top (`act()` now
-      answers whether it dropped the card). The photo lost its `Link`;
-      "Profili gör" (`testID="open-person"`, `personHref`) sits beside
-      "Uyum detayı", `flex: 1` each. The responder is memoised on what
-      its handlers close over, not fed a ref: `react-hooks/refs` refuses
-      a ref handed to a function called during render, and a responder
-      recreated mid-drag starts from an empty gesture state. Verified by
-      the track battery; the simulator claims are main's, listed in the
-      NOTES entry._
+      0.5 pt/ms flick, symmetric, null when dx and vx disagree in sign
+      and the opposing velocity is over 0.15 pt/ms (under it is the
+      finger lifting, not a change of mind), a non-finite vx decides on
+      distance — with nine cases in `swipe.test.ts`. The card is an
+      `Animated.View` on a `PanResponder` that claims only when |dx| > 8
+      and |dx| > |dy| and refuses termination requests; it follows dx
+      and a quarter of dy, tilts ±12°, reveals BEĞEN / GEÇ stamps that
+      reach full opacity at the threshold, flies out in 220 ms before the
+      existing `act()`, and springs back on a null decision, while busy
+      or flying, on a platform cancel, or when the record failed and the
+      card is still on top (`act()` now answers whether it dropped the
+      card, and never rejects). The round buttons are inert during the
+      fly-out. The photo lost its `Link`; "Profili gör"
+      (`testID="open-person"`, `personHref`) sits beside "Uyum detayı",
+      `flex: 1` each. The responder is a module-level factory, memoised on
+      what its handlers close over and holding the id of the card it was
+      granted on: a drag that spans a returning record (a finger still
+      down after ♥) settles instead of swiping the next candidate, and
+      the compiler lint rules refuse both a ref handed to a function
+      called during render and a variable reassigned after render inside
+      the component. Reviewed (code-reviewer, two findings, both landed);
+      verified by the track battery; the simulator claims are main's,
+      listed in the NOTES entry._
 
 - [ ] **Track D — matches and chat: avatars, Okundu, Yanıtla, the
       chat/match pager, level meters, plainer names (item 4).**
