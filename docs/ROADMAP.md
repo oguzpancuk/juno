@@ -658,8 +658,8 @@ are peer-installed by expo-router, not dependencies of the app.
       the chart until Track B moves it, so that is the deepest screen it
       can be taken from. Two findings on the way, both in NOTES: the old
       `dismissAll` before the sign-out replace became an unhandled
-      POP_TO_TOP and was removed; the welcome ⇄ sign-in links pushed and
-      are BackLinks now. The deck's "Uyum detayı" opens the Popup (item
+      POP_TO_TOP and was removed; sign-in's "‹ Geri" was a pushing Link and
+      is a BackLink now (welcome's forward button still pushes, rightly). The deck's "Uyum detayı" opens the Popup (item
       3.1's first half), so Track C's stub starts from there._
 
 - [ ] **Track A — sign-up and sign-in with a password; inert Apple and

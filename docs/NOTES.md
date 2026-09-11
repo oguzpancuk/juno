@@ -3043,6 +3043,24 @@ telling an onboarding reader "‹ Ayarlar" (one neutral label now), the
 Popup backdrop announced to VoiceOver as a second Kapat, and the deck's
 `toggle-detail` testID that only opens.
 
+A second review — three lenses, every finding put to two refuters —
+agreed on the onboarding blocker and added one of its own weight:
+`unstable_settings.initialRouteName` seats a group's anchor only under a
+cold deep link. An in-app `navigate` into a tab whose stack has never
+mounted — a like on the deck, a match arriving over Realtime, "Uyum
+detayı" from the deck's copy of a person page — mounted the matches
+stack with the match alone, so the list beneath it did not exist and
+could not be reached until a restart. `c9-realtime-match-lands-in-tab.png`
+was taken in exactly that state and cannot tell the difference. The
+three call sites now pass `INTO_MATCHES` (`{ withAnchor: true }`,
+`lib/routes.ts`), which loads the anchor beneath the target in the one
+action. Track D inherits the rule when it retargets the href to the
+chat. The review also asked for a visible way back from a chat or a
+match; the owner said there is none ("geri dönme butonuna ihtiyaç
+yok"), so the edge swipe and the tab stay the exits — whether re-tapping
+the focused tab pops its stack to the list is checked at Track D's
+merge, with the pager in place.
+
 **Shared pieces.** `components/Popup.tsx` (a native `Modal`, `color.scrim`
 backdrop, bottom sheet, exactly one closing button — the owner's rule),
 `components/Meter.tsx` (`Meter` + `BandMeter`, out of the deck screen),

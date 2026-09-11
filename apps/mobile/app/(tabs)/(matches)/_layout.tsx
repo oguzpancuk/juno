@@ -2,8 +2,9 @@ import { TabStack } from '@/components/TabStack';
 
 /**
  * See (profile)/_layout.tsx for why this is a static export. The anchor
- * matters most here: a match arriving over Realtime while the app is cold
- * deep-links straight into a thread, and back from it must be the list.
+ * seats the list beneath a cold deep link into a thread or a match. It
+ * does NOT apply to an in-app navigate from another tab — those pass
+ * `INTO_MATCHES` (lib/routes.ts) so the list is loaded beneath as well.
  */
 export const unstable_settings = { initialRouteName: 'matches' };
 

@@ -135,7 +135,13 @@ function PersonView({ id }: { id: string | string[] | undefined }) {
       </Link>
 
       {person.matchId === null ? null : (
-        <Link href={matchDetailHref(person.matchId)} style={styles.link}>
+        <Link
+          href={matchDetailHref(person.matchId)}
+          // This page has a copy in each tab; from the deck's copy the
+          // matches stack may not exist yet (see INTO_MATCHES).
+          withAnchor
+          style={styles.link}
+        >
           {t.person.openMatch}
         </Link>
       )}

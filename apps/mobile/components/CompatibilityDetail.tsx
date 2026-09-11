@@ -115,6 +115,8 @@ export function CompatibilityDetail({
           {overlays.length > 1 ? (
             <Pressable
               testID="toggle-overlays"
+              accessibilityRole="button"
+              hitSlop={{ top: 6, bottom: 6, left: 8, right: 8 }}
               onPress={() => setShowOverlays((v) => !v)}
             >
               <Text style={styles.link}>

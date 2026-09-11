@@ -22,7 +22,7 @@ import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
 import { usePhotoSources } from '@/lib/photos';
-import { matchDetailHref, personHref } from '@/lib/routes';
+import { INTO_MATCHES, matchDetailHref, personHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -112,7 +112,8 @@ export default function Discover() {
       return;
     }
     drop();
-    if (result.matchId) router.navigate(matchDetailHref(result.matchId));
+    if (result.matchId)
+      router.navigate(matchDetailHref(result.matchId), INTO_MATCHES);
   };
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
