@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, supabase } from './supabase';
 
 /** A row of `messages`. Both sides of a match read the same rows. */
 export const MessageRowSchema = z.object({
@@ -70,6 +70,10 @@ export async function sendMessage(
     .from('messages')
     .insert({ match_id: matchId, sender_id: senderId, body: body.trim() })
     .select('*')
+    // Bounded like the reads: a connection that is accepted and never
+    // answers otherwise leaves the button saying "Gönderiliyor…" for ever,
+    // with no error and no way to try again.
+    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS))
     .single();
   if (error) return null;
   const parsed = MessageRowSchema.safeParse(data);

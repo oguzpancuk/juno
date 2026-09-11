@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
-import { useSession } from '@/lib/session';
+import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
@@ -60,7 +60,7 @@ export default function Settings() {
       }
       // The account is gone; the stored session is now worthless.
       await supabase.auth.signOut();
-      router.replace('/sign-in');
+      leaveToSignIn();
     });
   };
 

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
@@ -30,4 +31,21 @@ export function useSession(): SessionState {
     };
   }, []);
   return state;
+}
+
+/**
+ * Leave the app for the sign-in screen with nothing of the old session
+ * left on the stack.
+ *
+ * `replace` alone only swaps the top route, so the tab group stays
+ * underneath. The route that follows sign-in is `/` , which redirects into
+ * the tab group again — and expo-router, seeing the focused route diverge
+ * at the root, adds a *second* tab navigator rather than reusing the one
+ * already there. Two bottom tab bars then sit in one stack: an edge swipe
+ * reveals the stale one, and on Android back lands in it instead of
+ * leaving the app.
+ */
+export function leaveToSignIn(): void {
+  if (router.canDismiss()) router.dismissAll();
+  router.replace('/sign-in');
 }

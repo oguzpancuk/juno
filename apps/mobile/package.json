@@ -9,7 +9,7 @@
     "android": "expo start --android",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint --no-cache"
+    "lint": "expo lint --no-cache app components lib theme"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.15",

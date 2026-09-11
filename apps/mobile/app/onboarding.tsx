@@ -22,7 +22,7 @@ import {
 } from '@/lib/profile';
 import { Calculating, STEP_MS } from '@/components/Calculating';
 import { dbErrorText } from '@/lib/errors';
-import { useSession } from '@/lib/session';
+import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
 import { color } from '@/theme/tokens';
@@ -167,7 +167,9 @@ export default function Onboarding() {
           onPress={() => {
             void supabase.auth
               .signOut()
-              .then(() => router.replace('/sign-in'))
+              .then(() => {
+                leaveToSignIn();
+              })
               .catch(() => setError(t.onboarding.errors.generic));
           }}
         >

@@ -2789,9 +2789,57 @@ the settings control announced nothing to VoiceOver and is the only route
 into Settings; and the filters back label said "Keşfet" while the control
 went to Ayarlar, which is also its only entry point.
 
-**Gate change.** Dead imports, styles and strings left by a refactor have
-now reached review twice. The cause is that `eslint-config-expo` reports
+**Gate change.** Dead imports and styles left by a refactor have now
+reached review twice. The cause is that `eslint-config-expo` reports
 unused declarations as a _warning_ and the battery treats a warning as a
 pass, so nothing ever failed. `apps/mobile/eslint.config.js` now raises
 `@typescript-eslint/no-unused-vars` to an error, with the usual
 underscore escape for a deliberately unused argument.
+
+Two corrections to that, both from the pre-push review, and both worth
+keeping because the first version of this gate was quietly useless:
+
+- The rules block had no `files`, so it applied to `.js` too — where
+  `eslint-config-expo` never registers the `@typescript-eslint` plugin.
+  ESLint then refuses to run at all: adding a `metro.config.js` or an
+  `app.config.js`, both ordinary Expo files, would have taken the lint
+  step down with an error about a missing plugin instead of about the
+  code. Scoped to `**/*.ts` and `**/*.tsx` now.
+- `expo lint` lints `app/`, `components/` and `src/` only. `lib/` — 27
+  files, including every module the dead code actually lives in — was
+  never linted by the battery at all. The script now names
+  `app components lib theme`. Verified by planting a dead import in
+  `lib/wheel.ts` and watching the battery fail on it, and it immediately
+  caught two dead `router` imports left by this session's own edit.
+
+Dead _strings_ are still not covered and cannot be: they are keys in an
+object literal in `lib/strings.ts`, which no unused-variable rule can
+see. Five of them had accumulated and were removed by hand.
+
+## 2026-09-11 — Pre-push review
+
+`code-reviewer` over `95e9eb2..HEAD` refused the push, correctly. Besides
+the two lint-gate holes above:
+
+- **Signing out left two tab navigators in one stack.** `replace` only
+  swaps the top route, so the tab group stayed underneath; the route
+  after sign-in is `/`, which redirects into the tab group again, and
+  expo-router — seeing the focused route diverge at the root — adds a
+  _second_ navigator rather than reusing the one already there. An edge
+  swipe then revealed a stale tab bar, and on Android back landed in it
+  instead of leaving the app. `leaveToSignIn` in `lib/session.ts`
+  dismisses to the root before replacing, and every sign-out path goes
+  through it. Checked on the device: after signing out, an edge swipe
+  reveals nothing (`screenshots/c8-sign-out-leaves-one-route.png`).
+- A comment written on the starter's send was simply false — it claimed
+  the screen survives a successful send, which POP_TO never allows.
+  Corrected rather than deleted, because the reason the line is there is
+  still good.
+- `sendMessage` was the one blocking call left without a timeout, beside
+  two reads that had just been given one.
+
+`READ_TIMEOUT_MS` now lives in `lib/supabase.ts`, not `lib/matches.ts`:
+`lib/profile.ts` and `lib/matches.ts` already import each other, and a
+third edge into that cycle is how a module ends up half-initialised. The
+cycle itself is still there and is worth breaking — the shared enums
+(`GENDERS`, `INTERESTS`, `ELEMENTS`) want a module of their own.

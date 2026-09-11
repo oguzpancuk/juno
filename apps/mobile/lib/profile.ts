@@ -15,8 +15,7 @@ import {
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { LEGAL_VERSION } from './legal';
-import { READ_TIMEOUT_MS } from './matches';
-import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, supabase } from './supabase';
 
 /** The four elements a Sun sign can have, as the filter offers them. */
 export const ELEMENTS = ['fire', 'earth', 'air', 'water'] as const;

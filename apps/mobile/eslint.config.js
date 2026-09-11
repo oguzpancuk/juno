@@ -8,6 +8,12 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'ios/*', 'android/*', '.expo/*', 'expo-env.d.ts'],
   },
   {
+    // Scoped to TypeScript: `eslint-config-expo` only registers the
+    // `@typescript-eslint` plugin for .ts/.tsx, so an unscoped rules block
+    // makes ESLint fail outright on any .js file in the project — a
+    // metro.config.js or app.config.js would take the lint step down with
+    // an error about a missing plugin rather than about the real cause.
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
       // An error, not the preset's warning. The battery treats a warning
       // as a pass, so dead imports, styles and strings left behind by a

@@ -118,10 +118,11 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
     setFailed(false);
     void sendMessage(matchId, userId, current.question).then((sent) => {
       sendingNow.current = false;
-      // Cleared either way. Under `dismissTo` this screen survives a
-      // successful send when it was reached from the thread — the send
-      // pops back to the thread, and coming forward again must not find
-      // two disabled buttons and a button that still says "Gönderiliyor…".
+      // Cleared on success too. POP_TO removes this route either way, so
+      // today nothing sees the cleared state — but a screen that leaves
+      // its primary action disabled on the way out is one navigation
+      // change away from being stuck, and that is exactly how it got
+      // stuck the last time.
       setSending(false);
       if (!sent) {
         setFailed(true);

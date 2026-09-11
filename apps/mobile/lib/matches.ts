@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { GENDERS } from './profile';
 import { parseRows, warnDropped } from './rows';
-import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, supabase } from './supabase';
 
 /** A row of the `match_profiles` view: my counterpart in one match. */
 export const MatchProfileRowSchema = z.object({
@@ -50,13 +50,6 @@ export async function fetchMatches(): Promise<MatchProfileRow[] | null> {
     warnDropped('match_profiles'),
   );
 }
-
-/**
- * supabase-js has no request timeout of its own, so a connection that is
- * accepted and then never answers hangs for ever. Every screen that reads
- * a row before it can render anything needs a bound on that.
- */
-export const READ_TIMEOUT_MS = 10000;
 
 export async function fetchMatch(
   matchId: string,

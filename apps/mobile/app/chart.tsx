@@ -8,7 +8,7 @@ import {
   natalAspectTitleTr,
   natalReading,
 } from '@juno/astro';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,7 +27,7 @@ import {
   SectionLabel,
 } from '@/components/ui';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
-import { useSession } from '@/lib/session';
+import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { supabase } from '@/lib/supabase';
 import { color, radius, space, type } from '@/theme/tokens';
@@ -240,7 +240,9 @@ export default function ChartScreen() {
         testID="sign-out"
         style={styles.signOut}
         onPress={() => {
-          void supabase.auth.signOut().then(() => router.replace('/sign-in'));
+          void supabase.auth.signOut().then(() => {
+            leaveToSignIn();
+          });
         }}
       >
         <Body muted>{t.chart.signOut}</Body>

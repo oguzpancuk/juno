@@ -555,6 +555,28 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       not reach. The natal chart also gained the house reading the owner
       asked for ("gezegenlerin hangi evde olduğu da bir şey ifade
       etmeli"): every card now says what its planet's house means._
+- [x] **C8 — the shape of the app.** The owner's navigation decisions of
+      2026-09-11: "haritam sekmesi profilim olarak değişmeli, profilden
+      haritaya ulaşmalı, profil düzenleme de oradan olmalı" and "sekme bari
+      aşağıda olmalı: profil - keşfet - eşleşmeler", plus a home for
+      settings. Also the chart's house readings, which were labelled on the
+      six cards at the top and unlabelled everywhere else.
+      — done when: the three tabs render with the right screen under each,
+      the chart is reached from the profile and settings from the profile's
+      own control, a new account lands inside the tab bar, signing out
+      leaves nothing of the old session on the stack, and the battery is
+      green on a committed HEAD (screenshots under `screenshots/c8-*`).
+      _Done. `c8-profile.png`, `c8-discover.png`, `c8-matches.png` are the
+      three tabs; `c8-chart.png` is the chart as reached from the profile.
+      Settings is the profile's top-right control — sliders, not a gear,
+      because a gear at 26 points is a circle with eight spokes and this
+      app draws real suns. `c8-onboarding-lands-on-chart.png` and
+      `c8-back-from-chart-is-the-deck.png` are the first-run path: the
+      chart arrives with the deck underneath it, which `replace('/chart')`
+      alone did not do once the deck moved into the tab group.
+      `c8-sign-out-leaves-one-route.png` is an edge swipe on the sign-in
+      screen revealing nothing — before `leaveToSignIn`, signing out and
+      back in left two tab navigators in the same stack._
 - [ ] **TestFlight.** Confirm Apple Developer Program membership for
       oguzpancuk (create if missing — ask-tier), reserve bundle ID
       `com.oguzpancuk.juno`, check App Store name availability; hosted

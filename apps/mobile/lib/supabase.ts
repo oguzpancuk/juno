@@ -23,3 +23,15 @@ AppState.addEventListener('change', (state) => {
     void supabase.auth.stopAutoRefresh();
   }
 });
+
+/**
+ * How long a read may hang before it is abandoned.
+ *
+ * supabase-js has no request timeout of its own, so a connection that is
+ * accepted and then never answers waits for ever — and several screens
+ * show nothing but a spinner until their first read resolves. It lives
+ * here, next to the client, because `lib/profile.ts` and `lib/matches.ts`
+ * already import each other and a third edge into that cycle is how a
+ * module ends up half-initialised.
+ */
+export const READ_TIMEOUT_MS = 10000;
