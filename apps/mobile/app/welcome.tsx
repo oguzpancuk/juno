@@ -1,18 +1,29 @@
 import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { GradientButton, OrbitMark } from '@/components/ui';
+import {
+  GradientButton,
+  LinkText,
+  OrbitMark,
+  OutlineButton,
+} from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
 
 /**
  * The door. Everything before this screen is a redirect, so it is the first
- * thing a new person sees: the mark, what the product is for, and one way
+ * thing a new person sees: the mark, what the product is for, and the ways
  * in.
  *
- * One way in on purpose. Sign in with Apple is a v1 ROADMAP item that
- * needs a real device to test, so it is not offered here until it works —
- * a button that does nothing is worse than a button that is not there. It
- * slots in above the e-mail one when that item lands.
+ * The filled button opens sign-up; the link under the group opens sign-in
+ * for someone who already has an account. Between them sit Apple and
+ * Google buttons that do nothing yet. This file used to say that a button
+ * that does nothing is worse than none, and kept the door to one way in
+ * until Sign in with Apple worked; the owner overrode that on 2026-09-11
+ * ("arkası şimdilik boş kalsın") — the placeholders are to be seen now,
+ * and the providers are wired under the ROADMAP item "Sign in with Apple".
+ * Until then a tap on either is a no-op that logs nothing. The App Store
+ * review risk of a non-working Sign in with Apple button is recorded in
+ * docs/NOTES.md against the TestFlight item.
  */
 export default function WelcomeScreen() {
   return (
@@ -29,8 +40,33 @@ export default function WelcomeScreen() {
         <GradientButton
           testID="continue-email"
           label={t.welcome.withEmail}
-          onPress={() => router.push('/sign-in')}
+          onPress={() =>
+            router.push({ pathname: '/sign-in', params: { mode: 'up' } })
+          }
         />
+        <OutlineButton
+          testID="continue-apple"
+          label={t.welcome.withApple}
+          // why: owner decision 2026-09-11 — a visible placeholder with
+          // nothing behind it; the provider is wired later (ROADMAP "Sign
+          // in with Apple"). Deliberately silent: no log, no toast.
+          onPress={() => {}}
+        />
+        <OutlineButton
+          testID="continue-google"
+          label={t.welcome.withGoogle}
+          // why: same owner decision as the Apple button above.
+          onPress={() => {}}
+        />
+        <LinkText
+          testID="to-sign-in"
+          style={styles.haveAccount}
+          onPress={() =>
+            router.push({ pathname: '/sign-in', params: { mode: 'in' } })
+          }
+        >
+          {t.welcome.haveAccount}
+        </LinkText>
         <Text style={styles.consent}>{t.signIn.consent}</Text>
         <Link href="/legal" style={styles.consentLink}>
           {t.onboarding.consentLink}
@@ -65,6 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
   },
   actions: { gap: space.md },
+  haveAccount: { textAlign: 'center' },
   consent: {
     ...type.bodySmall,
     color: color.textFaint,

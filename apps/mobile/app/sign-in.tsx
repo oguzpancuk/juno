@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -9,52 +9,92 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import {
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  modeParamSchema,
+  parseCredentials,
+  type AuthMode,
+} from '@/lib/auth';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
-import { BackLink, OrbitMark } from '@/components/ui';
+import { BackLink, LinkText, OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
-type Step = { kind: 'email' } | { kind: 'code'; email: string };
-
+/**
+ * One screen for both doors: sign-up and sign-in with an e-mail and a
+ * password. The mode arrives as a route param (welcome links to each) and
+ * a link at the bottom flips it in place, keeping what was typed.
+ *
+ * Sign-up gives a session at once because the auth project does not
+ * confirm addresses by mail (`supabase/config.toml`, owner 2026-09-11). A
+ * project that does answers with no session and no error; that case shows
+ * a sentence instead of a spinner that never ends.
+ */
 export default function SignIn() {
-  const [step, setStep] = useState<Step>({ kind: 'email' });
+  const params = useLocalSearchParams<{ mode?: string }>();
+  // Read once: welcome pushes a fresh instance per tap, and the flip link
+  // below is the only other way the mode changes.
+  const [mode, setMode] = useState<AuthMode>(() =>
+    modeParamSchema.parse(params.mode),
+  );
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const sendCode = async () => {
+  const parsed = parseCredentials({ email, password });
+  const canSubmit = parsed.ok && !busy;
+  // A field's own sentence appears once there is something in it to be
+  // wrong; an empty form is not yet a mistake.
+  const emailHint =
+    email.length > 0 && !parsed.ok && parsed.field === 'email'
+      ? t.signUp.errors.email
+      : null;
+  const passwordHint =
+    password.length > 0 && !parsed.ok && parsed.field === 'password'
+      ? t.signUp.errors.password(PASSWORD_MIN, PASSWORD_MAX)
+      : null;
+
+  const submit = async () => {
+    if (!parsed.ok) return;
     setBusy(true);
     setError(null);
-    const target = email.trim().toLowerCase();
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: target,
-      options: { shouldCreateUser: true },
-    });
-    setBusy(false);
+    setNotice(null);
+    const { data, error: err } =
+      mode === 'up'
+        ? await supabase.auth.signUp(parsed.value)
+        : await supabase.auth.signInWithPassword(parsed.value);
     if (err) {
+      setBusy(false);
       setError(authErrorText(err));
       return;
     }
-    setStep({ kind: 'code', email: target });
+    if (!data.session) {
+      // The account exists but the provider wants the address confirmed
+      // first (a hosted project with confirmations on). Nothing to wait
+      // for here: say so, and leave the form for the sign-in that follows.
+      setBusy(false);
+      if (mode === 'up') setNotice(t.signUp.confirmSent);
+      else setError(t.errors.generic);
+      return;
+    }
+    // Busy stays on: the screen is leaving. The dismiss pops the root stack
+    // to welcome so `/` replaces the door rather than sitting on top of it,
+    // and nothing is left under the tab group for an edge swipe or Android
+    // back to reveal. Welcome and this screen are root routes, so the
+    // POP_TO_TOP has a navigator to land on; `/` then routes to onboarding
+    // or the tabs. One call into the tab tree — never a second one here.
+    if (router.canGoBack()) router.dismissAll();
+    router.replace('/');
   };
 
-  const verify = async () => {
-    if (step.kind !== 'code') return;
-    setBusy(true);
+  const flip = () => {
+    setMode(mode === 'up' ? 'in' : 'up');
     setError(null);
-    const { error: err } = await supabase.auth.verifyOtp({
-      email: step.email,
-      token: code.trim(),
-      type: 'email',
-    });
-    setBusy(false);
-    if (err) {
-      setError(authErrorText(err));
-      return;
-    }
-    router.replace('/');
+    setNotice(null);
   };
 
   return (
@@ -71,69 +111,73 @@ export default function SignIn() {
       <View style={styles.mark}>
         <OrbitMark size={72} />
       </View>
-      <Text style={styles.title}>{t.signIn.title}</Text>
-      {step.kind === 'email' ? (
-        <View style={styles.form}>
-          <Text style={styles.label}>{t.signIn.emailLabel}</Text>
-          <TextInput
-            testID="email"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t.signIn.emailPlaceholder}
-            placeholderTextColor={color.textFaint}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-          />
-          <Pressable
-            testID="send-code"
-            style={[
-              styles.button,
-              (busy || !email.includes('@')) && styles.buttonBusy,
-            ]}
-            disabled={busy || !email.includes('@')}
-            onPress={() => void sendCode()}
-          >
-            <Text style={styles.buttonText}>
-              {busy ? t.signIn.sending : t.signIn.sendCode}
-            </Text>
-          </Pressable>
-          <Text style={styles.consent}>{t.signIn.consent}</Text>
-          <Link href="/legal" style={styles.consentLink}>
-            {t.legal.open}
-          </Link>
-        </View>
-      ) : (
-        <View style={styles.form}>
-          <Text style={styles.label}>{t.signIn.codeLabel}</Text>
-          <TextInput
-            testID="code"
-            style={styles.input}
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            maxLength={6}
-          />
-          <Pressable
-            testID="verify"
-            style={[
-              styles.button,
-              (busy || code.trim().length !== 6) && styles.buttonBusy,
-            ]}
-            disabled={busy || code.trim().length !== 6}
-            onPress={() => void verify()}
-          >
-            <Text style={styles.buttonText}>{t.signIn.verify}</Text>
-          </Pressable>
-          <Pressable onPress={() => setStep({ kind: 'email' })}>
-            <Text style={styles.link}>{t.signIn.resend}</Text>
-          </Pressable>
-        </View>
-      )}
+      <Text style={styles.title}>
+        {mode === 'up' ? t.signUp.title : t.signIn.title}
+      </Text>
+      <View style={styles.form}>
+        <Text style={styles.label}>{t.signIn.emailLabel}</Text>
+        <TextInput
+          testID="email"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t.signIn.emailPlaceholder}
+          placeholderTextColor={color.textFaint}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          returnKeyType="next"
+        />
+        {emailHint ? <Text style={styles.fieldError}>{emailHint}</Text> : null}
+        <Text style={styles.label}>{t.signIn.passwordLabel}</Text>
+        <TextInput
+          testID="password"
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          // Tells the keychain whether to offer a saved password or to
+          // generate one.
+          textContentType={mode === 'up' ? 'newPassword' : 'password'}
+          returnKeyType="done"
+          onSubmitEditing={() => {
+            if (canSubmit) void submit();
+          }}
+        />
+        {passwordHint ? (
+          <Text style={styles.fieldError}>{passwordHint}</Text>
+        ) : mode === 'up' ? (
+          <Text style={styles.hint}>{t.signUp.passwordHint(PASSWORD_MIN)}</Text>
+        ) : null}
+        <Pressable
+          testID="submit"
+          style={[styles.button, !canSubmit && styles.buttonBusy]}
+          disabled={!canSubmit}
+          onPress={() => void submit()}
+        >
+          <Text style={styles.buttonText}>
+            {mode === 'up'
+              ? busy
+                ? t.signUp.busy
+                : t.signUp.submit
+              : busy
+                ? t.signIn.busy
+                : t.signIn.submit}
+          </Text>
+        </Pressable>
+        <Text style={styles.consent}>{t.signIn.consent}</Text>
+        <Link href="/legal" style={styles.consentLink}>
+          {t.legal.open}
+        </Link>
+      </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      <LinkText testID="flip-mode" style={styles.flip} onPress={flip}>
+        {mode === 'up' ? t.signUp.toSignIn : t.signIn.toSignUp}
+      </LinkText>
     </KeyboardAvoidingView>
   );
 }
@@ -148,21 +192,6 @@ const styles = StyleSheet.create({
   },
   back: { position: 'absolute', top: 56, left: space.xl },
   mark: { alignItems: 'center', marginBottom: space.xl },
-  brand: {
-    ...type.display,
-    color: color.text,
-    fontSize: 44,
-    fontWeight: '300',
-    letterSpacing: 6,
-    textAlign: 'center',
-  },
-  tagline: {
-    ...type.label,
-    color: color.textMuted,
-    textAlign: 'center',
-    marginTop: space.sm,
-    marginBottom: space.xxl,
-  },
   title: { ...type.heading, color: color.textMuted },
   form: { gap: space.md, marginTop: space.md },
   label: { ...type.bodySmall, color: color.textMuted },
@@ -175,6 +204,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
     padding: space.lg,
   },
+  hint: { ...type.bodySmall, color: color.textFaint },
+  fieldError: { ...type.bodySmall, color: color.danger },
   button: {
     backgroundColor: color.pink,
     borderRadius: radius.pill,
@@ -183,13 +214,9 @@ const styles = StyleSheet.create({
   },
   buttonBusy: { opacity: 0.55 },
   buttonText: { ...type.heading, color: color.onBright },
-  link: {
-    ...type.body,
-    color: color.textMuted,
-    textAlign: 'center',
-    paddingVertical: space.md,
-  },
   consent: { ...type.bodySmall, color: color.textFaint },
   consentLink: { ...type.bodySmall, color: color.textMuted },
   error: { ...type.body, color: color.danger, marginTop: space.md },
+  notice: { ...type.body, color: color.textMuted, marginTop: space.md },
+  flip: { textAlign: 'center', marginTop: space.md },
 });

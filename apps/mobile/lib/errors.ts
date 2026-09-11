@@ -11,15 +11,25 @@ export function authErrorText(error: AuthError): string {
     case 'validation_failed':
     case 'email_address_invalid':
       return t.errors.emailInvalid;
-    case 'otp_expired':
-    case 'otp_disabled':
-      return t.errors.otpInvalid;
+    case 'weak_password':
+      return t.errors.weakPassword;
+    case 'invalid_credentials':
+      return t.errors.invalidCredentials;
+    // Two spellings of one situation: `signUp` on a known address answers
+    // the first, an e-mail change onto a taken address the second.
+    case 'user_already_exists':
+    case 'email_exists':
+      return t.errors.accountExists;
+    case 'email_not_confirmed':
+      return t.errors.emailNotConfirmed;
     case 'over_email_send_rate_limit':
     case 'over_request_rate_limit':
       return t.errors.rateLimited;
+    case 'signup_disabled':
     default:
-      // 403 on verifyOtp with a wrong code carries no code in some versions.
-      return error.status === 403 ? t.errors.otpInvalid : t.errors.generic;
+      // A closed door (`signup_disabled`) and anything unnamed: nothing
+      // the person typed would fix it, so the generic line.
+      return t.errors.generic;
   }
 }
 
