@@ -1,30 +1,30 @@
 {
   "emotional": {
-    "name": "Duygusal bağ",
+    "name": "Duygusal yakınlık",
     "low": "Yavaş ısınan",
     "mid": "Sıcaklık var",
     "high": "Kolay yakınlık"
   },
   "chemistry": {
-    "name": "Kimya",
+    "name": "Çekim",
     "low": "Yavaş yanan",
     "mid": "Çekim var",
     "high": "Manyetik"
   },
   "communication": {
-    "name": "Anlaşma",
+    "name": "İletişim",
     "low": "Farklı diller",
     "mid": "Anlaşılır",
     "high": "Aynı frekans"
   },
   "stability": {
-    "name": "Zemin",
+    "name": "İstikrar",
     "low": "Serbest",
     "mid": "Zemin var",
     "high": "Sağlam"
   },
   "growth": {
-    "name": "Devinim",
+    "name": "Gelişim",
     "low": "Sakin sular",
     "mid": "Kıpırdatan",
     "high": "Dönüştüren"
