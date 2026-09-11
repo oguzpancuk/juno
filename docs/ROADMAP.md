@@ -666,8 +666,8 @@ are peer-installed by expo-router, not dependencies of the app.
       `supabase/tests/auth.test.ts`; strings sections `welcome`, `signIn`,
       `signUp` (new, right after `signIn`), `errors`.
       — done when: track battery green; `lib/auth.test.ts` and
-      `lib/errors.test.ts` pass; on main after merge: `supabase/tests/
-    auth.test.ts` green (fresh sign-up yields a session, duplicate →
+      `lib/errors.test.ts` pass; on main after merge the auth DB test
+      (`supabase/tests/auth.test.ts`) is green (fresh sign-up yields a session, duplicate →
       `user_already_exists`, 5-char password → `weak_password`, wrong
       password → `invalid_credentials`); screenshots `auth-welcome.png`,
       `auth-sign-up.png`, `auth-sign-in.png`, `auth-wrong-password.png`,
