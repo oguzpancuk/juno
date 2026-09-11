@@ -1,4 +1,4 @@
-import { PLANETS, type Planet } from './bodies';
+import type { Planet } from './bodies';
 import {
   DIMENSIONS,
   dimensionOf,
@@ -19,14 +19,13 @@ import {
   IMPOSSIBLE_KEYS,
   OVERLAY_HOUSES,
   OVERLAY_PLANETS,
-  PRIMARY_PLACEMENTS,
+  PLACEMENTS,
   overlayHouseTheme,
   overlayText,
   type OverlayDirection,
   type OverlayHouse,
   RETRO_PLANETS,
   placementLabel,
-  type PrimaryPlacement,
   aspectTitle,
   bandName,
   bandOf,
@@ -48,32 +47,36 @@ import {
 import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
 import { signOf } from './signs';
-import { BODY_TR, SIGN_TR_LOCATIVE, describeAspectTr } from './tr';
+import {
+  BODY_TR,
+  SIGN_TR_LOCATIVE,
+  describeAspectTr,
+  formatDegree,
+} from './tr';
 
 /**
- * Screen-ready interpretation of one chart: what to say for each planet
- * and for the strongest natal aspects. Pure; the UI only renders.
+ * Screen-ready interpretation of one chart: what to say for each body and
+ * for the strongest natal aspects. Pure; the UI only renders.
  */
-export interface PlanetReading {
-  readonly planet: Planet;
-  readonly signText: string;
-  readonly houseText: string;
-  readonly retrogradeText: string | null;
-}
-
 /**
- * One of the six placements the chart screen leads with, titled by what it
- * means for dating: "Nasıl seversin · Venüs Akrep'te" rather than
- * "Venüs · Akrep · 7. ev" (PRD amendment 2026-09-10). The technical line
- * stays on screen under the product-language one — show the calculation,
- * soften the conclusion.
+ * One placement, titled by what it means for dating: "Nasıl seversin ·
+ * Venüs Akrep'te" rather than "Venüs · Akrep · 7. ev" (PRD amendment
+ * 2026-09-10). The technical line stays on screen under the
+ * product-language one — show the calculation, soften the conclusion.
+ *
+ * Every body gets one, in the same shape: the profile opens with the
+ * first three and the popup continues down the same list (owner,
+ * 2026-09-11), so a card cannot look one way on the page and another way
+ * behind the button.
  */
-export interface PrimaryReading {
-  readonly placement: PrimaryPlacement;
+export interface PlacementReading {
+  readonly placement: Body;
   /** "Nasıl seversin". */
   readonly label: string;
   /** "Venüs Akrep'te · 7. ev" — the astrology, kept visible. */
   readonly technical: string;
+  /** Degree within the sign, "12°34′". Shown where there is room for it. */
+  readonly degree: string;
   /** What the sign says. */
   readonly text: string;
   /**
@@ -83,6 +86,8 @@ export interface PrimaryReading {
    */
   readonly houseText: string | null;
   readonly house: HouseNumber | null;
+  /** Set only while the body is retrograde; the Ascendant never is. */
+  readonly retrogradeText: string | null;
 }
 
 export interface NatalAspectReading {
@@ -92,10 +97,11 @@ export interface NatalAspectReading {
 
 export interface NatalReading {
   readonly risingText: string;
-  /** The six cards the screen opens with. */
-  readonly primary: readonly PrimaryReading[];
-  /** All ten planets — behind "tüm haritanı gör". */
-  readonly planets: readonly PlanetReading[];
+  /**
+   * Every body in `PLACEMENTS` order. The profile page shows the first
+   * three; "tüm haritanı gör" shows all of them, once each.
+   */
+  readonly placements: readonly PlacementReading[];
   /** Strongest first; `limit` caps the list for the screen. */
   readonly aspects: readonly NatalAspectReading[];
 }
@@ -104,16 +110,6 @@ const isRetroPlanet = (planet: Planet): planet is RetroPlanet =>
   (RETRO_PLANETS as readonly string[]).includes(planet);
 
 export function natalReading(chart: PublicChart, limit = 8): NatalReading {
-  const planets = PLANETS.map((planet) => {
-    const p = chart.planets[planet];
-    return {
-      planet,
-      signText: signText(planet, p.sign),
-      houseText: houseText(planet, p.house),
-      retrogradeText:
-        p.retrograde && isRetroPlanet(planet) ? retrogradeText(planet) : null,
-    };
-  });
   // A tampered profile row could carry a geometrically impossible pair;
   // such an aspect is dropped rather than crashing the screen.
   const aspects = natalAspects(chart)
@@ -126,10 +122,15 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       text: natalAspectText(aspect.planetA, aspect.aspect, aspect.planetB),
     }));
   const rising = signOf(chart.houses.ascendant);
-  const primary = PRIMARY_PLACEMENTS.map((placement) => {
+  const placements = PLACEMENTS.map((placement) => {
     const ascendant = placement === 'ascendant';
     const sign = ascendant ? rising : chart.planets[placement].sign;
     const house = ascendant ? null : chart.planets[placement].house;
+    // The Ascendant is stored as an absolute longitude, a planet as its
+    // degree within its own sign; a sign is 30° wide.
+    const degree = ascendant
+      ? chart.houses.ascendant % 30
+      : chart.planets[placement].degree;
     return {
       placement,
       label: placementLabel(placement),
@@ -137,6 +138,7 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
         house === null
           ? `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]}`
           : `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]} · ${house}. ev`,
+      degree: formatDegree(degree),
       text: signText(placement, sign),
       // The sign says how; the house says where in a life it shows up.
       // Leaving this behind a disclosure made the house mean nothing.
@@ -145,12 +147,17 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       // widened to `number | null` by the ternary above.
       houseText: ascendant ? null : houseText(placement, house as HouseNumber),
       house,
+      retrogradeText:
+        !ascendant &&
+        chart.planets[placement].retrograde &&
+        isRetroPlanet(placement)
+          ? retrogradeText(placement)
+          : null,
     };
   });
   return {
     risingText: signText('ascendant', rising),
-    primary,
-    planets,
+    placements,
     aspects,
   };
 }

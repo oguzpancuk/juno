@@ -95,18 +95,27 @@ const DimensionEntry = z.object({
 });
 const bands = z.record(z.string(), BandEntry).parse(bandsRaw);
 /**
- * The six placements the chart screen leads with, titled by what they mean
- * for dating rather than by the planet's name (PRD amendment 2026-09-10).
+ * Every body a chart card is written for, in the order the profile reads
+ * them: the three the page opens with, then the rest as the "tüm
+ * haritanı gör" popup continues the same list (owner, 2026-09-11: "bir
+ * kez, baştan sona, aynı formatta"). Titled by what they mean for dating
+ * rather than by the planet's name (PRD amendment 2026-09-10).
+ * Conventional planet order, with the Ascendant lifted to third where the
+ * profile shows it.
  */
-export const PRIMARY_PLACEMENTS = [
+export const PLACEMENTS: readonly Body[] = [
   'sun',
   'moon',
   'ascendant',
   'mercury',
   'venus',
   'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+  'pluto',
 ] as const;
-export type PrimaryPlacement = (typeof PRIMARY_PLACEMENTS)[number];
 const placements = z.record(z.string(), Label).parse(placementsRaw);
 const overlays = SnippetMap.parse(overlaysRaw);
 const overlayHouses = z.record(z.string(), Label).parse(overlayHousesRaw);
@@ -413,7 +422,7 @@ export const CONTENT_FILES = {
 } as const;
 
 /** "Nasıl seversin" for Venus — the product-language title of a placement. */
-export function placementLabel(placement: PrimaryPlacement): string {
+export function placementLabel(placement: Body): string {
   return must(placements, placement, 'placements.json');
 }
 

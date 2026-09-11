@@ -216,8 +216,8 @@ function natalBrief(p: Person): string[] {
   const r = natalReading(p.chart, 3);
   const c = p.chart;
   const pick = (body: 'sun' | 'moon' | 'venus' | 'mars') => {
-    const pr = r.planets.find((x) => x.planet === body);
-    return `  - ${BODY_TR[body]} ${SIGN_TR[c.planets[body].sign]} (${c.planets[body].house}. ev): ${pr?.signText ?? ''} ${pr?.houseText ?? ''}`;
+    const pr = r.placements.find((x) => x.placement === body);
+    return `  - ${BODY_TR[body]} ${SIGN_TR[c.planets[body].sign]} (${c.planets[body].house}. ev): ${pr?.text ?? ''} ${pr?.houseText ?? ''}`;
   };
   return [
     `### ${p.name} — Güneş ${SIGN_TR[c.planets.sun.sign]}, Ay ${SIGN_TR[c.planets.moon.sign]}, Yükselen ${SIGN_TR[signOf(c.houses.ascendant)]}`,

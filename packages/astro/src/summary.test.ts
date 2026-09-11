@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PLANETS } from './bodies';
+import { PLACEMENTS } from './content';
 import { computeChart } from './chart';
 import { toPublicChart } from './public';
 import { natalReading, starterFromKey, synastryReading } from './summary';
@@ -18,21 +18,26 @@ const pub = (fx: typeof istanbul) =>
 describe('natalReading', () => {
   const reading = natalReading(pub(istanbul));
 
-  it('has a sign and house line for all ten planets and a rising line', () => {
-    expect(reading.planets.map((p) => p.planet)).toEqual([...PLANETS]);
-    for (const p of reading.planets) {
-      expect(p.signText.length).toBeGreaterThan(20);
-      expect(p.houseText.length).toBeGreaterThan(20);
+  // One list, each body once, in the order the popup reads it: the
+  // profile's three cards and the rest are the same shape (owner,
+  // 2026-09-11).
+  it('cards every body exactly once, in placement order', () => {
+    expect(reading.placements.map((p) => p.placement)).toEqual([...PLACEMENTS]);
+    for (const p of reading.placements) {
+      expect(p.text.length).toBeGreaterThan(20);
+      expect(p.label.length).toBeGreaterThan(2);
+      expect(p.degree).toMatch(/^\d{1,2}°\d{2}′$/);
     }
     expect(reading.risingText).toMatch(/Meraklı|konuşkan/); // Gemini rising
   });
 
   it('marks retrograde planets with a retrograde line and never the Sun or Moon', () => {
-    const jupiter = reading.planets.find((p) => p.planet === 'jupiter');
-    expect(jupiter?.retrogradeText).toMatch(/Jüpiter retro/);
-    expect(
-      reading.planets.find((p) => p.planet === 'sun')?.retrogradeText,
-    ).toBeNull();
+    const at = (body: string) =>
+      reading.placements.find((p) => p.placement === body);
+    expect(at('jupiter')?.retrogradeText).toMatch(/Jüpiter retro/);
+    expect(at('sun')?.retrogradeText).toBeNull();
+    // The Ascendant is a cusp, not a body that can turn around.
+    expect(at('ascendant')?.retrogradeText).toBeNull();
   });
 
   it('lists the strongest natal aspects first, each with text', () => {
@@ -99,8 +104,8 @@ describe('the house says something too', () => {
       }),
     );
     const reading = natalReading(chart);
-    expect(reading.primary).toHaveLength(6);
-    for (const card of reading.primary) {
+    expect(reading.placements).toHaveLength(PLACEMENTS.length);
+    for (const card of reading.placements) {
       expect(card.text.length).toBeGreaterThan(20);
       if (card.placement === 'ascendant') {
         // It is the first cusp, so there is no house it falls in.

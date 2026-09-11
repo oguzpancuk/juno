@@ -20,7 +20,7 @@ import {
   KEY_SPACES,
   bandOf,
   CALIBRATION,
-  PRIMARY_PLACEMENTS,
+  PLACEMENTS,
   aspectTitle,
   placementLabel,
   elementKey,
@@ -240,12 +240,13 @@ function synthetic(
 }
 
 describe('presentation content', () => {
-  it('names all six primary placements', () => {
-    for (const placement of PRIMARY_PLACEMENTS) {
+  it('names every placement, with no name used twice', () => {
+    expect(PLACEMENTS).toHaveLength(11);
+    for (const placement of PLACEMENTS) {
       expect(placementLabel(placement).length).toBeGreaterThan(2);
     }
-    const labels = PRIMARY_PLACEMENTS.map((p) => placementLabel(p));
-    expect(new Set(labels).size).toBe(PRIMARY_PLACEMENTS.length);
+    const labels = PLACEMENTS.map((p) => placementLabel(p));
+    expect(new Set(labels).size).toBe(PLACEMENTS.length);
   });
 
   it('has three title variants for every dimension and valence', () => {
