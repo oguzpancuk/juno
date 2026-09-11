@@ -689,6 +689,26 @@ are peer-installed by expo-router, not dependencies of the app.
       `auth-sign-up.png`, `auth-sign-in.png`, `auth-wrong-password.png`,
       `auth-one-tab-bar.png` (sign in as a seed account, sign out from
       `/settings/legal`, sign in again: one tab bar).
+      _Done on the track branch, awaiting the merge. `sign-in.tsx` is the
+      one screen in two modes, the mode read once from the route param
+      (`lib/auth.ts` `modeParamSchema`, sign-up for anything unreadable)
+      and flipped in place by the bottom link; submit is dimmed until
+      `parseCredentials` passes, a field's own sentence appears once
+      there is something in it to be wrong, and a null session without an
+      error shows `signUp.confirmSent` rather than a spinner. Success is
+      `dismissAll` (root stack, to welcome) then `replace('/')`. Welcome:
+      gradient button → sign-up, `LinkText` → sign-in, two
+      `OutlineButton`s with `onPress={() => {}}` and a `// why:` naming the
+      owner's decision; the doc comment records the override. `lib/errors.ts`
+      maps the five password codes and drops the OTP cases and the bare-403
+      fallback; `lib/auth.test.ts` and `lib/errors.test.ts` pass (25
+      cases). `minimum_password_length` is 8; `supabase/tests/auth.test.ts`
+      (six cases, typechecked and linted, not run — the stack is main's)
+      covers the four clauses plus a right-password sign-in. The privacy
+      notice now describes password sign-in; `LEGAL_UPDATED` moved,
+      `LEGAL_VERSION` did not (nothing re-asks consent — NOTES). Not
+      taken here: the five screenshots and the DB test run, both main's
+      after the merge._
 
 - [ ] **Track B — one profile for you and for them, with an edit mode
       (item 2, item 3's "tamamen aynı gözükmeli").** New

@@ -3,22 +3,40 @@ export const t = {
   appName: 'Juno',
   welcome: {
     pitch: 'İki haritanın\narasında ne var,\nonu gör.',
+    withApple: 'Apple ile giriş yap',
+    withGoogle: 'Google ile giriş yap',
+    haveAccount: 'Zaten hesabın var mı? Giriş yap',
     withEmail: 'E-posta ile devam et',
   },
   signIn: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
     tagline: 'ARANIZDAKİNİ GÖR',
+    passwordLabel: 'Parolan',
+    submit: 'Giriş yap',
+    busy: 'Giriş yapılıyor…',
+    toSignUp: 'Hesabın yok mu? Kaydol',
     title: 'Giriş yap',
     emailLabel: 'E-posta adresin',
     emailPlaceholder: 'ornek@eposta.com',
-    sendCode: 'Kod gönder',
-    codeLabel: 'E-postana gelen 6 haneli kod',
-    verify: 'Doğrula',
-    sending: 'Gönderiliyor…',
-    resend: 'Kodu tekrar gönder',
     back: '‹ Geri',
     consent:
       'Devam ederek doğum bilgilerinin ve konumunun uyum hesaplamak için işlenmesini kabul edersin.',
+  },
+  signUp: {
+    title: 'Kaydol',
+    submit: 'Kaydol',
+    busy: 'Hesap açılıyor…',
+    toSignIn: 'Zaten hesabın var mı? Giriş yap',
+    passwordHint: (min: number) => `En az ${min} karakter.`,
+    // Only when the auth project confirms addresses by mail: the account
+    // exists but there is no session until the mail is acted on.
+    confirmSent:
+      'Hesabın açıldı. E-postana gelen doğrulama adımını tamamla, sonra giriş yap.',
+    errors: {
+      email: 'Geçerli bir e-posta adresi gir.',
+      password: (min: number, max: number) =>
+        `Parola en az ${min}, en fazla ${max} karakter olmalı.`,
+    },
   },
   onboarding: {
     title: 'Doğum bilgilerin',
@@ -261,8 +279,13 @@ export const t = {
   common: { loading: 'Yükleniyor…', retry: 'Tekrar dene', close: 'Kapat' },
   errors: {
     generic: 'Bir şeyler ters gitti, tekrar dene.',
+    weakPassword:
+      'Parola çok zayıf. Daha uzun ya da daha karışık bir parola dene.',
+    invalidCredentials: 'E-posta ya da parola yanlış.',
+    accountExists: 'Bu e-postayla zaten bir hesap var. Giriş yapmayı dene.',
+    emailNotConfirmed:
+      'E-posta adresin henüz doğrulanmamış. Gelen kutunu kontrol et.',
     emailInvalid: 'E-posta adresi geçersiz görünüyor.',
-    otpInvalid: 'Kod geçersiz ya da süresi dolmuş. Yeni kod iste.',
     rateLimited: 'Çok sık denedin, biraz bekle.',
     alreadyExists: 'Bu kayıt zaten var.',
     invalidData: 'Girdiğin bilgiler kabul edilmedi, kontrol et.',

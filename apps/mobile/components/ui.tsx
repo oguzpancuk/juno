@@ -132,6 +132,34 @@ export function GradientButton({
   );
 }
 
+/**
+ * The unfilled button: a hairline border where GradientButton has its
+ * fill, the same height, the same label cap. For a way in that is offered
+ * beside the primary one rather than instead of it.
+ */
+export function OutlineButton({
+  label,
+  onPress,
+  testID,
+}: {
+  label: string;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [s.outlineButton, pressed && s.buttonDim]}
+    >
+      <Text style={s.outlineText} maxFontSizeMultiplier={MAX_LABEL_SCALE}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function LinkText({
   children,
   onPress,
@@ -242,6 +270,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: { ...type.heading, color: color.onBright, textAlign: 'center' },
+  // 15 + the 1pt border on each side: the same 16 the gradient one pads,
+  // so the two stack at one height.
+  outlineButton: {
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    paddingVertical: 15,
+    paddingHorizontal: space.lg,
+    alignItems: 'center',
+  },
+  outlineText: { ...type.heading, color: color.text, textAlign: 'center' },
   card: {
     backgroundColor: color.surface,
     borderRadius: radius.lg,
