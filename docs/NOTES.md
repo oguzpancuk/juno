@@ -3061,6 +3061,21 @@ yok"), so the edge swipe and the tab stay the exits — whether re-tapping
 the focused tab pops its stack to the list is checked at Track D's
 merge, with the pager in place.
 
+The re-review of the fixes passed, tracing `withAnchor` on `replace`,
+`navigate` and `<Link>` through expo-router's `getNavigationAction` and
+React Navigation's vendored `useNavigationBuilder` (the anchor loads
+because `initial: false` sends the fresh stack through
+`getInitialState`, where the group's `initialRouteName` sorts first).
+Three notes kept: `initial=false` rides along in the target's params,
+so on the web the URL after onboarding reads `/chart?initial=false` —
+cosmetic, every screen reads only `id`, but a `.strict()` on route
+params would trip on it one day; `BackLink`'s cold-open fallback now
+passes `withAnchor` too, for the same reason; and a person page opened
+from a match pushes a second copy of that match through its "Uyum
+detayı" link (pre-existing, Track B rebuilds the page). The eighteen
+older dead styles it counted are a ROADMAP follow-up with a gate, not a
+tonight fix: the four tracks are rewriting those files as this is written.
+
 **Shared pieces.** `components/Popup.tsx` (a native `Modal`, `color.scrim`
 backdrop, bottom sheet, exactly one closing button — the owner's rule),
 `components/Meter.tsx` (`Meter` + `BandMeter`, out of the deck screen),

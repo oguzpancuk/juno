@@ -611,7 +611,7 @@ every track, in disjoint top-level sections only (named per track).
 Nothing here imports `react-native-gesture-handler` or `reanimated`: both
 are peer-installed by expo-router, not dependencies of the app.
 
-- [ ] **F — Foundation, serial on main (items 1.1, 1.2, 4.3).** Every
+- [x] **F — Foundation, serial on main (items 1.1, 1.2, 4.3).** Every
       signed-in screen renders inside the tab bar: `(tabs)/_layout.tsx`
       keeps three tabs named `(profile)`, `(discover)`, `(matches)`, each
       a nested Stack (`components/TabStack.tsx`, per-group `_layout.tsx`
@@ -788,6 +788,16 @@ are peer-installed by expo-router, not dependencies of the app.
       quoted reply, the reply bar, no back link), `chat-match-page.png`
       (page 2 with the kicker, level meters and the five names),
       `chat-meters-discover.png`, `chat-block-leaves-one-route.png`.
+
+- [ ] **Dead-style gate (follow-up).** Two reviews in a row found
+      StyleSheet keys nothing references (five orphaned by the foundation,
+      eighteen older ones under `match/[id]`, `settings`, `sign-in`,
+      `discover`), and ESLint has no rule for it here. After the four
+      tracks merge — they are rewriting those very files — add a Vitest
+      scan in the style of `lib/routes.test.ts` that fails on a
+      `styles.<key>` defined and never read, and clean what it finds.
+      — done when: the scan is in the battery and green on a committed
+      HEAD.
 
 Owner decisions taken by default on 2026-09-11, each reversible (the
 question and the default are in `docs/NOTES.md` under the same date): a

@@ -183,7 +183,11 @@ export function BackLink({
       hitSlop={{ top: 10, bottom: 10, left: 16, right: 24 }}
       onPress={() => {
         if (router.canGoBack()) router.back();
-        else router.replace(fallback);
+        // A cold open (deep link, fresh web tab) has nothing to pop, and
+        // `fallback` may sit inside a tab stack that has not mounted yet.
+        // `withAnchor` seats that stack's anchor beneath it, so the next
+        // back has somewhere to go; a no-op when the stack already exists.
+        else router.replace(fallback, { withAnchor: true });
       }}
       style={({ pressed }) => [s.backHit, pressed && s.buttonDim]}
     >
