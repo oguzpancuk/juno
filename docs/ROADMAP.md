@@ -659,9 +659,12 @@ are peer-installed by expo-router, not dependencies of the app.
       stack), `c9-match-in-tab-bar.png` (CompatibilityDetail's sections
       on the match page), `c9-realtime-match-lands-in-tab.png` (a match
       inserted while Profil was focused arrived on the Eşleşmeler stack),
-      `c9-sign-out-from-chart-lands-on-sign-in.png` — sign-out lives on
-      the chart until Track B moves it, so that is the deepest screen it
-      can be taken from. Two findings on the way, both in NOTES: the old
+      `c9-sign-out-from-chart-lands-on-sign-in.png` — sign-out lived on
+      the chart until Track B moved it, so that was the deepest screen
+      it could be taken from; the first file saved under that name was
+      the frame after the edge swipe (welcome), caught by evaluator-qa
+      and replaced with the landing itself. At HEAD the same clause is
+      evidenced by `p-settings-sign-out.png`. Two findings on the way, both in NOTES: the old
       `dismissAll` before the sign-out replace became an unhandled
       POP_TO_TOP and was removed; sign-in's "‹ Geri" was a pushing Link and
       is a BackLink now (welcome's forward button still pushes, rightly). The deck's "Uyum detayı" opens the Popup (item
@@ -749,10 +752,13 @@ are peer-installed by expo-router, not dependencies of the app.
       — done when: track battery green; `photo-order.test.ts` and
       `age.test.ts` pass; no href to the deleted routes remains (grep);
       on main after merge screenshots `p-profile.png`, `p-chart-popup.png`,
-      `p-edit.png`, `p-reordered.png` (order survives a relaunch and shows
-      on another account's discover card), `p-person.png` (same layout,
-      no edit control), `p-onboarding-lands-on-profile.png`,
-      `p-settings-sign-out.png`.
+      `p-edit.png`, `p-reordered.png` (order survives a relaunch; the
+      stored row is what every other account's deck reads),
+      `p-person.png` (same layout, no edit control),
+      `p-settings-sign-out.png`; the onboarding landing checked with a
+      fresh password sign-up (amended after evaluator-qa: it was checked
+      on the web client, where the browser tool saves no PNG, so no
+      `p-onboarding-lands-on-profile.png` exists).
       _Merged (`6079c11`), reviewed on main (one race closed: a photo
       moved while a save or upload was in flight is now gated, the bio
       read-only and the pill disabled for the duration). Screenshots

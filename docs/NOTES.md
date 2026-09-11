@@ -3589,3 +3589,31 @@ main, the full battery green after each merge and after the prune
 (`80b85ea`). The four track branches and worktrees are still on disk
 for the owner to inspect; they are deleted once the branch has left the
 machine. Nothing has left the machine: that step is ask-tier.
+
+## 2026-09-11 — evaluator-qa on the merged whole
+
+A fresh-context judge over HEAD: the battery green on a clean tree, the
+migration, triggers, photo order, the like row and the block cleanup
+all confirmed in the local database, thirty-one of thirty-two
+screenshots showing what their clause says. NEEDS_WORK on the evidence
+contract, three corrections, all taken:
+
+- `c9-sign-out-from-chart-lands-on-sign-in.png` was the frame after the
+  edge swipe (welcome), not the landing; the landing frame from the same
+  minute replaces it, and the F paragraph says so.
+- `p-onboarding-lands-on-profile.png` was named in Track B's clause but
+  never existed — the landing was checked on the web client, where the
+  browser tool saves no PNG. The clause now says what was observed.
+- "shows on another account's discover card" was a sub-claim nothing
+  evidenced; the clause now claims the stored row, which is what every
+  other deck reads.
+
+The fourth item, a `pass` on Melis at 18:55 that no NOTES entry
+explained at the time, was the diagonal-drag check for the Track C
+review (a 300 pt drag left with 90 pt of downward travel), written up in
+the entry above a few minutes after the judge read the file. The judge
+could not drive the simulator (no tap tooling in its sandbox), so the
+gesture claims — vertical scroll survives, a tap on the pill does not
+swipe, re-tapping the focused tab pops to the list, an edge swipe after
+sign-out reveals nothing — rest on this session's device runs and the
+PNGs and rows they left behind.
