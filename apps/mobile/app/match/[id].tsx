@@ -220,6 +220,9 @@ function MatchView({ id }: { id: string | string[] | undefined }) {
       ) : (
         <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
       )}
+      <Link href={`/starter/${row.match_id}`} style={styles.link}>
+        {t.starter.open}
+      </Link>
 
       {meFailed ? (
         <Text style={styles.notice} testID="synastry-failed">

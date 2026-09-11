@@ -126,6 +126,18 @@ export const t = {
     allMatches: 'Tüm eşleşmeler ›',
     backToDiscover: '‹ Keşfete dön',
   },
+  starter: {
+    back: '‹ Eşleşme',
+    title: (name: string) => `${name} ile sohbeti başlat`,
+    label: 'SOHBET BAŞLATICIN',
+    counter: (n: number, total: number) => `${n} / ${total}`,
+    hint: 'Olduğu gibi gönderebilir ya da başka bir açıya bakabilirsin.',
+    send: 'Bunu gönder',
+    sending: 'Gönderiliyor…',
+    another: 'Başka bir tane',
+    sendFailed: 'Gönderilemedi, tekrar dene.',
+    open: 'Sohbeti başlat ›',
+  },
   matches: {
     title: 'Eşleşmeler',
     empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',

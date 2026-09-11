@@ -169,13 +169,25 @@ export default function ChatScreen() {
             </View>
           );
         }}
+        // The footer is the head of an inverted list, so this card sits at
+        // the very start of the thread. Once anything has been said it is
+        // in the way — and after sending the starter from /starter it was
+        // the same sentence twice, one line apart.
         ListFooterComponent={
-          <View style={styles.starterBox} testID="chat-starter">
-            <Text style={styles.starterLabel}>{t.match.starterLabel}</Text>
-            <Text style={styles.starterQuestion}>
-              {starter?.question ?? t.match.noStarter}
-            </Text>
-          </View>
+          ordered.length === 0 ? (
+            <View style={styles.starterBox} testID="chat-starter">
+              <Text style={styles.starterLabel}>{t.match.starterLabel}</Text>
+              <Text style={styles.starterQuestion}>
+                {starter?.question ?? t.match.noStarter}
+              </Text>
+              <Link
+                href={{ pathname: '/starter/[id]', params: { id: matchId } }}
+                style={styles.starterLink}
+              >
+                {t.starter.open}
+              </Link>
+            </View>
+          ) : null
         }
         ListEmptyComponent={
           messages === null ? (
@@ -255,6 +267,7 @@ const styles = StyleSheet.create({
   },
   starterLabel: { color: color.textMuted, fontSize: 11, letterSpacing: 1 },
   starterQuestion: { color: color.text, fontSize: 17, lineHeight: 24 },
+  starterLink: { color: color.textMuted, fontSize: 14, paddingTop: 10 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
