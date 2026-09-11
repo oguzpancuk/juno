@@ -254,6 +254,7 @@ export type Database = {
           id: string
           match_id: string
           read_at: string | null
+          reply_to: string | null
           sender_id: string
         }
         Insert: {
@@ -262,6 +263,7 @@ export type Database = {
           id?: string
           match_id: string
           read_at?: string | null
+          reply_to?: string | null
           sender_id: string
         }
         Update: {
@@ -270,6 +272,7 @@ export type Database = {
           id?: string
           match_id?: string
           read_at?: string | null
+          reply_to?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -285,6 +288,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
           {
