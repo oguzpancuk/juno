@@ -1,6 +1,13 @@
 import { bandName, bandOf, synastryReading } from '@juno/astro';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -13,12 +20,14 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type PanResponderInstance,
 } from 'react-native';
 import {
   fetchCandidates,
   swipe,
   type Candidate,
   type DiscoverState,
+  type SwipeResult,
 } from '@/lib/discover';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
@@ -57,6 +66,11 @@ export default function Discover() {
   const [state, setState] = useState<DiscoverState>({ status: 'loading' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // A card on its way off the screen, before and during its record. The
+  // round buttons are inert meanwhile: a tap on ♥ in those 220 ms would
+  // start a second record of the same card through a closure that still
+  // believes nothing is busy.
+  const [flying, setFlying] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const { width } = useWindowDimensions();
 
@@ -115,6 +129,10 @@ export default function Discover() {
         { id: me.id, chart: me.chart },
         { id: candidate.row.id, chart: candidate.row.chart },
         kind,
+      ).catch(
+        // A thrown network failure is the same as a refused write, and
+        // must not leave `busy` set for the rest of the session.
+        (): SwipeResult => ({ ok: false, reason: 'db' }),
       );
       setBusy(false);
       const drop = () => {
@@ -184,59 +202,21 @@ export default function Discover() {
   }, [pan]);
   // Memoised on exactly what the handlers close over: a new responder
   // starts with an empty gesture state, so one made on every render would
-  // snap the card back to the middle when the photo arrived mid-drag. What
-  // is listed — the card, a record in flight, the width — changes only
-  // between gestures. Not a ref read from the handlers: the lint rule
-  // refuses a ref handed to a function called during render.
+  // snap the card back to the middle when the photo arrived mid-drag. Not
+  // a ref read from the handlers: the lint rule refuses a ref handed to a
+  // function called during render.
   const responder = useMemo(
     () =>
-      PanResponder.create({
-        // Never on touch start: a tap has to reach the buttons underneath.
-        // Only a clearly horizontal move claims the card, so a vertical
-        // drag stays the scroll view's — the rule main checks on the
-        // simulator.
-        onMoveShouldSetPanResponder: (_, g) =>
-          Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy),
-        // Once the card has the touch the scroll view may not take it back.
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderMove: (_, g) => {
-          pan.setValue({ x: g.dx, y: g.dy * DY_FOLLOW });
-        },
-        onPanResponderRelease: (_, g) => {
-          // Busy: a record is in flight for this very card. No decision,
-          // and the round buttons are disabled for the same reason.
-          const decision =
-            busy || current === undefined
-              ? null
-              : decideSwipe({ dx: g.dx, vx: g.vx, width });
-          if (decision === null || current === undefined) {
-            settle();
-            return;
-          }
-          Animated.timing(pan, {
-            toValue: {
-              x: (decision === 'like' ? 1 : -1) * width * 1.5,
-              y: g.dy * DY_FOLLOW,
-            },
-            duration: FLY_OUT_MS,
-            useNativeDriver: NATIVE_DRIVER,
-          }).start(({ finished }) => {
-            // Caught mid-flight: that gesture decides, not this one.
-            if (!finished) return;
-            void act(current, decision).then((dropped) => {
-              // The next card starts from the middle; a card that could
-              // not be recorded is still the one on top and comes home.
-              if (dropped) pan.setValue({ x: 0, y: 0 });
-              else settle();
-            });
-          });
-        },
-        // The platform took the touch away (iOS cancels content touches
-        // when its scroll view starts moving): no decision, the card goes
-        // home.
-        onPanResponderTerminate: settle,
+      createDeckResponder({
+        pan,
+        width,
+        current,
+        idle: !busy && !flying,
+        act,
+        settle,
+        setFlying,
       }),
-    [act, busy, current, pan, settle, width],
+    [act, busy, current, flying, pan, settle, width],
   );
   const threshold = width * SWIPE_THRESHOLD;
   const tilt = pan.x.interpolate({
@@ -264,7 +244,11 @@ export default function Discover() {
   const currentId = current?.row.id;
   useEffect(() => {
     scroller.current?.scrollTo({ y: 0, animated: false });
-    // And from the middle, whatever the last card's gesture left behind.
+  }, [currentId]);
+  // And from the middle, whatever the last card's gesture left behind.
+  // Before paint: a passive effect would show the successor one frame
+  // out where the last card flew to.
+  useLayoutEffect(() => {
     pan.setValue({ x: 0, y: 0 });
   }, [currentId, pan]);
 
@@ -434,8 +418,8 @@ export default function Discover() {
             <Pressable
               testID="pass"
               accessibilityLabel={t.discover.pass}
-              style={[styles.round, busy && styles.buttonBusy]}
-              disabled={busy}
+              style={[styles.round, (busy || flying) && styles.buttonBusy]}
+              disabled={busy || flying}
               onPress={() => void act(current, 'pass')}
             >
               <Text style={styles.roundGlyph}>✕</Text>
@@ -443,8 +427,8 @@ export default function Discover() {
             <Pressable
               testID="like"
               accessibilityLabel={t.discover.like}
-              style={[styles.roundLike, busy && styles.buttonBusy]}
-              disabled={busy}
+              style={[styles.roundLike, (busy || flying) && styles.buttonBusy]}
+              disabled={busy || flying}
               onPress={() => void act(current, 'like')}
             >
               <LinearGradient
@@ -464,6 +448,99 @@ export default function Discover() {
       )}
     </ScrollView>
   );
+}
+
+/**
+ * The deck's gesture, outside the component on purpose: it keeps one
+ * mutable — the card it was granted on — and the compiler's lint rules
+ * refuse a variable reassigned after render inside a component, rightly.
+ * Everything else arrives as arguments from the render that made it, and
+ * the memo above remakes it when any of them change.
+ */
+function createDeckResponder({
+  pan,
+  width,
+  current,
+  idle,
+  act,
+  settle,
+  setFlying,
+}: {
+  pan: Animated.ValueXY;
+  width: number;
+  current: Candidate | undefined;
+  /** No record in flight and no card flying: a release may decide. */
+  idle: boolean;
+  act: (candidate: Candidate, kind: 'like' | 'pass') => Promise<boolean>;
+  settle: () => void;
+  setFlying: (flying: boolean) => void;
+}): PanResponderInstance {
+  // The card this responder was granted on. The responder is remade when
+  // a record returns (busy flips, the card drops) — which can happen with
+  // a finger still down after a tap on ♥ — and the remade one would
+  // otherwise take the rest of that drag as a swipe on the next
+  // candidate, someone the person has not seen. Its own grant never ran,
+  // so the ids differ and the release settles.
+  let grantedId: string | undefined;
+  return PanResponder.create({
+    // Never on touch start: a tap has to reach the buttons underneath.
+    // Only a clearly horizontal move claims the card, so a vertical drag
+    // stays the scroll view's — the rule main checks on the simulator.
+    onMoveShouldSetPanResponder: (_, g) =>
+      Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy),
+    onPanResponderGrant: () => {
+      grantedId = current?.row.id;
+    },
+    // Once the card has the touch the scroll view may not take it back.
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderMove: (_, g) => {
+      pan.setValue({ x: g.dx, y: g.dy * DY_FOLLOW });
+    },
+    onPanResponderRelease: (_, g) => {
+      // Not idle: a record is in flight for this very card. No decision,
+      // and the round buttons are inert for the same reason.
+      if (!idle || current === undefined || grantedId !== current.row.id) {
+        settle();
+        return;
+      }
+      const decision = decideSwipe({ dx: g.dx, vx: g.vx, width });
+      if (decision === null) {
+        settle();
+        return;
+      }
+      setFlying(true);
+      Animated.timing(pan, {
+        toValue: {
+          x: (decision === 'like' ? 1 : -1) * width * 1.5,
+          y: g.dy * DY_FOLLOW,
+        },
+        duration: FLY_OUT_MS,
+        useNativeDriver: NATIVE_DRIVER,
+      }).start(({ finished }) => {
+        // Caught mid-flight: that gesture owns the card now.
+        if (!finished) {
+          setFlying(false);
+          return;
+        }
+        // A dropped card's successor starts from the middle (the layout
+        // effect in the component); a card that could not be recorded is
+        // still the one on top and comes home.
+        void act(current, decision).then(
+          (dropped) => {
+            setFlying(false);
+            if (!dropped) settle();
+          },
+          () => {
+            setFlying(false);
+            settle();
+          },
+        );
+      });
+    },
+    // The platform took the touch away (iOS cancels content touches when
+    // its scroll view starts moving): no decision, the card goes home.
+    onPanResponderTerminate: settle,
+  });
 }
 
 const styles = StyleSheet.create({

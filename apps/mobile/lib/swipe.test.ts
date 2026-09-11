@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { decideSwipe, FLICK_VELOCITY, SWIPE_THRESHOLD } from './swipe';
+import {
+  decideSwipe,
+  FLICK_VELOCITY,
+  SWIPE_THRESHOLD,
+  VETO_VELOCITY,
+} from './swipe';
 
 /** A phone: the threshold is 120 points. */
 const width = 400;
@@ -39,6 +44,18 @@ describe('decideSwipe', () => {
     expect(decideSwipe({ dx: -short, vx: flick, width })).toBeNull();
   });
 
+  it('ignores an opposing velocity too small to be a change of mind', () => {
+    // A lift after a clear drag past the line carries a few hundredths the
+    // other way from the last move event; that is the finger leaving, and
+    // the distance decides.
+    expect(decideSwipe({ dx: past, vx: -0.05, width })).toBe('like');
+    expect(decideSwipe({ dx: -past, vx: 0.05, width })).toBe('pass');
+    expect(decideSwipe({ dx: past, vx: -VETO_VELOCITY, width })).toBe('like');
+    expect(decideSwipe({ dx: past, vx: -(VETO_VELOCITY + 0.01), width })).toBe(
+      null,
+    );
+  });
+
   it('scales the threshold with the width', () => {
     const dx = 130;
     expect(decideSwipe({ dx, vx: 0, width: 400 })).toBe('like');
@@ -49,8 +66,14 @@ describe('decideSwipe', () => {
     ).toBeNull();
   });
 
-  it('answers nothing for a width that has not been laid out', () => {
+  it('answers nothing for a width or a distance that is not a number', () => {
     expect(decideSwipe({ dx: past, vx: flick, width: 0 })).toBeNull();
     expect(decideSwipe({ dx: Number.NaN, vx: 0, width })).toBeNull();
+  });
+
+  it('decides on distance alone when the velocity is not a number', () => {
+    // One move event and a dt of zero: the platform divides by it.
+    expect(decideSwipe({ dx: past, vx: Number.NaN, width })).toBe('like');
+    expect(decideSwipe({ dx: short, vx: Number.NaN, width })).toBeNull();
   });
 });
