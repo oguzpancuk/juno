@@ -126,6 +126,14 @@ export const t = {
     allMatches: 'Tüm eşleşmeler ›',
     backToDiscover: '‹ Keşfete dön',
   },
+  calculating: {
+    title: 'Haritan hesaplanıyor',
+    steps: [
+      'Doğduğun andaki gökyüzü kuruluyor…',
+      'Gezegenler ve ev sınırların çıkarılıyor…',
+      'Haritan okunuyor…',
+    ],
+  },
   starter: {
     back: '‹ Eşleşme',
     title: (name: string) => `${name} ile sohbeti başlat`,

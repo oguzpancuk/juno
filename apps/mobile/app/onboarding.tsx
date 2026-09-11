@@ -20,6 +20,7 @@ import {
   type Gender,
   type Interest,
 } from '@/lib/profile';
+import { Calculating, STEP_MS } from '@/components/Calculating';
 import { dbErrorText } from '@/lib/errors';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +29,19 @@ import { color } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
+
+/**
+ * How long the calculating screen stays up at a minimum: long enough for
+ * its last line of copy to appear. The chart itself takes a few hundred
+ * milliseconds, and letting it flash past reads as a glitch rather than as
+ * the app having done something.
+ */
+const MIN_VISIBLE_MS = t.calculating.steps.length * STEP_MS;
+
+const heldFor = (started: number): Promise<void> =>
+  new Promise((done) =>
+    setTimeout(done, Math.max(0, MIN_VISIBLE_MS - (Date.now() - started))),
+  );
 
 export default function Onboarding() {
   const session = useSession();
@@ -42,6 +56,7 @@ export default function Onboarding() {
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('');
   const [busy, setBusy] = useState(false);
+  const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Warm the city index off the first keystroke (1 MB JSON parse + Zod).
@@ -90,7 +105,12 @@ export default function Onboarding() {
       return setError(t.onboarding.errors.generic);
 
     setBusy(true);
+    // Before the calculating screen goes up: this can open the system
+    // location prompt, and that prompt does not belong over a screen
+    // claiming to be working on something.
     const device = await deviceLocation();
+    setCalculating(true);
+    const started = Date.now();
     try {
       const result = await createProfile({
         userId: session.session.user.id,
@@ -101,10 +121,12 @@ export default function Onboarding() {
         local,
         device,
       });
+      await heldFor(started);
       if (result.ok || result.reason === 'exists') {
         router.replace('/chart');
         return;
       }
+      setCalculating(false);
       if (result.reason === 'underage') setError(t.onboarding.errors.underage);
       else if (result.reason === 'invalid-date')
         setError(t.onboarding.errors.date);
@@ -114,11 +136,14 @@ export default function Onboarding() {
         setError(t.onboarding.errors.unknownCity);
       else if (result.reason === 'db') setError(dbErrorText(result.error));
     } catch {
+      setCalculating(false);
       setError(t.onboarding.errors.generic);
     } finally {
       setBusy(false);
     }
   };
+
+  if (calculating) return <Calculating />;
 
   return (
     <KeyboardAvoidingView
