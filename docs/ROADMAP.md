@@ -1158,7 +1158,13 @@ other.
       the aspect sentence ("Satürn'ün onun Mars'ıyla üçgen açı yapıyor")
       and the remaining-count both left the card, taking
       `t.discover.noAspectWhy` and `t.discover.remaining` with them. ✕ / ♥
-      stay the last row. The deck photo and the profile photo now take the
+      stay the last row, at 76pt rather than 62 — the photo gave up the
+      height for them (`PHOTO_SCREEN_FRACTION` 0.62 → 0.56). Four gutters
+      and gaps on the deck that had drifted from the profile's were moved
+      onto `SCREEN_PADDING`, and the profile now always reserves the line
+      the deck fills with a distance, so the name sits at the same height
+      on both. Measured: the big-three row starts and ends at the same x
+      on each screen and its top edge is at 502.0pt on both. The deck photo and the profile photo now take the
       same share of the window (`PHOTO_SCREEN_FRACTION`), so their bottom
       edges line up: the profile takes it directly, the deck fills what
       its fixed block leaves and caps there, which is the arrangement that

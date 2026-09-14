@@ -27,7 +27,7 @@ import { CardIcon } from '@/components/CardIcon';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
-import { PHOTO_SCREEN_FRACTION } from '@/components/ui';
+import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
 import { useBottomGap } from '@/lib/insets';
@@ -673,14 +673,20 @@ const styles = StyleSheet.create({
     backgroundColor: color.surfaceHigh,
   },
   cardPhoto: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  info: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.sm },
+  info: {
+    paddingHorizontal: SCREEN_PADDING,
+    // `Screen`'s own gap between children, so the big three sit the same
+    // distance below the photo here as they do on the profile.
+    paddingTop: space.md,
+    gap: space.sm,
+  },
   // Above the name's own line, hard against the right gutter, so the two
   // never crowd a long name. The photo under them is still the swipe
   // surface: a drag that starts here passes to the card, because the
   // responder claims on movement and a Pressable only acts on a release.
   cardActions: {
     position: 'absolute',
-    right: space.lg,
+    right: SCREEN_PADDING,
     bottom: space.xxl,
     flexDirection: 'row',
     gap: space.md,
@@ -695,15 +701,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  footer: { paddingHorizontal: space.lg, gap: space.sm },
+  footer: { paddingHorizontal: SCREEN_PADDING, gap: space.sm },
   photoScrim: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: space.lg,
+    // SCREEN_PADDING, not a literal: this block has to land on the same
+    // x as the profile's, which gets it from `Screen` (owner, 2026-09-14:
+    // the two cards must look exactly the same).
+    paddingHorizontal: SCREEN_PADDING,
     paddingTop: space.xxl,
-    paddingBottom: space.sm,
+    paddingBottom: space.md,
     gap: 2,
     // Paint only. It overlaps the two corner buttons, and a gradient
     // with a name in it must not be what a finger lands on.
@@ -760,8 +769,8 @@ const styles = StyleSheet.create({
     marginTop: space.sm,
   },
   round: {
-    width: 62,
-    height: 62,
+    width: 76,
+    height: 76,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: color.borderStrong,
@@ -770,14 +779,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   roundLike: {
-    width: 62,
-    height: 62,
+    width: 76,
+    height: 76,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
   roundFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  roundGlyph: { fontSize: 22, color: color.textMuted },
-  roundGlyphOn: { fontSize: 24, color: color.onBright },
+  roundGlyph: { fontSize: 27, color: color.textMuted },
+  roundGlyphOn: { fontSize: 29, color: color.onBright },
   buttonBusy: { opacity: 0.5 },
   muted: { ...type.body, color: color.textMuted, textAlign: 'center' },
 });

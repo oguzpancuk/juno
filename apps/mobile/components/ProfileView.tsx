@@ -267,9 +267,12 @@ function PhotoCarousel({
         <Text style={styles.name} testID="profile-name">
           {age === null ? name : `${name}, ${age}`}
         </Text>
-        {caption === undefined ? null : (
-          <Text style={styles.caption}>{caption}</Text>
-        )}
+        {/* Always drawn, even with nothing to say: the deck's card always
+            has a distance line here, and the two are supposed to be the
+            same card (owner, 2026-09-14). An empty line keeps the name on
+            the same y rather than letting it drop 22pt on the one screen
+            that has no caption. */}
+        <Text style={styles.caption}>{caption ?? ''}</Text>
       </LinearGradient>
     </View>
   );

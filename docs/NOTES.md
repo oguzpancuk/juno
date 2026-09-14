@@ -3994,3 +3994,40 @@ With the pills gone the card had about 68pt of slack between the band and
 the ✕ / ♥, so `PHOTO_SCREEN_FRACTION` went 0.55 → 0.62 and the photo took
 it. The profile follows the same constant, so the two still end on the
 same line.
+
+## 2026-09-14 — the deck card and the profile, measured against each other
+
+The owner said the photo, the name and the big three did not look exactly
+the same on the two screens. Two agents diffed the drawing paths and
+resolved every token to points rather than eyeballing it; the list came
+back the same from both, and all of it was the deck's side drifting.
+
+Four numbers, all bare literals in `discover.tsx` where the profile's
+equivalent comes from `Screen` through `SCREEN_PADDING`: the name's
+gutter (16 against 24), the gap under the last line inside the gradient
+(8 against 12), the big-three row's gutter (16, which also made every
+chip 5.3pt wider) and the gap above that row (8 against `Screen`'s own
+12). The deck moved in every case, because the profile's values live in
+the component three screens share and moving them would drag the deck's
+own person sheet and the chat header's along.
+
+The fifth was not a style at all. The deck always draws a distance line
+under the name; the owner's own profile has nothing to put there and so
+drew none, which let the name drop 22pt on that one screen. The caption
+is now always rendered, empty when there is nothing to say. A blank line
+reserved on purpose is worth the note, because it looks like a mistake to
+anyone who finds it without this paragraph.
+
+Verified after the change rather than asserted: the big-three row starts
+at the same x and ends at the same x on both screens, and its top edge is
+at 502.0pt on each.
+
+Two differences are left standing on purpose. The profile draws paging
+dots and the deck does not — the deck shows one photo by design, and the
+dots sit above the name so they move nothing. And the deck caps Dynamic
+Type where the profile does not, which is invisible at the default size
+and deliberate above it: the deck cannot scroll and the profile can.
+
+The photo also got shorter — `PHOTO_SCREEN_FRACTION` 0.62 → 0.56 — and
+the verdict buttons went 62 → 76pt with it, which is what the owner asked
+the height for.
