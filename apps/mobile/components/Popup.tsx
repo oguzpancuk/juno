@@ -8,7 +8,11 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GradientButton, SCREEN_PADDING } from '@/components/ui';
+import {
+  GradientButton,
+  SCREEN_PADDING,
+  TopGapContextProvider,
+} from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -31,17 +35,22 @@ export function Popup({
   onClose,
   title,
   closeLabel,
+  bleed = false,
   children,
   testID,
 }: {
   visible: boolean;
   onClose: () => void;
-  title?: string;
   /** Defaults to "Kapat". */
   closeLabel?: string;
   children: ReactNode;
   testID?: string;
-}) {
+} & (
+  | { title?: string; bleed?: false }
+  // A bleed sheet has nowhere above the photo to put a title, so the type
+  // forbids passing one rather than letting it be drawn underneath.
+  | { title?: undefined; bleed: true }
+)) {
   const insets = useSafeAreaInsets();
   return (
     <Modal
@@ -67,6 +76,7 @@ export function Popup({
         <View
           style={[
             styles.sheet,
+            bleed && styles.sheetBleed,
             { paddingBottom: Math.max(insets.bottom, space.lg) },
           ]}
         >
@@ -83,8 +93,18 @@ export function Popup({
             style={styles.body}
             contentContainerStyle={styles.bodyContent}
             showsVerticalScrollIndicator={false}
+            // Only a bleed sheet: the titled ones have a gap above their
+            // content and nothing to reveal by rubber-banding into it.
+            bounces={!bleed}
+            overScrollMode={bleed ? 'never' : 'auto'}
           >
-            {children}
+            {/* Always, bleed or not. A Modal renders its children in the
+                same React tree, so a sheet opened from inside a bleed
+                `Screen` would otherwise inherit that screen's 68 and a
+                child would cancel a padding this host never applied. */}
+            <TopGapContextProvider value={{ padding: 0, chrome: 0 }}>
+              {children}
+            </TopGapContextProvider>
           </ScrollView>
           <View style={styles.action}>
             <GradientButton
@@ -119,6 +139,12 @@ const styles = StyleSheet.create({
     paddingTop: space.xl,
     overflow: 'hidden',
   },
+  // The gap is the sheet's, above the scroll view, so only the sheet can
+  // give it up — a negative margin inside the scroll view would land above
+  // offset 0 and be clipped. Giving it up here drops the photo onto the
+  // sheet's border box, where `overflow: hidden` rounds it into the
+  // corners (owner, 2026-09-14: the photo must cover the top of the popup).
+  sheetBleed: { paddingTop: 0 },
   title: {
     ...type.title,
     color: color.text,

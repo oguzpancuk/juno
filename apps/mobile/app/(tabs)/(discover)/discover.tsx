@@ -1,13 +1,6 @@
 import { bandName, bandOf, natalReading, synastryReading } from '@juno/astro';
 import { router, useFocusEffect } from 'expo-router';
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -15,7 +8,6 @@ import {
   PanResponder,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -34,27 +26,39 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
+import { PhotoTopScrim } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
+import { useBottomGap } from '@/lib/insets';
 import { usePhotoSources } from '@/lib/photos';
 import { INTO_MATCHES, matchDetailHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { decideSwipe, SWIPE_THRESHOLD } from '@/lib/swipe';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
- * Horizontal travel before the card, not the scroll, owns the touch. Under
- * it a finger is still deciding, and a tap on a button is well under it.
+ * Horizontal travel before the card owns the touch. Under it a finger is
+ * still deciding, and a tap on a button is well under it.
  */
 const CLAIM_DISTANCE = 8;
+
+/**
+ * A ceiling on Dynamic Type below the photo. The card has to fit one
+ * screen with nothing to scroll into (owner, 2026-09-14), so text that
+ * grew without limit would eat the picture instead of running off the
+ * bottom. 1.35 is the top of iOS's standard range; the accessibility
+ * sizes are served uncapped by the two sheets, which do scroll.
+ */
+const MAX_DECK_SCALE = 1.35;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
 /**
  * How much of a vertical drag the card follows: enough to feel held, not
- * enough to fight the scroll for the same movement.
+ * so much that a wobble looks like an answer.
  */
 const DY_FOLLOW = 0.25;
 /** The card's tilt at one full width of travel. */
@@ -224,6 +228,8 @@ export default function Discover() {
   // Where the card is under the finger. State, not a ref: it is read during
   // render for the interpolations below (see Calculating.tsx), and the
   // initialiser is lazy so the value is created once.
+  const insets = useSafeAreaInsets();
+  const bottomGap = useBottomGap(space.lg);
   const [pan] = useState(() => new Animated.ValueXY());
   const settle = useCallback(() => {
     Animated.spring(pan, {
@@ -256,6 +262,13 @@ export default function Discover() {
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
     extrapolate: 'clamp',
   });
+  // The count goes before either stamp arrives, so the two never share
+  // the same line.
+  const countOpacity = pan.x.interpolate({
+    inputRange: [-CLAIM_DISTANCE * 3, 0, CLAIM_DISTANCE * 3],
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
   // Each stamp is fully there exactly where a release would count.
   const likeOpacity = pan.x.interpolate({
     inputRange: [0, threshold],
@@ -268,16 +281,8 @@ export default function Discover() {
     extrapolate: 'clamp',
   });
 
-  // The card is content-height now, so iOS clamps the old offset to the new
-  // maximum rather than returning to the top: without this the next
-  // candidate opens part-way down, on their compatibility rather than their
-  // face.
-  const scroller = useRef<ScrollView>(null);
   const currentId = current?.row.id;
-  useEffect(() => {
-    scroller.current?.scrollTo({ y: 0, animated: false });
-  }, [currentId]);
-  // And from the middle, whatever the last card's gesture left behind.
+  // From the middle, whatever the last card's gesture left behind.
   // Before paint: a passive effect would show the successor one frame
   // out where the last card flew to.
   useLayoutEffect(() => {
@@ -291,12 +296,10 @@ export default function Discover() {
   if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   return (
-    <ScrollView
-      ref={scroller}
-      style={styles.screen}
-      contentContainerStyle={styles.scrollContent}
-      testID="discover-screen"
-    >
+    // No scrolling at all (owner, 2026-09-14: "kart scrollanabilir bir
+    // birim olmasin"): one screen, the photo taking whatever the block
+    // below it leaves.
+    <View style={styles.screen} testID="discover-screen">
       {state.status === 'loading' ? (
         <View style={styles.center}>
           <ActivityIndicator color={color.textMuted} />
@@ -344,19 +347,40 @@ export default function Discover() {
                 resizeMode="cover"
                 testID="card-photo"
               />
-            ) : (
-              <View style={[styles.cardPhoto, styles.cardPhotoEmpty]} />
-            )}
+            ) : null}
+            {/* The status bar is fixed light, and a pale photograph now
+                reaches all the way under it. */}
+            <PhotoTopScrim height={insets.top + space.xxl} />
+            {/* The count rides the photo now that the pills own the foot
+                of the screen. It fades before either stamp arrives at the
+                same height. */}
+            <Animated.View
+              style={[
+                styles.count,
+                { top: insets.top + space.xl, opacity: countOpacity },
+              ]}
+              pointerEvents="none"
+            >
+              <Text
+                style={styles.countText}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                {t.discover.remaining(state.candidates.length - 1)}
+              </Text>
+            </Animated.View>
             {/* The name sits on the photo, as in the design; the chart
                 below it is what the card is actually about. */}
             <LinearGradient
               colors={['transparent', color.scrim, color.bg]}
               style={styles.photoScrim}
             >
-              <Text style={styles.name}>
+              <Text style={styles.name} maxFontSizeMultiplier={MAX_DECK_SCALE}>
                 {current.row.display_name}, {current.row.age}
               </Text>
-              <Text style={styles.distance}>
+              <Text
+                style={styles.distance}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
                 {current.row.distance_km === 0
                   ? t.discover.under1km
                   : `${current.row.distance_km} km`}
@@ -365,7 +389,11 @@ export default function Discover() {
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
             <Animated.View
-              style={[styles.stamp, styles.stampLike, { opacity: likeOpacity }]}
+              style={[
+                styles.stamp,
+                styles.stampLike,
+                { top: insets.top + space.xl, opacity: likeOpacity },
+              ]}
               accessible={false}
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
@@ -376,7 +404,11 @@ export default function Discover() {
               </Text>
             </Animated.View>
             <Animated.View
-              style={[styles.stamp, styles.stampPass, { opacity: passOpacity }]}
+              style={[
+                styles.stamp,
+                styles.stampPass,
+                { top: insets.top + space.xl, opacity: passOpacity },
+              ]}
               accessible={false}
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
@@ -387,88 +419,48 @@ export default function Discover() {
               </Text>
             </Animated.View>
           </View>
-          {current.row.bio ? (
-            <Text style={styles.bio} numberOfLines={3}>
-              {current.row.bio}
-            </Text>
-          ) : null}
-          <BigThreeRow three={current.row.big_three} />
-          <View style={styles.bandBox}>
-            <BandMeter
-              band={bandOf(current.match.score)}
-              label={bandName(current.match.score)}
+          <View style={styles.info}>
+            <BigThreeRow
+              three={current.row.big_three}
+              maxFontSizeMultiplier={MAX_DECK_SCALE}
             />
-            <View>
-              <Text style={styles.bandName} testID="band">
-                {bandName(current.match.score)}
-              </Text>
-              <Text style={styles.scoreLabel}>{t.discover.scoreLabel}</Text>
-            </View>
-          </View>
-          <Text style={styles.why} testID="why">
-            {current.why ?? t.discover.noAspectWhy}
-          </Text>
-          {/* Both are popups, not disclosures and not pages (owner,
-              2026-09-11 for the reading, 2026-09-14 for the person): the
-              card stays a glance and either sheet rises over it, so the
-              deck never loses its place. */}
-          <View style={styles.pills}>
-            <Pressable
-              testID="open-detail"
-              accessibilityRole="button"
-              style={styles.pill}
-              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-            >
-              <Text style={styles.pillText}>{t.discover.detail}</Text>
-            </Pressable>
-            <Pressable
-              testID="open-person"
-              accessibilityRole="button"
-              style={styles.pill}
-              onPress={() => setSheet({ id: current.row.id, of: 'person' })}
-            >
-              <Text style={styles.pillText}>{t.discover.openProfile}</Text>
-            </Pressable>
-          </View>
-          {detail ? (
-            <Popup
-              visible={showDetail}
-              onClose={() => setSheet(null)}
-              title={t.discover.detail}
-              testID="detail"
-            >
-              <View style={styles.popupBand}>
-                <BandMeter band={detail.band} label={detail.bandName} />
-                <Text style={styles.bandName}>{detail.bandName}</Text>
-              </View>
-              <CompatibilityDetail reading={detail} />
-            </Popup>
-          ) : null}
-          {theirReading ? (
-            <Popup
-              visible={showPerson}
-              onClose={() => setSheet(null)}
-              testID="person-popup"
-            >
-              <ProfileView
-                name={current.row.display_name}
-                age={current.row.age}
-                caption={
-                  current.row.distance_km === 0
-                    ? t.discover.under1km
-                    : `${current.row.distance_km} km`
-                }
-                photos={current.row.photos}
-                sources={sources}
-                three={current.row.big_three}
-                bio={current.row.bio}
-                reading={theirReading}
-                chart={current.row.chart}
-                fullChartLabel={t.person.fullChart}
-                fullChartTitle={t.person.chartTitle(current.row.display_name)}
+            <View style={styles.bandBox}>
+              <BandMeter
+                band={bandOf(current.match.score)}
+                label={bandName(current.match.score)}
               />
-            </Popup>
-          ) : null}
+              <View>
+                <Text
+                  style={styles.bandName}
+                  testID="band"
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {bandName(current.match.score)}
+                </Text>
+                <Text
+                  style={styles.scoreLabel}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {t.discover.scoreLabel}
+                </Text>
+              </View>
+            </View>
+            <Text
+              style={styles.why}
+              testID="why"
+              numberOfLines={2}
+              maxFontSizeMultiplier={MAX_DECK_SCALE}
+            >
+              {current.why ?? t.discover.noAspectWhy}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+      {current ? (
+        // Outside the card on purpose: at screen height, buttons tilting
+        // and flying away with the picture read as a bug, and a pill that
+        // has drifted under the finger turns a press into a swipe.
+        <View style={[styles.footer, { paddingBottom: bottomGap }]}>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.actions}>
             <Pressable
@@ -478,7 +470,12 @@ export default function Discover() {
               disabled={busy || flying}
               onPress={() => void act(current, 'pass')}
             >
-              <Text style={styles.roundGlyph}>✕</Text>
+              <Text
+                style={styles.roundGlyph}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                ✕
+              </Text>
             </Pressable>
             <Pressable
               testID="like"
@@ -493,16 +490,90 @@ export default function Discover() {
                 end={{ x: 1, y: 1 }}
                 style={styles.roundFill}
               >
-                <Text style={styles.roundGlyphOn}>♥</Text>
+                <Text
+                  style={styles.roundGlyphOn}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  ♥
+                </Text>
               </LinearGradient>
             </Pressable>
           </View>
-          <Text style={styles.remaining}>
-            {t.discover.remaining(state.candidates.length - 1)}
-          </Text>
-        </Animated.View>
-      )}
-    </ScrollView>
+          {/* Both are popups, not disclosures and not pages (owner,
+              2026-09-11 for the reading, 2026-09-14 for the person), and
+              they are the last row on the screen (owner, 2026-09-14:
+              "uyum detayi ve profili gor en altta olsun"). */}
+          <View style={styles.pills}>
+            <Pressable
+              testID="open-detail"
+              accessibilityRole="button"
+              style={styles.pill}
+              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+            >
+              <Text
+                style={styles.pillText}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                {t.discover.detail}
+              </Text>
+            </Pressable>
+            <Pressable
+              testID="open-person"
+              accessibilityRole="button"
+              style={styles.pill}
+              onPress={() => setSheet({ id: current.row.id, of: 'person' })}
+            >
+              <Text
+                style={styles.pillText}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                {t.discover.openProfile}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+      {current && detail ? (
+        <Popup
+          visible={showDetail}
+          onClose={() => setSheet(null)}
+          title={t.discover.detail}
+          testID="detail"
+        >
+          <View style={styles.popupBand}>
+            <BandMeter band={detail.band} label={detail.bandName} />
+            <Text style={styles.bandName}>{detail.bandName}</Text>
+          </View>
+          <CompatibilityDetail reading={detail} />
+        </Popup>
+      ) : null}
+      {current && theirReading ? (
+        <Popup
+          visible={showPerson}
+          onClose={() => setSheet(null)}
+          bleed
+          testID="person-popup"
+        >
+          <ProfileView
+            name={current.row.display_name}
+            age={current.row.age}
+            caption={
+              current.row.distance_km === 0
+                ? t.discover.under1km
+                : `${current.row.distance_km} km`
+            }
+            photos={current.row.photos}
+            sources={sources}
+            three={current.row.big_three}
+            bio={current.row.bio}
+            reading={theirReading}
+            chart={current.row.chart}
+            fullChartLabel={t.person.fullChart}
+            fullChartTitle={t.person.chartTitle(current.row.display_name)}
+          />
+        </Popup>
+      ) : null}
+    </View>
   );
 }
 
@@ -540,22 +611,21 @@ function createDeckResponder({
   let grantedId: string | undefined;
   return PanResponder.create({
     // Never on touch start: a tap has to reach the buttons underneath.
-    // Only a clearly horizontal move claims the card, so a vertical drag
-    // stays the scroll view's — the rule main checks on the simulator.
+    // Only a clearly horizontal move claims the card. There is no scroll
+    // view on this surface any more (owner, 2026-09-14), so nothing else
+    // wants a vertical drag — but a deliberate vertical flick must still
+    // not read as a verdict.
     onMoveShouldSetPanResponder: (_, g) =>
       Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy),
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
     },
-    // Refuses the JS-side request only. On iOS under the new
-    // architecture the native scroll view can still cancel a content
-    // touch once its own pan begins on a steep diagonal; that arrives as
-    // a terminate below and settles the card — no decision, no write. A
-    // 300 pt drag with 90 pt of vertical travel, and one of 200 pt with
-    // 180 pt, both recorded fine on the simulator (NOTES 2026-09-11); if
-    // testers report lost swipes,
-    // `scrollEnabled={false}` on the scroll view for the length of a
-    // drag is the no-dependency remedy.
+    // Refuses the JS-side request. The ancestor scroll view that used to
+    // take the touch back on a steep diagonal is gone with the card's
+    // rewrite, so the diagonal measurements in NOTES 2026-09-11 describe
+    // a mechanism this surface no longer has; the refusal stays as the
+    // general safety net, because a Modal opening under a live finger
+    // still terminates.
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, g) => {
       pan.setValue({ x: g.dx, y: g.dy * DY_FOLLOW });
@@ -604,20 +674,15 @@ function createDeckResponder({
         );
       });
     },
-    // The platform took the touch away (iOS cancels content touches when
-    // its scroll view starts moving): no decision, the card goes home.
+    // The platform took the touch away — a sheet opening over the card,
+    // a call arriving: no decision, the card goes home.
     onPanResponderTerminate: settle,
   });
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
-  scrollContent: {
-    padding: space.lg,
-    paddingTop: 64,
-    paddingBottom: 48,
-    flexGrow: 1,
-  },
+
   center: {
     flex: 1,
     alignItems: 'center',
@@ -625,32 +690,30 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  // Edge to edge (owner, 2026-09-12): the card cancels the screen's
-  // gutter so its photo touches both edges, and gives up the side border
-  // and the corner radius that only made sense inset.
-  card: {
-    marginHorizontal: -space.lg,
-    // The title needs air: with the card full width there is no inset
-    // left to read as a gap.
-    marginTop: space.sm,
-    backgroundColor: color.surface,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: color.border,
-    padding: space.lg,
-    gap: space.sm,
-  },
-  // The photo still needs its own clip: it is the child that overflows the
-  // card's padding, and the card has to stay free to grow past the
-  // viewport and scroll.
+  // The swipeable unit: the picture and the chart block under it, filling
+  // the screen above a static footer. No border and no radius — at screen
+  // height a hairline sweeping across the display under the tilt reads as
+  // a fault, not as an edge.
+  card: { flex: 1 },
+  // No `minHeight`: a floor would turn a squeezed photo into clipped text
+  // below it, and the text is the part that cannot be scrolled to.
   photoWrap: {
-    marginHorizontal: -space.lg,
-    marginTop: -space.lg,
-    marginBottom: space.xs,
+    flex: 1,
     overflow: 'hidden',
+    backgroundColor: color.surfaceHigh,
   },
-  cardPhoto: { width: '100%', height: 380 },
-  cardPhotoEmpty: { backgroundColor: color.surfaceHigh },
+  cardPhoto: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  info: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.sm },
+  footer: { paddingHorizontal: space.lg, gap: space.sm },
+  count: {
+    position: 'absolute',
+    alignSelf: 'center',
+    backgroundColor: color.scrim,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
+    paddingVertical: space.xs,
+  },
+  countText: { ...type.caption, color: color.textMuted },
   photoScrim: {
     position: 'absolute',
     left: 0,
@@ -669,7 +732,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     // The finger is on the photo; the stamps are a picture of it.
     pointerEvents: 'none',
-    top: space.xl,
     paddingHorizontal: space.md,
     paddingVertical: space.xs,
     borderWidth: 2,
@@ -689,7 +751,6 @@ const styles = StyleSheet.create({
   stampText: { ...type.heading, letterSpacing: 2 },
   stampTextLike: { color: color.pink },
   stampTextPass: { color: color.textMuted },
-  bio: { ...type.bodySmall, color: color.textMuted },
   bandBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -751,6 +812,5 @@ const styles = StyleSheet.create({
   roundGlyph: { fontSize: 22, color: color.textMuted },
   roundGlyphOn: { fontSize: 24, color: color.onBright },
   buttonBusy: { opacity: 0.5 },
-  remaining: { ...type.caption, color: color.textFaint, textAlign: 'center' },
   muted: { ...type.body, color: color.textMuted, textAlign: 'center' },
 });

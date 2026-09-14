@@ -17,7 +17,14 @@ import {
   PlacementCard,
 } from '@/components/ChartDetail';
 import { Popup } from '@/components/Popup';
-import { Body, Card, GradientButton, SCREEN_PADDING } from '@/components/ui';
+import {
+  Body,
+  Card,
+  GradientButton,
+  PhotoTopScrim,
+  SCREEN_PADDING,
+  useTopGap,
+} from '@/components/ui';
 import { MAX_BIO_LENGTH, MAX_PHOTOS, type PhotoSource } from '@/lib/photos';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
@@ -185,6 +192,9 @@ function PhotoCarousel({
   /** What the owner reads in place of a photo; nothing for another person. */
   emptyHint: string | undefined;
 }) {
+  // What this host owes the top edge, and how much of it the status bar
+  // covers. See the `carousel` style below for the contract.
+  const { padding: topGap, chrome } = useTopGap();
   // Measured, not taken from the window: the page is as wide as whatever
   // the screen's padding leaves, and the carousel should not know that.
   const [width, setWidth] = useState(0);
@@ -195,7 +205,7 @@ function PhotoCarousel({
   const current = Math.min(page, Math.max(0, photos.length - 1));
   return (
     <View
-      style={styles.carousel}
+      style={[styles.carousel, { marginTop: -topGap }]}
       onLayout={(event) => setWidth(Math.round(event.nativeEvent.layout.width))}
       testID="photo-carousel"
     >
@@ -232,6 +242,11 @@ function PhotoCarousel({
           })}
         </ScrollView>
       )}
+      {/* Gated on there being a photo: the empty tile is flat `surfaceHigh`
+          and a smudge across it reads as a rendering fault. */}
+      {chrome > 0 && photos.length > 0 ? (
+        <PhotoTopScrim height={chrome + space.xxl} />
+      ) : null}
       <LinearGradient
         colors={['transparent', color.scrim, color.bg]}
         style={styles.scrim}
@@ -381,13 +396,20 @@ function Arrow({
 }
 
 const styles = StyleSheet.create({
-  // Edge to edge (owner, 2026-09-12): the photo cancels the gutter on
-  // both sides, and loses its corner radius with it — a rounded corner
-  // against the screen edge reads as a mistake. This is a contract with
-  // whatever renders a ProfileView: the host must keep `SCREEN_PADDING`
-  // on a scroll view's *content*, as `Screen` and `Popup` both do, so
-  // the negative margin grows into the frame rather than out of it,
-  // where a scroll view would clip it.
+  // Edge to edge on all four sides that meet the frame (owner,
+  // 2026-09-12 sideways, 2026-09-14 up). The photo cancels the gutter and
+  // the top gap with negative margins, and loses its corner radius with
+  // them — a rounded corner against the screen edge reads as a mistake.
+  //
+  // Two things the host owes for that to work. It must keep
+  // `SCREEN_PADDING` on a scroll view's *content*, as `Screen` and
+  // `Popup` both do, so the negative margin grows into the frame rather
+  // than out of it, where a scroll view would clip it. And it must
+  // publish its top padding through `useTopGap` — 68 on a bleed `Screen`,
+  // 0 in a bleed `Popup`, which gives its own up at the sheet because
+  // there the gap sits above the scroll view and nothing inside can reach
+  // it. The carousel must also be the host's first in-flow child, which
+  // is why the profile tab's controls left the flow.
   carousel: {
     alignSelf: 'stretch',
     marginHorizontal: -SCREEN_PADDING,

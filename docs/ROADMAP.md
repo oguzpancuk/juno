@@ -1096,6 +1096,61 @@ state so only one can be open; "Profili gör" keeps its wording; and the
 five other screens with the same inset double count are fixed alongside
 the chat rather than left inconsistent with it.
 
+## The fourth pass (owner request 2026-09-14, same day)
+
+Four layout corrections, all the same missing move: a photo that stops
+short of the top edge. Designed with two competing takes on the shared
+component and a judge that picked one and grafted three pieces from the
+other.
+
+- [x] **The photo takes the top edge, in all three hosts.** The gutter
+      has been cancelled sideways since 2026-09-12; the top gap is the
+      same contract in the other axis, except that its size differs per
+      host, so it travels through `useTopGap` rather than a constant.
+      `Screen` keeps its 68 on the content container and publishes it —
+      which is what lets the spinner and the error branch keep their
+      clearance without asking — and a bleed `Popup` publishes 0, because
+      its own gap sits above the scroll view where nothing inside can
+      reach it, and gives it up at the sheet instead.
+      _Done. `v5-profile-top.png`, `v5-deck-profile-popup.png`,
+      `v5-chat-profile-popup.png`. The sheets keep the 1pt hairline
+      across the top of the photo: it is the sheet's edge against the
+      dimmed screen, and dropping it would make these two the only sheets
+      without an outline._
+
+- [x] **The profile's controls float over the photo.** Düzenle and the
+      settings icon left the flow — the carousel has to be the first
+      in-flow child to take the top edge — and are absolutely positioned,
+      still first in document order so a screen reader meets them before
+      the whole profile. The settings icon gained a chip, because three
+      bare strokes over a photograph are not a control. "Yukarı doğru
+      scrollanmasın" is `bounces={false}`: the top no longer rubber-bands.
+      iOS has no per-edge control, so the bottom loses its bounce with it.
+      _Done. `v5-profile-top.png`; a pull-down moved nothing, and
+      `v5-profile-scrolled.png` is the honest other half — the page still
+      travels to its end._
+
+- [x] **The deck is one screen with no scrolling.** The card was a
+      scrollable unit; it is a flex column now — the photo taking
+      whatever the block below it leaves, the chart block under it, then
+      a static footer of ✕ / ♥ with the two pills as the last row. The
+      footer left the card so the buttons no longer tilt and fly away
+      with the picture, and so a pill drifting under a finger cannot turn
+      a press into a swipe. The remaining count moved onto the photo and
+      fades the moment a drag starts.
+      _Done. `v5-deck.png`. The gesture is unchanged — `lib/swipe.ts`,
+      the fly-out and the responder are untouched — but four comments
+      that described the ancestor scroll view were rewritten rather than
+      left lying._
+
+Owner decisions taken by default, each reversible: the ✕ / ♥ stay above
+the pills, since the owner named only the pills as "en altta"; the bio
+leaves the deck card (it is the one element whose height varies per
+candidate, and it is in full inside "Profili gör"); Dynamic Type below
+the deck photo is capped, because nothing there can be scrolled to; and
+the profile's controls scroll away with the photo rather than staying
+pinned over the cards below.
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

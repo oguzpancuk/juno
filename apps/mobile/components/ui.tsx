@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import {
   Image,
   Pressable,
@@ -12,6 +12,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
@@ -27,21 +28,93 @@ import { color, gradient, radius, space, type } from '@/theme/tokens';
  */
 export const SCREEN_PADDING = space.xl;
 
+/** The clearance a `Screen` keeps above its first child, for the status bar. */
+export const SCREEN_TOP_PADDING = 68;
+
+/**
+ * What a host owes its first child if that child takes the top edge.
+ *
+ * The vertical twin of `SCREEN_PADDING`: the gutter is cancelled with a
+ * negative margin by a child that runs edge to edge, and the top gap is
+ * cancelled the same way — except that its size differs per host, so it
+ * cannot be a constant. `Screen` keeps its 68 on the content container and
+ * publishes it; a bleed `Popup` gives its own up at the sheet and so
+ * publishes 0.
+ */
+export interface TopGap {
+  /** Top padding the host put on its scroll view's *content*. */
+  readonly padding: number;
+  /**
+   * How much of the child then lies under system chrome — status bar,
+   * Dynamic Island — and needs a scrim to stay legible.
+   */
+  readonly chrome: number;
+}
+const TopGapContext = createContext<TopGap>({ padding: 0, chrome: 0 });
+export const TopGapContextProvider = TopGapContext.Provider;
+export function useTopGap(): TopGap {
+  return useContext(TopGapContext);
+}
+
 export function Screen({
   children,
+  bleed = false,
   testID,
 }: {
   children: ReactNode;
+  /**
+   * The first child paints to the top edge. It cancels `SCREEN_TOP_PADDING`
+   * itself through `useTopGap`; the padding stays on the content container
+   * so every other branch of the screen — a spinner, an error — keeps its
+   * clearance without asking. The top also stops rubber-banding, which is
+   * the whole of "yukarı doğru scrollanmasın" (owner, 2026-09-14); iOS has
+   * no per-edge control, so the bottom loses its bounce with it.
+   */
+  bleed?: boolean;
   testID?: string;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <ScrollView
       style={s.screen}
       contentContainerStyle={s.screenContent}
+      bounces={!bleed}
+      overScrollMode={bleed ? 'never' : 'auto'}
       testID={testID}
     >
-      {children}
+      <TopGapContext.Provider
+        value={
+          bleed
+            ? { padding: SCREEN_TOP_PADDING, chrome: insets.top }
+            : { padding: 0, chrome: 0 }
+        }
+      >
+        {children}
+      </TopGapContext.Provider>
     </ScrollView>
+  );
+}
+
+/**
+ * A scrim down the top of a full-bleed photo, so the status bar stays
+ * readable over it. The app fixes `StatusBar style="light"`, so white
+ * glyphs can land on a pale picture with nothing behind them.
+ *
+ * Full strength across the chrome band and fading only below it: a plain
+ * two-stop gradient is already half gone by the bottom of the clock.
+ */
+export function PhotoTopScrim({ height }: { height: number }) {
+  return (
+    <LinearGradient
+      colors={[color.scrim, color.scrim, 'transparent']}
+      locations={[
+        0,
+        height > 0 ? Math.max(height - space.xxl, 0) / height : 0,
+        1,
+      ]}
+      style={[s.topScrim, { height }]}
+      pointerEvents="none"
+    />
   );
 }
 
@@ -297,9 +370,10 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
+  topScrim: { position: 'absolute', top: 0, left: 0, right: 0 },
   screenContent: {
     padding: SCREEN_PADDING,
-    paddingTop: 68,
+    paddingTop: SCREEN_TOP_PADDING,
     paddingBottom: 56,
     gap: space.md,
   },

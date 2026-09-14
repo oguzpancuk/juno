@@ -16,16 +16,41 @@ const CELLS = [
   { key: 'rising', body: 'ascendant', label: () => t.chart.rising },
 ] as const;
 
-export function BigThreeRow({ three }: { three: BigThree }) {
+export function BigThreeRow({
+  three,
+  maxFontSizeMultiplier,
+}: {
+  three: BigThree;
+  /**
+   * A ceiling on Dynamic Type, for a host that cannot scroll: the deck
+   * card has to fit one screen, so text that grows without limit pushes
+   * the photo out instead of pushing itself off the bottom. Undefined
+   * everywhere else, which is uncapped.
+   */
+  maxFontSizeMultiplier?: number | undefined;
+}) {
   return (
     <View style={styles.row}>
       {CELLS.map(({ key, body, label }) => {
         const sign = three[key];
         return (
           <View key={key} style={styles.chip} testID={`big-three-${key}`}>
-            <Text style={styles.glyph}>{BODY_GLYPH[body]}</Text>
-            <Text style={styles.label}>{label()}</Text>
-            <Text style={styles.value}>
+            <Text
+              style={styles.glyph}
+              maxFontSizeMultiplier={maxFontSizeMultiplier}
+            >
+              {BODY_GLYPH[body]}
+            </Text>
+            <Text
+              style={styles.label}
+              maxFontSizeMultiplier={maxFontSizeMultiplier}
+            >
+              {label()}
+            </Text>
+            <Text
+              style={styles.value}
+              maxFontSizeMultiplier={maxFontSizeMultiplier}
+            >
               {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
             </Text>
           </View>

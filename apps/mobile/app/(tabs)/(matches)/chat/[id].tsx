@@ -527,6 +527,7 @@ function ChatView({
         <Popup
           visible={showPerson}
           onClose={() => setShowPerson(false)}
+          bleed
           testID="person-popup"
         >
           <ProfileView

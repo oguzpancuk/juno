@@ -3882,3 +3882,49 @@ its reason reworded, because it is a property of such a directory rather
 than of that one. What is lost is a web deep-link target: `/person/<id>`
 was a real page and is now a 404. Nothing in the app linked to it, and
 the sheet shows the same thing.
+
+## 2026-09-14 — the fourth pass: the top edge
+
+Four requests, one missing move. The horizontal gutter has been cancelled
+by the carousel since 2026-09-12 with `marginHorizontal: -SCREEN_PADDING`;
+the top is the same contract in the other axis. What made it not a
+one-liner is that the three hosts do not share a number, and one of them
+cannot be reached from inside at all: `Popup` puts its 24pt gap on the
+_sheet_, above the scroll view, so a negative margin inside the scroll
+view lands above offset 0 and is clipped. That killed the obvious "one
+prop on ProfileView" and forced a host change either way.
+
+`Screen` cancels rather than zeroes. Zeroing its 68 would have meant
+handing the clearance back by hand to the spinner and the error branch,
+with a control-height constant — and the constant the losing design
+proposed was 34 where the pill is 36, because it forgot the 1pt border on
+each side. A magic number invented to undo a padding you chose to destroy
+is the design telling you it took the wrong branch.
+
+`bounces={false}` is the whole of "yukarı doğru scrollanmasın", and it is
+scoped: on `Screen` only when `bleed`, on `Popup` only when `bleed`, so
+the three titled sheets and every other screen keep their bounce. iOS has
+no per-edge control, so the profile also loses its bottom rubber-band —
+a small, named cost.
+
+`Popup` resets the context unconditionally, bleed or not. A `Modal`
+renders its children in the same React tree, so the full-chart sheet
+opened from inside a bleed `Screen` would otherwise inherit that screen's
+68 and cancel a padding this host never applied.
+
+**The deck stopped scrolling, and a piece of the record narrows with it.**
+The 2026-09-11 entry about the scroll view stealing the pan — the
+`scrollEnabled={false}` remedy held in reserve, and the 300/90 and
+200/180 diagonal-drag measurements — describes a mechanism this surface
+no longer has: there is no ancestor scroll view on the deck. The finding
+itself still stands wherever a pan lives inside a scroll view, which is
+now the two sheets and the profile tab. The termination-request refusal
+stays as the general safety net, because a Modal opening under a live
+finger still terminates.
+
+The deck's vertical budget is now fixed, which is why Dynamic Type below
+the photo is capped at 1.35 rather than the 1.6 `MAX_LABEL_SCALE` allows:
+with nothing to scroll into, text that grows without limit eats the
+picture. The accessibility sizes are served uncapped by the two sheets,
+which do scroll — which is exactly why `bounces={false}` had to be scoped
+to bleed sheets only.
