@@ -41,7 +41,7 @@ export const SCREEN_TOP_PADDING = 68;
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
  */
-export const PHOTO_SCREEN_FRACTION = 0.55;
+export const PHOTO_SCREEN_FRACTION = 0.62;
 
 /**
  * What a host owes its first child if that child takes the top edge.

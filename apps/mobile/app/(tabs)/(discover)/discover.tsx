@@ -23,6 +23,7 @@ import {
 } from '@/lib/discover';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
+import { CardIcon } from '@/components/CardIcon';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
@@ -364,6 +365,37 @@ export default function Discover() {
                   : `${current.row.distance_km} km`}
               </Text>
             </LinearGradient>
+            {/* In the corner of the picture, not a row of their own
+                (owner, 2026-09-14). Small, outlined and translucent on
+                purpose: the filled ✕ and ♥ below decide something, these
+                two only open a sheet, and four equal circles would invite
+                the wrong one. */}
+            <View style={styles.cardActions}>
+              <Pressable
+                testID="open-detail"
+                accessibilityRole="button"
+                accessibilityLabel={t.discover.detail}
+                style={({ pressed }) => [
+                  styles.cardAction,
+                  pressed && styles.buttonBusy,
+                ]}
+                onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+              >
+                <CardIcon name="reading" />
+              </Pressable>
+              <Pressable
+                testID="open-person"
+                accessibilityRole="button"
+                accessibilityLabel={t.discover.openProfile}
+                style={({ pressed }) => [
+                  styles.cardAction,
+                  pressed && styles.buttonBusy,
+                ]}
+                onPress={() => setSheet({ id: current.row.id, of: 'person' })}
+              >
+                <CardIcon name="person" />
+              </Pressable>
+            </View>
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
             <Animated.View
@@ -398,36 +430,6 @@ export default function Discover() {
             </Animated.View>
           </View>
           <View style={styles.info}>
-            {/* Directly under the name on the photo (owner, 2026-09-14):
-                the two ways to look closer, before the chart itself. */}
-            <View style={styles.pills}>
-              <Pressable
-                testID="open-detail"
-                accessibilityRole="button"
-                style={styles.pill}
-                onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-              >
-                <Text
-                  style={styles.pillText}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                >
-                  {t.discover.detail}
-                </Text>
-              </Pressable>
-              <Pressable
-                testID="open-person"
-                accessibilityRole="button"
-                style={styles.pill}
-                onPress={() => setSheet({ id: current.row.id, of: 'person' })}
-              >
-                <Text
-                  style={styles.pillText}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                >
-                  {t.discover.openProfile}
-                </Text>
-              </Pressable>
-            </View>
             <BigThreeRow
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
@@ -672,6 +674,27 @@ const styles = StyleSheet.create({
   },
   cardPhoto: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   info: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.sm },
+  // Above the name's own line, hard against the right gutter, so the two
+  // never crowd a long name. The photo under them is still the swipe
+  // surface: a drag that starts here passes to the card, because the
+  // responder claims on movement and a Pressable only acts on a release.
+  cardActions: {
+    position: 'absolute',
+    right: space.lg,
+    bottom: space.xxl,
+    flexDirection: 'row',
+    gap: space.md,
+  },
+  cardAction: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.scrim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   footer: { paddingHorizontal: space.lg, gap: space.sm },
   photoScrim: {
     position: 'absolute',
@@ -682,6 +705,9 @@ const styles = StyleSheet.create({
     paddingTop: space.xxl,
     paddingBottom: space.sm,
     gap: 2,
+    // Paint only. It overlaps the two corner buttons, and a gradient
+    // with a name in it must not be what a finger lands on.
+    pointerEvents: 'none',
   },
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
@@ -724,23 +750,6 @@ const styles = StyleSheet.create({
     color: color.textMuted,
     textAlign: 'center',
     paddingVertical: space.sm,
-  },
-  pills: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
-  pill: {
-    flex: 1,
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    paddingVertical: space.md,
-    paddingHorizontal: space.sm,
-    alignItems: 'center',
-  },
-  pillText: {
-    ...type.body,
-    color: color.text,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   popupBand: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },

@@ -1146,9 +1146,15 @@ other.
       the fly-out and the responder are untouched — but four comments
       that described the ancestor scroll view were rewritten rather than
       left lying._
-      **Amended the same day, on the owner's further look:** the two pills
-      moved from the foot of the screen to directly under the name, where
-      they read as the two ways to look closer before the chart itself;
+      **Amended twice the same day, on the owner's further looks.** The
+      two pills first moved from the foot of the screen to directly under
+      the name, and then stopped being pills at all: they are two 44pt
+      circles in the bottom-right corner of the photo, drawn rather than
+      labelled — a shrunken band meter for the reading and the profile
+      tab's own head and shoulders for the person, so each button looks
+      like the thing it opens. Small, outlined and translucent against the
+      filled ✕ and ♥ below, because four equal circles on one screen would
+      invite the wrong one. The photo grew into the row they vacated;
       the aspect sentence ("Satürn'ün onun Mars'ıyla üçgen açı yapıyor")
       and the remaining-count both left the card, taking
       `t.discover.noAspectWhy` and `t.discover.remaining` with them. ✕ / ♥

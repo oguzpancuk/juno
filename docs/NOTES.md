@@ -3965,3 +3965,32 @@ applies. The app adds nothing to it — `tabBarStyle` sets only colours and
 the top border. Trimming it means overriding the bar's height and letting
 the labels sit closer to the indicator, which is a taste call and is
 therefore parked rather than taken.
+
+## 2026-09-14 — the deck's two pills became two glyphs
+
+The owner did not like the pills and proposed two round text-free buttons
+in the corner of the photo. Taken, with one thing designed around: two
+unlabelled circles sit a few points above the filled ✕ and ♥, and four
+circles of similar size on one screen would read as four peers — two of
+which decide something irreversible. So the pair is smaller (44 against
+62), outlined and translucent rather than filled, and lives _on_ the
+picture rather than on the background, which is the same separation the
+card already makes between "look closer" and "answer".
+
+Icon-only costs guessability, so neither glyph is invented: the reading
+button is the `BandMeter` the card shows a few points below, shrunk, and
+the person button is the profile tab's own head and shoulders. Both carry
+an `accessibilityLabel` with the words the pills used to show.
+
+One real bug on the way, worth the note because it will recur: the
+buttons did nothing on the first run. The name's gradient is absolutely
+positioned across the bottom of the photo and was painted after them, so
+it took the touch. It is decoration plus a name, so it is now
+`pointerEvents: 'none'` and the buttons render after it. `ProfileView`'s
+own scrim had had that property since the day it was written; the deck's
+copy never did, because until now nothing sat under it.
+
+With the pills gone the card had about 68pt of slack between the band and
+the ✕ / ♥, so `PHOTO_SCREEN_FRACTION` went 0.55 → 0.62 and the photo took
+it. The profile follows the same constant, so the two still end on the
+same line.
