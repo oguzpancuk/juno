@@ -1,4 +1,4 @@
-import { bandName, bandOf, synastryReading } from '@juno/astro';
+import { bandName, bandOf, natalReading, synastryReading } from '@juno/astro';
 import { router, useFocusEffect } from 'expo-router';
 import {
   useCallback,
@@ -34,8 +34,10 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
+import { ProfileView } from '@/components/ProfileView';
+import { useScreenName } from '@/lib/a11y';
 import { usePhotoSources } from '@/lib/photos';
-import { INTO_MATCHES, matchDetailHref, personHref } from '@/lib/routes';
+import { INTO_MATCHES, matchDetailHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -47,6 +49,9 @@ import { color, gradient, radius, space, type } from '@/theme/tokens';
  * it a finger is still deciding, and a tap on a button is well under it.
  */
 const CLAIM_DISTANCE = 8;
+
+/** The two sheets a card can open; only ever one at a time. */
+type Sheet = 'detail' | 'person';
 /**
  * How much of a vertical drag the card follows: enough to feel held, not
  * enough to fight the scroll for the same movement.
@@ -59,6 +64,7 @@ const FLY_OUT_MS = 220;
 const NATIVE_DRIVER = Platform.OS !== 'web';
 
 export default function Discover() {
+  useScreenName(t.tabs.discover);
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -173,21 +179,47 @@ export default function Discover() {
   // request is authorised by the endpoint (ADR-0006), so fetching the
   // whole deck up front would cost one invocation per candidate on every
   // swipe and buffer every image at once.
+  // Which sheet is open, and over which card. Keyed by id rather than a
+  // boolean so a card arriving underneath closes it: a sheet belongs to
+  // the person it was opened on, never to the position.
+  const [sheet, setSheet] = useState<{ id: string; of: Sheet } | null>(null);
+  const open = current !== undefined && sheet?.id === current.row.id;
+  const showDetail = open && sheet?.of === 'detail';
+  const showPerson = open && sheet?.of === 'person';
+
+  // Only the visible card's photo, and only while it is visible. Every
+  // request is authorised by the endpoint (ADR-0006), so fetching the
+  // whole deck up front would cost one invocation per candidate on every
+  // swipe and buffer every image at once. The profile sheet needs the
+  // rest of them, so the list widens while it is open and collapses when
+  // it closes — `sourcesFor` matches a source to its own path, never to a
+  // position, so the card's own image does not blank while the siblings
+  // arrive.
   const cardPath = current?.row.photos[0];
+  const allPaths = current?.row.photos;
   const cardPaths = useMemo(
-    () => (cardPath === undefined ? [] : [cardPath]),
-    [cardPath],
+    () =>
+      showPerson && allPaths !== undefined
+        ? [...allPaths]
+        : cardPath === undefined
+          ? []
+          : [cardPath],
+    [showPerson, allPaths, cardPath],
   );
-  const [cardSource] = usePhotoSources(cardPaths);
-  // Id of the card whose detail is open; a new card is therefore collapsed.
-  const [detailFor, setDetailFor] = useState<string | null>(null);
+  const sources = usePhotoSources(cardPaths);
+  const cardSource = sources[0];
   // Engine-rendered detail for the visible card; the screen only lays it out.
   const detail = useMemo(
     () =>
       me && current ? synastryReading(me.chart, current.row.chart, 3) : null,
     [me, current],
   );
-  const showDetail = current !== undefined && detailFor === current.row.id;
+  // Their own chart, for the profile sheet. Memoised on the card like the
+  // synastry above, so the sheet opens on a reading that is already there.
+  const theirReading = useMemo(
+    () => (current ? natalReading(current.row.chart) : null),
+    [current],
+  );
 
   // Where the card is under the finger. State, not a ref: it is read during
   // render for the interpolations below (see Calculating.tsx), and the
@@ -265,8 +297,6 @@ export default function Discover() {
       contentContainerStyle={styles.scrollContent}
       testID="discover-screen"
     >
-      <Text style={styles.title}>{t.discover.title}</Text>
-
       {state.status === 'loading' ? (
         <View style={styles.center}>
           <ActivityIndicator color={color.textMuted} />
@@ -378,15 +408,16 @@ export default function Discover() {
           <Text style={styles.why} testID="why">
             {current.why ?? t.discover.noAspectWhy}
           </Text>
-          {/* The detail is a popup, not a disclosure (owner, 2026-09-11):
-              the card stays a glance, the reading is a sheet over it. Beside
-              it, the person at length. */}
+          {/* Both are popups, not disclosures and not pages (owner,
+              2026-09-11 for the reading, 2026-09-14 for the person): the
+              card stays a glance and either sheet rises over it, so the
+              deck never loses its place. */}
           <View style={styles.pills}>
             <Pressable
               testID="open-detail"
               accessibilityRole="button"
               style={styles.pill}
-              onPress={() => setDetailFor(current.row.id)}
+              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
             >
               <Text style={styles.pillText}>{t.discover.detail}</Text>
             </Pressable>
@@ -394,9 +425,7 @@ export default function Discover() {
               testID="open-person"
               accessibilityRole="button"
               style={styles.pill}
-              // navigate, not push: a second tap before the transition
-              // lands would otherwise stack the same person twice.
-              onPress={() => router.navigate(personHref(current.row.id))}
+              onPress={() => setSheet({ id: current.row.id, of: 'person' })}
             >
               <Text style={styles.pillText}>{t.discover.openProfile}</Text>
             </Pressable>
@@ -404,7 +433,7 @@ export default function Discover() {
           {detail ? (
             <Popup
               visible={showDetail}
-              onClose={() => setDetailFor(null)}
+              onClose={() => setSheet(null)}
               title={t.discover.detail}
               testID="detail"
             >
@@ -413,6 +442,31 @@ export default function Discover() {
                 <Text style={styles.bandName}>{detail.bandName}</Text>
               </View>
               <CompatibilityDetail reading={detail} />
+            </Popup>
+          ) : null}
+          {theirReading ? (
+            <Popup
+              visible={showPerson}
+              onClose={() => setSheet(null)}
+              testID="person-popup"
+            >
+              <ProfileView
+                name={current.row.display_name}
+                age={current.row.age}
+                caption={
+                  current.row.distance_km === 0
+                    ? t.discover.under1km
+                    : `${current.row.distance_km} km`
+                }
+                photos={current.row.photos}
+                sources={sources}
+                three={current.row.big_three}
+                bio={current.row.bio}
+                reading={theirReading}
+                chart={current.row.chart}
+                fullChartLabel={t.person.fullChart}
+                fullChartTitle={t.person.chartTitle(current.row.display_name)}
+              />
             </Popup>
           ) : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -571,7 +625,6 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  title: { ...type.heading, color: color.text },
   // Edge to edge (owner, 2026-09-12): the card cancels the screen's
   // gutter so its photo touches both edges, and gives up the side border
   // and the corner radius that only made sense inset.

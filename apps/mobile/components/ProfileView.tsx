@@ -1,6 +1,6 @@
 import type { BigThree, NatalReading, PublicChart } from '@juno/astro';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -50,6 +50,11 @@ export interface ProfileEdit {
  * three, the bio, the three primary placements, and one button that opens
  * the whole chart as a popup. The screens fetch, compute the reading and
  * pass it in; nothing here reads the network or the engine.
+ *
+ * Three hosts: the profile tab, and — as the body of a `Popup` — the deck
+ * and the chat header. Each keeps `SCREEN_PADDING` on a scroll view's
+ * *content*, which is what lets the carousel below cancel it and run edge
+ * to edge instead of being clipped (see the carousel's own note).
  */
 export function ProfileView({
   name,
@@ -61,8 +66,6 @@ export function ProfileView({
   bio,
   reading,
   chart,
-  header,
-  footer,
   fullChartLabel,
   fullChartTitle,
   edit,
@@ -79,9 +82,6 @@ export function ProfileView({
   bio: string | null;
   reading: NatalReading;
   chart: PublicChart;
-  /** The row above the carousel: a title and its controls, or a back link. */
-  header?: ReactNode;
-  footer?: ReactNode;
   /** "Tüm haritanı gör" or "Tüm haritasını gör". */
   fullChartLabel: string;
   fullChartTitle: string;
@@ -92,7 +92,6 @@ export function ProfileView({
 
   return (
     <>
-      {header}
       <PhotoCarousel
         photos={photos}
         sources={sources}
@@ -157,8 +156,6 @@ export function ProfileView({
       >
         <ChartDetail reading={reading} chart={chart} own={own} />
       </Popup>
-
-      {footer}
     </>
   );
 }

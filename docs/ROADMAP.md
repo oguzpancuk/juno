@@ -1023,6 +1023,79 @@ is lost; the profile popup in the chat opens from both the avatar and the
 name; Engelle keeps its inline confirmation, because its confirm is a
 second, destructive button and `Popup` has exactly one.
 
+## The third pass (owner request 2026-09-14)
+
+Four more corrections after a session on the simulator. Designed with a
+five-agent pass whose two critics found the collisions between them; the
+order below is theirs (item 4 first, because it deletes the only caller
+of two `ProfileView` props item 1 would otherwise have re-documented).
+
+- [x] **4 — the deck's "Profili gör" opens a popup.** It navigated to a
+      page; it now raises the same kind of sheet the "Uyum detayı" pill
+      beside it already does, over the card, so the deck never loses its
+      place. The sheet is the same `ProfileView` the profile tab and the
+      chat header render, fed from the `DiscoverRow` the deck already
+      holds — nothing is fetched but the photos, and those only while the
+      sheet is open.
+      _Done. `v4-deck-profile-popup.png`: the sheet over the card, photo
+      edge to edge, name, age, distance and the big three, the rest on a
+      scroll. The card is intact behind it when the sheet closes._
+      **Consequence, taken deliberately:** `person/[id]` had no other
+      entry point, so the route, `lib/person.ts`, `personHref`, the three
+      strings only that page used and `ProfileView`'s `header`/`footer`
+      props are deleted with it, and the `(discover,matches)` array group
+      with them. One `git revert` away if the owner wants a page again.
+
+- [x] **3 — the chat composer sits 16pt above the tab bar, not 46.** The
+      padding added the safe-area bottom inset, which was right while the
+      chat was a root route and became a second helping when it moved
+      under the tab bar: the bar is already `49 + inset` tall with the
+      inset as its own padding, and nothing between expo-router's single
+      `SafeAreaProvider` and a screen re-provides a reduced value. Five
+      other screens had the same double count and are fixed with it,
+      through one `lib/insets.ts` hook that asks the navigator instead of
+      assuming; `Popup` is the documented exception, being its own window.
+      — done when: a screenshot shows the gap matching the composer's own
+      padding, and `grep -rn 'insets.bottom' apps/mobile` returns only
+      `lib/insets.ts` and `Popup.tsx`.
+      _Done. `v2-chat-header-and-gap.png`; the grep returns those two._
+
+- [x] **2 — the chat's back control is a chevron beside the avatar, and a
+      right-swipe leaves.** The word "Eşleşmeler" is gone from it, it
+      moved onto the avatar's row to its left, and swiping right anywhere
+      on the thread returns to the conversation list.
+      The swipe is a third, empty page in front of the thread in the
+      pager the screen already had, not a gesture of our own: on iOS the
+      whole-screen pop gesture is required to fail behind any scroll view
+      wider than its frame, so it could never have fired here, and a
+      right-swipe on Uyum still means "one page back to the thread"
+      because that is all it has ever been. `lib/chat-pages.ts` holds the
+      arithmetic with a Vitest file, because the case that matters — an
+      offset read before layout — would otherwise navigate on its own.
+      _Done. `v2-chat-header-and-gap.png` (chevron, avatar, name on one
+      row); on the device a right-swipe from the thread landed on the
+      matches list, and the same swipe from Uyum landed on the thread._
+
+- [x] **1 — the tab roots draw no page heading.** "Profilin", "Keşfet"
+      and "Eşleşmeler" are gone from profile, discover and matches; the
+      bar names the page. Pushed screens (settings, filters, blocked,
+      starter, onboarding, sign-in) keep theirs — the bar names the TAB,
+      so while /settings is open it still reads "Profil", and their only
+      other top text is a back link naming where it goes, not where it is.
+      Each root instead announces its name to VoiceOver on focus
+      (`lib/a11y.ts`), because three arrivals — a cold open, the replace
+      out of onboarding, and the tab switch a Realtime match performs —
+      never touch the tab button that would have said it.
+      _Done. `v1-discover-no-title.png`, `v3-profile-no-title.png`, and
+      the matches list in the swipe check above._
+
+Owner decisions taken by default in this pass, each reversible: the deck
+sheet keeps the distance line the page it replaces had; the person route
+is deleted rather than left unreachable; the deck's two sheets share one
+state so only one can be open; "Profili gör" keeps its wording; and the
+five other screens with the same inset double count are fixed alongside
+the chat rather than left inconsistent with it.
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

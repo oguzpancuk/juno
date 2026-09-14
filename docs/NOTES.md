@@ -3826,3 +3826,59 @@ unchecked mechanism, and then misreads its own numbers, is twice the
 fault it is warning about.) The simulator screenshot stays what it
 was; at 402pt every width in this discussion fits, so it witnesses the
 names and the meters, not the narrow case.
+
+## 2026-09-14 — the third pass: four corrections, and two things learned
+
+Designed with a five-agent pass (one per item plus a gesture specialist)
+and two critics over the four plans. The critics earned their keep: they
+found that items 1 and 4 would collide in `ProfileView` — item 1 planned
+to re-document a `header` prop item 4 deletes the only caller of — and
+that three plans each intended to open their own dated ROADMAP section.
+They also caught four wrong line citations and one wrong claim about how
+many call sites `BackLink` has. Order was theirs: 4, 3, 2, 1.
+
+**The composer's gap was a rename, not a taste.** `git show 2c33df1`
+(2026-09-09) replaced the composer's `paddingBottom: 28` with
+`Math.max(insets.bottom, 12) + 12` while the chat was a ROOT route, where
+the inset was owed. `6ffdbb0` (2026-09-11) renamed the file under
+`(tabs)/(matches)/` byte-identically, and the padding became a second
+helping silently: the tab bar is `49 + inset` tall with `paddingBottom:
+insets.bottom` of its own, and `useSafeAreaInsets` is a plain context read
+with no idea what is below it — `SafeAreaProviderCompat` deliberately
+renders a plain View rather than re-providing a reduced value. Five other
+screens had the same bug. `lib/insets.ts` now asks
+`BottomTabBarHeightContext`, which is defined for a screen the tab
+navigator renders and undefined elsewhere — which is exactly the
+question. `legal.tsx` is why it has to be a question and not a constant:
+one component, two routes, one of them outside the tabs. `Popup` keeps a
+raw inset and says why.
+
+**The chat could never have had a swipe-back.** Worth writing down,
+because the next person will reach for the native gesture. Under iOS 26
+the whole-screen pop gesture is on by default, but
+`react-native-screens`' `ios/RNSScreenStack.mm`
+`shouldRequireFailureOfGestureRecognizer` makes it require the failure of
+any scroll view pan whose content is wider than its frame — and this
+screen's pager always is. Only the system edge strip popped, which is why
+the chat read as having no swipe-back at all. The fix is therefore not a
+gesture but a third, empty page in front of the thread: swiping onto it
+is leaving. That also gives Uyum's right-swipe for free, because from
+page two a right-swipe was always just one page back.
+
+The arithmetic lives in `lib/chat-pages.ts` with a test, for one reason:
+`pageAt` is asked to name a page from a content offset, and every
+degenerate input — width 0 before layout, NaN — rounds to index 0, which
+is the page that navigates. A screen that has not been laid out must not
+be able to take the user off it by arithmetic accident.
+
+**What the page deletion cost and did not.** `person/[id]` lost its last
+entry point when `MatchDetail` dropped its link in the second pass; the
+deck's pill was the only one left. Deleting it takes `lib/person.ts`,
+`personHref`, `t.person.back` / `gone` / `openMatch`, `ProfileView`'s
+`header` and `footer` props, and the `(discover,matches)` array group —
+the only use of expo-router's array syntax in the tree, which
+`routes.test.ts` had carved an exception for; the exception stays, with
+its reason reworded, because it is a property of such a directory rather
+than of that one. What is lost is a web deep-link target: `/person/<id>`
+was a real page and is now a 404. Nothing in the app linked to it, and
+the sheet shows the same thing.

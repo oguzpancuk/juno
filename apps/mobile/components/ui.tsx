@@ -217,17 +217,59 @@ export function BackLink({
       // The text is one line of 15pt inside 8pt of padding; the slop is
       // what carries it over the 44pt minimum target.
       hitSlop={{ top: 10, bottom: 10, left: 16, right: 24 }}
-      onPress={() => {
-        if (router.canGoBack()) router.back();
-        // A cold open (deep link, fresh web tab) has nothing to pop, and
-        // `fallback` may sit inside a tab stack that has not mounted yet.
-        // `withAnchor` seats that stack's anchor beneath it, so the next
-        // back has somewhere to go; a no-op when the stack already exists.
-        else router.replace(fallback, { withAnchor: true });
-      }}
+      onPress={() => goBack(fallback)}
       style={({ pressed }) => [s.backHit, pressed && s.buttonDim]}
     >
       <Text style={s.back}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Leave a screen the way its back control does: pop if there is anything
+ * to pop, and otherwise seat `fallback`'s stack beneath a cold open (deep
+ * link, fresh web tab) — `withAnchor` gives the next back somewhere to go,
+ * and is a no-op when the stack already exists.
+ *
+ * Exported because the chat has three ways out — the chevron, the pager's
+ * right-swipe and its error branch's link — and they must not be able to
+ * disagree about what "back" means.
+ */
+export function goBack(fallback: Href): void {
+  if (router.canGoBack()) router.back();
+  else router.replace(fallback, { withAnchor: true });
+}
+
+/**
+ * The same way back with no word beside it, for a header that already says
+ * whose screen this is (owner, 2026-09-14: "geri butonunun sağında
+ * eşleşmeler yazmasına gerek yok").
+ *
+ * `glyph` is drawn and `accessibilityLabel` is spoken, because "‹" is not
+ * a sentence. The box is 44pt tall and about 20 wide, and the slop carries
+ * the narrow axis over the minimum without widening the header row.
+ */
+export function BackChevron({
+  glyph,
+  accessibilityLabel,
+  fallback,
+  testID,
+}: {
+  glyph: string;
+  accessibilityLabel: string;
+  fallback: Href;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={{ top: 0, bottom: 0, left: space.lg, right: space.md }}
+      onPress={() => goBack(fallback)}
+      style={({ pressed }) => [s.chevronHit, pressed && s.buttonDim]}
+    >
+      <Text style={s.chevron}>{glyph}</Text>
     </Pressable>
   );
 }
@@ -299,5 +341,13 @@ const s = StyleSheet.create({
   },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
+  chevronHit: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingRight: space.sm,
+  },
+  // Larger than the label it replaces: alone on the row it has to read as
+  // a control rather than as punctuation.
+  chevron: { fontSize: 30, lineHeight: 34, color: color.textMuted },
   back: { ...type.body, color: color.textMuted },
 });

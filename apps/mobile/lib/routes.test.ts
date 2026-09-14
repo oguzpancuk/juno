@@ -47,8 +47,10 @@ describe('route tree', () => {
     const groups = readdirSync(tabs).filter(
       (name) =>
         statSync(join(tabs, name)).isDirectory() &&
-        // A single group, `(x)`. The shared `(a,b)` directory is not a
-        // navigator of its own: its screens are copied into each group.
+        // A single group, `(x)`. The tree holds only these three today;
+        // the test keeps excluding a shared `(a,b)` directory because such
+        // a directory is not a navigator of its own — its screens are
+        // copied into each group it names, so it has no layout to check.
         /^\([^,]+\)$/.test(name),
     );
     expect(groups.sort()).toEqual(['(discover)', '(matches)', '(profile)']);

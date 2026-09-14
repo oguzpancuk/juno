@@ -23,7 +23,8 @@ import { Avatar } from '@/components/Avatar';
 import { MatchDetail } from '@/components/MatchDetail';
 import { Popup } from '@/components/Popup';
 import { ProfileView } from '@/components/ProfileView';
-import { BackLink } from '@/components/ui';
+import { BackChevron, BackLink, goBack } from '@/components/ui';
+import { VISIBLE_PAGES, pageAt, pageOffset, type Page } from '@/lib/chat-pages';
 import {
   MAX_MESSAGE_LENGTH,
   isSendable,
@@ -45,11 +46,8 @@ import {
 } from '@/lib/thread-view';
 import { color, radius, space, type } from '@/theme/tokens';
 
-/** The two pages, in pager order. */
-const PAGES = ['thread', 'match'] as const;
-type Page = (typeof PAGES)[number];
 /** The `page` param: anything but "match" opens the thread. */
-const PageParam = z.enum(PAGES).catch('thread');
+const PageParam = z.enum(VISIBLE_PAGES).catch('thread');
 
 /** Stable identity while the row is still loading. */
 const EMPTY: readonly string[] = [];
@@ -98,8 +96,9 @@ function ChatView({
   const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
   const { messages, send, loadOlder } = useThread(matchId, userId);
-  // Without the inset the send button sits under the home indicator and
-  // the bottom of it is not tappable.
+  // The header's top clearance only. The composer takes no bottom inset:
+  // the tab bar below this screen already covers the home indicator
+  // (lib/insets.ts), and with the keyboard up the keyboard does.
   const insets = useSafeAreaInsets();
   // Portrait only (app.json), so the page width does not change under a
   // mounted pager.
@@ -165,14 +164,18 @@ function ChatView({
   );
 
   // The pager. `active` is what the segments show; the ScrollView is the
-  // truth and reports back on `onMomentumScrollEnd`.
+  // truth and reports back on `onMomentumScrollEnd`. There are three
+  // pages: an empty one in front of the thread that is the way out
+  // (lib/chat-pages.ts), then the thread, then the match detail.
   const pager = useRef<ScrollView>(null);
   const [active, setActive] = useState<Page>(page);
   const [pageHeight, setPageHeight] = useState<number | null>(null);
   const applied = useRef<Page | null>(null);
-  const xFor = (target: Page): number => (target === 'match' ? width : 0);
+  // One exit per screen: a fling that settles on the empty page fires
+  // once, and a second settle event while the pop is in flight is ignored.
+  const leaving = useRef(false);
   const goTo = (target: Page, animated: boolean) => {
-    pager.current?.scrollTo({ x: xFor(target), y: 0, animated });
+    pager.current?.scrollTo({ x: pageOffset(target, width), y: 0, animated });
     setActive(target);
   };
   // The param is applied once the pager has a size — a scrollTo before
@@ -188,14 +191,20 @@ function ChatView({
     if (pageHeight === null || applied.current === page) return;
     applied.current = page;
     pager.current?.scrollTo({
-      x: page === 'match' ? width : 0,
+      x: pageOffset(page, width),
       animated: false,
     });
     setActive(page);
   }, [page, pageHeight, width]);
   const onPageSettled = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = event.nativeEvent.contentOffset.x;
-    setActive(Math.round(x / width) >= 1 ? 'match' : 'thread');
+    const settled = pageAt(event.nativeEvent.contentOffset.x, width);
+    if (settled === 'back') {
+      if (leaving.current) return;
+      leaving.current = true;
+      goBack('/matches');
+      return;
+    }
+    setActive(settled);
   };
 
   // After every hook: hooks must run in the same order on each render.
@@ -253,35 +262,40 @@ function ChatView({
           styles.header,
           // Floored, not raw: the inset is 0 on the web client and 20
           // on a device without a notch, either of which would put the
-          // back link against the top of the viewport. 44 leaves this
+          // chevron's hit area under the Dynamic Island. 44 leaves this
           // header in the neighbourhood of `Screen`'s own 68pt.
           { paddingTop: Math.max(insets.top, 44) + space.xs },
         ]}
       >
-        <BackLink
-          label={t.chat.backToMatches}
-          fallback="/matches"
-          testID="chat-back"
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t.person.openProfile(row.display_name)}
-          onPress={() => setShowPerson(true)}
-          style={({ pressed }) => [styles.titleRow, pressed && styles.dim]}
-          testID="open-person"
-        >
-          <Avatar
-            name={row.display_name}
-            source={avatar}
-            size={32}
-            testID="chat-avatar"
+        {/* One row: the way out, then whose conversation this is (owner,
+            2026-09-14 — "buton profil resminin solunda olsun"). */}
+        <View style={styles.headerRow}>
+          <BackChevron
+            glyph={t.chat.backGlyph}
+            accessibilityLabel={t.chat.backToMatchesLabel}
+            fallback="/matches"
+            testID="chat-back"
           />
-          <Text style={styles.title} numberOfLines={1}>
-            {row.display_name}
-          </Text>
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.person.openProfile(row.display_name)}
+            onPress={() => setShowPerson(true)}
+            style={({ pressed }) => [styles.titleRow, pressed && styles.dim]}
+            testID="open-person"
+          >
+            <Avatar
+              name={row.display_name}
+              source={avatar}
+              size={32}
+              testID="chat-avatar"
+            />
+            <Text style={styles.title} numberOfLines={1}>
+              {row.display_name}
+            </Text>
+          </Pressable>
+        </View>
         <View style={styles.segments} accessibilityRole="tablist">
-          {PAGES.map((p) => {
+          {VISIBLE_PAGES.map((p) => {
             const on = active === p;
             return (
               <Pressable
@@ -311,8 +325,9 @@ function ChatView({
         bounces={false}
         showsHorizontalScrollIndicator={false}
         // iOS reads this before the first frame, so a chat opened on its
-        // Uyum page never shows the thread first; onLayout covers the rest.
-        contentOffset={{ x: xFor(page), y: 0 }}
+        // Uyum page never shows the thread first, and neither page ever
+        // opens showing the empty one; onLayout covers the rest.
+        contentOffset={{ x: pageOffset(page, width), y: 0 }}
         onLayout={onPagerLayout}
         onMomentumScrollEnd={onPageSettled}
         // The send button is under this ScrollView too; without this a tap
@@ -321,6 +336,9 @@ function ChatView({
         style={styles.pager}
         testID="chat-pager"
       >
+        {/* Empty on purpose: swiping onto it is how the screen leaves. */}
+        <View style={pageStyle} testID="chat-page-back" />
+
         <View style={pageStyle} testID="chat-page-thread">
           <KeyboardAvoidingView
             style={styles.page}
@@ -467,12 +485,7 @@ function ChatView({
                 </Pressable>
               </View>
             ) : null}
-            <View
-              style={[
-                styles.composer,
-                { paddingBottom: Math.max(insets.bottom, 12) + 12 },
-              ]}
-            >
+            <View style={styles.composer}>
               <TextInput
                 style={styles.input}
                 value={draft}
@@ -551,12 +564,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: color.border,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: space.md,
+  },
+  // `flexShrink` so a long name yields to the chevron rather than pushing
+  // it off the row; the chevron's own box is a fixed 44pt tall.
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    paddingTop: space.xs,
-    paddingBottom: space.md,
+    flexShrink: 1,
   },
   dim: { opacity: 0.6 },
   title: { ...type.title, color: color.text, flexShrink: 1 },
@@ -626,6 +645,10 @@ const styles = StyleSheet.create({
   replyBarExcerpt: { ...type.bodySmall, color: color.textMuted },
   replyCancel: { padding: space.xs },
   replyCancelGlyph: { color: color.textMuted, fontSize: 17 },
+  // Sixteen on all four sides. The bottom used to add the safe-area
+  // inset, which was right while this was a root route and became a
+  // second helping when it moved under the tab bar (owner, 2026-09-14;
+  // lib/insets.ts).
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',

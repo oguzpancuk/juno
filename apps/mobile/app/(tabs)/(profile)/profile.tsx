@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { ProfileView } from '@/components/ProfileView';
+import { useScreenName } from '@/lib/a11y';
 import { Body, LinkText, Screen } from '@/components/ui';
 import { ageOn } from '@/lib/age';
 import { movePhoto } from '@/lib/photo-order';
@@ -82,6 +83,7 @@ function SettingsIcon() {
  * Vazgeç).
  */
 export default function Profile() {
+  useScreenName(t.tabs.profile);
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -199,41 +201,40 @@ export default function Profile() {
   return (
     <Screen testID="profile-screen">
       {/* Always on screen, even before the row arrives: settings is the
-          only way out when the fetch fails. */}
-      <View style={styles.head}>
-        <Text style={styles.title}>{t.profile.title}</Text>
-        <View style={styles.controls}>
-          {state.status === 'ready' ? (
-            <Pressable
-              testID="edit-profile"
-              accessibilityRole="button"
-              // Not during an upload either: the tap would be swallowed
-              // by the working gate and read as a broken button.
-              disabled={saving || adding}
-              onPress={toggle}
-              style={({ pressed }) => [
-                styles.pill,
-                editing && styles.pillOn,
-                (pressed || saving || adding) && styles.dim,
-              ]}
-            >
-              <Text style={[styles.pillText, editing && styles.pillTextOn]}>
-                {pillLabel}
-              </Text>
-            </Pressable>
-          ) : null}
+          only way out when the fetch fails. The page is not named here —
+          the tab bar names it (owner, 2026-09-14) — so this is the
+          controls alone, pushed to the right of a stretched column. */}
+      <View style={styles.controls}>
+        {state.status === 'ready' ? (
           <Pressable
-            testID="open-settings"
+            testID="edit-profile"
             accessibilityRole="button"
-            // The child is an <Svg> of paths, which announces nothing, and
-            // this is the only route into Settings.
-            accessibilityLabel={t.settings.title}
-            hitSlop={12}
-            onPress={() => router.push('/settings')}
+            // Not during an upload either: the tap would be swallowed
+            // by the working gate and read as a broken button.
+            disabled={saving || adding}
+            onPress={toggle}
+            style={({ pressed }) => [
+              styles.pill,
+              editing && styles.pillOn,
+              (pressed || saving || adding) && styles.dim,
+            ]}
           >
-            <SettingsIcon />
+            <Text style={[styles.pillText, editing && styles.pillTextOn]}>
+              {pillLabel}
+            </Text>
           </Pressable>
-        </View>
+        ) : null}
+        <Pressable
+          testID="open-settings"
+          accessibilityRole="button"
+          // The child is an <Svg> of paths, which announces nothing, and
+          // this is the only route into Settings.
+          accessibilityLabel={t.settings.title}
+          hitSlop={12}
+          onPress={() => router.push('/settings')}
+        >
+          <SettingsIcon />
+        </Pressable>
       </View>
       {error ? (
         <Text style={styles.error} testID="profile-error">
@@ -287,14 +288,12 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  head: {
+  controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.md,
+    alignSelf: 'flex-end',
+    gap: space.lg,
   },
-  title: { ...type.title, color: color.text, flexShrink: 1 },
-  controls: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
   pill: {
     borderRadius: radius.pill,
     borderWidth: 1,

@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Avatar } from '@/components/Avatar';
+import { useScreenName } from '@/lib/a11y';
 import { fetchMatches, type MatchProfileRow } from '@/lib/matches';
 import { usePhotoSources } from '@/lib/photos';
 import { chatHref } from '@/lib/routes';
@@ -30,6 +31,7 @@ function firstPhotos(rows: readonly MatchProfileRow[]): string[] {
 }
 
 export default function Matches() {
+  useScreenName(t.tabs.matches);
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -72,7 +74,6 @@ export default function Matches() {
       contentContainerStyle={styles.content}
       testID="matches-screen"
     >
-      <Text style={styles.title}>{t.matches.title}</Text>
       {rows === 'loading' ? (
         <ActivityIndicator color={color.textMuted} />
       ) : rows === null ? (
@@ -137,7 +138,6 @@ export default function Matches() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 12 },
-  title: { color: color.text, fontSize: 26, fontWeight: '700' },
   muted: { color: color.textMuted },
   card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
