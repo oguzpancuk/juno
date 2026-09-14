@@ -107,7 +107,6 @@ export const t = {
     // Turkish i → I, not İ.
     swipeLike: 'BEĞEN',
     swipePass: 'GEÇ',
-    title: 'Keşfet',
     // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
     like: 'Beğen',
@@ -161,13 +160,11 @@ export const t = {
     open: 'Sohbeti başlat ›',
   },
   matches: {
-    title: 'Eşleşmeler',
     empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',
     noMessages: 'Henüz mesaj yok; başlangıç sorusu sende.',
     youPrefix: 'Sen: ',
   },
   profile: {
-    title: 'Profilin',
     edit: 'Düzenle',
     saving: 'Kaydediliyor…',
     moveLeft: 'Sola al',
@@ -206,6 +203,9 @@ export const t = {
   },
   chat: {
     backToMatches: '‹ Eşleşmeler',
+    // The header control: the glyph alone, with its own spoken label.
+    backGlyph: '‹',
+    backToMatchesLabel: 'Eşleşmelere dön',
     tabThread: 'Sohbet',
     tabMatch: 'Uyum',
     read: 'Okundu',
@@ -218,10 +218,10 @@ export const t = {
     sendFailed: 'Mesaj gönderilemedi, tekrar dene.',
     open: 'Sohbeti aç ›',
   },
+  // Someone else, wherever they are shown: the deck's profile sheet and
+  // the chat header's. There is no person *page* any more (owner,
+  // 2026-09-14: the deck opens a popup), so nothing here names a screen.
   person: {
-    back: '‹ Keşfet',
-    gone: 'Bu profil artık görünmüyor.',
-    openMatch: 'Uyum detayı ›',
     openProfile: (name: string) => `${name} profilini aç`,
     chartTitle: (name: string) => `${name} haritası`,
     fullChart: 'Tüm haritasını gör',
