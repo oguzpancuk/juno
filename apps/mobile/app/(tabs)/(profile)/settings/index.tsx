@@ -1,12 +1,12 @@
 import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { leaveToSignIn, useSession } from '@/lib/session';
+import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
 import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
@@ -38,7 +38,7 @@ export default function Settings() {
     setLocating(saved ? 'done' : 'failed');
   };
 
-  const insets = useSafeAreaInsets();
+  const bottomGap = useBottomGap(24);
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -69,7 +69,7 @@ export default function Settings() {
 
   return (
     <View
-      style={[styles.screen, { paddingBottom: insets.bottom + 24 }]}
+      style={[styles.screen, { paddingBottom: bottomGap }]}
       testID="settings-screen"
     >
       <BackLink label={t.settings.back} fallback="/profile" />

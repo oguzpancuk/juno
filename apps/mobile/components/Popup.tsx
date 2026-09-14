@@ -60,6 +60,10 @@ export function Popup({
           accessible={false}
           importantForAccessibility="no"
         />
+        {/* The one raw `insets.bottom` left in the app (lib/insets.ts has
+            the other). A Modal is its own window, above the tab bar, so
+            nothing else covers the home indicator for this sheet — a
+            screen inside the tabs must not copy it. */}
         <View
           style={[
             styles.sheet,

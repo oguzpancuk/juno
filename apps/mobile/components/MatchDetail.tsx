@@ -9,10 +9,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { Popup } from '@/components/Popup';
+import { useBottomGap } from '@/lib/insets';
 import type { MatchProfileRow } from '@/lib/matches';
 import type { PhotoSource } from '@/lib/photos';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
@@ -50,9 +50,10 @@ export function MatchDetail({
 }) {
   const [me, setMe] = useState<OwnProfile | null>(null);
   const [meFailed, setMeFailed] = useState(false);
-  // The safety buttons are the last thing on the page; without the inset
-  // they sit under the home indicator and do not take a tap.
-  const insets = useSafeAreaInsets();
+  // The safety buttons are the last thing on the page. No safe-area
+  // inset: this renders inside the chat, inside the tab navigator, and
+  // the bar below already covers the home indicator (lib/insets.ts).
+  const bottomGap = useBottomGap(space.xxl);
   const [reporting, setReporting] = useState(false);
   const [confirmingBlock, setConfirmingBlock] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -136,10 +137,7 @@ export function MatchDetail({
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: insets.bottom + 32 },
-      ]}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
       testID="match-screen"
     >
       <Text style={styles.kicker}>{t.match.kicker}</Text>

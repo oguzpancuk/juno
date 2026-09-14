@@ -8,9 +8,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchBlocked, unblockUser, type BlockedPerson } from '@/lib/safety';
 import { RedirectToSignIn, useSession } from '@/lib/session';
+import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
 import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
@@ -24,7 +24,7 @@ export default function Blocked() {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const insets = useSafeAreaInsets();
+  const bottomGap = useBottomGap(32);
   const [people, setPeople] = useState<BlockedPerson[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const working = useRef(false);
@@ -73,10 +73,7 @@ export default function Blocked() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: insets.bottom + 32 },
-      ]}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
       testID="blocked-screen"
     >
       <BackLink label={t.blocked.back} fallback="/settings" />

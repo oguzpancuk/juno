@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BackLink,
   Body,
@@ -23,6 +22,7 @@ import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { chatHref } from '@/lib/routes';
 import { starterOptions } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
+import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -44,7 +44,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const insets = useSafeAreaInsets();
+  const bottomGap = useBottomGap(space.lg);
   const [row, setRow] = useState<MatchProfileRow | null | 'loading'>(
     typeof id === 'string' ? 'loading' : null,
   );
@@ -194,9 +194,7 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
         )}
       </ScrollView>
       {current ? (
-        <View
-          style={[styles.actions, { paddingBottom: insets.bottom + space.lg }]}
-        >
+        <View style={[styles.actions, { paddingBottom: bottomGap }]}>
           {failed ? (
             <Text style={styles.error} testID="starter-failed">
               {t.starter.sendFailed}

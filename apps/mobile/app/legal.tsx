@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
 import { useSession } from '@/lib/session';
+import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
 import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
@@ -15,7 +15,10 @@ const BULLET = '• ';
  * first.
  */
 export default function Legal() {
-  const insets = useSafeAreaInsets();
+  // One component, two routes (see (tabs)/(profile)/settings/legal.tsx):
+  // the tab bar covers the home indicator on /settings/legal and nothing
+  // covers it on the root /legal, so this asks instead of assuming.
+  const bottomGap = useBottomGap(32);
   // Reachable from sign-in as well as from settings, and a signed-out
   // reader cannot open settings at all. While the stored session is still
   // being read there is no honest answer, so no link is shown rather than
@@ -24,10 +27,7 @@ export default function Legal() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingBottom: insets.bottom + 32 },
-      ]}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
       testID="legal-screen"
     >
       {/* One label for both: the control pops to wherever the reader came
