@@ -21,7 +21,6 @@ import {
   Body,
   Card,
   GradientButton,
-  PhotoTopScrim,
   SCREEN_PADDING,
   useTopGap,
 } from '@/components/ui';
@@ -73,6 +72,7 @@ export function ProfileView({
   bio,
   reading,
   chart,
+  photoHeight,
   fullChartLabel,
   fullChartTitle,
   edit,
@@ -89,6 +89,11 @@ export function ProfileView({
   bio: string | null;
   reading: NatalReading;
   chart: PublicChart;
+  /**
+   * An explicit photo height, for a host that has to line up with another
+   * screen. Omitted, the carousel keeps the picture's own 3:4.
+   */
+  photoHeight?: number | undefined;
   /** "Tüm haritanı gör" or "Tüm haritasını gör". */
   fullChartLabel: string;
   fullChartTitle: string;
@@ -105,6 +110,7 @@ export function ProfileView({
         name={name}
         age={age}
         caption={caption}
+        height={photoHeight}
         emptyHint={own ? t.profile.noPhotos : undefined}
       />
       {edit?.active ? (
@@ -182,6 +188,7 @@ function PhotoCarousel({
   name,
   age,
   caption,
+  height: fixedHeight,
   emptyHint,
 }: {
   photos: readonly string[];
@@ -189,17 +196,18 @@ function PhotoCarousel({
   name: string;
   age: number | null;
   caption: string | undefined;
+  /** Set by a host that must line up with another screen. */
+  height: number | undefined;
   /** What the owner reads in place of a photo; nothing for another person. */
   emptyHint: string | undefined;
 }) {
-  // What this host owes the top edge, and how much of it the status bar
-  // covers. See the `carousel` style below for the contract.
-  const { padding: topGap, chrome } = useTopGap();
+  // What this host owes the top edge. See the `carousel` style below.
+  const topGap = useTopGap();
   // Measured, not taken from the window: the page is as wide as whatever
   // the screen's padding leaves, and the carousel should not know that.
   const [width, setWidth] = useState(0);
   const [page, setPage] = useState(0);
-  const height = Math.round(width / PHOTO_ASPECT);
+  const height = fixedHeight ?? Math.round(width / PHOTO_ASPECT);
   // A photo removed or moved while its page was showing must not leave
   // the dots pointing past the end.
   const current = Math.min(page, Math.max(0, photos.length - 1));
@@ -242,11 +250,6 @@ function PhotoCarousel({
           })}
         </ScrollView>
       )}
-      {/* Gated on there being a photo: the empty tile is flat `surfaceHigh`
-          and a smudge across it reads as a rendering fault. */}
-      {chrome > 0 && photos.length > 0 ? (
-        <PhotoTopScrim height={chrome + space.xxl} />
-      ) : null}
       <LinearGradient
         colors={['transparent', color.scrim, color.bg]}
         style={styles.scrim}

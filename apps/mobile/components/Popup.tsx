@@ -102,9 +102,7 @@ export function Popup({
                 same React tree, so a sheet opened from inside a bleed
                 `Screen` would otherwise inherit that screen's 68 and a
                 child would cancel a padding this host never applied. */}
-            <TopGapContextProvider value={{ padding: 0, chrome: 0 }}>
-              {children}
-            </TopGapContextProvider>
+            <TopGapContextProvider value={0}>{children}</TopGapContextProvider>
           </ScrollView>
           <View style={styles.action}>
             <GradientButton

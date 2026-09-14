@@ -1116,7 +1116,11 @@ other.
       `v5-chat-profile-popup.png`. The sheets keep the 1pt hairline
       across the top of the photo: it is the sheet's edge against the
       dimmed screen, and dropping it would make these two the only sheets
-      without an outline._
+      without an outline. There is no scrim over the top of the photo —
+      one was drawn for the status bar and the owner asked for it out
+      (2026-09-14); the bar stays legible on the pictures in hand, and if
+      a pale one proves otherwise the remedy is a scrim again, not a
+      guess._
 
 - [x] **The profile's controls float over the photo.** Düzenle and the
       settings icon left the flow — the carousel has to be the first
@@ -1142,6 +1146,17 @@ other.
       the fly-out and the responder are untouched — but four comments
       that described the ancestor scroll view were rewritten rather than
       left lying._
+      **Amended the same day, on the owner's further look:** the two pills
+      moved from the foot of the screen to directly under the name, where
+      they read as the two ways to look closer before the chart itself;
+      the aspect sentence ("Satürn'ün onun Mars'ıyla üçgen açı yapıyor")
+      and the remaining-count both left the card, taking
+      `t.discover.noAspectWhy` and `t.discover.remaining` with them. ✕ / ♥
+      stay the last row. The deck photo and the profile photo now take the
+      same share of the window (`PHOTO_SCREEN_FRACTION`), so their bottom
+      edges line up: the profile takes it directly, the deck fills what
+      its fixed block leaves and caps there, which is the arrangement that
+      cannot overflow on a screen too short for it._
 
 Owner decisions taken by default, each reversible: the ✕ / ♥ stay above
 the pills, since the owner named only the pills as "en altta"; the bio

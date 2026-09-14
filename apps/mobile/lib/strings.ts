@@ -116,9 +116,7 @@ export const t = {
       'Yakınlarda şimdilik kimse kalmadı. Yarıçapı ayarlardan genişletebilirsin.',
     noAspect:
       'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
-    noAspectWhy: 'Haritalarınız birbirine değmiyor.',
     detail: 'Uyum detayı',
-    remaining: (n: number) => (n > 0 ? `${n} kişi daha` : 'Sonuncu'),
   },
   match: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.

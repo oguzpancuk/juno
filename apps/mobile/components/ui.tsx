@@ -12,7 +12,6 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
@@ -32,6 +31,19 @@ export const SCREEN_PADDING = space.xl;
 export const SCREEN_TOP_PADDING = 68;
 
 /**
+ * How much of the window a full-screen photo takes, on the deck and on the
+ * profile. One number so the two line up (owner, 2026-09-14: "keşfette ve
+ * profilde resimler aynı hizada olsun") — both start at the top edge, so
+ * equal heights put their bottoms on the same line. The deck arrives at it
+ * by filling what its fixed block below leaves and capping here; the
+ * profile, which scrolls, takes it directly.
+ *
+ * The two popup sheets are not in this: they are 88% of the screen tall
+ * and keep the picture's own 3:4.
+ */
+export const PHOTO_SCREEN_FRACTION = 0.55;
+
+/**
  * What a host owes its first child if that child takes the top edge.
  *
  * The vertical twin of `SCREEN_PADDING`: the gutter is cancelled with a
@@ -41,18 +53,9 @@ export const SCREEN_TOP_PADDING = 68;
  * publishes it; a bleed `Popup` gives its own up at the sheet and so
  * publishes 0.
  */
-export interface TopGap {
-  /** Top padding the host put on its scroll view's *content*. */
-  readonly padding: number;
-  /**
-   * How much of the child then lies under system chrome — status bar,
-   * Dynamic Island — and needs a scrim to stay legible.
-   */
-  readonly chrome: number;
-}
-const TopGapContext = createContext<TopGap>({ padding: 0, chrome: 0 });
+const TopGapContext = createContext<number>(0);
 export const TopGapContextProvider = TopGapContext.Provider;
-export function useTopGap(): TopGap {
+export function useTopGap(): number {
   return useContext(TopGapContext);
 }
 
@@ -73,7 +76,6 @@ export function Screen({
   bleed?: boolean;
   testID?: string;
 }) {
-  const insets = useSafeAreaInsets();
   return (
     <ScrollView
       style={s.screen}
@@ -82,39 +84,10 @@ export function Screen({
       overScrollMode={bleed ? 'never' : 'auto'}
       testID={testID}
     >
-      <TopGapContext.Provider
-        value={
-          bleed
-            ? { padding: SCREEN_TOP_PADDING, chrome: insets.top }
-            : { padding: 0, chrome: 0 }
-        }
-      >
+      <TopGapContext.Provider value={bleed ? SCREEN_TOP_PADDING : 0}>
         {children}
       </TopGapContext.Provider>
     </ScrollView>
-  );
-}
-
-/**
- * A scrim down the top of a full-bleed photo, so the status bar stays
- * readable over it. The app fixes `StatusBar style="light"`, so white
- * glyphs can land on a pale picture with nothing behind them.
- *
- * Full strength across the chrome band and fading only below it: a plain
- * two-stop gradient is already half gone by the bottom of the clock.
- */
-export function PhotoTopScrim({ height }: { height: number }) {
-  return (
-    <LinearGradient
-      colors={[color.scrim, color.scrim, 'transparent']}
-      locations={[
-        0,
-        height > 0 ? Math.max(height - space.xxl, 0) / height : 0,
-        1,
-      ]}
-      style={[s.topScrim, { height }]}
-      pointerEvents="none"
-    />
   );
 }
 
@@ -370,7 +343,6 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
-  topScrim: { position: 'absolute', top: 0, left: 0, right: 0 },
   screenContent: {
     padding: SCREEN_PADDING,
     paddingTop: SCREEN_TOP_PADDING,

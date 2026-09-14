@@ -8,11 +8,18 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
-import { Body, LinkText, SCREEN_PADDING, Screen } from '@/components/ui';
+import {
+  Body,
+  LinkText,
+  PHOTO_SCREEN_FRACTION,
+  SCREEN_PADDING,
+  Screen,
+} from '@/components/ui';
 import { ageOn } from '@/lib/age';
 import { movePhoto } from '@/lib/photo-order';
 import {
@@ -86,6 +93,8 @@ function SettingsIcon() {
 export default function Profile() {
   useScreenName(t.tabs.profile);
   const insets = useSafeAreaInsets();
+  // The same height the deck's photo reaches, so the two line up.
+  const { height: windowHeight } = useWindowDimensions();
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -285,6 +294,7 @@ export default function Profile() {
           bio={bio.length > 0 ? bio : null}
           reading={reading}
           chart={state.profile.chart}
+          photoHeight={Math.round(windowHeight * PHOTO_SCREEN_FRACTION)}
           fullChartLabel={t.chart.fullChart}
           fullChartTitle={t.chart.title}
           edit={{

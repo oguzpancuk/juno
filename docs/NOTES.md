@@ -3928,3 +3928,40 @@ with nothing to scroll into, text that grows without limit eats the
 picture. The accessibility sizes are served uncapped by the two sheets,
 which do scroll — which is exactly why `bounces={false}` had to be scoped
 to bleed sheets only.
+
+## 2026-09-14 — the fourth pass, amended on a second look
+
+Five follow-ups the owner sent after seeing the pass on the device, all
+small, one of them undoing something this session had just added.
+
+**The top scrim is gone.** It was drawn so the fixed light status bar
+would stay legible over a pale photograph; the owner does not want the
+darkening. `PhotoTopScrim` and the `chrome` half of the top-gap contract
+went with it, so `useTopGap` is now a number rather than a pair — the
+simpler thing it should have been once its second consumer disappeared.
+
+**The deck and the profile photos are one size.** `PHOTO_SCREEN_FRACTION`
+in `ui.tsx` is the single number; the profile takes it as an explicit
+height and the deck fills what its fixed block leaves and caps at it.
+That asymmetry is deliberate: the deck cannot scroll, so it must be free
+to shrink on a screen too short for the full share, and a cap can only
+make it smaller. The fraction is 0.55 rather than 0.56 for exactly that
+reason — at 0.56 the deck's own block left it 4pt short of the cap and
+the two edges did not meet. Measured on the device afterwards: the photo
+ends at 474.0pt on the deck and 472.7 on the profile, the 1.3pt being the
+bottom gradient's own falloff, which starts higher on the profile because
+its scrim also carries the page dots.
+
+**The pills moved up and two things left the card.** "Uyum detayı" and
+"Profili gör" sit directly under the name now rather than at the foot of
+the screen — the owner asked for both arrangements a few hours apart, and
+this one is the later word. The aspect sentence and the remaining count
+are out entirely, with their strings.
+
+**On the space under the tab bar**, which the owner asked about rather
+than asked for: the bar is `49 + insets.bottom` = 83pt here, of which the
+bottom 34 is the home-indicator inset iOS reserves and react-navigation
+applies. The app adds nothing to it — `tabBarStyle` sets only colours and
+the top border. Trimming it means overriding the bar's height and letting
+the labels sit closer to the indicator, which is a taste call and is
+therefore parked rather than taken.

@@ -26,7 +26,7 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
-import { PhotoTopScrim } from '@/components/ui';
+import { PHOTO_SCREEN_FRACTION } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
 import { useBottomGap } from '@/lib/insets';
@@ -82,7 +82,7 @@ export default function Discover() {
   // believes nothing is busy.
   const [flying, setFlying] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
   // State is set from promise callbacks, never synchronously in the effect.
@@ -262,13 +262,6 @@ export default function Discover() {
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
     extrapolate: 'clamp',
   });
-  // The count goes before either stamp arrives, so the two never share
-  // the same line.
-  const countOpacity = pan.x.interpolate({
-    inputRange: [-CLAIM_DISTANCE * 3, 0, CLAIM_DISTANCE * 3],
-    outputRange: [0, 1, 0],
-    extrapolate: 'clamp',
-  });
   // Each stamp is fully there exactly where a release would count.
   const likeOpacity = pan.x.interpolate({
     inputRange: [0, threshold],
@@ -339,7 +332,12 @@ export default function Discover() {
         >
           {/* The photo is the swipe surface, not a tap target (owner,
               2026-09-11): "Profili gör" below is the way to the person. */}
-          <View style={styles.photoWrap}>
+          <View
+            style={[
+              styles.photoWrap,
+              { maxHeight: Math.round(height * PHOTO_SCREEN_FRACTION) },
+            ]}
+          >
             {cardSource ? (
               <Image
                 source={cardSource}
@@ -348,26 +346,6 @@ export default function Discover() {
                 testID="card-photo"
               />
             ) : null}
-            {/* The status bar is fixed light, and a pale photograph now
-                reaches all the way under it. */}
-            <PhotoTopScrim height={insets.top + space.xxl} />
-            {/* The count rides the photo now that the pills own the foot
-                of the screen. It fades before either stamp arrives at the
-                same height. */}
-            <Animated.View
-              style={[
-                styles.count,
-                { top: insets.top + space.xl, opacity: countOpacity },
-              ]}
-              pointerEvents="none"
-            >
-              <Text
-                style={styles.countText}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-              >
-                {t.discover.remaining(state.candidates.length - 1)}
-              </Text>
-            </Animated.View>
             {/* The name sits on the photo, as in the design; the chart
                 below it is what the card is actually about. */}
             <LinearGradient
@@ -420,6 +398,36 @@ export default function Discover() {
             </Animated.View>
           </View>
           <View style={styles.info}>
+            {/* Directly under the name on the photo (owner, 2026-09-14):
+                the two ways to look closer, before the chart itself. */}
+            <View style={styles.pills}>
+              <Pressable
+                testID="open-detail"
+                accessibilityRole="button"
+                style={styles.pill}
+                onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+              >
+                <Text
+                  style={styles.pillText}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {t.discover.detail}
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="open-person"
+                accessibilityRole="button"
+                style={styles.pill}
+                onPress={() => setSheet({ id: current.row.id, of: 'person' })}
+              >
+                <Text
+                  style={styles.pillText}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {t.discover.openProfile}
+                </Text>
+              </Pressable>
+            </View>
             <BigThreeRow
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
@@ -445,14 +453,6 @@ export default function Discover() {
                 </Text>
               </View>
             </View>
-            <Text
-              style={styles.why}
-              testID="why"
-              numberOfLines={2}
-              maxFontSizeMultiplier={MAX_DECK_SCALE}
-            >
-              {current.why ?? t.discover.noAspectWhy}
-            </Text>
           </View>
         </Animated.View>
       )}
@@ -497,38 +497,6 @@ export default function Discover() {
                   ♥
                 </Text>
               </LinearGradient>
-            </Pressable>
-          </View>
-          {/* Both are popups, not disclosures and not pages (owner,
-              2026-09-11 for the reading, 2026-09-14 for the person), and
-              they are the last row on the screen (owner, 2026-09-14:
-              "uyum detayi ve profili gor en altta olsun"). */}
-          <View style={styles.pills}>
-            <Pressable
-              testID="open-detail"
-              accessibilityRole="button"
-              style={styles.pill}
-              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-            >
-              <Text
-                style={styles.pillText}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-              >
-                {t.discover.detail}
-              </Text>
-            </Pressable>
-            <Pressable
-              testID="open-person"
-              accessibilityRole="button"
-              style={styles.pill}
-              onPress={() => setSheet({ id: current.row.id, of: 'person' })}
-            >
-              <Text
-                style={styles.pillText}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-              >
-                {t.discover.openProfile}
-              </Text>
             </Pressable>
           </View>
         </View>
@@ -705,15 +673,6 @@ const styles = StyleSheet.create({
   cardPhoto: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   info: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.sm },
   footer: { paddingHorizontal: space.lg, gap: space.sm },
-  count: {
-    position: 'absolute',
-    alignSelf: 'center',
-    backgroundColor: color.scrim,
-    borderRadius: radius.pill,
-    paddingHorizontal: space.md,
-    paddingVertical: space.xs,
-  },
-  countText: { ...type.caption, color: color.textMuted },
   photoScrim: {
     position: 'absolute',
     left: 0,
@@ -760,7 +719,6 @@ const styles = StyleSheet.create({
   },
   bandName: { ...type.title, color: color.text },
   scoreLabel: { ...type.label, color: color.textFaint },
-  why: { ...type.body, color: color.textMuted, textAlign: 'center' },
   link: {
     ...type.bodySmall,
     color: color.textMuted,
