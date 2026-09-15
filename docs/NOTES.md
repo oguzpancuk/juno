@@ -4031,3 +4031,52 @@ and deliberate above it: the deck cannot scroll and the profile can.
 The photo also got shorter — `PHOTO_SCREEN_FRACTION` 0.62 → 0.56 — and
 the verdict buttons went 62 → 76pt with it, which is what the owner asked
 the height for.
+
+## 2026-09-15 — the photo and the band become the controls; and a disk that filled
+
+**The deck has no secondary buttons now.** The owner dropped the two
+corner glyphs: a tap on the photo opens the person, a tap on the band
+block opens the reading. That reverses the 2026-09-11 rule that the photo
+is a swipe surface only, and it is the gesture question the rule existed
+to avoid, so it was checked rather than assumed. The card's responder
+never claims on touch start, only on horizontal movement past
+`CLAIM_DISTANCE`, so a tap reaches the photo's `Pressable`; and when a
+drag does cross the threshold, the responder takes the touch and the
+press is cancelled before it can fire. On the device: a tap on the photo
+and a tap on the band each opened their sheet, and an 80pt drag moved the
+card and let it spring back with no sheet and no `likes` row. One
+known softness, not fixed: a long _vertical_ drag that ends inside the
+photo still counts as a press, because nothing claims vertical movement
+any more; it opens the profile rather than doing nothing.
+
+✕ / ♥ are 88pt and centred in the free space: the card hugs its content
+and the footer is `flex: 1` with a minimum of one button's height, so the
+buttons sit between the band and the tab bar instead of against the bar.
+Both card and photo may shrink, so on a screen too short for the full
+photo share it is the picture that gives way.
+
+**The environment broke underneath the session, and it was the disk.**
+Docker Desktop would not open and every simulator reported "runtime
+profile not found". Docker's own log had the cause at 05:22: "Docker
+Desktop cannot continue because the disk is full". The backend stayed
+hung after the error dialog closed, which is why reopening did nothing;
+killing it and relaunching brought the engine back, and the local
+database came through intact. The same disk pressure had evidently cost
+the iOS 26.5 simulator runtime: `simctl runtime list` showed no disk
+images at all. The owner re-downloaded it (`xcodebuild -downloadPlatform
+iOS`, 8.5 GB), and installing it removed the now-orphaned device folders
+— including the simulator this project had used all along, with Expo Go
+and the signed-in session on it. A new iPhone 17 Pro was created and
+Expo Go installed from `~/.expo/ios-simulator-app-cache` rather than
+downloaded again.
+
+`supabase start` after the Docker restart left the **edge runtime**
+stopped (its container had exited 255 in the crash). Two symptoms, one
+cause: every photo on screen drew as an empty tile, since photos come
+through the `photo` function (ADR-0006), and the supabase test workspace
+failed on the `delete-account` preflight. `docker start
+supabase_edge_runtime_juno` fixed both. Worth checking first the next
+time photos go blank.
+
+The disk is at about 87% with 25 GB free. It filled once; the npm cache
+(2.4 GB) is the one clearly safe thing left to reclaim.

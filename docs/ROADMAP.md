@@ -1169,6 +1169,15 @@ other.
       edges line up: the profile takes it directly, the deck fills what
       its fixed block leaves and caps there, which is the arrangement that
       cannot overflow on a screen too short for it._
+      **Amended a third time, 2026-09-15.** The two corner glyphs are
+      gone too. A tap anywhere on the photo opens the person and a tap on
+      the band block opens the reading, both as the same sheets —
+      reversing the 2026-09-11 decision that the photo is a swipe surface
+      only. ✕ / ♥ grew to 88pt and sit centred in the space between the
+      band and the tab bar rather than against the bar. Checked on the
+      device: a tap on the photo and a tap on the band each open their
+      sheet, and a short horizontal drag on the photo moved the card and
+      returned it with no sheet opened and no `likes` row written.
 
 Owner decisions taken by default, each reversible: the ✕ / ♥ stay above
 the pills, since the owner named only the pills as "en altta"; the bio

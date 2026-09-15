@@ -23,7 +23,6 @@ import {
 } from '@/lib/discover';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
-import { CardIcon } from '@/components/CardIcon';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
@@ -54,6 +53,9 @@ const CLAIM_DISTANCE = 8;
  * sizes are served uncapped by the two sheets, which do scroll.
  */
 const MAX_DECK_SCALE = 1.35;
+
+/** ✕ and ♥ — the verdict, the largest targets on the screen. */
+const ROUND_SIZE = 88;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
@@ -331,13 +333,20 @@ export default function Discover() {
           testID={`card-${current.row.id}`}
           {...responder.panHandlers}
         >
-          {/* The photo is the swipe surface, not a tap target (owner,
-              2026-09-11): "Profili gör" below is the way to the person. */}
-          <View
+          {/* The photo is both surfaces now (owner, 2026-09-14, reversing
+              2026-09-11): a tap anywhere on it opens the person, a drag
+              swipes. They do not fight — the card's responder claims only
+              on horizontal movement, and taking the touch cancels this
+              press before it can fire. */}
+          <Pressable
             style={[
               styles.photoWrap,
-              { maxHeight: Math.round(height * PHOTO_SCREEN_FRACTION) },
+              { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
             ]}
+            onPress={() => setSheet({ id: current.row.id, of: 'person' })}
+            accessibilityRole="button"
+            accessibilityLabel={t.discover.openProfile}
+            testID="open-person"
           >
             {cardSource ? (
               <Image
@@ -365,37 +374,6 @@ export default function Discover() {
                   : `${current.row.distance_km} km`}
               </Text>
             </LinearGradient>
-            {/* In the corner of the picture, not a row of their own
-                (owner, 2026-09-14). Small, outlined and translucent on
-                purpose: the filled ✕ and ♥ below decide something, these
-                two only open a sheet, and four equal circles would invite
-                the wrong one. */}
-            <View style={styles.cardActions}>
-              <Pressable
-                testID="open-detail"
-                accessibilityRole="button"
-                accessibilityLabel={t.discover.detail}
-                style={({ pressed }) => [
-                  styles.cardAction,
-                  pressed && styles.buttonBusy,
-                ]}
-                onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-              >
-                <CardIcon name="reading" />
-              </Pressable>
-              <Pressable
-                testID="open-person"
-                accessibilityRole="button"
-                accessibilityLabel={t.discover.openProfile}
-                style={({ pressed }) => [
-                  styles.cardAction,
-                  pressed && styles.buttonBusy,
-                ]}
-                onPress={() => setSheet({ id: current.row.id, of: 'person' })}
-              >
-                <CardIcon name="person" />
-              </Pressable>
-            </View>
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
             <Animated.View
@@ -428,13 +406,21 @@ export default function Discover() {
                 {t.discover.swipePass}
               </Text>
             </Animated.View>
-          </View>
+          </Pressable>
           <View style={styles.info}>
             <BigThreeRow
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
             />
-            <View style={styles.bandBox}>
+            {/* The reading opens from the thing it explains (owner,
+                2026-09-14). */}
+            <Pressable
+              style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
+              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+              accessibilityRole="button"
+              accessibilityLabel={t.discover.detail}
+              testID="open-detail"
+            >
               <BandMeter
                 band={bandOf(current.match.score)}
                 label={bandName(current.match.score)}
@@ -454,7 +440,7 @@ export default function Discover() {
                   {t.discover.scoreLabel}
                 </Text>
               </View>
-            </View>
+            </Pressable>
           </View>
         </Animated.View>
       )}
@@ -660,15 +646,19 @@ const styles = StyleSheet.create({
     gap: space.md,
     backgroundColor: color.bg,
   },
-  // The swipeable unit: the picture and the chart block under it, filling
-  // the screen above a static footer. No border and no radius — at screen
-  // height a hairline sweeping across the display under the tilt reads as
-  // a fault, not as an edge.
-  card: { flex: 1 },
-  // No `minHeight`: a floor would turn a squeezed photo into clipped text
-  // below it, and the text is the part that cannot be scrolled to.
+  // The swipeable unit: the picture and the chart block under it. No
+  // border and no radius — at screen height a hairline sweeping across the
+  // display under the tilt reads as a fault, not as an edge.
+  //
+  // It hugs its content and the footer takes what is left, so ✕ / ♥ sit in
+  // the middle of the free space rather than against the tab bar (owner,
+  // 2026-09-14). Both card and photo may shrink: on a screen too short for
+  // the full photo share it is the picture that gives way, never the
+  // buttons, which keep the footer's minimum height.
+  card: { flexShrink: 1 },
   photoWrap: {
-    flex: 1,
+    flexShrink: 1,
+    minHeight: 0,
     overflow: 'hidden',
     backgroundColor: color.surfaceHigh,
   },
@@ -680,28 +670,14 @@ const styles = StyleSheet.create({
     paddingTop: space.md,
     gap: space.sm,
   },
-  // Above the name's own line, hard against the right gutter, so the two
-  // never crowd a long name. The photo under them is still the swipe
-  // surface: a drag that starts here passes to the card, because the
-  // responder claims on movement and a Pressable only acts on a release.
-  cardActions: {
-    position: 'absolute',
-    right: SCREEN_PADDING,
-    bottom: space.xxl,
-    flexDirection: 'row',
-    gap: space.md,
-  },
-  cardAction: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    backgroundColor: color.scrim,
-    alignItems: 'center',
+  footer: {
+    flex: 1,
+    minHeight: ROUND_SIZE + space.xl,
     justifyContent: 'center',
+    paddingHorizontal: SCREEN_PADDING,
+    gap: space.sm,
   },
-  footer: { paddingHorizontal: SCREEN_PADDING, gap: space.sm },
+  dim: { opacity: 0.6 },
   photoScrim: {
     position: 'absolute',
     left: 0,
@@ -766,11 +742,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: space.xl,
     justifyContent: 'center',
-    marginTop: space.sm,
   },
   round: {
-    width: 76,
-    height: 76,
+    width: ROUND_SIZE,
+    height: ROUND_SIZE,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: color.borderStrong,
@@ -779,14 +754,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   roundLike: {
-    width: 76,
-    height: 76,
+    width: ROUND_SIZE,
+    height: ROUND_SIZE,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
   roundFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  roundGlyph: { fontSize: 27, color: color.textMuted },
-  roundGlyphOn: { fontSize: 29, color: color.onBright },
+  roundGlyph: { fontSize: 32, color: color.textMuted },
+  roundGlyphOn: { fontSize: 35, color: color.onBright },
   buttonBusy: { opacity: 0.5 },
   muted: { ...type.body, color: color.textMuted, textAlign: 'center' },
 });
