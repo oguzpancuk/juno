@@ -17,7 +17,7 @@ import {
   settingsTitle,
   type SettingsView,
 } from '@/components/SettingsPanel';
-import { SlidersIcon } from '@/components/SlidersIcon';
+import { GearIcon } from '@/components/GearIcon';
 import { useScreenName } from '@/lib/a11y';
 import {
   Body,
@@ -232,7 +232,7 @@ export default function Profile() {
             // strokes over a picture are not a control.
             style={({ pressed }) => [styles.iconChip, pressed && styles.dim]}
           >
-            <SlidersIcon />
+            <GearIcon />
           </Pressable>
         </View>
         {/* Under the control that caused it. In the flow it would push the

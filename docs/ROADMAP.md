@@ -1235,6 +1235,13 @@ controls that take one gesture instead of a dozen taps.
       at 18 and 99, and "Belirgin" saved as `strong`. Screen-reader
       stepping on the thumbs is written but not driven._
 
+- [x] **Settings is a gear.** With the filters' sliders in the same
+      corner of the next tab, the profile's chip draws a gear instead
+      (owner, 2026-09-15), so the two are not one picture with two
+      meanings. The outline is computed in `GearIcon`, flat-topped teeth
+      and a hole, not a spoked disc that could pass for a sun.
+      _Done. `v6-profile-gear.png`; the chip still opens the sheet._
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

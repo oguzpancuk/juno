@@ -2,8 +2,9 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { color } from '@/theme/tokens';
 
 /**
- * Settings: three sliders, not a gear. A gear at this size is a circle
- * with eight spokes, which is also a sun — and this app draws real suns.
+ * The discovery filters: three sliders. Settings used to draw this too;
+ * it is a gear now, so the two corner chips on neighbouring tabs are not
+ * the same picture meaning different things.
  */
 export function SlidersIcon({ fill = color.surfaceSoft }: { fill?: string }) {
   return (

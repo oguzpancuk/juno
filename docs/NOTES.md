@@ -4233,3 +4233,16 @@ sheet.
 A simulator note: while this was being built the owner was using the
 same simulator, and one screenshot caught their screen rather than the
 one being checked; it was deleted and retaken.
+
+## 2026-09-15 — the settings gear
+
+**Settings draws a gear.** Raised in the previous entry: the profile's
+settings chip and the deck's filters chip sat in the same corner of
+neighbouring tabs with the same sliders glyph. The owner chose a gear for
+settings. `SlidersIcon`'s old comment had argued against a gear — at 26pt
+a disc with spokes reads as a sun, which this app draws for real — so
+`GearIcon` is an outline with eight flat-topped teeth and a hole, its path
+computed from a few constants rather than copied from an icon set, which
+leaves no licence to credit. Checked on the device (`v6-profile-gear.png`
+and an enlarged crop): it reads as a gear, and the chip still opens the
+settings sheet.
