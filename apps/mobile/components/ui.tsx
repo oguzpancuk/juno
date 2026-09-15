@@ -346,7 +346,10 @@ const s = StyleSheet.create({
   screenContent: {
     padding: SCREEN_PADDING,
     paddingTop: SCREEN_TOP_PADDING,
-    paddingBottom: 56,
+    // The gutter, not more: the tab bar under this screen already sits
+    // between the last card and the home indicator (owner, 2026-09-15:
+    // too much space under "Tüm haritanı gör").
+    paddingBottom: SCREEN_PADDING,
     gap: space.md,
   },
   display: { ...type.display, color: color.text },

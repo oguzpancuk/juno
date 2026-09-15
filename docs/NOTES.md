@@ -4119,3 +4119,39 @@ below the buttons — with the same 8pt floor on each, and the band block
 lost its own vertical padding, which had added to both of its gaps. Its
 touch target keeps its reach through `hitSlop`. Not yet measured on the
 device: the simulator was in the owner's hands on another screen.
+
+## 2026-09-15 — tab items centred, the deck's reading made whole, and a correction
+
+**Tab items, centred for real.** The 4pt nudge was not enough; the owner
+asked for them exactly in the middle. React Navigation lays the item out
+from the top of a 49pt row and gives the home indicator's 34pt below it
+as padding, so no amount of item padding could centre it within that
+row. The bar keeps its standard height but its row now gets all of it
+(`paddingBottom: 0`), and the items move down by `barHeight / 2` minus
+their measured centre (28.85pt) — clamped to zero on a phone with no
+home indicator, where the bar is the standard one. Measured:
+23.7pt from the border to the icon, 23.0 from the label to the screen
+edge. `v6-tabbar-centred.png`.
+
+**"Uyum detayı" on the deck is the match page's reading.** The owner
+wanted the deck's sheet as detailed as the Uyum tab after a match,
+without the match part. The block is now one component, `PairReading` —
+the band word, then `CompatibilityDetail` with the two aspect sections,
+the house overlays and five aspects rather than three — rendered by both
+the match page and the deck sheet, so they cannot drift. Left out as
+match-specific: the "EŞLEŞTİNİZ" heading, the starter, the photo strip
+and the safety controls. The deck's sheet lost the band meter it used to
+draw beside the word, because the match page has none.
+
+**The profile's bottom** keeps the gutter (24pt) under "Tüm haritanı gör"
+instead of 56. `Screen` has that one caller.
+
+**A correction to the previous entry.** It said the deck's three gaps
+under the chips were equal "by construction". The layout boxes are; the
+drawn gaps were not — measured 28.7 / 24.0 / 23.3pt. The band word's line
+box is taller than its letters, by about 4.7pt above and 0.7 below, so
+the gap above the band reads larger. The band is now lifted 4pt and the
+gap above the tab bar given 5 more. **Not yet re-measured**: the
+simulator was in the owner's hands. Neither is the deck's new reading
+sheet or the profile's bottom gap; all three are typechecked, linted and
+on the committed HEAD, and nothing more than that is claimed for them.

@@ -1,4 +1,4 @@
-import { bandName, bandOf, natalReading, synastryReading } from '@juno/astro';
+import { bandName, bandOf, natalReading } from '@juno/astro';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import {
@@ -23,7 +23,7 @@ import {
 } from '@/lib/discover';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
-import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import { PairReading } from '@/components/PairReading';
 import { BandMeter } from '@/components/Meter';
 import { Popup } from '@/components/Popup';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
@@ -57,6 +57,15 @@ const MAX_DECK_SCALE = 1.35;
 const ROUND_SIZE = 88;
 /** The least each of the three gaps under the chips may shrink to. */
 const SPACING_FLOOR = space.sm;
+/**
+ * The band word's own line box is taller than its glyphs: measured on the
+ * device, about 4.7pt of it is empty above the letters and 0.7pt below.
+ * The layout gaps are equal, so the *drawn* gap above the band came out
+ * ~5pt larger than the two below it. Lifting the band by 4 and giving the
+ * bottom gap 5 more makes the three read equal to within half a point.
+ */
+const BAND_LIFT = 4;
+const BAR_GAP_EXTRA = 5;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
@@ -216,10 +225,11 @@ export default function Discover() {
   );
   const sources = usePhotoSources(cardPaths);
   const cardSource = sources[0];
-  // Engine-rendered detail for the visible card; the screen only lays it out.
+  // The two charts the detail sheet reads; `PairReading` does the rest, and
+  // only once the sheet mounts it.
   const detail = useMemo(
     () =>
-      me && current ? synastryReading(me.chart, current.row.chart, 3) : null,
+      me && current ? { mine: me.chart, theirs: current.row.chart } : null,
     [me, current],
   );
   // Their own chart, for the profile sheet. Memoised on the card like the
@@ -497,11 +507,9 @@ export default function Discover() {
           title={t.discover.detail}
           testID="detail"
         >
-          <View style={styles.popupBand}>
-            <BandMeter band={detail.band} label={detail.bandName} />
-            <Text style={styles.bandName}>{detail.bandName}</Text>
-          </View>
-          <CompatibilityDetail reading={detail} />
+          {/* The match page's whole reading, not a digest of it (owner,
+              2026-09-15). */}
+          <PairReading mine={detail.mine} theirs={detail.theirs} />
         </Popup>
       ) : null}
       {current && theirReading ? (
@@ -688,7 +696,8 @@ const styles = StyleSheet.create({
     flexGrow: 2,
     minHeight: ROUND_SIZE + 2 * SPACING_FLOOR,
     justifyContent: 'space-evenly',
-    paddingVertical: SPACING_FLOOR,
+    paddingTop: SPACING_FLOOR,
+    paddingBottom: SPACING_FLOOR + BAR_GAP_EXTRA,
     paddingHorizontal: SCREEN_PADDING,
   },
   dim: { opacity: 0.6 },
@@ -743,6 +752,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.md,
+    marginBottom: BAND_LIFT,
   },
   bandName: { ...type.title, color: color.text },
   scoreLabel: { ...type.label, color: color.textFaint },
@@ -752,7 +762,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: space.sm,
   },
-  popupBand: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },
   actions: {
     flexDirection: 'row',

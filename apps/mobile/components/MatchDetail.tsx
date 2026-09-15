@@ -1,6 +1,5 @@
-import { houseOverlays, matchSections, synastryReading } from '@juno/astro';
 import { Link, router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -10,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
-import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import { PairReading } from '@/components/PairReading';
 import { Popup } from '@/components/Popup';
 import { useBottomGap } from '@/lib/insets';
 import type { MatchProfileRow } from '@/lib/matches';
@@ -79,25 +78,6 @@ export function MatchDetail({
       cancelled = true;
     };
   }, [userId]);
-
-  const reading = useMemo(
-    () => (me ? synastryReading(me.chart, row.chart, 5) : null),
-    [me, row],
-  );
-  const sections = useMemo(
-    () =>
-      reading
-        ? matchSections(
-            reading.match,
-            reading.dimensions.map((d) => d.label),
-          )
-        : null,
-    [reading],
-  );
-  const overlays = useMemo(
-    () => (me ? houseOverlays(me.chart, row.chart) : []),
-    [me, row],
-  );
 
   const starter = starterFor(row, userId);
   const other = row.id;
@@ -186,18 +166,11 @@ export function MatchDetail({
           {t.match.synastryFailed}
         </Text>
       ) : null}
-      {reading && sections ? (
-        <View style={styles.summary} testID="synastry">
+      {me ? (
+        <View style={styles.summary}>
           <Text style={styles.label}>{t.match.summary}</Text>
-          {/* The band, never the number (ADR-0009 §3). */}
-          <Text style={styles.bandName} testID="band">
-            {reading.bandName}
-          </Text>
-          <CompatibilityDetail
-            reading={reading}
-            sections={sections}
-            overlays={overlays}
-          />
+          {/* Shared with the deck's "Uyum detayı" sheet. */}
+          <PairReading mine={me.chart} theirs={row.chart} />
         </View>
       ) : null}
 
@@ -292,7 +265,6 @@ const styles = StyleSheet.create({
   starterMeaning: { ...type.body, color: color.textMuted },
   starterQuestion: { ...type.heading, color: color.text, lineHeight: 26 },
   summary: { gap: space.sm },
-  bandName: { ...type.display, color: color.text },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },

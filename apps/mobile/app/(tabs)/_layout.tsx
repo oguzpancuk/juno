@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabIcon } from '@/components/TabIcon';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, type } from '@/theme/tokens';
 
 /**
  * The three places the app lives: you, the deck, the people you matched
@@ -13,7 +14,25 @@ import { color, space, type } from '@/theme/tokens';
  * handful of times in an account's life, and a fourth tab would spend a
  * permanent quarter of the bar on it.
  */
+/** React Navigation's UIKit tab row, above the home-indicator inset. */
+const TAB_ROW = 49;
+/**
+ * Where the drawn icon-and-label sits in that row with no padding of ours:
+ * its vertical centre, measured on the device (icon top 10.7pt below the
+ * bar's border, label bottom 47pt). The library lays the item out from the
+ * top (`justifyContent: 'flex-start'`), so centring is an offset from here.
+ */
+const ITEM_CENTRE = 28.85;
+
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  // The bar keeps its standard height, but its row is given all of it
+  // rather than stopping above the home indicator, and the items are
+  // pushed down to its middle (owner, 2026-09-15: "tam ortalamalı"). With
+  // no inset — a phone without a home indicator — the offset clamps to 0
+  // and the bar is the standard one.
+  const barHeight = TAB_ROW + insets.bottom;
+  const itemOffset = Math.max(0, Math.round(barHeight / 2 - ITEM_CENTRE));
   return (
     <Tabs
       // Keşfet is the middle tab and the one the app opens on; the order
@@ -31,15 +50,11 @@ export default function TabLayout() {
           backgroundColor: color.bg,
           borderTopColor: color.border,
           borderTopWidth: 1,
+          height: barHeight,
+          paddingBottom: 0,
         },
         tabBarLabelStyle: { ...type.caption, fontSize: 11 },
-        // The items sit at the top of the bar's 49pt row (react-navigation's
-        // UIKit layout is `justifyContent: 'flex-start'`), and below them is
-        // the home indicator's 34pt, so on a dark screen with no indicator
-        // drawn they read as riding high (owner, 2026-09-15). Nudged down
-        // on the wrapper rather than by trimming the bar's bottom padding,
-        // which would not move top-aligned items at all.
-        tabBarItemStyle: { paddingTop: space.xs },
+        tabBarItemStyle: { paddingTop: itemOffset },
         sceneStyle: { backgroundColor: color.bg },
       }}
     >
