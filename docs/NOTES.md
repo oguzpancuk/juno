@@ -4469,7 +4469,8 @@ the real guard was put back and both pass.
 
 This is the second time an assertion on an error code passed for the wrong
 reason in this file. A standing rule for it is proposed to the owner rather
-than written unasked.
+than written unasked; the proposed wording is the open ROADMAP item "Owner
+decision: a standing rule for refusal tests".
 
 **Minor, also fixed.** The badge's realtime test now also shows the
 sender's recipient subscription staying silent when the other side reads
@@ -4486,3 +4487,12 @@ server after the panel has read the row back; whether PostgREST cancels
 the statement when the client goes away is not checked. The local
 database's migration history row for 20260916000001 holds the first draft
 of the file; the schema itself matches the committed file.
+
+## 2026-09-16 — pushed
+
+After the review of 522e312 returned PASS (two wording findings, fixed in
+the commit after it), `main` was pushed with the owner's approval:
+d08ff23..522e312, 28 commits — the fourth and fifth UI passes, the gear,
+the unread badge, three rounds of review fixes and `messages.recipient_id`.
+Nothing was deployed; the migration waits for the first `db push`, before
+any app build carrying the filtered badge (ADR-0010).
