@@ -1,6 +1,6 @@
 import { bandName, bandOf, natalReading } from '@juno/astro';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -45,6 +45,11 @@ import { color, gradient, radius, space, type } from '@/theme/tokens';
  * still deciding, and a tap on a button is well under it.
  */
 const CLAIM_DISTANCE = 8;
+
+/** How far away someone is, as the card and the person sheet write it. */
+function distanceLine(km: number): string {
+  return km === 0 ? t.discover.under1km : `${km} km`;
+}
 /** The filters chip, the same size as the profile's settings chip. */
 const CORNER_CHIP = 36;
 
@@ -211,6 +216,10 @@ export default function Discover() {
   // boolean so a card arriving underneath closes it: a sheet belongs to
   // the person it was opened on, never to the position.
   const [sheet, setSheet] = useState<{ id: string; of: Sheet } | null>(null);
+  // Where the finger went down on the photo. The card claims only a
+  // sideways drag, so an upward or downward one that stays on the photo is
+  // still this press when it lifts — and a drag is not a tap.
+  const pressedAt = useRef<{ x: number; y: number } | null>(null);
   const open = current !== undefined && sheet?.id === current.row.id;
   const showDetail = open && sheet?.of === 'detail';
   const showPerson = open && sheet?.of === 'person';
@@ -363,15 +372,43 @@ export default function Discover() {
               2026-09-11): a tap anywhere on it opens the person, a drag
               swipes. They do not fight — the card's responder claims only
               on horizontal movement, and taking the touch cancels this
-              press before it can fire. */}
+              press before it can fire. A vertical drag is not claimed, so
+              the press itself refuses a finger that travelled (review,
+              2026-09-15). */}
           <Pressable
             style={[
               styles.photoWrap,
               { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
             ]}
-            onPress={() => setSheet({ id: current.row.id, of: 'person' })}
+            onPressIn={(event) => {
+              pressedAt.current = {
+                x: event.nativeEvent.pageX,
+                y: event.nativeEvent.pageY,
+              };
+            }}
+            onPress={(event) => {
+              const from = pressedAt.current;
+              pressedAt.current = null;
+              // A screen reader's activation carries no travel: NaN is
+              // not past the line, so it still opens.
+              if (
+                from !== null &&
+                Math.hypot(
+                  event.nativeEvent.pageX - from.x,
+                  event.nativeEvent.pageY - from.y,
+                ) > CLAIM_DISTANCE
+              )
+                return;
+              setSheet({ id: current.row.id, of: 'person' });
+            }}
             accessibilityRole="button"
-            accessibilityLabel={t.discover.openProfile}
+            // The name, age and distance drawn on the photo, which the
+            // label would otherwise hide from VoiceOver (review, 2026-09-15).
+            accessibilityLabel={t.discover.openPerson(
+              current.row.display_name,
+              current.row.age,
+              distanceLine(current.row.distance_km),
+            )}
             testID="open-person"
           >
             {cardSource ? (
@@ -395,9 +432,7 @@ export default function Discover() {
                 style={styles.distance}
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
               >
-                {current.row.distance_km === 0
-                  ? t.discover.under1km
-                  : `${current.row.distance_km} km`}
+                {distanceLine(current.row.distance_km)}
               </Text>
             </LinearGradient>
             {/* The verdict as it forms, for sighted eyes only: the round
@@ -444,7 +479,10 @@ export default function Discover() {
               style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
               onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
               accessibilityRole="button"
-              accessibilityLabel={t.discover.detail}
+              // The band word drawn inside, then what a tap opens.
+              accessibilityLabel={t.discover.openDetail(
+                bandName(current.match.score),
+              )}
               hitSlop={space.md}
               testID="open-detail"
             >
@@ -538,11 +576,7 @@ export default function Discover() {
           <ProfileView
             name={current.row.display_name}
             age={current.row.age}
-            caption={
-              current.row.distance_km === 0
-                ? t.discover.under1km
-                : `${current.row.distance_km} km`
-            }
+            caption={distanceLine(current.row.distance_km)}
             photos={current.row.photos}
             sources={sources}
             three={current.row.big_three}

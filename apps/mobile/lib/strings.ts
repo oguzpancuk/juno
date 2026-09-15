@@ -108,7 +108,12 @@ export const t = {
     matchesUnread: (count: number) => `Eşleşmeler, ${count} okunmamış mesaj`,
   },
   discover: {
-    openProfile: 'Profili gör',
+    // What VoiceOver reads for the photo and for the band. A label takes
+    // the place of the text inside a button, so it carries what is drawn
+    // there first, then what a tap does.
+    openPerson: (name: string, age: number, distance: string) =>
+      `${name}, ${age}, ${distance}. Profili gör`,
+    openDetail: (band: string) => `${band} uyum. Uyum detayı`,
     // The stamps a drag reveals. Pre-uppercased: RN textTransform maps
     // Turkish i → I, not İ.
     swipeLike: 'BEĞEN',
