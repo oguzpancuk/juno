@@ -19,6 +19,7 @@ import {
 } from '@/components/SettingsPanel';
 import { GearIcon } from '@/components/GearIcon';
 import { useScreenName } from '@/lib/a11y';
+import { LeaveGate } from '@/lib/leave-gate';
 import {
   Body,
   LinkText,
@@ -72,18 +73,19 @@ export default function Profile() {
   const [showSettings, setShowSettings] = useState(false);
   // Which part of settings the sheet shows; every opening starts at the list.
   const [settingsView, setSettingsView] = useState<SettingsView>('menu');
-  // What to do once the sheet is fully gone — the trip to sign-in after a
-  // sign-out or a deleted account. Queued rather than run, see Popup's
-  // `onDismissed`.
-  const afterSettings = useRef<(() => void) | null>(null);
-  // Set once a sign-out or a deletion has been asked for. The sheet fades
-  // before the sign-out starts, and reopening it in that gap would put it
-  // back on screen for the moment the session ends.
+  // Whether a sign-out or a deletion may leave now, later, or not at all:
+  // see `LeaveGate`. Held in state, made once, like the track's gesture.
+  const [gate] = useState(() => new LeaveGate());
+  useEffect(() => {
+    gate.attached();
+    return () => gate.unmounted();
+  }, [gate]);
+  // Set once a sign-out or a deletion has been asked for: the chip stays
+  // off, so the sheet cannot be put back up in the moment the session ends.
   const [leaving, setLeaving] = useState(false);
-  const closeSettingsThen = (next: () => void) => {
-    afterSettings.current = next;
-    setLeaving(true);
-    setShowSettings(false);
+  const leave = (next: () => void) => {
+    if (gate.leave(next, () => setShowSettings(false)) !== 'ignored')
+      setLeaving(true);
   };
   const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -232,6 +234,7 @@ export default function Profile() {
             disabled={leaving}
             onPress={() => {
               setSettingsView('menu');
+              gate.opened();
               setShowSettings(true);
             }}
             // A chip, because the icon now sits on a photograph: three bare
@@ -295,11 +298,7 @@ export default function Profile() {
       <Popup
         visible={showSettings}
         onClose={() => setShowSettings(false)}
-        onDismissed={() => {
-          const next = afterSettings.current;
-          afterSettings.current = null;
-          next?.();
-        }}
+        onDismissed={() => gate.dismissed()}
         title={settingsTitle(settingsView)}
         contentKey={settingsView}
         testID="settings-popup"
@@ -307,7 +306,7 @@ export default function Profile() {
         <SettingsPanel
           view={settingsView}
           onView={setSettingsView}
-          onLeave={closeSettingsThen}
+          onLeave={leave}
         />
       </Popup>
     </Screen>

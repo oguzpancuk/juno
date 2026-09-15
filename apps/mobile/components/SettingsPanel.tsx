@@ -176,7 +176,9 @@ export function SettingsPanel({
       <Text style={styles.label}>{t.safety.title}</Text>
       <Pressable
         testID="sign-out"
-        style={styles.button}
+        style={[styles.button, deleting && styles.buttonBusy]}
+        // A deletion in flight signs out on its own when it finishes.
+        disabled={deleting}
         onPress={() => onLeave(signOutAndLeave)}
       >
         <Text style={styles.buttonText}>{t.settings.signOut}</Text>
