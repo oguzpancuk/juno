@@ -9,6 +9,7 @@ import { useSheetScrollLock } from '@/components/Popup';
 import {
   moveThumb,
   nearerThumb,
+  readTouch,
   stopAt,
   stopX,
   thumbForDirection,
@@ -31,9 +32,15 @@ export type TrackValues = readonly [number] | readonly [number, number];
  *
  * Controlled. A drag reports every stop it crosses through `onChange`, so
  * the caller can write the value above the track as it moves, and reports
- * once through `onCommit` when the finger lifts — the one moment worth a
- * database write. A tap on the track is a drag that did not move: the
- * nearer thumb jumps to it.
+ * once through `onCommit` when the finger lifts on a different stop than
+ * it started from — the one moment worth a database write. A drag that
+ * ends where it began, or is taken away, reports `onCancel` instead, so
+ * the caller can drop what it was showing. A tap on the track jumps the
+ * nearer thumb to it when the finger lifts.
+ *
+ * Nothing moves until the touch has shown what it is: a touch that heads
+ * up or down is the sheet's scroll, and the track lets it go without
+ * having changed anything.
  *
  * Built on `PanResponder`, the deck's own gesture, rather than a slider
  * package: React Native's own slider has one thumb, and a range needs two.
@@ -43,6 +50,7 @@ export function Track({
   values,
   onChange,
   onCommit,
+  onCancel,
   describe,
   labels,
   ticks = false,
@@ -53,6 +61,7 @@ export function Track({
   values: TrackValues;
   onChange: (values: TrackValues) => void;
   onCommit: (values: TrackValues) => void;
+  onCancel: () => void;
   /** What a screen reader says for a stop. */
   describe: (stop: number) => string;
   /** One accessibility label per thumb, low first. */
@@ -75,6 +84,7 @@ export function Track({
         disabled,
         onChange,
         onCommit,
+        onCancel,
         lock,
       }),
   );
@@ -88,6 +98,7 @@ export function Track({
       disabled,
       onChange,
       onCommit,
+      onCancel,
       lock,
     });
   });
@@ -179,6 +190,7 @@ type GestureProps = {
   disabled: boolean;
   onChange: (values: TrackValues) => void;
   onCommit: (values: TrackValues) => void;
+  onCancel: () => void;
   lock: (locked: boolean) => void;
 };
 
@@ -189,11 +201,17 @@ type GestureProps = {
  * crosses; a class held in state rather than refs read from the handlers,
  * because the lint rule refuses a ref handed to a function built during
  * render (the deck met the same rule, see `createDeckResponder`).
+ *
+ * The touch is claimed when it goes down, so a tap is heard, but nothing
+ * visible happens until `readTouch` has read it: a drag jumps the thumb
+ * and holds the sheet still from that move on, a scroll is handed back to
+ * the sheet untouched, and a touch that lifts unread is a tap (review,
+ * 2026-09-15).
  */
 class TrackGesture {
   private props: GestureProps;
+  private touch: { x: number; read: 'drag' | 'scroll' | null } | null = null;
   private drag: {
-    x: number;
     from: TrackValues;
     thumb: Thumb | null;
     last: TrackValues;
@@ -202,42 +220,59 @@ class TrackGesture {
 
   constructor(props: GestureProps) {
     this.props = props;
-    const claim = () => !this.props.disabled && this.props.inner > 0;
     this.responder = PanResponder.create({
-      onStartShouldSetPanResponder: claim,
-      onMoveShouldSetPanResponder: claim,
-      // The sheet's scroll view asks for the touch back once it moves;
-      // the thumb keeps it, and the sheet is held still meanwhile.
-      onPanResponderTerminationRequest: () => false,
-      onShouldBlockNativeResponder: () => true,
+      onStartShouldSetPanResponder: () =>
+        !this.props.disabled && this.props.inner > 0,
+      // Android: a vertical move has to be able to reach the scroll view.
+      // iOS takes no notice of this flag.
+      onShouldBlockNativeResponder: () => false,
+      // The sheet may have the touch until it is a drag, and not after.
+      onPanResponderTerminationRequest: () => this.drag === null,
       onPanResponderGrant: (event) => {
-        const { inner, count, values } = this.props;
         // Every child ignores touches, so this is always measured from
         // the track's own left edge, never from a thumb's.
-        const x = event.nativeEvent.locationX;
-        const stop = stopAt(x - THUMB / 2, inner, count);
-        this.drag = {
-          x,
-          from: values,
-          thumb:
-            values.length === 1
-              ? 'low'
-              : nearerThumb(stop, { low: values[0], high: values[1] }),
-          last: values,
-        };
-        this.props.lock(true);
-        this.place(x, 0);
+        this.touch = { x: event.nativeEvent.locationX, read: null };
       },
       onPanResponderMove: (_, g) => {
-        if (this.drag) this.place(this.drag.x + g.dx, g.dx);
+        const t = this.touch;
+        if (!t || t.read === 'scroll') return;
+        if (t.read === null) {
+          t.read = readTouch(g.dx, g.dy);
+          if (t.read !== 'drag') return;
+          this.begin(t.x);
+          this.props.lock(true);
+        }
+        // Measured from touch-down: the grant ran when the finger landed.
+        this.place(t.x + g.dx, g.dx);
       },
-      onPanResponderRelease: () => this.finish(),
-      onPanResponderTerminate: () => this.finish(),
+      onPanResponderRelease: () => {
+        const t = this.touch;
+        if (t !== null && t.read === null) {
+          this.begin(t.x);
+          this.place(t.x, 0);
+        }
+        this.finish(true);
+      },
+      onPanResponderTerminate: () => this.finish(false),
     });
   }
 
   update(props: GestureProps) {
     this.props = props;
+  }
+
+  /** Pick the thumb a touch at `x` takes, from the values as they are now. */
+  private begin(x: number) {
+    const { inner, count, values } = this.props;
+    const stop = stopAt(x - THUMB / 2, inner, count);
+    this.drag = {
+      from: values,
+      thumb:
+        values.length === 1
+          ? 'low'
+          : nearerThumb(stop, { low: values[0], high: values[1] }),
+      last: values,
+    };
   }
 
   private place(x: number, dx: number) {
@@ -266,11 +301,15 @@ class TrackGesture {
     this.props.onChange(next);
   }
 
-  private finish() {
+  private finish(commit: boolean) {
     const d = this.drag;
     this.drag = null;
+    this.touch = null;
     this.props.lock(false);
-    if (d) this.props.onCommit(d.last);
+    // Read as a scroll: nothing was shown, so there is nothing to undo.
+    if (!d) return;
+    if (commit && !same(d.last, d.from)) this.props.onCommit(d.last);
+    else this.props.onCancel();
   }
 }
 

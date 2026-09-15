@@ -2,11 +2,12 @@ import { BANDS, bandName, type Band } from '@juno/astro';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Track, type TrackValues } from '@/components/Track';
+import { LinkText } from '@/components/ui';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { supabase } from '@/lib/supabase';
-import { nearestStop } from '@/lib/track';
+import { READ_TIMEOUT_MS, supabase } from '@/lib/supabase';
+import { nearestStop, optionToWrite } from '@/lib/track';
 import { color, radius as r, space, type } from '@/theme/tokens';
 
 const RADIUS_OPTIONS = [5, 25, 50, 100, 500] as const;
@@ -43,22 +44,41 @@ export function FiltersPanel() {
   const [ageDrag, setAgeDrag] = useState<readonly [number, number] | null>(
     null,
   );
+  // Nothing is live, and nothing looks saved, until the stored row is in.
+  // A failed read used to leave age, band and elements answering on their
+  // defaults, ready to write those over what was stored (review,
+  // 2026-09-15); it now says so and offers a retry.
+  const [load, setLoad] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const ready = load === 'ready';
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    void fetchOwnProfile(userId).then((state) => {
-      if (cancelled || state.status !== 'ready') return;
-      setKm(state.profile.radius_km);
-      setAgeMin(state.profile.age_min);
-      setAgeMax(state.profile.age_max);
-      setBand(state.profile.min_band);
-      setElements(state.profile.sun_elements);
-    });
+    // After any write a previous opening left unanswered, so a sheet
+    // reopened at once shows what was just set.
+    void filterWritesAnswered()
+      .then(() => fetchOwnProfile(userId))
+      .then((state) => {
+        if (cancelled) return;
+        if (state.status !== 'ready') {
+          setLoad('failed');
+          return;
+        }
+        setKm(state.profile.radius_km);
+        // The column allows up to 120; the track ends at 99. A larger
+        // stored bound shows at the end and is only rewritten when a thumb
+        // really moves.
+        setAgeMin(Math.min(state.profile.age_min, AGE_CEILING));
+        setAgeMax(Math.min(state.profile.age_max, AGE_CEILING));
+        setBand(state.profile.min_band);
+        setElements(state.profile.sun_elements);
+        setLoad('ready');
+      });
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, attempt]);
 
   /**
    * Optimistic: the control moves, and reverts only if the write fails.
@@ -78,15 +98,19 @@ export function FiltersPanel() {
     patch: Record<string, unknown>,
     revert: () => void,
   ) => {
-    if (!userId) return;
+    if (!userId || !ready) return;
     order.current += 1;
     const mine = order.current;
     const columns = Object.keys(patch);
     for (const column of columns) newest.current.set(column, mine);
-    const { error: failed } = await supabase
-      .from('profiles')
-      .update(patch)
-      .eq('id', userId);
+    // `.then` once, here: every `then` on a query builder sends it again.
+    const { error: failed } = await answered(
+      supabase
+        .from('profiles')
+        .update(patch)
+        .eq('id', userId)
+        .then((result) => result),
+    );
     if (!failed) {
       // Only this write's own columns are known to be good now, but the
       // banner names no column, so the honest move is to clear it and let
@@ -116,9 +140,13 @@ export function FiltersPanel() {
     });
   };
 
-  const setRadius = (option: number) => {
+  const setRadius = (stop: number) => {
     setRadiusDrag(null);
-    if (option === km) return;
+    if (km === null) return;
+    // Let go where the stored value shows: nothing to save, which also
+    // leaves a stored radius between the options as it is.
+    const option = optionToWrite(stop, km, RADIUS_OPTIONS);
+    if (option === null) return;
     const was = km;
     setKm(option);
     void save({ radius_km: option }, () => setKm(was));
@@ -131,8 +159,6 @@ export function FiltersPanel() {
     ageMin - AGE_FLOOR,
     ageMax - AGE_FLOOR,
   ];
-  const kmOf = (values: TrackValues) =>
-    RADIUS_OPTIONS[values[0]] ?? RADIUS_OPTIONS[2];
   const agesOf = (values: TrackValues): readonly [number, number] => [
     values[0] + AGE_FLOOR,
     (values[1] ?? values[0]) + AGE_FLOOR,
@@ -152,14 +178,14 @@ export function FiltersPanel() {
     void save({ sun_elements: stored }, () => setElements(was));
   };
 
-  const chosen = elements ?? ELEMENTS;
+  const chosen = ready ? (elements ?? ELEMENTS) : [];
 
   return (
     <View testID="filters-screen">
       <View style={[styles.labelRow, styles.first]}>
         <Text style={styles.label}>{t.settings.radius}</Text>
         <Text style={styles.value} testID="radius-value">
-          {km === null ? '' : `${shownKm} km`}
+          {ready && km !== null ? `${shownKm} km` : ''}
         </Text>
       </View>
       <Track
@@ -168,24 +194,28 @@ export function FiltersPanel() {
         values={[radiusStop]}
         ticks
         // Until the stored radius arrives there is nothing true to show.
-        disabled={km === null}
+        disabled={!ready}
         labels={[t.settings.radius]}
         describe={(stop) => `${RADIUS_OPTIONS[stop] ?? ''} km`}
         onChange={(values) => setRadiusDrag(values[0])}
-        onCommit={(values) => setRadius(kmOf(values))}
+        onCommit={(values) => setRadius(values[0])}
+        onCancel={() => setRadiusDrag(null)}
       />
       <Text style={styles.hint}>{t.settings.radiusHint}</Text>
 
       <View style={styles.labelRow}>
         <Text style={styles.label}>{t.filters.age}</Text>
         <Text style={styles.value} testID="age-value">
-          {`${ageStops[0] + AGE_FLOOR} – ${ageStops[1] + AGE_FLOOR}`}
+          {ready
+            ? `${ageStops[0] + AGE_FLOOR} – ${ageStops[1] + AGE_FLOOR}`
+            : ''}
         </Text>
       </View>
       <Track
         testID="age"
         count={AGE_STOPS}
         values={ageStops}
+        disabled={!ready}
         labels={[t.filters.ageMin, t.filters.ageMax]}
         describe={(stop) => String(stop + AGE_FLOOR)}
         onChange={(values) => setAgeDrag([values[0], values[1] ?? values[0]])}
@@ -193,6 +223,7 @@ export function FiltersPanel() {
           const [min, max] = agesOf(values);
           setAge(min, max);
         }}
+        onCancel={() => setAgeDrag(null)}
       />
       <Text style={styles.hint}>{t.filters.ageHint}</Text>
 
@@ -200,17 +231,21 @@ export function FiltersPanel() {
       {/* One row of four (owner, 2026-09-15). The chips wrapped, because
           the lowest band's word is long; as a minimum it filters nobody
           out, so here it is called what it does. */}
-      <View style={styles.segments} accessibilityRole="radiogroup">
+      <View
+        style={[styles.segments, !ready && styles.off]}
+        accessibilityRole="radiogroup"
+      >
         {BANDS.map((option, index) => {
           const label =
             index === 0 ? t.filters.anyBand : bandName(BAND_SAMPLE[index] ?? 0);
-          const on = band === option;
+          const on = ready && band === option;
           return (
             <Pressable
               key={option}
               testID={`band-${option}`}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
+              disabled={!ready}
               style={[styles.segment, on && styles.segmentOn]}
               onPress={() => {
                 if (on) return;
@@ -234,11 +269,12 @@ export function FiltersPanel() {
       <Text style={styles.hint}>{t.filters.minBandHint}</Text>
 
       <Text style={[styles.label, styles.section]}>{t.filters.elements}</Text>
-      <View style={styles.row}>
+      <View style={[styles.row, !ready && styles.off]}>
         {ELEMENTS.map((element) => (
           <Pressable
             key={element}
             testID={`element-${element}`}
+            disabled={!ready}
             style={[styles.chip, chosen.includes(element) && styles.chipOn]}
             onPress={() => toggleElement(element)}
           >
@@ -255,9 +291,50 @@ export function FiltersPanel() {
       </View>
       <Text style={styles.hint}>{t.filters.elementsHint}</Text>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {load === 'failed' ? (
+        <View>
+          <Text style={styles.error}>{t.errors.generic}</Text>
+          <LinkText
+            testID="filters-retry"
+            onPress={() => {
+              setLoad('loading');
+              setAttempt((n) => n + 1);
+            }}
+          >
+            {t.common.retry}
+          </LinkText>
+        </View>
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : null}
     </View>
   );
+}
+
+/**
+ * Filter writes not yet answered, across openings of the sheet. The deck
+ * reloads as the sheet closes, and a reopened panel reads the row as it
+ * mounts; both wait for these first, so neither can read the row from
+ * before a drag let go a moment earlier (review, 2026-09-15). PostgREST
+ * answers after the transaction commits, so once this settles every
+ * earlier write has landed or failed. Bounded by the read timeout, so a
+ * hung write holds nothing back for long.
+ */
+let unanswered: Promise<unknown> = Promise.resolve();
+
+function answered<T>(pending: PromiseLike<T>): Promise<T> {
+  // A plain promise by now — the builder's one `then` is at the call
+  // site — so wrapping it does not send the request again.
+  const write = Promise.resolve(pending);
+  unanswered = Promise.allSettled([unanswered, write]);
+  return write;
+}
+
+export function filterWritesAnswered(): Promise<unknown> {
+  return Promise.race([
+    unanswered,
+    new Promise((resolve) => setTimeout(resolve, READ_TIMEOUT_MS)),
+  ]);
 }
 
 /**
@@ -312,4 +389,6 @@ const styles = StyleSheet.create({
   segmentText: { ...type.body, color: color.text },
   hint: { ...type.bodySmall, color: color.textFaint, marginTop: space.sm },
   error: { ...type.body, color: color.danger, marginTop: space.lg },
+  // The same dim a disabled track uses.
+  off: { opacity: 0.4 },
 });

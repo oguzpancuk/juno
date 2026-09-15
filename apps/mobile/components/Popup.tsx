@@ -25,12 +25,13 @@ import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
 /**
- * Lets a control inside a sheet hold the sheet still while a finger is on
- * it. A slider's drag is a JS gesture, and the sheet's scroll view is a
- * native one that takes over any touch that moves far enough — up and
+ * Lets a control inside a sheet hold the sheet still while it is being
+ * dragged. A slider's drag is a JS gesture, and the sheet's scroll view is
+ * a native one that takes over any touch that moves far enough — up and
  * down a little is enough — so without this a sideways drag on a thumb
- * turns into the sheet scrolling and the thumb stops. Outside a sheet it
- * does nothing.
+ * turns into the sheet scrolling and the thumb stops. Taken only once a
+ * touch has been read as a drag, never on touch-down, so a scroll that
+ * starts on a slider still scrolls. Outside a sheet it does nothing.
  */
 const SheetScrollLock = createContext<(locked: boolean) => void>(() => {});
 

@@ -25,7 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
 import { BandMeter } from '@/components/Meter';
-import { FiltersPanel } from '@/components/FiltersPanel';
+import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
 import { Popup } from '@/components/Popup';
 import { SlidersIcon } from '@/components/SlidersIcon';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
@@ -115,7 +115,10 @@ export default function Discover() {
     useCallback(() => {
       if (!userId) return;
       let cancelled = false;
-      fetchOwnProfile(userId)
+      // After any filter write still in flight: closing the filters sheet
+      // reloads the deck at once, and it must load with what was just set.
+      filterWritesAnswered()
+        .then(() => fetchOwnProfile(userId))
         .then(async (profile) => {
           if (profile.status === 'missing')
             return { status: 'missing' as const, me: null };
