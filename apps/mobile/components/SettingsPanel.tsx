@@ -28,7 +28,8 @@ export function settingsTitle(view: SettingsView): string {
  * mid-presentation. Its `onDismissed` then never fires, and every one of
  * those navigations lands while iOS is still animating the modal away,
  * which is when iOS drops them (review, 2026-09-15). Best-effort: a failed
- * sign-out must still leave the screen.
+ * sign-out must still leave the screen. It cannot hang: the client gives
+ * the server's /logout a deadline (lib/supabase.ts).
  */
 function signOutAndLeave(): void {
   void supabase.auth
