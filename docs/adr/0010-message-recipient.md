@@ -72,6 +72,11 @@ nothing (`supabase/tests/realtime.test.ts`).
   other side of their match is.
 - The chat thread keeps its `match_id=eq.` subscription.
 - The migration reaches the hosted database with the first
-  `npx supabase db push`, which is ask-tier. The measured figures above
+  `npx supabase db push`, which is ask-tier. **Order matters**: the
+  database first, then any app build or update carrying the filtered
+  badge. A subscription filtering on a column the server does not have
+  fails, and on the local stack a failing subscription delayed or dropped
+  events for the other channels on the same socket — the chat thread's
+  among them. The measured figures above
   come from the local stack; the hosted Realtime version may differ and is
   worth rechecking then.

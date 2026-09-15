@@ -149,6 +149,10 @@ export function FiltersPanel() {
 
   const setAge = (min: number, max: number) => {
     setAgeDrag(null);
+    // Let go while the row is being read back: the reload is about to show
+    // what is stored, so the thumb goes back rather than showing a value
+    // nothing will save.
+    if (!ready) return;
     if (min === ageMin && max === ageMax) return;
     const wasMin = ageMin;
     const wasMax = ageMax;
@@ -162,7 +166,7 @@ export function FiltersPanel() {
 
   const setRadius = (stop: number) => {
     setRadiusDrag(null);
-    if (km === null) return;
+    if (!ready || km === null) return;
     // Let go where the stored value shows: nothing to save, which also
     // leaves a stored radius between the options as it is.
     const option = optionToWrite(stop, km, RADIUS_OPTIONS);

@@ -82,6 +82,8 @@ const UNIQUE_VIOLATION = '23505';
 const NOT_NULL_VIOLATION = '23502';
 const INVALID_DATE = '22007';
 const CHECK_VIOLATION = '23514';
+/** forbid_message_edit's refusal of any change but the receipt. */
+const ONLY_READ_AT = 'only read_at may change';
 const FOREIGN_KEY_VIOLATION = '23503';
 
 let alice: TestUser; // woman, wants men, Istanbul
@@ -1146,17 +1148,29 @@ describe('messages', () => {
     ).find((m) => m.reply_to !== null);
     if (!reply) throw new Error('no reply to re-point');
 
+    // Each attempt carries a read_at, as a real receipt would: the reply is
+    // still unread, and a patch without one is refused by the guard's
+    // other rule ("read_at cannot be cleared") whether or not reply_to is
+    // frozen, which proved nothing (review, 2026-09-16). The message names
+    // the rule that refused.
     const cleared = await jane.client
       .from('messages')
-      .update(replyPatch({ reply_to: null }))
+      .update(replyPatch({ reply_to: null, read_at: new Date().toISOString() }))
       .eq('id', reply.id);
     expect(cleared.error?.code).toBe(CHECK_VIOLATION);
+    expect(cleared.error?.message).toBe(ONLY_READ_AT);
 
     const repointed = await jane.client
       .from('messages')
-      .update(replyPatch({ reply_to: otherThreadMessageId }))
+      .update(
+        replyPatch({
+          reply_to: otherThreadMessageId,
+          read_at: new Date().toISOString(),
+        }),
+      )
       .eq('id', reply.id);
     expect(repointed.error?.code).toBe(CHECK_VIOLATION);
+    expect(repointed.error?.message).toBe(ONLY_READ_AT);
 
     const read = await jane.client
       .from('messages')
@@ -1206,11 +1220,35 @@ describe('messages', () => {
     const id = z.object({ id: z.string().uuid() }).parse(sent.data).id;
 
     // Jane is the recipient, the one member the update policy lets through.
+    // The patch carries a read_at so that only the freeze can refuse it
+    // (see the reply_to test above), and the same receipt without the
+    // re-addressing then lands.
     const redirected = await jane.client
       .from('messages')
-      .update({ recipient_id: ivan.id })
+      .update({ recipient_id: ivan.id, read_at: new Date().toISOString() })
       .eq('id', id);
     expect(redirected.error?.code).toBe(CHECK_VIOLATION);
+    expect(redirected.error?.message).toBe(ONLY_READ_AT);
+
+    const receipt = await jane.client
+      .from('messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('recipient_id');
+    expect(receipt.error).toBeNull();
+    expect(
+      z.array(z.object({ recipient_id: z.string() })).parse(receipt.data),
+    ).toEqual([{ recipient_id: jane.id }]);
+  });
+
+  it('a message whose sender is not in the match has no one to go to, even bypassing RLS', async () => {
+    // Kate is in a different match. The service role skips the insert
+    // policy, so what refuses this is the recipient check.
+    const { error } = await admin
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: kate.id, body: 'kimse' });
+    expect(error?.code).toBe(CHECK_VIOLATION);
+    expect(error?.message).toContain('messages_recipient_present');
   });
 });
 

@@ -256,9 +256,18 @@ it('the badge hears messages sent to me and my own read receipts, and nothing el
   expect(await sender.got).toBeNull();
   expect(await snoop.got).toBeNull();
 
-  // Ada reading it is what brings her badge down.
+  // Ada reading it is what brings her badge down. Bora's badge must not
+  // move when the other side reads his message: that receipt is his
+  // thread's news, not his unread count's.
   const receipt = toAda('UPDATE', ada);
-  await receipt.ready;
+  const senderReceipt = waitForMessage(
+    bora,
+    matchId,
+    CROSSING_BUDGET_MS,
+    'UPDATE',
+    `recipient_id=eq.${bora.id}`,
+  );
+  await Promise.all([receipt.ready, senderReceipt.ready]);
   const marked = await ada.client
     .from('messages')
     .update({ read_at: new Date().toISOString() })
@@ -267,4 +276,5 @@ it('the badge hears messages sent to me and my own read receipts, and nothing el
   const read = await receipt.got;
   expect(read?.id).toBe(sentId);
   expect(read?.read_at).not.toBeNull();
+  expect(await senderReceipt.got).toBeNull();
 }, 30_000);

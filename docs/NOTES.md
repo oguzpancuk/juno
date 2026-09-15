@@ -4450,3 +4450,39 @@ column (ADR-0010). What was done and what to know:
   `create_match_on_mutual_like` and `profiles_check_birth` are also
   security-definer trigger functions with EXECUTE on PUBLIC — the same
   pattern, pre-existing (ROADMAP).
+
+## 2026-09-16 — review of the recipient change
+
+code-reviewer covered 28713b4..9449861 and returned NEEDS_WORK on one
+important finding, in a test rather than the code:
+
+**The freeze test proved nothing.** "Who a message is for cannot be
+changed afterwards" updated an unread message with a patch that carried no
+`read_at`, so `forbid_message_edit` refused it by its other rule — "read_at
+cannot be cleared" — whether or not `recipient_id` was frozen. The older
+`reply_to` freeze test had the same flaw. Both now send a `read_at` with
+the forbidden change and assert the refusal's message ("only read_at may
+change"), and the recipient test then shows the same receipt landing
+without the change. Measured, not argued: with a copy of the guard that
+freezes neither column installed on the local database, both tests failed;
+the real guard was put back and both pass.
+
+This is the second time an assertion on an error code passed for the wrong
+reason in this file. A standing rule for it is proposed to the owner rather
+than written unasked.
+
+**Minor, also fixed.** The badge's realtime test now also shows the
+sender's recipient subscription staying silent when the other side reads
+his message. A new test pins that a message whose sender is not in the
+match is refused even by the service role, by the recipient check. In the
+filters panel, a thumb let go while the row is being read back no longer
+leaves a value on screen that nothing saves. ADR-0010 now says the order
+for the first deploy: the database before any app build carrying the
+filtered badge, since a subscription on a missing column fails and, on the
+local stack, disturbed the other channels on the socket.
+
+**Left as is.** A write aborted on the client may still commit on the
+server after the panel has read the row back; whether PostgREST cancels
+the statement when the client goes away is not checked. The local
+database's migration history row for 20260916000001 holds the first draft
+of the file; the schema itself matches the committed file.
