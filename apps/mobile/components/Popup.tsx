@@ -73,9 +73,10 @@ export function Popup({
    */
   onDismissed?: () => void;
   /**
-   * Change it to start the body over from the top — for a sheet that swaps
+   * Change it to scroll the body back to the top — for a sheet that swaps
    * what it shows, where a long page left scrolled would otherwise open
-   * the next one halfway down.
+   * the next one halfway down. The children are not remounted, so their
+   * state survives the swap.
    */
   contentKey?: string;
   /** Defaults to "Kapat". */
@@ -90,6 +91,13 @@ export function Popup({
 )) {
   const insets = useSafeAreaInsets();
   const [locked, setLocked] = useState(false);
+  // Scrolled back, not remounted by a key: a remount would take the
+  // children's state with it — a delete in flight in the settings sheet
+  // among it, which would unlock its button (review, 2026-09-15).
+  const body = useRef<ScrollView>(null);
+  useEffect(() => {
+    body.current?.scrollTo({ y: 0, animated: false });
+  }, [contentKey]);
   // Android never fires Modal's `onDismiss`; there the sheet is gone as soon
   // as `visible` is false. A ref, so a new callback identity does not re-run
   // this on every render.
@@ -142,7 +150,7 @@ export function Popup({
               Same measurement as `Screen`, so a component laid out for
               one host is laid out for the other. */}
           <ScrollView
-            key={contentKey}
+            ref={body}
             style={styles.body}
             contentContainerStyle={styles.bodyContent}
             showsVerticalScrollIndicator={false}

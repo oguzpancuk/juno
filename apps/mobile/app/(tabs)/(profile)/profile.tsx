@@ -76,8 +76,13 @@ export default function Profile() {
   // sign-out or a deleted account. Queued rather than run, see Popup's
   // `onDismissed`.
   const afterSettings = useRef<(() => void) | null>(null);
+  // Set once a sign-out or a deletion has been asked for. The sheet fades
+  // before the sign-out starts, and reopening it in that gap would put it
+  // back on screen for the moment the session ends.
+  const [leaving, setLeaving] = useState(false);
   const closeSettingsThen = (next: () => void) => {
     afterSettings.current = next;
+    setLeaving(true);
     setShowSettings(false);
   };
   const [saving, setSaving] = useState(false);
@@ -224,6 +229,7 @@ export default function Profile() {
             // this is the only route into Settings.
             accessibilityLabel={t.settings.title}
             hitSlop={12}
+            disabled={leaving}
             onPress={() => {
               setSettingsView('menu');
               setShowSettings(true);

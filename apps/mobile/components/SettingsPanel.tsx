@@ -20,6 +20,24 @@ export function settingsTitle(view: SettingsView): string {
 }
 
 /**
+ * Sign out, then go to sign-in. Handed to the host through `onLeave`, so it
+ * runs once the sheet is gone — never while it is up. Signing out is what
+ * turns every screen's session to signed-out: supabase-js tells its
+ * listeners before `signOut()` resolves, each signed-in screen answers
+ * with `RedirectToSignIn`, and the profile's own guard unmounts this sheet
+ * mid-presentation. Its `onDismissed` then never fires, and every one of
+ * those navigations lands while iOS is still animating the modal away,
+ * which is when iOS drops them (review, 2026-09-15). Best-effort: a failed
+ * sign-out must still leave the screen.
+ */
+function signOutAndLeave(): void {
+  void supabase.auth
+    .signOut()
+    .catch(() => undefined)
+    .then(() => leaveToSignIn());
+}
+
+/**
  * Settings, as the body of a popup opened from the profile (owner,
  * 2026-09-15). It was the `/settings` screen; everything it did it still
  * does, except send people to the discovery filters, which now open from
@@ -29,9 +47,10 @@ export function settingsTitle(view: SettingsView): string {
  * than as pages (owner, same day), with a way back to the list. The view
  * is the host's, because the title it names is the sheet's.
  *
- * Signing out and deleting the account do leave, and that navigation is
- * handed to the host through `onLeave`: only the host owns the sheet, and
- * on iOS a navigation issued while it is still on screen is dropped.
+ * Signing out and deleting the account do leave. What they need done —
+ * the sign-out itself as well as the navigation — is handed to the host
+ * through `onLeave`, which closes the sheet and runs it once the sheet is
+ * gone (see `signOutAndLeave`).
  */
 export function SettingsPanel({
   view,
@@ -80,19 +99,17 @@ export function SettingsPanel({
     deletingNow.current = true;
     setDeleting(true);
     setDeleteError(null);
-    void deleteAccount().then(async (ok) => {
+    void deleteAccount().then((ok) => {
       if (!ok) {
         deletingNow.current = false;
         setDeleting(false);
         setDeleteError(t.safety.deleteFailed);
         return;
       }
-      // The account is gone; the stored session is now worthless. A
-      // failure here must not strand the person on a screen for an
-      // account that no longer exists, so the sign-out is best-effort and
-      // the navigation happens either way.
-      await supabase.auth.signOut().catch(() => undefined);
-      onLeave(leaveToSignIn);
+      // The account is gone; the stored session is now worthless. The
+      // sheet stays locked on "deleting" until here, then closes, and the
+      // best-effort sign-out and the navigation run once it has.
+      onLeave(signOutAndLeave);
     });
   };
 
@@ -160,16 +177,7 @@ export function SettingsPanel({
       <Pressable
         testID="sign-out"
         style={styles.button}
-        onPress={() => {
-          // Best-effort: a failed sign-out must still leave the screen,
-          // and the session hook clears on the next auth event either way.
-          void supabase.auth
-            .signOut()
-            .catch(() => undefined)
-            .then(() => {
-              onLeave(leaveToSignIn);
-            });
-        }}
+        onPress={() => onLeave(signOutAndLeave)}
       >
         <Text style={styles.buttonText}>{t.settings.signOut}</Text>
       </Pressable>
