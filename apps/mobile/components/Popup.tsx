@@ -1,4 +1,11 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   Modal,
   Platform,
@@ -16,6 +23,20 @@ import {
 } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
+
+/**
+ * Lets a control inside a sheet hold the sheet still while a finger is on
+ * it. A slider's drag is a JS gesture, and the sheet's scroll view is a
+ * native one that takes over any touch that moves far enough — up and
+ * down a little is enough — so without this a sideways drag on a thumb
+ * turns into the sheet scrolling and the thumb stops. Outside a sheet it
+ * does nothing.
+ */
+const SheetScrollLock = createContext<(locked: boolean) => void>(() => {});
+
+export function useSheetScrollLock(): (locked: boolean) => void {
+  return useContext(SheetScrollLock);
+}
 
 /**
  * The one popup in the product (owner, 2026-09-11): the screen behind it
@@ -61,6 +82,7 @@ export function Popup({
   | { title?: undefined; bleed: true }
 )) {
   const insets = useSafeAreaInsets();
+  const [locked, setLocked] = useState(false);
   // Android never fires Modal's `onDismiss`; there the sheet is gone as soon
   // as `visible` is false. A ref, so a new callback identity does not re-run
   // this on every render.
@@ -120,12 +142,17 @@ export function Popup({
             // content and nothing to reveal by rubber-banding into it.
             bounces={!bleed}
             overScrollMode={bleed ? 'never' : 'auto'}
+            scrollEnabled={!locked}
           >
             {/* Always, bleed or not. A Modal renders its children in the
                 same React tree, so a sheet opened from inside a bleed
                 `Screen` would otherwise inherit that screen's 68 and a
                 child would cancel a padding this host never applied. */}
-            <TopGapContextProvider value={0}>{children}</TopGapContextProvider>
+            <TopGapContextProvider value={0}>
+              <SheetScrollLock.Provider value={setLocked}>
+                {children}
+              </SheetScrollLock.Provider>
+            </TopGapContextProvider>
           </ScrollView>
           <View style={styles.action}>
             <GradientButton

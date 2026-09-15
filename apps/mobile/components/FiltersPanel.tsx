@@ -1,15 +1,19 @@
 import { BANDS, bandName, type Band } from '@juno/astro';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Track, type TrackValues } from '@/components/Track';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { supabase } from '@/lib/supabase';
+import { nearestStop } from '@/lib/track';
 import { color, radius as r, space, type } from '@/theme/tokens';
 
 const RADIUS_OPTIONS = [5, 25, 50, 100, 500] as const;
 const AGE_FLOOR = 18;
 const AGE_CEILING = 99;
+/** Every whole age is a stop. */
+const AGE_STOPS = AGE_CEILING - AGE_FLOOR + 1;
 
 /**
  * Who the deck is allowed to contain. Radius, gender and age are applied by
@@ -17,7 +21,7 @@ const AGE_CEILING = 99;
  * from a score the device computes from two charts — so those two are
  * stored here and applied after scoring.
  *
- * The body of a popup opened from the deck's top-left corner (owner,
+ * The body of a popup opened from the deck's top-right corner (owner,
  * 2026-09-15); it was the `/filters` screen behind Settings. Every change is
  * written as it is made, so the host only has to reload the deck when the
  * sheet closes.
@@ -33,6 +37,12 @@ export function FiltersPanel() {
   const [band, setBand] = useState<Band>('quiet');
   const [elements, setElements] = useState<readonly SunElement[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // What a drag in progress shows, above its track and on it. Null when no
+  // finger is down; the saved state above is what the database was told.
+  const [radiusDrag, setRadiusDrag] = useState<number | null>(null);
+  const [ageDrag, setAgeDrag] = useState<readonly [number, number] | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!userId) return;
@@ -53,8 +63,8 @@ export function FiltersPanel() {
   /**
    * Optimistic: the control moves, and reverts only if the write fails.
    *
-   * Only the newest write may revert. Holding a stepper fires one write
-   * per tap, each closing over the value it read; an older one failing
+   * Only the newest write may revert. Two drags in quick succession fire
+   * two writes, each closing over the value it read; an older one failing
    * would otherwise put the screen back to a number the database has since
    * moved past, leaving the two disagreeing with no error in sight.
    */
@@ -94,6 +104,8 @@ export function FiltersPanel() {
   };
 
   const setAge = (min: number, max: number) => {
+    setAgeDrag(null);
+    if (min === ageMin && max === ageMax) return;
     const wasMin = ageMin;
     const wasMax = ageMax;
     setAgeMin(min);
@@ -103,6 +115,28 @@ export function FiltersPanel() {
       setAgeMax(wasMax);
     });
   };
+
+  const setRadius = (option: number) => {
+    setRadiusDrag(null);
+    if (option === km) return;
+    const was = km;
+    setKm(option);
+    void save({ radius_km: option }, () => setKm(was));
+  };
+
+  const radiusStop =
+    radiusDrag ?? nearestStop(km ?? RADIUS_OPTIONS[2], RADIUS_OPTIONS);
+  const shownKm = RADIUS_OPTIONS[radiusStop] ?? RADIUS_OPTIONS[2];
+  const ageStops: readonly [number, number] = ageDrag ?? [
+    ageMin - AGE_FLOOR,
+    ageMax - AGE_FLOOR,
+  ];
+  const kmOf = (values: TrackValues) =>
+    RADIUS_OPTIONS[values[0]] ?? RADIUS_OPTIONS[2];
+  const agesOf = (values: TrackValues): readonly [number, number] => [
+    values[0] + AGE_FLOOR,
+    (values[1] ?? values[0]) + AGE_FLOOR,
+  ];
 
   const toggleElement = (element: SunElement) => {
     const current = elements ?? [...ELEMENTS];
@@ -122,66 +156,74 @@ export function FiltersPanel() {
 
   return (
     <View testID="filters-screen">
-      <Text style={[styles.label, styles.first]}>{t.settings.radius}</Text>
-      <View style={styles.row}>
-        {RADIUS_OPTIONS.map((option) => (
-          <Pressable
-            key={option}
-            testID={`radius-${option}`}
-            style={[styles.chip, km === option && styles.chipOn]}
-            onPress={() => {
-              const was = km;
-              setKm(option);
-              void save({ radius_km: option }, () => setKm(was));
-            }}
-          >
-            <Text style={[styles.chipText, km === option && styles.chipTextOn]}>
-              {option} km
-            </Text>
-          </Pressable>
-        ))}
+      <View style={[styles.labelRow, styles.first]}>
+        <Text style={styles.label}>{t.settings.radius}</Text>
+        <Text style={styles.value} testID="radius-value">
+          {km === null ? '' : `${shownKm} km`}
+        </Text>
       </View>
+      <Track
+        testID="radius"
+        count={RADIUS_OPTIONS.length}
+        values={[radiusStop]}
+        ticks
+        // Until the stored radius arrives there is nothing true to show.
+        disabled={km === null}
+        labels={[t.settings.radius]}
+        describe={(stop) => `${RADIUS_OPTIONS[stop] ?? ''} km`}
+        onChange={(values) => setRadiusDrag(values[0])}
+        onCommit={(values) => setRadius(kmOf(values))}
+      />
       <Text style={styles.hint}>{t.settings.radiusHint}</Text>
 
-      <Text style={styles.label}>{t.filters.age}</Text>
-      <View style={styles.ageRow}>
-        <Stepper
-          testID="age-min"
-          value={ageMin}
-          onChange={(v) => setAge(Math.min(v, ageMax), ageMax)}
-          min={AGE_FLOOR}
-          max={ageMax}
-        />
-        <Text style={styles.ageDash}>—</Text>
-        <Stepper
-          testID="age-max"
-          value={ageMax}
-          onChange={(v) => setAge(ageMin, Math.max(v, ageMin))}
-          min={ageMin}
-          max={AGE_CEILING}
-        />
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{t.filters.age}</Text>
+        <Text style={styles.value} testID="age-value">
+          {`${ageStops[0] + AGE_FLOOR} – ${ageStops[1] + AGE_FLOOR}`}
+        </Text>
       </View>
+      <Track
+        testID="age"
+        count={AGE_STOPS}
+        values={ageStops}
+        labels={[t.filters.ageMin, t.filters.ageMax]}
+        describe={(stop) => String(stop + AGE_FLOOR)}
+        onChange={(values) => setAgeDrag([values[0], values[1] ?? values[0]])}
+        onCommit={(values) => {
+          const [min, max] = agesOf(values);
+          setAge(min, max);
+        }}
+      />
       <Text style={styles.hint}>{t.filters.ageHint}</Text>
 
-      <Text style={styles.label}>{t.filters.minBand}</Text>
-      <View style={styles.row}>
+      <Text style={[styles.label, styles.section]}>{t.filters.minBand}</Text>
+      {/* One row of four (owner, 2026-09-15). The chips wrapped, because
+          the lowest band's word is long; as a minimum it filters nobody
+          out, so here it is called what it does. */}
+      <View style={styles.segments} accessibilityRole="radiogroup">
         {BANDS.map((option, index) => {
-          // The band's own word, taken from the cut it starts at, so this
-          // screen never invents a label the match screen does not use.
-          const label = bandName(BAND_SAMPLE[index] ?? 0);
+          const label =
+            index === 0 ? t.filters.anyBand : bandName(BAND_SAMPLE[index] ?? 0);
+          const on = band === option;
           return (
             <Pressable
               key={option}
               testID={`band-${option}`}
-              style={[styles.chip, band === option && styles.chipOn]}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              style={[styles.segment, on && styles.segmentOn]}
               onPress={() => {
+                if (on) return;
                 const was = band;
                 setBand(option);
                 void save({ min_band: option }, () => setBand(was));
               }}
             >
               <Text
-                style={[styles.chipText, band === option && styles.chipTextOn]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={[styles.segmentText, on && styles.chipTextOn]}
               >
                 {label}
               </Text>
@@ -191,7 +233,7 @@ export function FiltersPanel() {
       </View>
       <Text style={styles.hint}>{t.filters.minBandHint}</Text>
 
-      <Text style={styles.label}>{t.filters.elements}</Text>
+      <Text style={[styles.label, styles.section]}>{t.filters.elements}</Text>
       <View style={styles.row}>
         {ELEMENTS.map((element) => (
           <Pressable
@@ -219,60 +261,25 @@ export function FiltersPanel() {
 }
 
 /**
- * A score inside each band, so the chip can carry the band's real word
+ * A score inside each band, so a segment can carry the band's real word
  * rather than a second list of names that could drift from the engine's.
+ * The first is unused: that segment says "Hepsi".
  */
 const BAND_SAMPLE = [0, 58, 64, 80] as const;
-
-function Stepper({
-  value,
-  onChange,
-  min,
-  max,
-  testID,
-}: {
-  value: number;
-  onChange: (value: number) => void;
-  min: number;
-  max: number;
-  testID: string;
-}) {
-  return (
-    <View style={styles.stepper} testID={testID}>
-      <Pressable
-        testID={`${testID}-down`}
-        disabled={value <= min}
-        onPress={() => onChange(value - 1)}
-        style={styles.stepButton}
-      >
-        <Text style={[styles.stepGlyph, value <= min && styles.stepOff]}>
-          −
-        </Text>
-      </Pressable>
-      <Text style={styles.stepValue}>{value}</Text>
-      <Pressable
-        testID={`${testID}-up`}
-        disabled={value >= max}
-        onPress={() => onChange(value + 1)}
-        style={styles.stepButton}
-      >
-        <Text style={[styles.stepGlyph, value >= max && styles.stepOff]}>
-          +
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   // The sheet's title sits right above the first section.
   first: { marginTop: 0 },
-  label: {
-    ...type.label,
-    color: color.textFaint,
+  label: { ...type.label, color: color.textFaint },
+  section: { marginTop: space.xl, marginBottom: space.sm },
+  // The label and, across from it, the value the track below is set to.
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
     marginTop: space.xl,
-    marginBottom: space.sm,
   },
+  value: { ...type.heading, color: color.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   chip: {
     backgroundColor: color.surfaceSoft,
@@ -285,25 +292,24 @@ const styles = StyleSheet.create({
   chipOn: { backgroundColor: color.cool, borderColor: color.cool },
   chipText: { ...type.body, color: color.text },
   chipTextOn: { color: color.onBright, fontWeight: '600' },
-  ageRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  ageDash: { ...type.body, color: color.textFaint },
-  stepper: {
+  segments: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: color.surfaceSoft,
     borderRadius: r.pill,
     borderWidth: 1,
     borderColor: color.border,
+    padding: 3,
   },
-  stepButton: { paddingVertical: space.sm, paddingHorizontal: space.lg },
-  stepGlyph: { ...type.heading, color: color.text },
-  stepOff: { color: color.textFaint },
-  stepValue: {
-    ...type.heading,
-    color: color.text,
-    minWidth: 34,
-    textAlign: 'center',
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: r.pill,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.xs,
   },
+  segmentOn: { backgroundColor: color.cool },
+  segmentText: { ...type.body, color: color.text },
   hint: { ...type.bodySmall, color: color.textFaint, marginTop: space.sm },
   error: { ...type.body, color: color.danger, marginTop: space.lg },
 });

@@ -229,9 +229,13 @@ export const t = {
   filters: {
     title: 'Keşif ayarları',
     age: 'Yaş aralığı',
+    ageMin: 'En küçük yaş',
+    ageMax: 'En büyük yaş',
     ageHint:
       'Bu aralığın dışındakiler sana gösterilmez; sen de onların aralığının dışındaysan onlara görünmezsin.',
     minBand: 'En az uyum',
+    // The lowest band as a minimum: it filters nobody out.
+    anyBand: 'Hepsi',
     minBandHint:
       'Seçtiğin bandın altındaki eşleşmeler keşfette çıkmaz. Düşük bir bant kötü bir eşleşme demek değil, sadece haritalarınızın az noktada kesiştiği anlamına gelir.',
     elements: 'Güneş elementi',
