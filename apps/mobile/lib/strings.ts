@@ -158,7 +158,9 @@ export const t = {
     open: 'Sohbeti başlat ›',
   },
   matches: {
-    empty: 'Henüz eşleşme yok. Keşfetmeye devam et.',
+    // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
+    newMatches: 'YENİ EŞLEŞMELER',
+    noNewMatches: 'Şimdilik yeni eşleşme yok.',
     noMessages: 'Henüz mesaj yok; başlangıç sorusu sende.',
     youPrefix: 'Sen: ',
   },

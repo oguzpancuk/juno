@@ -4080,3 +4080,42 @@ time photos go blank.
 
 The disk is at about 87% with 25 GB free. It filled once; the npm cache
 (2.4 GB) is the one clearly safe thing left to reclaim.
+
+## 2026-09-15 — the matches screen gets a top, the tab items come down, the deck's gaps even out
+
+**New matches along the top.** With the page heading gone, the matches
+screen had a list starting at the top of an otherwise empty page. It now
+opens with a "YENİ EŞLEŞMELER" row: the matches nobody has written to
+yet, as round faces, newest first, scrolling sideways edge to edge. The
+list below it holds only the conversations. With nothing new the row does
+not collapse — it says "Şimdilik yeni eşleşme yok." — so the top is
+never bare (the owner's condition on picking this option). Two iOS
+gotchas on the way: a bare `Link` renders as Text, and its line box cut
+the top off the round photo, so the item is `Link asChild` around a
+`Pressable`; and `asChild` passes props through a slot that drops a
+style callback, which left the name unaligned under the photo, so the
+item takes a plain style. Screenshots: `v6-matches-no-new.png` (the empty
+row) and `v6-matches-new-strip.png`, for which a mutual like between
+Selin and Burak was written to the local database with
+`seed-like.ts` — test data, left in place.
+
+**Tab items lower in the bar.** They sit at the top of react-navigation's
+49pt UIKit row, which is `justifyContent: 'flex-start'`, with the home
+indicator's 34pt below; on this dark screen, with no indicator drawn,
+they read as riding high. `tabBarItemStyle: { paddingTop: space.xs }`
+moves them 4pt down — measured on the device, the icon top went from
+10.7pt below the bar's border to 14.7, and the label from 36.0pt above
+the screen edge to 32.0. The bar's height is unchanged; trimming its
+bottom padding instead would not have moved top-aligned items at all.
+
+**The deck's three gaps under the chips are equal by construction.** The
+owner asked whether the space above and below the compatibility block
+matched; measured, it did not (21.3pt above, 23.7 below, 26.7 under the
+buttons) — the top one was a fixed padding and the others the flexible
+remainder, and they merely happened to be close on this screen. The free
+space now splits by flex weight — one share inside the card between the
+chips and the band, two to the footer, which spends them evenly above and
+below the buttons — with the same 8pt floor on each, and the band block
+lost its own vertical padding, which had added to both of its gaps. Its
+touch target keeps its reach through `hitSlop`. Not yet measured on the
+device: the simulator was in the owner's hands on another screen.

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { TabIcon } from '@/components/TabIcon';
 import { t } from '@/lib/strings';
-import { color, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * The three places the app lives: you, the deck, the people you matched
@@ -33,6 +33,13 @@ export default function TabLayout() {
           borderTopWidth: 1,
         },
         tabBarLabelStyle: { ...type.caption, fontSize: 11 },
+        // The items sit at the top of the bar's 49pt row (react-navigation's
+        // UIKit layout is `justifyContent: 'flex-start'`), and below them is
+        // the home indicator's 34pt, so on a dark screen with no indicator
+        // drawn they read as riding high (owner, 2026-09-15). Nudged down
+        // on the wrapper rather than by trimming the bar's bottom padding,
+        // which would not move top-aligned items at all.
+        tabBarItemStyle: { paddingTop: space.xs },
         sceneStyle: { backgroundColor: color.bg },
       }}
     >

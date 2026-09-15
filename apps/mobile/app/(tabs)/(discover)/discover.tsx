@@ -29,7 +29,6 @@ import { Popup } from '@/components/Popup';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
-import { useBottomGap } from '@/lib/insets';
 import { usePhotoSources } from '@/lib/photos';
 import { INTO_MATCHES, matchDetailHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
@@ -56,6 +55,8 @@ const MAX_DECK_SCALE = 1.35;
 
 /** ✕ and ♥ — the verdict, the largest targets on the screen. */
 const ROUND_SIZE = 88;
+/** The least each of the three gaps under the chips may shrink to. */
+const SPACING_FLOOR = space.sm;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
@@ -232,7 +233,6 @@ export default function Discover() {
   // render for the interpolations below (see Calculating.tsx), and the
   // initialiser is lazy so the value is created once.
   const insets = useSafeAreaInsets();
-  const bottomGap = useBottomGap(space.lg);
   const [pan] = useState(() => new Animated.ValueXY());
   const settle = useCallback(() => {
     Animated.spring(pan, {
@@ -419,6 +419,7 @@ export default function Discover() {
               onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
               accessibilityRole="button"
               accessibilityLabel={t.discover.detail}
+              hitSlop={space.md}
               testID="open-detail"
             >
               <BandMeter
@@ -448,7 +449,7 @@ export default function Discover() {
         // Outside the card on purpose: at screen height, buttons tilting
         // and flying away with the picture read as a bug, and a pill that
         // has drifted under the finger turns a press into a swipe.
-        <View style={[styles.footer, { paddingBottom: bottomGap }]}>
+        <View style={styles.footer}>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={styles.actions}>
             <Pressable
@@ -655,7 +656,7 @@ const styles = StyleSheet.create({
   // 2026-09-14). Both card and photo may shrink: on a screen too short for
   // the full photo share it is the picture that gives way, never the
   // buttons, which keep the footer's minimum height.
-  card: { flexShrink: 1 },
+  card: { flexGrow: 1, flexShrink: 1 },
   photoWrap: {
     flexShrink: 1,
     minHeight: 0,
@@ -663,19 +664,32 @@ const styles = StyleSheet.create({
     backgroundColor: color.surfaceHigh,
   },
   cardPhoto: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  // The big three, then the band. `space-between` puts the free space the
+  // card was given between the two, so the band floats down to meet the
+  // buttons' spacing instead of sticking to the chips.
   info: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
     paddingHorizontal: SCREEN_PADDING,
     // `Screen`'s own gap between children, so the big three sit the same
     // distance below the photo here as they do on the profile.
     paddingTop: space.md,
-    gap: space.sm,
+    gap: SPACING_FLOOR,
   },
+  // Three equal gaps below the chips — chips to band, band to buttons,
+  // buttons to the tab bar (owner, 2026-09-15: "uyum ile alt ve üstteki
+  // mesafeler aynı mı?"). The free space splits by flex weight: one share
+  // to the card, where `info` spends it between chips and band; two to the
+  // footer, which spends them evenly above and below the buttons. Each
+  // side also carries the same floor, so the three stay equal when the
+  // free space runs out. No bottom inset: the tab bar under this screen
+  // already covers the home indicator (lib/insets.ts).
   footer: {
-    flex: 1,
-    minHeight: ROUND_SIZE + space.xl,
-    justifyContent: 'center',
+    flexGrow: 2,
+    minHeight: ROUND_SIZE + 2 * SPACING_FLOOR,
+    justifyContent: 'space-evenly',
+    paddingVertical: SPACING_FLOOR,
     paddingHorizontal: SCREEN_PADDING,
-    gap: space.sm,
   },
   dim: { opacity: 0.6 },
   photoScrim: {
@@ -721,12 +735,14 @@ const styles = StyleSheet.create({
   stampText: { ...type.heading, letterSpacing: 2 },
   stampTextLike: { color: color.pink },
   stampTextPass: { color: color.textMuted },
+  // No vertical padding: it would add to the gap on each side of the band
+  // and break the equal spacing. The touch target keeps its reach through
+  // `hitSlop` on the Pressable instead.
   bandBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.md,
-    paddingVertical: space.sm,
   },
   bandName: { ...type.title, color: color.text },
   scoreLabel: { ...type.label, color: color.textFaint },

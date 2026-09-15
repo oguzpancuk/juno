@@ -2,6 +2,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +16,27 @@ import { chatHref } from '@/lib/routes';
 import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color, space } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
+
+/** The new-match faces: large enough to read as people, not as badges. */
+const STRIP_AVATAR = 64;
+
+/** Matches with no message yet, newest first — the strip at the top. */
+function fresh(rows: readonly MatchProfileRow[]): MatchProfileRow[] {
+  return rows
+    .filter((row) => row.last_at === null)
+    .sort((x, y) => y.matched_at.localeCompare(x.matched_at));
+}
+
+/** Matches with a conversation, most recent message first — the list. */
+function threads(rows: readonly MatchProfileRow[]): MatchProfileRow[] {
+  return rows
+    .filter(
+      (row): row is MatchProfileRow & { last_at: string } =>
+        row.last_at !== null,
+    )
+    .sort((x, y) => y.last_at.localeCompare(x.last_at));
+}
 
 /** Stable identity while the rows are still loading. */
 const NO_PATHS: readonly string[] = [];
@@ -78,16 +99,68 @@ export default function Matches() {
         <ActivityIndicator color={color.textMuted} />
       ) : rows === null ? (
         <Text style={styles.muted}>{t.errors.generic}</Text>
-      ) : rows.length === 0 ? (
-        <Text style={styles.muted}>{t.matches.empty}</Text>
       ) : (
-        [...rows]
-          .sort((x, y) =>
-            (y.last_at ?? y.matched_at).localeCompare(
-              x.last_at ?? x.matched_at,
-            ),
-          )
-          .map((row) => {
+        <>
+          {/* The top of the screen, now that it has no heading (owner,
+              2026-09-15): the matches nobody has written to yet, as a row
+              of faces. Always there once the rows are in, so the top is
+              never bare — with nothing new it says so rather than
+              collapsing. A match leaves this row for the list below the
+              moment its first message is sent. */}
+          <Text style={styles.sectionLabel}>{t.matches.newMatches}</Text>
+          {fresh(rows).length === 0 ? (
+            <Text style={styles.stripEmpty} testID="new-matches-empty">
+              {t.matches.noNewMatches}
+            </Text>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.strip}
+              // The strip scrolls sideways inside a page that scrolls down;
+              // it must not swallow the page's own content inset.
+              style={styles.stripFrame}
+              testID="new-matches"
+            >
+              {fresh(rows).map((row) => {
+                const first = row.photos[0];
+                return (
+                  // `asChild` so the tap target is a View: a bare `Link`
+                  // renders as Text on iOS, and its line box cut the top
+                  // off the round photo.
+                  <Link
+                    key={row.match_id}
+                    href={chatHref(row.match_id)}
+                    asChild
+                  >
+                    <Pressable
+                      // A plain style, not a function: `asChild` hands the
+                      // props through a slot that drops a style callback,
+                      // which left the name unaligned under the photo.
+                      style={styles.stripItem}
+                      accessibilityRole="button"
+                      accessibilityLabel={row.display_name}
+                      testID={`new-match-${row.match_id}`}
+                    >
+                      <Avatar
+                        name={row.display_name}
+                        source={
+                          first === undefined
+                            ? null
+                            : (sourceByPath.get(first) ?? null)
+                        }
+                        size={STRIP_AVATAR}
+                      />
+                      <Text style={styles.stripName} numberOfLines={1}>
+                        {row.display_name}
+                      </Text>
+                    </Pressable>
+                  </Link>
+                );
+              })}
+            </ScrollView>
+          )}
+          {threads(rows).map((row) => {
             const first = row.photos[0];
             return (
               <Link
@@ -129,7 +202,8 @@ export default function Matches() {
                 </View>
               </Link>
             );
-          })
+          })}
+        </>
       )}
     </ScrollView>
   );
@@ -139,6 +213,26 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 12 },
   muted: { color: color.textMuted },
+  sectionLabel: { ...type.label, color: color.textFaint },
+  // Runs to both screen edges like the photos do, so the faces scroll out
+  // from under the gutter rather than being cut off inside it.
+  stripFrame: { marginHorizontal: -24 },
+  strip: { paddingHorizontal: 24, gap: space.lg, paddingBottom: space.sm },
+  stripItem: {
+    width: STRIP_AVATAR + space.sm,
+    alignItems: 'center',
+    gap: space.xs,
+  },
+  stripName: {
+    ...type.caption,
+    color: color.textMuted,
+    maxWidth: STRIP_AVATAR + space.sm,
+  },
+  stripEmpty: {
+    ...type.bodySmall,
+    color: color.textMuted,
+    paddingBottom: space.sm,
+  },
   card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   cardBody: { flex: 1 },
