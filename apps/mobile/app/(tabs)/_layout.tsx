@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabIcon } from '@/components/TabIcon';
 import { useSession } from '@/lib/session';
@@ -21,7 +22,7 @@ import { color, type } from '@/theme/tokens';
 const TAB_ROW = 49;
 /**
  * Where the drawn icon-and-label sits in that row with no padding of ours:
- * its vertical centre, measured on the device (icon top 10.7pt below the
+ * its vertical centre, measured on an iPhone (icon top 10.7pt below the
  * bar's border, label bottom 47pt). The library lays the item out from the
  * top (`justifyContent: 'flex-start'`), so centring is an offset from here.
  */
@@ -39,8 +40,16 @@ export default function TabLayout() {
   // pushed down to its middle (owner, 2026-09-15: "tam ortalamalı"). With
   // no inset — a phone without a home indicator — the offset clamps to 0
   // and the bar is the standard one.
+  //
+  // iOS only. Android draws its navigation bar over the bottom inset and
+  // takes the touches there, so a label pushed into it would sit under the
+  // back and home buttons (review, 2026-09-15); there the items keep the
+  // library's own place, above the inset.
+  const centred = Platform.OS === 'ios';
   const barHeight = TAB_ROW + insets.bottom;
-  const itemOffset = Math.max(0, Math.round(barHeight / 2 - ITEM_CENTRE));
+  const itemOffset = centred
+    ? Math.max(0, Math.round(barHeight / 2 - ITEM_CENTRE))
+    : 0;
   return (
     <Tabs
       // Keşfet is the middle tab and the one the app opens on; the order
@@ -59,7 +68,7 @@ export default function TabLayout() {
           borderTopColor: color.border,
           borderTopWidth: 1,
           height: barHeight,
-          paddingBottom: 0,
+          paddingBottom: centred ? 0 : insets.bottom,
         },
         tabBarLabelStyle: { ...type.caption, fontSize: 11 },
         tabBarItemStyle: { paddingTop: itemOffset },
