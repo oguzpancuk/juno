@@ -132,13 +132,15 @@ export function FiltersPanel() {
     }
     if (status === 0) {
       // No answer at all — timed out or cut off. The write may have landed
-      // anyway, so neither the control's value nor its revert can be
-      // trusted: read the row back and show what is stored.
+      // anyway, even after a newer one did, so neither the control's value
+      // nor a revert can be trusted: read the row back and show what is
+      // stored, newest write or not. The read waits for any write still in
+      // flight, and the banner says only what is about to be true (third
+      // review, 2026-09-16: it used to claim a reload that an older write
+      // never triggered).
       setError(t.filters.unanswered);
-      if (newestForAll) {
-        setLoad('loading');
-        setAttempt((n) => n + 1);
-      }
+      setLoad('loading');
+      setAttempt((n) => n + 1);
       return;
     }
     setError(t.filters.failed);

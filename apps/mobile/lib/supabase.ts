@@ -24,9 +24,17 @@ export const READ_TIMEOUT_MS = 10000;
  * or signal for it, so on a connection that is accepted and never answers
  * the person would sit on the profile, the settings chip already off, with
  * nothing happening (review, 2026-09-15). Aborted, the call fails the way a
- * dropped connection does, and auth-js clears the session on this device
- * exactly once — the server's refresh token may then stay unrevoked, as it
- * does for any sign-out made offline. Every other request passes through.
+ * dropped connection does, and auth-js clears the session on this device —
+ * the server's refresh token may then stay unrevoked, as it does for any
+ * sign-out made offline. Every other request passes through.
+ *
+ * What this does not cover: before /logout, auth-js loads the session,
+ * and a session within its refresh margin is refreshed first through
+ * /auth/v1/token, which has no deadline here. On a connection that hangs
+ * exactly then, sign-out still waits; and if that refresh fails, auth-js
+ * returns the error without clearing the session. Both predate this
+ * deadline and are left as they are (third review, 2026-09-16): bounding
+ * the refresh would not make a failed one clear the session.
  */
 // Built the way supabase-js builds its auth URL (`new URL('auth/v1', base)`
 // on a base ending in a slash), so a trailing slash in the env value
