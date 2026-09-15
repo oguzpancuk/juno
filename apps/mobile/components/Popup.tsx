@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,11 +37,19 @@ export function Popup({
   title,
   closeLabel,
   bleed = false,
+  onDismissed,
   children,
   testID,
 }: {
   visible: boolean;
   onClose: () => void;
+  /**
+   * Called once the sheet is fully off the screen. Navigate from here, not
+   * from `onClose`: on iOS a push or replace issued while the modal is
+   * still animating away is silently dropped, which is how "Engellediklerin"
+   * once closed the settings sheet and opened nothing.
+   */
+  onDismissed?: () => void;
   /** Defaults to "Kapat". */
   closeLabel?: string;
   children: ReactNode;
@@ -52,6 +61,19 @@ export function Popup({
   | { title?: undefined; bleed: true }
 )) {
   const insets = useSafeAreaInsets();
+  // Android never fires Modal's `onDismiss`; there the sheet is gone as soon
+  // as `visible` is false. A ref, so a new callback identity does not re-run
+  // this on every render.
+  const dismissed = useRef(onDismissed);
+  useEffect(() => {
+    dismissed.current = onDismissed;
+  });
+  const wasVisible = useRef(visible);
+  useEffect(() => {
+    if (Platform.OS === 'android' && wasVisible.current && !visible)
+      dismissed.current?.();
+    wasVisible.current = visible;
+  }, [visible]);
   return (
     <Modal
       visible={visible}
@@ -59,6 +81,7 @@ export function Popup({
       animationType="fade"
       statusBarTranslucent
       onRequestClose={onClose}
+      onDismiss={() => dismissed.current?.()}
     >
       <View style={styles.layer} testID={testID}>
         {/* A tap target for sighted users only: VoiceOver gets the one

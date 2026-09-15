@@ -35,7 +35,7 @@ export default function Legal() {
           naming one of them would be wrong for the others. Only the
           fallback, for a cold deep link, depends on the session. */}
       {session.status === 'signed-in' ? (
-        <BackLink label={t.signIn.back} fallback="/settings" />
+        <BackLink label={t.signIn.back} fallback="/profile" />
       ) : session.status === 'signed-out' ? (
         <BackLink label={t.signIn.back} fallback="/sign-in" />
       ) : null}

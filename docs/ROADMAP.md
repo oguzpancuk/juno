@@ -1187,6 +1187,41 @@ the deck photo is capped, because nothing there can be scrolled to; and
 the profile's controls scroll away with the photo rather than staying
 pinned over the cards below.
 
+## The fifth pass (owner request 2026-09-15)
+
+Settings and discovery filters stop being pages, and the filters get
+controls that take one gesture instead of a dozen taps.
+
+- [x] **Settings opens as a popup over the profile.** The settings chip
+      opens a sheet with what the page held — blocked people, privacy,
+      location, sign-out, delete account — minus the link to the filters,
+      which moved to the deck. Blocked people and privacy stay pages; the
+      sheet closes first and the navigation waits for it to be gone,
+      because on iOS a navigation issued while a modal is animating away
+      is dropped.
+      _Done. `v6-settings-popup.png`; on the device both links opened
+      their page from the sheet, and "‹ Profil" returned to the profile._
+
+- [x] **Discovery filters open as a popup from the deck's top-right
+      corner.** The owner first said top-left and corrected it to
+      top-right the same day. The chip is the profile's settings chip at
+      the same height in the same corner, and it is there in every deck
+      state, because widening the filters is the way out of an empty
+      deck. Closing the sheet reloads the deck. The like and pass stamps
+      start below the chip, since the pass stamp shares its corner.
+      _Done. `v6-deck-filters-chip.png`._
+
+- [ ] **Radius and age are set with a drag, and the minimum band fits one
+      row.** Age becomes one track with two thumbs, the range written
+      large above it; radius becomes one track with five stops
+      (5 · 25 · 50 · 100 · 500 km), its value above it. No new
+      dependency: the deck's own `PanResponder`. The minimum band becomes
+      a four-part segmented row, and its lowest option reads "Hepsi" here,
+      because as a minimum it filters nothing; the band keeps its own
+      name everywhere else. Done when: both tracks drag and snap and save
+      on the device, and the band row is one line at the default text
+      size — `v6-filters-sliders.png`.
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

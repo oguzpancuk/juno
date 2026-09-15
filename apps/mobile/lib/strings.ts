@@ -227,8 +227,6 @@ export const t = {
     fullChart: 'Tüm haritasını gör',
   },
   filters: {
-    // Settings is the only way in, and the control goes back there.
-    back: '‹ Ayarlar',
     title: 'Keşif ayarları',
     age: 'Yaş aralığı',
     ageHint:
@@ -245,13 +243,11 @@ export const t = {
       air: 'Hava',
       water: 'Su',
     },
-    open: 'Keşif ayarları ›',
     failed: 'Kaydedilemedi, tekrar dene.',
   },
   settings: {
     title: 'Ayarlar',
     signOut: 'Çıkış yap',
-    back: '‹ Profil',
     radius: 'Keşif yarıçapı',
     radiusHint:
       'Bu mesafe içindeki kişiler sana gösterilir; seni kimlerin göreceğini onların yarıçapı belirler. Konumun başkalarına sadece km olarak görünür.',
@@ -267,7 +263,8 @@ export const t = {
   },
   blocked: {
     open: 'Engellediklerin',
-    back: '‹ Ayarlar',
+    // Settings is a popup now, so the page returns to the profile under it.
+    back: '‹ Profil',
     title: 'Engellediklerin',
     hint: 'Engeli kaldırırsan eşleşmeniz ve eski yazışmanız iki tarafta da geri gelir.',
     empty: 'Kimseyi engellemedin.',

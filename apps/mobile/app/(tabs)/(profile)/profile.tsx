@@ -10,8 +10,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { Popup } from '@/components/Popup';
 import { ProfileView } from '@/components/ProfileView';
+import { SettingsPanel } from '@/components/SettingsPanel';
+import { SlidersIcon } from '@/components/SlidersIcon';
 import { useScreenName } from '@/lib/a11y';
 import {
   Body,
@@ -38,50 +40,6 @@ import { color, radius, space, type } from '@/theme/tokens';
 const EMPTY: readonly string[] = [];
 
 /**
- * Settings: three sliders, not a gear. A gear at this size is a circle
- * with eight spokes, which is also a sun — and this app draws real suns.
- */
-function SettingsIcon() {
-  return (
-    <Svg width={26} height={26} viewBox="0 0 24 24">
-      <Path
-        d="M3.5 7h17M3.5 12h17M3.5 17h17"
-        stroke={color.textMuted}
-        strokeWidth={1.6}
-        strokeLinecap="round"
-      />
-      <Circle cx={9} cy={7} r={2.4} fill={color.surfaceSoft} />
-      <Circle
-        cx={9}
-        cy={7}
-        r={2.4}
-        stroke={color.textMuted}
-        strokeWidth={1.6}
-        fill="none"
-      />
-      <Circle cx={15.5} cy={12} r={2.4} fill={color.surfaceSoft} />
-      <Circle
-        cx={15.5}
-        cy={12}
-        r={2.4}
-        stroke={color.textMuted}
-        strokeWidth={1.6}
-        fill="none"
-      />
-      <Circle cx={7.5} cy={17} r={2.4} fill={color.surfaceSoft} />
-      <Circle
-        cx={7.5}
-        cy={17}
-        r={2.4}
-        stroke={color.textMuted}
-        strokeWidth={1.6}
-        fill="none"
-      />
-    </Svg>
-  );
-}
-
-/**
  * Your own page, laid out exactly as another person's is (`ProfileView`),
  * plus one pill beside the settings control: "Düzenle" opens the edit
  * mode, where it reads "Kaydet" and one update persists the photo order
@@ -106,6 +64,15 @@ export default function Profile() {
   const sources = usePhotoSources(photos);
   const [bio, setBio] = useState('');
   const [editing, setEditing] = useState(false);
+  // Settings is a popup over the profile, not a page (owner, 2026-09-15).
+  const [showSettings, setShowSettings] = useState(false);
+  // What to do once the sheet is fully gone — a push to a page, or the
+  // trip to sign-in. Queued rather than run, see Popup's `onDismissed`.
+  const afterSettings = useRef<(() => void) | null>(null);
+  const closeSettingsThen = (next: () => void) => {
+    afterSettings.current = next;
+    setShowSettings(false);
+  };
   const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -250,12 +217,12 @@ export default function Profile() {
             // this is the only route into Settings.
             accessibilityLabel={t.settings.title}
             hitSlop={12}
-            onPress={() => router.push('/settings')}
+            onPress={() => setShowSettings(true)}
             // A chip, because the icon now sits on a photograph: three bare
             // strokes over a picture are not a control.
             style={({ pressed }) => [styles.iconChip, pressed && styles.dim]}
           >
-            <SettingsIcon />
+            <SlidersIcon />
           </Pressable>
         </View>
         {/* Under the control that caused it. In the flow it would push the
@@ -309,6 +276,22 @@ export default function Profile() {
           }}
         />
       )}
+      <Popup
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+        onDismissed={() => {
+          const next = afterSettings.current;
+          afterSettings.current = null;
+          next?.();
+        }}
+        title={t.settings.title}
+        testID="settings-popup"
+      >
+        <SettingsPanel
+          onOpen={(href) => closeSettingsThen(() => router.push(href))}
+          onLeave={closeSettingsThen}
+        />
+      </Popup>
     </Screen>
   );
 }

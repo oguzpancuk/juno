@@ -1,9 +1,8 @@
 import { BANDS, bandName, type Band } from '@juno/astro';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
-import { BackLink } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { supabase } from '@/lib/supabase';
 import { color, radius as r, space, type } from '@/theme/tokens';
@@ -17,8 +16,13 @@ const AGE_CEILING = 99;
  * the `discover` view; the band and the element cannot be — the band comes
  * from a score the device computes from two charts — so those two are
  * stored here and applied after scoring.
+ *
+ * The body of a popup opened from the deck's top-left corner (owner,
+ * 2026-09-15); it was the `/filters` screen behind Settings. Every change is
+ * written as it is made, so the host only has to reload the deck when the
+ * sheet closes.
  */
-export default function FiltersScreen() {
+export function FiltersPanel() {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -117,15 +121,8 @@ export default function FiltersScreen() {
   const chosen = elements ?? ELEMENTS;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      testID="filters-screen"
-    >
-      <BackLink label={t.filters.back} fallback="/settings" />
-      <Text style={styles.title}>{t.filters.title}</Text>
-
-      <Text style={styles.label}>{t.settings.radius}</Text>
+    <View testID="filters-screen">
+      <Text style={[styles.label, styles.first]}>{t.settings.radius}</Text>
       <View style={styles.row}>
         {RADIUS_OPTIONS.map((option) => (
           <Pressable
@@ -217,7 +214,7 @@ export default function FiltersScreen() {
       <Text style={styles.hint}>{t.filters.elementsHint}</Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -268,9 +265,8 @@ function Stepper({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: color.bg },
-  content: { padding: space.xl, paddingTop: 68, paddingBottom: 56 },
-  title: { ...type.display, color: color.text, marginBottom: space.sm },
+  // The sheet's title sits right above the first section.
+  first: { marginTop: 0 },
   label: {
     ...type.label,
     color: color.textFaint,

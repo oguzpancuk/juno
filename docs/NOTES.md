@@ -4155,3 +4155,36 @@ gap above the tab bar given 5 more. **Not yet re-measured**: the
 simulator was in the owner's hands. Neither is the deck's new reading
 sheet or the profile's bottom gap; all three are typechecked, linted and
 on the committed HEAD, and nothing more than that is claimed for them.
+
+## 2026-09-15 — settings and filters as popups
+
+**Settings is a sheet over the profile, filters a sheet over the deck.**
+The two routes are gone (`settings/index.tsx`, `filters.tsx`); their
+bodies are `SettingsPanel` and `FiltersPanel`, and the sliders glyph moved
+out of the profile into `SlidersIcon` so both chips draw it. The legal
+route still lives at `settings/legal`, and `/blocked` and `/legal` fall
+back to `/profile` now that the page they used to return to does not
+exist.
+
+**Navigating out of a sheet has to wait for it.** The first build closed
+the settings sheet and navigated to `/blocked` in the same handler; on
+the device the sheet closed and nothing opened. On iOS a navigation
+issued while a `Modal` is still animating away is dropped. `Popup` now
+takes `onDismissed`, wired to `Modal.onDismiss` — which React Native
+implements on iOS only; react-native-web calls it too — and on Android
+fired when `visible` turns false. The profile queues the navigation (a
+page, or the trip to sign-in after sign-out or account deletion) in a ref
+and runs it from `onDismissed`. Checked on the device: "Engellediklerin"
+and "Gizlilik ve lisanslar" each open from the sheet. Sign-out and delete
+were not driven — delete is destructive and sign-out would have ended the
+session the owner is using; both run the same queued path as the two
+links.
+
+**Top-right, not top-left.** The owner asked for the filters chip
+top-left and corrected it to top-right while it was being built. It now
+sits exactly where the profile's settings chip sits (the same
+`Math.max(insets.top, space.xl)` from the top, the same gutter), so the
+control does not move between the two tabs. That put it in the pass
+stamp's corner, so both stamps now start 12pt below the chip. One thing
+for the owner: the two chips now draw the same glyph in the same place
+and mean different things — settings on one tab, filters on the other.

@@ -25,7 +25,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
 import { BandMeter } from '@/components/Meter';
+import { FiltersPanel } from '@/components/FiltersPanel';
 import { Popup } from '@/components/Popup';
+import { SlidersIcon } from '@/components/SlidersIcon';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
@@ -43,6 +45,8 @@ import { color, gradient, radius, space, type } from '@/theme/tokens';
  * still deciding, and a tap on a button is well under it.
  */
 const CLAIM_DISTANCE = 8;
+/** The filters chip, the same size as the profile's settings chip. */
+const CORNER_CHIP = 36;
 
 /**
  * A ceiling on Dynamic Type below the photo. The card has to fit one
@@ -95,6 +99,10 @@ export default function Discover() {
   // believes nothing is busy.
   const [flying, setFlying] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // Discovery filters, as a popup from the deck's top-right corner (owner,
+  // 2026-09-15). Closing it reloads the deck: nothing else would, because
+  // the screen never lost focus.
+  const [showFilters, setShowFilters] = useState(false);
   const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -243,6 +251,11 @@ export default function Discover() {
   // render for the interpolations below (see Calculating.tsx), and the
   // initialiser is lazy so the value is created once.
   const insets = useSafeAreaInsets();
+  // The profile's settings chip sits at this height in the same corner, so
+  // moving between the two tabs the control does not jump. The stamps start
+  // below it: the pass stamp shares the right-hand corner.
+  const cornerTop = Math.max(insets.top, space.xl);
+  const stampTop = cornerTop + CORNER_CHIP + space.md;
   const [pan] = useState(() => new Animated.ValueXY());
   const settle = useCallback(() => {
     Animated.spring(pan, {
@@ -390,7 +403,7 @@ export default function Discover() {
               style={[
                 styles.stamp,
                 styles.stampLike,
-                { top: insets.top + space.xl, opacity: likeOpacity },
+                { top: stampTop, opacity: likeOpacity },
               ]}
               accessible={false}
               accessibilityElementsHidden
@@ -405,7 +418,7 @@ export default function Discover() {
               style={[
                 styles.stamp,
                 styles.stampPass,
-                { top: insets.top + space.xl, opacity: passOpacity },
+                { top: stampTop, opacity: passOpacity },
               ]}
               accessible={false}
               accessibilityElementsHidden
@@ -538,6 +551,35 @@ export default function Discover() {
           />
         </Popup>
       ) : null}
+      {/* Over everything else on the screen, and outside the card so it does
+          not fly away with a swipe. Present in every state — loading, empty,
+          error — because widening the filters is the way out of an empty
+          deck. */}
+      <Pressable
+        testID="open-filters"
+        accessibilityRole="button"
+        accessibilityLabel={t.filters.title}
+        hitSlop={12}
+        onPress={() => setShowFilters(true)}
+        style={({ pressed }) => [
+          styles.filtersButton,
+          { top: cornerTop },
+          pressed && styles.dim,
+        ]}
+      >
+        <SlidersIcon />
+      </Pressable>
+      <Popup
+        visible={showFilters}
+        onClose={() => {
+          setShowFilters(false);
+          setAttempt((n) => n + 1);
+        }}
+        title={t.filters.title}
+        testID="filters-popup"
+      >
+        <FiltersPanel />
+      </Popup>
     </View>
   );
 }
@@ -701,6 +743,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
   },
   dim: { opacity: 0.6 },
+  // The same 36pt chip as the profile's settings control, in the same
+  // corner, so the two read as one kind of thing.
+  filtersButton: {
+    position: 'absolute',
+    right: SCREEN_PADDING,
+    width: CORNER_CHIP,
+    height: CORNER_CHIP,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   photoScrim: {
     position: 'absolute',
     left: 0,

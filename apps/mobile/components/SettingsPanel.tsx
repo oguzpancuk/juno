@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import type { Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { updateLocation } from '@/lib/discover';
@@ -6,12 +6,28 @@ import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { leaveToSignIn, useSession } from '@/lib/session';
-import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
-import { BackLink } from '@/components/ui';
 import { color } from '@/theme/tokens';
 
-export default function Settings() {
+/**
+ * Settings, as the body of a popup opened from the profile (owner,
+ * 2026-09-15). It was the `/settings` screen; everything it did it still
+ * does, except send people to the discovery filters, which now open from
+ * the deck itself.
+ *
+ * Every way out is handed to the host, because only the host owns the
+ * sheet and a navigation issued while it is still on screen is dropped on
+ * iOS: `onOpen` for the two pages that are still pages (blocked people,
+ * privacy), `onLeave` with the navigation a sign-out or a deleted account
+ * needs. The host closes the sheet and runs either once it is gone.
+ */
+export function SettingsPanel({
+  onOpen,
+  onLeave,
+}: {
+  onOpen: (href: Href) => void;
+  onLeave: (navigate: () => void) => void;
+}) {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -38,7 +54,6 @@ export default function Settings() {
     setLocating(saved ? 'done' : 'failed');
   };
 
-  const bottomGap = useBottomGap(24);
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -63,26 +78,26 @@ export default function Settings() {
       // account that no longer exists, so the sign-out is best-effort and
       // the navigation happens either way.
       await supabase.auth.signOut().catch(() => undefined);
-      leaveToSignIn();
+      onLeave(leaveToSignIn);
     });
   };
 
   return (
-    <View
-      style={[styles.screen, { paddingBottom: bottomGap }]}
-      testID="settings-screen"
-    >
-      <BackLink label={t.settings.back} fallback="/profile" />
-      <Text style={styles.title}>{t.settings.title}</Text>
-      <Link href="/blocked" style={styles.link}>
-        {t.blocked.open}
-      </Link>
-      <Link href="/settings/legal" style={styles.link}>
-        {t.legal.open}
-      </Link>
-      <Link href="/filters" style={styles.link}>
-        {t.filters.open}
-      </Link>
+    <View style={styles.panel} testID="settings-screen">
+      <Pressable
+        accessibilityRole="link"
+        onPress={() => onOpen('/blocked')}
+        testID="open-blocked"
+      >
+        <Text style={styles.link}>{t.blocked.open}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="link"
+        onPress={() => onOpen('/settings/legal')}
+        testID="open-legal"
+      >
+        <Text style={styles.link}>{t.legal.open}</Text>
+      </Pressable>
       <Text style={styles.label}>{t.settings.location}</Text>
       <Pressable
         testID="refresh-location"
@@ -120,7 +135,7 @@ export default function Settings() {
             .signOut()
             .catch(() => undefined)
             .then(() => {
-              leaveToSignIn();
+              onLeave(leaveToSignIn);
             });
         }}
       >
@@ -165,26 +180,10 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: color.bg,
-    padding: 24,
-    paddingTop: 64,
-    gap: 12,
-  },
+  // The sheet supplies the gutter and the title; this is the list.
+  panel: { gap: 12 },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
-  title: { color: color.text, fontSize: 26, fontWeight: '700' },
   label: { color: color.textMuted, fontSize: 14, marginTop: 12 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    backgroundColor: color.surface,
-  },
-  chipOn: { backgroundColor: color.cool },
-  chipText: { color: color.text },
-  chipTextOn: { color: color.onBright, fontWeight: '600' },
   hint: { color: color.textFaint, fontSize: 12 },
   error: { color: color.danger },
   ok: { color: color.ok, fontSize: 13 },
@@ -197,7 +196,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: color.surface,
+    backgroundColor: color.surfaceSoft,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

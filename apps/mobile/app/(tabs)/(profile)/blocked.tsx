@@ -76,7 +76,7 @@ export default function Blocked() {
       contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
       testID="blocked-screen"
     >
-      <BackLink label={t.blocked.back} fallback="/settings" />
+      <BackLink label={t.blocked.back} fallback="/profile" />
       <Text style={styles.title}>{t.blocked.title}</Text>
       <Text style={styles.hint}>{t.blocked.hint}</Text>
       {people === null ? (
