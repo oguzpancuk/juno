@@ -107,6 +107,10 @@ export function useUnreadTotal(userId: string | null): number {
         soon,
       )
       .subscribe((status, err) => {
+        // Joined — and joined again after every reconnect: read once, so
+        // messages that arrived while the socket was away are counted
+        // (review, 2026-09-15). A read that changes nothing ends there.
+        if (status === 'SUBSCRIBED') soon();
         // Without the socket the badge still follows this device's own
         // reads and every return to the foreground; say so in the log.
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {

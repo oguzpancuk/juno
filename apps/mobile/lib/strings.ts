@@ -104,8 +104,8 @@ export const t = {
     profile: 'Profil',
     discover: 'Keşfet',
     matches: 'Eşleşmeler',
-    // What VoiceOver says for the tab while the badge shows a count.
-    matchesUnread: (count: number) => `Eşleşmeler, ${count} okunmamış mesaj`,
+    // What VoiceOver adds to the tab while the badge shows a count.
+    unread: (count: number) => `${count} okunmamış mesaj`,
   },
   discover: {
     // What VoiceOver reads for the photo and for the band. A label takes

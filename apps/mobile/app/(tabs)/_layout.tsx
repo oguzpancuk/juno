@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabIcon } from '@/components/TabIcon';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { tabAccessibilityLabel } from '@/lib/tab-a11y';
 import { useUnreadTotal } from '@/lib/unread';
 import { badgeText } from '@/lib/unread-count';
 import { color, type } from '@/theme/tokens';
@@ -95,28 +96,43 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="(matches)"
-        options={{
-          title: t.tabs.matches,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="matches" focused={focused} />
-          ),
-          // Unread messages across every thread, on the icon's top-right
-          // corner (owner, 2026-09-15). The list's per-thread badge colours,
-          // so the two read as the same count.
-          tabBarBadgeStyle: {
-            backgroundColor: color.cool,
-            color: color.onBright,
-            fontWeight: '700',
-          },
-          // Spread rather than set to undefined: the option types are exact.
-          // The badge itself is not announced, so with a count the tab's
-          // label says it; without one, the library's own label stands.
-          ...(badge === undefined
-            ? {}
-            : {
-                tabBarBadge: badge,
-                tabBarAccessibilityLabel: t.tabs.matchesUnread(unread),
-              }),
+        options={({ route, navigation }) => {
+          // why: expo-router types the navigation handed to a screen's
+          // options as `any`; its state here is the tab navigator's, the
+          // same route list the bar numbers its tabs from.
+          const { routes } = (
+            navigation as { getState(): { routes: readonly { key: string }[] } }
+          ).getState();
+          return {
+            title: t.tabs.matches,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon name="matches" focused={focused} />
+            ),
+            // Unread messages across every thread, on the icon's top-right
+            // corner (owner, 2026-09-15). The list's per-thread badge
+            // colours, so the two read as the same count.
+            tabBarBadgeStyle: {
+              backgroundColor: color.cool,
+              color: color.onBright,
+              fontWeight: '700',
+            },
+            // Spread rather than set to undefined: the option types are
+            // exact. The badge itself is not announced, so with a count the
+            // tab's label says it, after the role and position the library
+            // would have said (see `tabAccessibilityLabel`).
+            ...(badge === undefined
+              ? {}
+              : {
+                  tabBarBadge: badge,
+                  tabBarAccessibilityLabel: tabAccessibilityLabel(
+                    Platform.OS,
+                    t.tabs.matches,
+                    routes.findIndex((r) => r.key === route.key),
+                    routes.length,
+                    t.tabs.unread(unread),
+                  ),
+                }),
+          };
         }}
       />
     </Tabs>
