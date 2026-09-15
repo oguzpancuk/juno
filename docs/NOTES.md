@@ -4246,3 +4246,38 @@ computed from a few constants rather than copied from an icon set, which
 leaves no licence to credit. Checked on the device (`v6-profile-gear.png`
 and an enlarged crop): it reads as a gear, and the chip still opens the
 settings sheet.
+
+## 2026-09-15 — an unread badge on the Eşleşmeler tab
+
+**What it counts.** The sum of `unread_count` over `match_profiles` — the
+column the conversation rows already show — so the tab and the list agree
+by construction, including leaving out a blocked person's thread. The
+arithmetic (`totalUnread`, `badgeText` with its "99+" cap) is in
+`lib/unread-count.ts` under Vitest; the read and the subscription are
+`lib/unread.ts`.
+
+**When it moves.** `useUnreadTotal`, mounted in the tabs layout, reads on
+sign-in and again, after a 300ms settle, on any Realtime insert or update
+on `messages` (RLS limits those to my threads; one thread marked read is
+one update per message, hence the settle), on `notifyUnreadChanged()` —
+called by `markThreadRead`, `blockUser` and `unblockUser` after they
+succeed, and by the list on every focus — and when the app returns to the
+foreground. A failed read keeps the last count rather than showing zero,
+and the count is held with the user it was read for, so a second account
+on the same device never sees the first one's number. With the socket
+down the badge still follows this device's own reads, the list and the
+foreground; a message from someone else then waits for one of those.
+
+**Accessibility.** React Navigation does not announce the badge, so while
+there is a count the tab's accessibility label becomes "Eşleşmeler, N
+okunmamış mesaj". Not driven with VoiceOver.
+
+**The row badge** sat on the name's line, at the top-right of the card;
+the owner asked for it centred. It is now the row's last child, and the
+row already centres its children, so it lines up with the avatar.
+
+Checked on the device, with test messages written to the local database
+as Burak to Selin (`Rozet testi 1`–`4`, left in place; the fourth is still
+unread): three messages showed 3 on the tab and on Burak's row; opening
+the thread stamped `read_at` on all three and both badges went; a fourth
+inserted while Keşfet was open showed 1 on the tab with no reload.

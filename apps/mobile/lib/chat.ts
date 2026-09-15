@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
+import { notifyUnreadChanged } from './unread';
 
 /** A row of `messages`. Both sides of a match read the same rows. */
 export const MessageRowSchema = z.object({
@@ -109,7 +110,12 @@ export async function markThreadRead(
     .is('read_at', null);
   // A failure leaves the badge up; the next focus retries, so this is a
   // log rather than a state the screen has to carry.
-  if (error) console.warn('markThreadRead failed', error.message);
+  if (error) {
+    console.warn('markThreadRead failed', error.message);
+    return;
+  }
+  // The tab's badge, without waiting for Realtime to echo the update.
+  notifyUnreadChanged();
 }
 
 const byTime = (a: MessageRow, b: MessageRow): number =>

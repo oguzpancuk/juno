@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabIcon } from '@/components/TabIcon';
+import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { useUnreadTotal } from '@/lib/unread';
+import { badgeText } from '@/lib/unread-count';
 import { color, type } from '@/theme/tokens';
 
 /**
@@ -26,6 +29,11 @@ const ITEM_CENTRE = 28.85;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const session = useSession();
+  const unread = useUnreadTotal(
+    session.status === 'signed-in' ? session.session.user.id : null,
+  );
+  const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it
   // rather than stopping above the home indicator, and the items are
   // pushed down to its middle (owner, 2026-09-15: "tam ortalamalı"). With
@@ -83,6 +91,23 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon name="matches" focused={focused} />
           ),
+          // Unread messages across every thread, on the icon's top-right
+          // corner (owner, 2026-09-15). The list's per-thread badge colours,
+          // so the two read as the same count.
+          tabBarBadgeStyle: {
+            backgroundColor: color.cool,
+            color: color.onBright,
+            fontWeight: '700',
+          },
+          // Spread rather than set to undefined: the option types are exact.
+          // The badge itself is not announced, so with a count the tab's
+          // label says it; without one, the library's own label stands.
+          ...(badge === undefined
+            ? {}
+            : {
+                tabBarBadge: badge,
+                tabBarAccessibilityLabel: t.tabs.matchesUnread(unread),
+              }),
         }}
       />
     </Tabs>

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { supabase } from './supabase';
+import { notifyUnreadChanged } from './unread';
 
 /** Mirrors the `report_reason` enum; the labels are the UI's, in Turkish. */
 export const REPORT_REASONS = [
@@ -25,7 +26,11 @@ export async function blockUser(
     .from('blocks')
     .insert({ blocker_id: myId, blocked_id: otherId });
   // Blocking twice is not an error the user needs to see.
-  return !error || error.code === '23505';
+  const ok = !error || error.code === '23505';
+  // A blocked person's thread leaves the list, and its unread count the
+  // tab's badge.
+  if (ok) notifyUnreadChanged();
+  return ok;
 }
 
 const BlockedSchema = z.array(
@@ -71,7 +76,10 @@ export async function unblockUser(
     .eq('blocker_id', myId)
     .eq('blocked_id', otherId)
     .select('blocked_id');
-  return !error && (data?.length ?? 0) > 0;
+  const ok = !error && (data?.length ?? 0) > 0;
+  // The thread comes back, and with it whatever in it is unread.
+  if (ok) notifyUnreadChanged();
+  return ok;
 }
 
 /**

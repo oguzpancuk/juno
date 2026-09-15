@@ -100,7 +100,13 @@ export const t = {
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
   },
-  tabs: { profile: 'Profil', discover: 'Keşfet', matches: 'Eşleşmeler' },
+  tabs: {
+    profile: 'Profil',
+    discover: 'Keşfet',
+    matches: 'Eşleşmeler',
+    // What VoiceOver says for the tab while the badge shows a count.
+    matchesUnread: (count: number) => `Eşleşmeler, ${count} okunmamış mesaj`,
+  },
   discover: {
     openProfile: 'Profili gör',
     // The stamps a drag reveals. Pre-uppercased: RN textTransform maps

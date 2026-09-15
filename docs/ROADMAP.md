@@ -1242,6 +1242,19 @@ controls that take one gesture instead of a dozen taps.
       and a hole, not a spoked disc that could pass for a sun.
       _Done. `v6-profile-gear.png`; the chip still opens the sheet._
 
+- [x] **Unread messages on the Eşleşmeler tab.** The owner asked whether
+      a new message shows a count on the tab's icon; it did not — only each
+      conversation's row carried one. The tab now draws a badge with the
+      total, capped at "99+", from the same `match_profiles.unread_count`
+      the rows use, kept current by Realtime inserts and updates on
+      `messages`, this device's own reads and blocks, returns to the
+      foreground, and every visit to the list. The row badge moved beside
+      the whole row, centred on it, rather than on the name's line.
+      _Done. `v6-tab-badge.png` (3 unread), `v6-tab-badge-live.png` (a
+      message inserted while on Keşfet appeared as 1 without a reload),
+      `v6-row-badge-centred.png`; opening the thread cleared both badges
+      and stamped `read_at` on all three messages._
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

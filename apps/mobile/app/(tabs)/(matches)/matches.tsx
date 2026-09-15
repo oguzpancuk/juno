@@ -16,6 +16,7 @@ import { chatHref } from '@/lib/routes';
 import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
+import { notifyUnreadChanged } from '@/lib/unread';
 import { color, space, type } from '@/theme/tokens';
 
 /** The new-match faces: large enough to read as people, not as badges. */
@@ -70,6 +71,9 @@ export default function Matches() {
       void fetchMatches().then((r) => {
         if (!cancelled) setRows(r);
       });
+      // The tab's badge reads the same column; bring it along, for when
+      // the Realtime socket missed a change the list has just picked up.
+      notifyUnreadChanged();
       return () => {
         cancelled = true;
       };
@@ -181,16 +185,9 @@ export default function Matches() {
                     testID="conversation-avatar"
                   />
                   <View style={styles.cardBody}>
-                    <View style={styles.cardHead}>
-                      <Text style={styles.name} numberOfLines={1}>
-                        {row.display_name}, {row.age}
-                      </Text>
-                      {row.unread_count > 0 ? (
-                        <Text style={styles.badge} testID="unread-badge">
-                          {row.unread_count}
-                        </Text>
-                      ) : null}
-                    </View>
+                    <Text style={styles.name} numberOfLines={1}>
+                      {row.display_name}, {row.age}
+                    </Text>
                     <Text style={styles.preview} numberOfLines={2}>
                       {row.last_body === null
                         ? ((userId
@@ -199,6 +196,13 @@ export default function Matches() {
                         : `${row.last_sender_id === userId ? t.matches.youPrefix : ''}${row.last_body}`}
                     </Text>
                   </View>
+                  {/* Beside the whole row, centred on it, rather than on
+                      the name's line (owner, 2026-09-15). */}
+                  {row.unread_count > 0 ? (
+                    <Text style={styles.badge} testID="unread-badge">
+                      {row.unread_count}
+                    </Text>
+                  ) : null}
                 </View>
               </Link>
             );
@@ -238,12 +242,6 @@ const styles = StyleSheet.create({
   cardBody: { flex: 1 },
   name: { color: color.text, fontSize: 18, fontWeight: '600', flexShrink: 1 },
   preview: { color: color.textMuted, fontSize: 13, marginTop: 4 },
-  cardHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
   badge: {
     color: color.onBright,
     backgroundColor: color.cool,
