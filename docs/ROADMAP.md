@@ -1263,9 +1263,28 @@ controls that take one gesture instead of a dozen taps.
       each finding its own skeptical verifier with the library source to
       hand: ten confirmed, one partly. All eleven are fixed in b3b7ac8,
       c22f58c, de106f6 and 0f06ea3; see NOTES 2026-09-15 "review fixes".
-      _Open: sign-out and deletion from the sheet are not yet driven on the
-      device — that needs the owner to sign out and back in; the deck's new
-      VoiceOver labels were not read on the device; Android is not run._
+      _Open: the deck's new VoiceOver labels were not read on the device;
+      Android is not run. Sign-out from the sheet was driven by the owner on
+      the device, 2026-09-15: the sheet closed and sign-in opened._
+      **Second review (af210f1..2ba5336), same day.** NEEDS_WORK again: a
+      deletion finishing after the sheet was closed never signed out
+      (fixed, bea3805), and the badge's unfiltered Realtime subscription
+      costs one RLS check per online user per message (open — owner
+      decision, below). Minor: a sign-out that could hang (dee41d0), filter
+      writes tracked without a bound and an unanswered write reverted as a
+      failure (a0b2cd1), the tab's spoken position lost with a count and no
+      catch-up after a reconnect (54c669d).
+
+- [ ] **The unread badge's subscription scales with users online.** Every
+      signed-in device subscribes to all inserts and updates on `messages`,
+      and Realtime checks RLS once per subscriber per change. Measured on
+      the local stack (NOTES 2026-09-15, "review fixes, second round"): a
+      filter is evaluated before RLS, so filtering the subscription avoids
+      the checks. Options put to the owner: a `messages.recipient_id`
+      column set by trigger, subscribed with `recipient_id=eq.<me>`
+      (recommended; migration and ADR); an `in` filter over the user's
+      match ids (no migration, but chunking, resubscribing and a 69-id
+      ceiling on this stack); or leave it until before launch.
 
 ## Deferred
 

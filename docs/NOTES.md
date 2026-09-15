@@ -4346,3 +4346,57 @@ reopening it showed the new values (Selin's filters were set back to
 opened the person, a short sideways drag sprang back. The badge work in
 bfb2e2b and the gear in 0287afe were outside that review; the next review
 covers them with these fixes.
+
+## 2026-09-15 — review fixes, second round
+
+**The owner signed out from the settings sheet on the device**, after
+b3b7ac8: the sheet closed and sign-in opened. That closes the one check the
+previous entry left undriven for sign-out; deletion is still not driven.
+
+code-reviewer then covered af210f1..2ba5336 and returned NEEDS_WORK. A
+workflow checked the Realtime question on the local stack and put a
+skeptic on each planned fix before any of them was written.
+
+**A deletion that finished after the sheet was closed (important,
+bea3805).** b3b7ac8 queued every leave until the sheet reported itself
+gone; if the person closed the sheet while "Siliniyor…" showed, nothing
+would report it gone again, and they stayed signed in to a deleted account
+with the settings chip off. `LeaveGate` now decides: while the sheet is up
+or fading, wait for `onDismissed`; while it is down, go at once; only the
+first leave counts, so "Çıkış yap" during a deletion cannot sign out twice
+(a late second sign-out would wipe a session signed in since); nothing
+runs once the profile is gone. "Çıkış yap" is also disabled during a
+deletion. Refusing to close the sheet during a deletion was considered and
+rejected: the delete call has no timeout, so a hung one would trap the
+person in the sheet.
+
+**The badge's subscription (important, open).** Every signed-in device
+subscribes to all `messages` inserts and updates, and Realtime runs one RLS
+check per subscriber per change. What the workflow measured on the local
+stack (Realtime v2.130.0, SQL pipeline): `realtime.apply_rls` evaluates a
+subscription's filter before its RLS check, so filtered-out subscribers
+cost no RLS; 2000 fake unfiltered subscribers cost 2000 `match_open` calls
+per change. An `in` filter on `match_id` works (an event in a listed match
+arrived, one in an unlisted match did not), but the filter check itself
+costs about as much as RLS at 50 ids, uuid lists over 69 fail on
+Realtime's own index, and a failing subscription delayed or dropped events
+for the other channels on the same socket. A `recipient_id=eq.` filter was
+the cheapest measured. The decision is put to the owner (ROADMAP).
+
+**Minor.** A sign-out could hang on a connection that accepts and never
+answers: auth-js waits for `/logout` with no timeout. The client's fetch
+now gives that one request the read timeout, and an aborted call takes
+auth-js's dropped-connection path, clearing the session on the device once
+(dee41d0; the workflow ran this against the local stack). The filter-write
+tracker chained every answer for the life of the app and made each later
+read wait out a hung write again; `PendingWrites` gives each write a slot
+with its own deadline, and a write that ends with no answer (status 0),
+which may still have landed, now reads the row back instead of reverting
+and claiming failure (a0b2cd1). With a count, the tab's label had replaced
+the library's iOS "tab, 3 of 3"; it is rebuilt from the navigator's route
+list with the count after it, and the badge reads again whenever its
+channel joins or rejoins (54c669d).
+
+Not driven on the device: the simulator is signed out, and signing in is
+the owner's. All of this round is covered by unit tests (`leave-gate`,
+`pending-writes`, `tab-a11y`) and the battery.
