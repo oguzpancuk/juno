@@ -18,9 +18,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * 16 (owner, 2026-09-14: "çok boşluk var").
  *
  * Outside the tabs there is nothing below the screen and the inset is
- * owed. `legal.tsx` is the only file that is both — it is the default
- * export for the root `/legal` and for `/settings/legal` — which is why
- * this asks the navigator instead of taking either answer as given.
+ * owed. A screen could be served both ways — `legal.tsx` once was, until
+ * the signed-in copy moved into the settings sheet — which is why this
+ * asks the navigator instead of taking either answer as given.
  *
  * `Popup` is the documented exception: a `Modal` is its own window, above
  * the tab bar, so nothing covers the home indicator for that sheet.

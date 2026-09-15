@@ -251,6 +251,8 @@ export const t = {
   },
   settings: {
     title: 'Ayarlar',
+    // Inside the sheet, from blocked people or the privacy text.
+    back: '‹ Ayarlar',
     signOut: 'Çıkış yap',
     radius: 'Keşif yarıçapı',
     radiusHint:
@@ -267,8 +269,6 @@ export const t = {
   },
   blocked: {
     open: 'Engellediklerin',
-    // Settings is a popup now, so the page returns to the profile under it.
-    back: '‹ Profil',
     title: 'Engellediklerin',
     hint: 'Engeli kaldırırsan eşleşmeniz ve eski yazışmanız iki tarafta da geri gelir.',
     empty: 'Kimseyi engellemedin.',

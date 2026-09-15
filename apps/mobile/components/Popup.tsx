@@ -59,6 +59,7 @@ export function Popup({
   closeLabel,
   bleed = false,
   onDismissed,
+  contentKey,
   children,
   testID,
 }: {
@@ -71,6 +72,12 @@ export function Popup({
    * once closed the settings sheet and opened nothing.
    */
   onDismissed?: () => void;
+  /**
+   * Change it to start the body over from the top — for a sheet that swaps
+   * what it shows, where a long page left scrolled would otherwise open
+   * the next one halfway down.
+   */
+  contentKey?: string;
   /** Defaults to "Kapat". */
   closeLabel?: string;
   children: ReactNode;
@@ -135,6 +142,7 @@ export function Popup({
               Same measurement as `Screen`, so a component laid out for
               one host is laid out for the other. */}
           <ScrollView
+            key={contentKey}
             style={styles.body}
             contentContainerStyle={styles.bodyContent}
             showsVerticalScrollIndicator={false}

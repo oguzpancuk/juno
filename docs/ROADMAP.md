@@ -1201,6 +1201,14 @@ controls that take one gesture instead of a dozen taps.
       is dropped.
       _Done. `v6-settings-popup.png`; on the device both links opened
       their page from the sheet, and "‹ Profil" returned to the profile._
+      **Amended the same day.** Blocked people and the privacy text open
+      inside the sheet too: the title becomes the page's name, "‹ Ayarlar"
+      goes back to the list, and every opening starts at the list. The
+      `/blocked` and `/settings/legal` routes are gone; the root `/legal`
+      stays for sign-in, welcome and onboarding. The queued navigation is
+      now only the trip to sign-in after sign-out or account deletion.
+      _Done. `v6-settings-blocked.png`, `v6-settings-legal.png`; checked on
+      the device, including back to the list and reopening._
 
 - [x] **Discovery filters open as a popup from the deck's top-right
       corner.** The owner first said top-left and corrected it to
@@ -1211,7 +1219,7 @@ controls that take one gesture instead of a dozen taps.
       start below the chip, since the pass stamp shares its corner.
       _Done. `v6-deck-filters-chip.png`._
 
-- [ ] **Radius and age are set with a drag, and the minimum band fits one
+- [x] **Radius and age are set with a drag, and the minimum band fits one
       row.** Age becomes one track with two thumbs, the range written
       large above it; radius becomes one track with five stops
       (5 · 25 · 50 · 100 · 500 km), its value above it. No new
@@ -1221,6 +1229,11 @@ controls that take one gesture instead of a dozen taps.
       name everywhere else. Done when: both tracks drag and snap and save
       on the device, and the band row is one line at the default text
       size — `v6-filters-sliders.png`.
+      _Done. On the device: both age thumbs and the radius thumb dragged
+      and saved (39–81, 100 km, read back from the local database), a tap
+      on the radius track jumped the thumb, drags past either end held
+      at 18 and 99, and "Belirgin" saved as `strong`. Screen-reader
+      stepping on the thumbs is written but not driven._
 
 ## Deferred
 

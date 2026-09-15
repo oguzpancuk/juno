@@ -1,13 +1,23 @@
-import type { Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BlockedList } from '@/components/BlockedList';
+import { LegalText } from '@/components/LegalText';
 import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
+
+export type SettingsView = 'menu' | 'blocked' | 'legal';
+
+/** The sheet's title for each view. */
+export function settingsTitle(view: SettingsView): string {
+  if (view === 'blocked') return t.blocked.title;
+  if (view === 'legal') return t.legal.open;
+  return t.settings.title;
+}
 
 /**
  * Settings, as the body of a popup opened from the profile (owner,
@@ -15,17 +25,21 @@ import { color } from '@/theme/tokens';
  * does, except send people to the discovery filters, which now open from
  * the deck itself.
  *
- * Every way out is handed to the host, because only the host owns the
- * sheet and a navigation issued while it is still on screen is dropped on
- * iOS: `onOpen` for the two pages that are still pages (blocked people,
- * privacy), `onLeave` with the navigation a sign-out or a deleted account
- * needs. The host closes the sheet and runs either once it is gone.
+ * Blocked people and the privacy text open inside the same sheet rather
+ * than as pages (owner, same day), with a way back to the list. The view
+ * is the host's, because the title it names is the sheet's.
+ *
+ * Signing out and deleting the account do leave, and that navigation is
+ * handed to the host through `onLeave`: only the host owns the sheet, and
+ * on iOS a navigation issued while it is still on screen is dropped.
  */
 export function SettingsPanel({
-  onOpen,
+  view,
+  onView,
   onLeave,
 }: {
-  onOpen: (href: Href) => void;
+  view: SettingsView;
+  onView: (view: SettingsView) => void;
   onLeave: (navigate: () => void) => void;
 }) {
   const session = useSession();
@@ -82,18 +96,36 @@ export function SettingsPanel({
     });
   };
 
+  if (view !== 'menu') {
+    return (
+      <View style={styles.panel}>
+        <Pressable
+          testID="settings-back"
+          accessibilityRole="button"
+          accessibilityLabel={t.settings.back}
+          hitSlop={{ top: 10, bottom: 10, left: 16, right: 24 }}
+          onPress={() => onView('menu')}
+          style={({ pressed }) => [styles.backHit, pressed && styles.dim]}
+        >
+          <Text style={styles.back}>{t.settings.back}</Text>
+        </Pressable>
+        {view === 'blocked' ? <BlockedList /> : <LegalText />}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.panel} testID="settings-screen">
       <Pressable
-        accessibilityRole="link"
-        onPress={() => onOpen('/blocked')}
+        accessibilityRole="button"
+        onPress={() => onView('blocked')}
         testID="open-blocked"
       >
         <Text style={styles.link}>{t.blocked.open}</Text>
       </Pressable>
       <Pressable
-        accessibilityRole="link"
-        onPress={() => onOpen('/settings/legal')}
+        accessibilityRole="button"
+        onPress={() => onView('legal')}
         testID="open-legal"
       >
         <Text style={styles.link}>{t.legal.open}</Text>
@@ -182,6 +214,10 @@ export function SettingsPanel({
 const styles = StyleSheet.create({
   // The sheet supplies the gutter and the title; this is the list.
   panel: { gap: 12 },
+  // The same control as the pages' `BackLink`, minus the navigation.
+  backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
+  back: { ...type.body, color: color.textMuted },
+  dim: { opacity: 0.6 },
   link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
   label: { color: color.textMuted, fontSize: 14, marginTop: 12 },
   hint: { color: color.textFaint, fontSize: 12 },

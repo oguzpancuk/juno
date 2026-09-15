@@ -12,7 +12,11 @@ import {
 } from 'react-native';
 import { Popup } from '@/components/Popup';
 import { ProfileView } from '@/components/ProfileView';
-import { SettingsPanel } from '@/components/SettingsPanel';
+import {
+  SettingsPanel,
+  settingsTitle,
+  type SettingsView,
+} from '@/components/SettingsPanel';
 import { SlidersIcon } from '@/components/SlidersIcon';
 import { useScreenName } from '@/lib/a11y';
 import {
@@ -66,8 +70,11 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   // Settings is a popup over the profile, not a page (owner, 2026-09-15).
   const [showSettings, setShowSettings] = useState(false);
-  // What to do once the sheet is fully gone — a push to a page, or the
-  // trip to sign-in. Queued rather than run, see Popup's `onDismissed`.
+  // Which part of settings the sheet shows; every opening starts at the list.
+  const [settingsView, setSettingsView] = useState<SettingsView>('menu');
+  // What to do once the sheet is fully gone — the trip to sign-in after a
+  // sign-out or a deleted account. Queued rather than run, see Popup's
+  // `onDismissed`.
   const afterSettings = useRef<(() => void) | null>(null);
   const closeSettingsThen = (next: () => void) => {
     afterSettings.current = next;
@@ -217,7 +224,10 @@ export default function Profile() {
             // this is the only route into Settings.
             accessibilityLabel={t.settings.title}
             hitSlop={12}
-            onPress={() => setShowSettings(true)}
+            onPress={() => {
+              setSettingsView('menu');
+              setShowSettings(true);
+            }}
             // A chip, because the icon now sits on a photograph: three bare
             // strokes over a picture are not a control.
             style={({ pressed }) => [styles.iconChip, pressed && styles.dim]}
@@ -284,11 +294,13 @@ export default function Profile() {
           afterSettings.current = null;
           next?.();
         }}
-        title={t.settings.title}
+        title={settingsTitle(settingsView)}
+        contentKey={settingsView}
         testID="settings-popup"
       >
         <SettingsPanel
-          onOpen={(href) => closeSettingsThen(() => router.push(href))}
+          view={settingsView}
+          onView={setSettingsView}
           onLeave={closeSettingsThen}
         />
       </Popup>

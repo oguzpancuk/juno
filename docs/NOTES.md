@@ -4188,3 +4188,48 @@ control does not move between the two tabs. That put it in the pass
 stamp's corner, so both stamps now start 12pt below the chip. One thing
 for the owner: the two chips now draw the same glyph in the same place
 and mean different things — settings on one tab, filters on the other.
+
+## 2026-09-15 — filters by drag, and settings pages inside the sheet
+
+**Radius and age are sliders; the band floor is one row.** The owner
+found the chips and the steppers slow ("daha kolay seçilmeli") and chose
+the proposal: a five-stop radius track, a two-thumb age track, each value
+written across from its label as the finger moves and saved once on
+release, and a four-part segmented row for the band floor with its lowest
+option called "Hepsi". `Track` is `PanResponder`-based — React Native's
+own slider has one thumb — with the stop arithmetic in `lib/track.ts`
+under Vitest. Two things it needed:
+
+- The sheet's scroll view is native and takes over a touch that drifts
+  vertically, so `Popup` now provides `useSheetScrollLock`, and a track
+  holds the sheet still between grant and release (and on unmount, for a
+  sheet closed under a finger).
+- The lint rule that stopped the deck reading refs from its handlers
+  stopped this too, and the deck's answer — remake the responder when
+  its inputs change — does not work here, because the inputs change on
+  every stop a drag crosses and a remade responder loses the drag. The
+  gesture is a small class held in `useState`, told the latest props in
+  an effect.
+
+Checked on the device: both age thumbs and the radius thumb dragged and
+wrote 39–81 and 100 km to the local database; a tap on the radius track
+jumped to 50; drags past the ends held at 18 and 99; "Belirgin" saved as
+`strong`. Selin's filters were put back to 50 km, 18–99, Hepsi through
+the same controls. Not driven: VoiceOver stepping on the thumbs.
+
+**Blocked people and privacy inside the settings sheet.** The owner
+asked that the two links open inside the popup rather than as pages. The
+host keeps which view the sheet shows, because the sheet's title names
+it; "‹ Ayarlar" returns to the list, `Popup` gained `contentKey` to start
+the body at the top when the view changes, and every opening starts at
+the list. `BlockedList` and `LegalText` are the pages' bodies; the root
+`/legal` page wraps `LegalText` for people who are not signed in, and
+`/blocked` and `/settings/legal` are deleted. The blocked list is read on
+mount, which is each time the sheet shows it, where the page used to read
+on focus. Checked on the device: both views open, back returns to the
+list, reopening starts at the list, and the legal text scrolls inside the
+sheet.
+
+A simulator note: while this was being built the owner was using the
+same simulator, and one screenshot caught their screen rather than the
+one being checked; it was deleted and retaken.
