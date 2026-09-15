@@ -259,6 +259,9 @@ export const t = {
       water: 'Su',
     },
     failed: 'Kaydedilemedi, tekrar dene.',
+    // A write that got no answer may still have landed; the panel reads the
+    // stored row back instead of reverting.
+    unanswered: 'Bağlantı yanıt vermedi; kayıtlı ayar yeniden yüklendi.',
   },
   settings: {
     title: 'Ayarlar',

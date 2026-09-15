@@ -7,6 +7,7 @@ import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { READ_TIMEOUT_MS, supabase } from '@/lib/supabase';
+import { PendingWrites } from '@/lib/pending-writes';
 import { nearestStop, optionToWrite } from '@/lib/track';
 import { color, radius as r, space, type } from '@/theme/tokens';
 
@@ -104,27 +105,44 @@ export function FiltersPanel() {
     const columns = Object.keys(patch);
     for (const column of columns) newest.current.set(column, mine);
     // `.then` once, here: every `then` on a query builder sends it again.
-    const { error: failed } = await answered(
+    // The signal gives the request itself a deadline; the tracker's own
+    // deadline covers the time before it is sent, which a token refresh
+    // can stretch.
+    const { error: failed, status } = await filterWrites.track(
       supabase
         .from('profiles')
         .update(patch)
         .eq('id', userId)
+        .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS))
         .then((result) => result),
+      READ_TIMEOUT_MS,
+    );
+    // Per column, not per screen: a newer write to a *different* control
+    // used to suppress a revert, leaving the failed control showing a
+    // value the database never took.
+    const newestForAll = columns.every(
+      (column) => newest.current.get(column) === mine,
     );
     if (!failed) {
       // Only this write's own columns are known to be good now, but the
       // banner names no column, so the honest move is to clear it and let
       // any still-failing column say so on its next attempt.
-      if (columns.every((column) => newest.current.get(column) === mine))
-        setError(null);
+      if (newestForAll) setError(null);
+      return;
+    }
+    if (status === 0) {
+      // No answer at all — timed out or cut off. The write may have landed
+      // anyway, so neither the control's value nor its revert can be
+      // trusted: read the row back and show what is stored.
+      setError(t.filters.unanswered);
+      if (newestForAll) {
+        setLoad('loading');
+        setAttempt((n) => n + 1);
+      }
       return;
     }
     setError(t.filters.failed);
-    // Per column, not per screen: a newer write to a *different* control
-    // used to suppress this revert, leaving the failed control showing a
-    // value the database never took.
-    if (columns.every((column) => newest.current.get(column) === mine))
-      revert();
+    if (newestForAll) revert();
   };
 
   const setAge = (min: number, max: number) => {
@@ -313,28 +331,16 @@ export function FiltersPanel() {
 
 /**
  * Filter writes not yet answered, across openings of the sheet. The deck
- * reloads as the sheet closes, and a reopened panel reads the row as it
- * mounts; both wait for these first, so neither can read the row from
- * before a drag let go a moment earlier (review, 2026-09-15). PostgREST
- * answers after the transaction commits, so once this settles every
- * earlier write has landed or failed. Bounded by the read timeout, so a
- * hung write holds nothing back for long.
+ * reloads as the sheet closes and a reopened panel reads the row as it
+ * mounts; both wait for these first (review, 2026-09-15). PostgREST
+ * answers after the transaction commits, so once a write is answered it
+ * has landed or failed. Each is bounded by the read timeout — see
+ * `PendingWrites`.
  */
-let unanswered: Promise<unknown> = Promise.resolve();
+const filterWrites = new PendingWrites();
 
-function answered<T>(pending: PromiseLike<T>): Promise<T> {
-  // A plain promise by now — the builder's one `then` is at the call
-  // site — so wrapping it does not send the request again.
-  const write = Promise.resolve(pending);
-  unanswered = Promise.allSettled([unanswered, write]);
-  return write;
-}
-
-export function filterWritesAnswered(): Promise<unknown> {
-  return Promise.race([
-    unanswered,
-    new Promise((resolve) => setTimeout(resolve, READ_TIMEOUT_MS)),
-  ]);
+export function filterWritesAnswered(): Promise<void> {
+  return filterWrites.answered();
 }
 
 /**
