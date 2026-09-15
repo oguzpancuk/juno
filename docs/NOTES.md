@@ -4281,3 +4281,68 @@ as Burak to Selin (`Rozet testi 1`–`4`, left in place; the fourth is still
 unread): three messages showed 3 on the tab and on Burak's row; opening
 the thread stamped `read_at` on all three and both badges went; a fourth
 inserted while Keşfet was open showed 1 on the tab with no reload.
+
+## 2026-09-15 — review fixes
+
+code-reviewer covered d08ff23..af210f1 (the fourth and fifth passes) and
+returned NEEDS_WORK. Each of its eleven findings went to its own verifier
+in a workflow, told to refute first and to settle behaviour from the
+library source in `node_modules`, not from memory. Ten were confirmed and
+one (the filters close race) only partly. What each turned out to be:
+
+**Sign-out and deletion stranded the user (important, b3b7ac8).** The
+earlier entry claimed both "run the same queued path as the two links".
+They did not. `supabase.auth.signOut()` awaits `_notifyAllSubscribers
+('SIGNED_OUT')` before it resolves (auth-js `GoTrueClient._removeSession`),
+so every `useSession` flipped while the sheet was still up; the profile's
+guard returned `RedirectToSignIn` and unmounted the sheet mid-presentation
+— Fabric then dismisses the modal with its event emitter already reset,
+so `onDismissed` never fired — and every mounted screen's redirect issued
+`router.replace` during that dismissal, the case already recorded as
+dropped on iOS. Now the sheet closes first and the host runs the
+sign-out and the navigation from `onDismissed`; a deletion keeps the sheet
+locked on its in-flight label until the server answers; and the settings
+chip is disabled once a leave is asked for, so the sheet cannot be
+reopened in the gap before the session ends. **Not driven on the device**:
+it needs a sign-out, which would end the owner's session, and signing back
+in is theirs to do.
+
+**A slider took every touch (important, c22f58c).** The track claimed at
+touch-down, jumped the thumb, locked the sheet and saved on release or on
+termination, so a touch meant to scroll the sheet changed a filter. A touch
+is now read first (`readTouch`, 8pt slop): sideways is a drag, which then
+jumps the thumb and locks the sheet; vertical is the sheet's, untouched; a
+lift before either is a tap. Release saves only a change, termination
+never saves, and `onCancel` lets the panel drop what a drag showed. The
+verifier's reading of RN: iOS ignores `onShouldBlockNativeResponder`, so
+the scroll lock is still needed once a drag is under way; Android needs the
+flag false for a vertical move to reach the scroll view.
+
+**The deck hid who it shows from VoiceOver (important, de106f6).** An
+accessible button's label replaces the text inside it. The photo now
+reads "Kaan, 35, 15 km. Profili gör" and the band "Belirgin uyum. Uyum
+detayı". Not read on the device: the simulator's accessibility reader was
+unavailable this session.
+
+**The minor ones.** Android tab items no longer centre into the system
+navigation bar (0f06ea3). In the filters panel (c22f58c): a tap where a
+stored radius between the options shows no longer rewrites it
+(`optionToWrite`); a touch beside an age range closed to one stop takes
+the thumb on its side (`nearerThumb`); a stored age above 99 is clamped to
+the track's end on load; nothing is live until the row has loaded, and a
+failed read shows an error and a retry; the deck's reload and a reopened
+panel wait (at most the read timeout) for filter writes still in flight.
+In the settings sheet (b3b7ac8), a swapped view scrolls back instead of
+remounting, which had thrown away a deletion in flight. On the deck
+(de106f6), a vertical drag that stays on the photo no longer opens the
+profile.
+
+Checked on the device: the settings sheet's views and back; with a stored
+70 km, a tap on its thumb wrote nothing, a vertical drag starting on the
+age track changed nothing, a tap on the age track saved 38, a sideways
+drag saved 100 km, and closing the sheet straight after a drag and
+reopening it showed the new values (Selin's filters were set back to
+50 km, 18–99, Hepsi); on the deck a vertical drag opened nothing, a tap
+opened the person, a short sideways drag sprang back. The badge work in
+bfb2e2b and the gear in 0287afe were outside that review; the next review
+covers them with these fixes.

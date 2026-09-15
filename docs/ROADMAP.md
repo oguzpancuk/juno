@@ -1255,6 +1255,18 @@ controls that take one gesture instead of a dozen taps.
       `v6-row-badge-centred.png`; opening the thread cleared both badges
       and stamped `read_at` on all three messages._
 
+- [x] **Review of the pass, and its fixes.** code-reviewer read
+      d08ff23..af210f1 and returned NEEDS_WORK: three important findings
+      (sign-out and deletion from the sheet could strand the user on iOS; a
+      slider took every touch, scrolls included, and saved it; VoiceOver
+      lost the deck's name and band) and eight minor ones. A workflow gave
+      each finding its own skeptical verifier with the library source to
+      hand: ten confirmed, one partly. All eleven are fixed in b3b7ac8,
+      c22f58c, de106f6 and 0f06ea3; see NOTES 2026-09-15 "review fixes".
+      _Open: sign-out and deletion from the sheet are not yet driven on the
+      device — that needs the owner to sign out and back in; the deck's new
+      VoiceOver labels were not read on the device; Android is not run._
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested
