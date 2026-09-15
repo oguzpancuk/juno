@@ -48,12 +48,16 @@ async function user(tag: string): Promise<TestUser> {
   return u;
 }
 
-/** Resolves with the first message event, or null when the budget passes. */
+/**
+ * Resolves with the first message event, or null when the budget passes.
+ * Filtered by match, as the thread listens, unless `filter` says otherwise.
+ */
 function waitForMessage(
   as: TestUser,
   match: string,
   budgetMs: number,
   event: 'INSERT' | 'UPDATE' = 'INSERT',
+  filter = `match_id=eq.${match}`,
 ): { ready: Promise<void>; got: Promise<z.infer<typeof Message> | null> } {
   let onReady: () => void;
   const ready = new Promise<void>((resolve) => {
@@ -65,14 +69,14 @@ function waitForMessage(
       resolve(null);
     }, budgetMs);
     const channel = as.client
-      .channel(`test-messages:${event}:${match}:${as.id}`)
+      .channel(`test-messages:${event}:${filter}:${as.id}`)
       .on(
         'postgres_changes',
         {
           event,
           schema: 'public',
           table: 'messages',
-          filter: `match_id=eq.${match}`,
+          filter,
         },
         (payload) => {
           const parsed = Message.safeParse(payload.new);
@@ -213,4 +217,54 @@ it('a read receipt reaches the sender within the budget and nobody else', async 
 
   expect(await outsider.got).toBeNull();
   console.log(`read receipt crossed in ${elapsed} ms`);
+}, 30_000);
+
+// The unread badge's subscription (ADR-0010): every message sent to me and
+// every read receipt I stamp, filtered by recipient rather than by match.
+it('the badge hears messages sent to me and my own read receipts, and nothing else', async () => {
+  const toAda = (event: 'INSERT' | 'UPDATE', as: TestUser) =>
+    waitForMessage(
+      as,
+      matchId,
+      CROSSING_BUDGET_MS,
+      event,
+      `recipient_id=eq.${ada.id}`,
+    );
+
+  const recipient = toAda('INSERT', ada);
+  // The sender's own badge must not move for a message he sent.
+  const sender = waitForMessage(
+    bora,
+    matchId,
+    CROSSING_BUDGET_MS,
+    'INSERT',
+    `recipient_id=eq.${bora.id}`,
+  );
+  // Naming someone else's id in the filter does not get past RLS.
+  const snoop = toAda('INSERT', cem);
+  await Promise.all([recipient.ready, sender.ready, snoop.ready]);
+
+  const posted = await bora.client
+    .from('messages')
+    .insert({ match_id: matchId, sender_id: bora.id, body: 'Rozet' })
+    .select('id')
+    .single();
+  expect(posted.error).toBeNull();
+  const sentId = z.object({ id: z.string().uuid() }).parse(posted.data).id;
+
+  expect((await recipient.got)?.id).toBe(sentId);
+  expect(await sender.got).toBeNull();
+  expect(await snoop.got).toBeNull();
+
+  // Ada reading it is what brings her badge down.
+  const receipt = toAda('UPDATE', ada);
+  await receipt.ready;
+  const marked = await ada.client
+    .from('messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', sentId);
+  expect(marked.error).toBeNull();
+  const read = await receipt.got;
+  expect(read?.id).toBe(sentId);
+  expect(read?.read_at).not.toBeNull();
 }, 30_000);

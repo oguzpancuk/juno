@@ -4400,3 +4400,53 @@ channel joins or rejoins (54c669d).
 Not driven on the device: the simulator is signed out, and signing in is
 the owner's. All of this round is covered by unit tests (`leave-gate`,
 `pending-writes`, `tab-a11y`) and the battery.
+
+## 2026-09-16 — messages carry their recipient
+
+The owner chose option 1 for the badge's subscription: a `recipient_id`
+column (ADR-0010). What was done and what to know:
+
+- **The migration** (`20260916000001_message_recipient.sql`) adds the
+  column, backfills it from each message's match with the edit guard held
+  off for that one statement, requires it with a check constraint, fills
+  it on every insert from a security-definer trigger (a client-supplied
+  value is overwritten), freezes it in `forbid_message_edit`, and indexes
+  it by recipient for the profile-deletion cascade.
+- **Applied locally with `npx supabase migration up`, not `db reset`**, so
+  the owner's local accounts and threads stayed. The 14 existing messages
+  all got a recipient, none equal to their sender.
+- **A check, not NOT NULL.** The first draft used NOT NULL, which the type
+  generator turns into a required field on every insert; the file was
+  changed to a check constraint after it had been applied locally, and
+  the local database was brought in line by hand (drop not null, add the
+  check). A fresh run of the migrations produces the same schema.
+- **The badge** subscribes with `recipient_id=eq.<me>` for inserts and
+  updates. `realtime.test.ts` measures it: Ada's subscription received
+  Bora's message and then her own read receipt; Bora's own subscription
+  did not receive the message he sent; Cem, naming Ada's id, received
+  nothing, because RLS still decides.
+- **Not on the device yet**: the simulator is signed out. The previous
+  on-device badge checks (NOTES 2026-09-15) exercised the unfiltered
+  version.
+- **Hosted**: nothing is deployed; this migration goes with the first
+  `npx supabase db push`, ask-tier. The CLI sends each migration file as
+  one transaction, so the edit guard can never be left disabled, and the
+  first run of it will be on an empty table.
+- **Checked before commit by a two-lens workflow** (security, migration
+  safety), all on the local stack inside rolled-back transactions. It
+  found three minor things, fixed in the file and by hand locally:
+  the trigger function kept EXECUTE on PUBLIC, which let an
+  authenticated SQL session attach it to a temporary table and learn the
+  other member of any match (no API route reaches it; revoked now); the
+  index was partial and could not serve the deletion cascade (now plain);
+  and the backfill addressed a non-member sender's row to one side where
+  the trigger gives none (now the same rule, so such a row fails the
+  migration loudly). Confirmed fine: a client cannot address a message to
+  anyone but the other member by any insert, update or upsert; RLS still
+  refuses non-members with 42501 before the check constraint; Realtime
+  applies the filter before RLS and does not publish deletes on this
+  table; no view exposes the column.
+- **Follow-up, not done here**: `messages_reply_in_match`,
+  `create_match_on_mutual_like` and `profiles_check_birth` are also
+  security-definer trigger functions with EXECUTE on PUBLIC — the same
+  pattern, pre-existing (ROADMAP).

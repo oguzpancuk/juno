@@ -745,6 +745,7 @@ describe('messages', () => {
         id: z.string().uuid(),
         match_id: z.string().uuid(),
         sender_id: z.string().uuid(),
+        recipient_id: z.string().uuid(),
         body: z.string(),
         reply_to: z.string().uuid().nullable(),
         read_at: z.string().nullable(),
@@ -1174,6 +1175,42 @@ describe('messages', () => {
         .parse(read.data)
         .map((m) => m.reply_to),
     ).toEqual([reply.reply_to]);
+  });
+
+  // Last in the block, so the extra messages change no count asserted above.
+  it('the server addresses a message to the other member, whatever the client sends', async () => {
+    // Himself, and someone from another match entirely.
+    for (const claimed of [ivan.id, kate.id]) {
+      const sent = await ivan.client
+        .from('messages')
+        .insert({
+          match_id: matchId,
+          sender_id: ivan.id,
+          body: 'kime?',
+          recipient_id: claimed,
+        })
+        .select('*')
+        .single();
+      expect(sent.error).toBeNull();
+      expect(MessageRows.parse([sent.data])[0]?.recipient_id).toBe(jane.id);
+    }
+  });
+
+  it('who a message is for cannot be changed afterwards', async () => {
+    const sent = await ivan.client
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: ivan.id, body: 'sabit' })
+      .select('id')
+      .single();
+    expect(sent.error).toBeNull();
+    const id = z.object({ id: z.string().uuid() }).parse(sent.data).id;
+
+    // Jane is the recipient, the one member the update policy lets through.
+    const redirected = await jane.client
+      .from('messages')
+      .update({ recipient_id: ivan.id })
+      .eq('id', id);
+    expect(redirected.error?.code).toBe(CHECK_VIOLATION);
   });
 });
 

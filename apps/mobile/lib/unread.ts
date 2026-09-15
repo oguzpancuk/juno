@@ -50,11 +50,16 @@ const SETTLE_MS = 300;
 /**
  * The unread total for the Eşleşmeler tab's badge (owner, 2026-09-15: a
  * message arriving should show on the tab). Read once on sign-in, and
- * again — settled — whenever a message is inserted or updated in any of my
- * threads (Realtime postgres_changes respects RLS, so only those arrive),
- * whenever this device changes the count itself, and whenever the app
- * comes back to the foreground, which is how a count missed while the
- * socket slept is caught up.
+ * again — settled — whenever a message is sent to me or a message sent to
+ * me is marked read, whenever this device changes the count itself, and
+ * whenever the app comes back to the foreground, which is how a count
+ * missed while the socket slept is caught up.
+ *
+ * The subscription is filtered by `recipient_id`, not left open on the
+ * table: Realtime evaluates a filter before its per-subscriber RLS check,
+ * so an unfiltered badge cost one check per person online for every
+ * message anyone sent (ADR-0010). The filter narrows; RLS still decides,
+ * so naming someone else's id receives nothing.
  *
  * A failed read keeps the last count rather than dropping to zero. A
  * different account never sees the previous one's number: the count is
@@ -98,12 +103,22 @@ export function useUnreadTotal(userId: string | null): number {
       .channel(`unread:${userId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${userId}`,
+        },
         soon,
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${userId}`,
+        },
         soon,
       )
       .subscribe((status, err) => {

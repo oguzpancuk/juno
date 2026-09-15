@@ -1275,7 +1275,7 @@ controls that take one gesture instead of a dozen taps.
       failure (a0b2cd1), the tab's spoken position lost with a count and no
       catch-up after a reconnect (54c669d).
 
-- [ ] **The unread badge's subscription scales with users online.** Every
+- [x] **The unread badge's subscription scales with users online.** Every
       signed-in device subscribes to all inserts and updates on `messages`,
       and Realtime checks RLS once per subscriber per change. Measured on
       the local stack (NOTES 2026-09-15, "review fixes, second round"): a
@@ -1285,6 +1285,23 @@ controls that take one gesture instead of a dozen taps.
       (recommended; migration and ADR); an `in` filter over the user's
       match ids (no migration, but chunking, resubscribing and a 69-id
       ceiling on this stack); or leave it until before launch.
+      _Done, option 1 (owner, 2026-09-16): ADR-0010,
+      `20260916000001_message_recipient.sql`, the badge filtered by
+      `recipient_id=eq.<me>`. Covered by `rls.test.ts` (the server sets
+      the recipient whatever the client sends; it cannot be changed) and
+      `realtime.test.ts` (messages to me and my read receipts arrive, my
+      own sends and someone else's id do not). Applied to the local
+      database without a reset; the hosted database gets it with the first
+      `db push`, which is the owner's call._
+
+- [ ] **Revoke EXECUTE on the older security-definer trigger functions.**
+      `messages_reply_in_match`, `create_match_on_mutual_like` and
+      `profiles_check_birth` keep EXECUTE on PUBLIC, which lets a SQL
+      session attach them to a temporary table of its own and run them as
+      their owner (found while checking `messages_recipient`, 2026-09-16;
+      no API route reaches it). Done when a migration revokes them from
+      public, anon, authenticated and service_role and the battery stays
+      green.
 
 ## Deferred
 

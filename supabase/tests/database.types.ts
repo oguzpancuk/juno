@@ -254,6 +254,7 @@ export type Database = {
           id: string
           match_id: string
           read_at: string | null
+          recipient_id: string | null
           reply_to: string | null
           sender_id: string
         }
@@ -263,6 +264,7 @@ export type Database = {
           id?: string
           match_id: string
           read_at?: string | null
+          recipient_id?: string | null
           reply_to?: string | null
           sender_id: string
         }
@@ -272,6 +274,7 @@ export type Database = {
           id?: string
           match_id?: string
           read_at?: string | null
+          recipient_id?: string | null
           reply_to?: string | null
           sender_id?: string
         }
@@ -288,6 +291,27 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "match_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
