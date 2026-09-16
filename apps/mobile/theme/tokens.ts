@@ -58,6 +58,20 @@ export const color = {
   tense: '#C9A0FF',
 } as const;
 
+/**
+ * A sign's element as a colour, for the big-three badges (owner,
+ * 2026-09-16: the sheet's chart page sets each sign's symbol in its own
+ * colour, large, in a tinted circle). Ink for the glyph, tint for the
+ * circle behind it — the tint is the ink at low alpha, kept here as a
+ * literal because nothing outside this file may hold a colour.
+ */
+export const element = {
+  fire: { ink: color.warm, tint: 'rgba(247,169,140,0.24)' },
+  earth: { ink: color.ok, tint: 'rgba(140,224,176,0.2)' },
+  air: { ink: color.coolLight, tint: 'rgba(201,182,255,0.2)' },
+  water: { ink: color.cool, tint: 'rgba(167,139,250,0.24)' },
+} as const;
+
 /** Warm → pink → cool. The product's one gradient; do not invent another. */
 export const gradient = [color.warm, color.pink, color.cool] as const;
 export const gradientSoft = ['#2A1E33', '#1B1830', '#15182E'] as const;
