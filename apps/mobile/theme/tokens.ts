@@ -31,7 +31,14 @@ export const color = {
 
   text: '#F6F3FF',
   textMuted: '#9E97BD',
-  textFaint: '#6E6890',
+  /**
+   * The quietest text that is still text: hints, kickers, the consent
+   * line. 4.77:1 on `surfaceHigh`, the lightest ground it is printed on,
+   * and 5.74:1 on `bg` — `tokens.test.ts` holds every text token to 4.5.
+   * The previous #6E6890 read at 3.2–3.9 and was carried as a palette
+   * debt from C7 until the visual pass (ROADMAP D1).
+   */
+  textFaint: '#8A84AD',
 
   /** The mark's two spheres, and the ends of every gradient. */
   warm: '#F7A98C',
@@ -78,12 +85,16 @@ export const radius = {
  * Turkish i to I, not İ — so nothing here sets textTransform.
  */
 export const type = {
-  display: { fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },
-  title: { fontSize: 25, fontWeight: '700', letterSpacing: -0.3 },
+  // Semibold, not bold, at the two largest sizes: the sheet's titles sit
+  // on the page rather than shouting from it (ROADMAP D1).
+  display: { fontSize: 34, fontWeight: '600', letterSpacing: -0.5 },
+  title: { fontSize: 25, fontWeight: '600', letterSpacing: -0.3 },
   heading: { fontSize: 19, fontWeight: '600' },
   body: { fontSize: 15, fontWeight: '400', lineHeight: 22 },
   bodySmall: { fontSize: 13.5, fontWeight: '400', lineHeight: 20 },
-  label: { fontSize: 11.5, fontWeight: '600', letterSpacing: 1.4 },
+  // About 0.2 em: the sheet's kickers are set wide enough to read as a
+  // rule above the section, not as a word.
+  label: { fontSize: 11.5, fontWeight: '600', letterSpacing: 2.2 },
   caption: { fontSize: 12.5, fontWeight: '400' },
 } as const;
 

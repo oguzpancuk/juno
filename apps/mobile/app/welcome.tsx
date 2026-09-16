@@ -1,6 +1,7 @@
 import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import {
+  Glow,
   GradientButton,
   LinkText,
   OrbitMark,
@@ -25,11 +26,18 @@ import { color, space, type } from '@/theme/tokens';
  * review risk of a non-working Sign in with Apple button is recorded in
  * docs/NOTES.md against the TestFlight item.
  */
+/** The mark, and the light behind it — centred on it, so offset by half the difference. */
+const MARK = 132;
+const GLOW = 300;
+
 export default function WelcomeScreen() {
   return (
     <View style={styles.screen} testID="welcome-screen">
       <View style={styles.hero}>
-        <OrbitMark size={132} />
+        <View>
+          <Glow size={GLOW} style={styles.glow} />
+          <OrbitMark size={MARK} />
+        </View>
         <Text style={styles.brand}>{t.appName}</Text>
         <Text style={styles.tagline}>{t.signIn.tagline}</Text>
       </View>
@@ -85,6 +93,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   hero: { alignItems: 'center', marginTop: 96, gap: space.md },
+  glow: { top: -(GLOW - MARK) / 2, left: -(GLOW - MARK) / 2 },
   brand: {
     ...type.display,
     color: color.text,

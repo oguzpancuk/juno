@@ -2,7 +2,6 @@ import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +12,7 @@ import {
   Body,
   Card,
   GradientButton,
-  MAX_LABEL_SCALE,
+  OutlineButton,
   SectionLabel,
 } from '@/components/ui';
 import { sendMessage } from '@/lib/chat';
@@ -24,7 +23,7 @@ import { starterOptions } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * The conversation starter as its own surface: one question at a time,
@@ -207,22 +206,15 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
             onPress={send}
           />
           {options.length > 1 ? (
-            <Pressable
+            <OutlineButton
               testID="starter-next"
-              style={styles.secondary}
+              label={t.starter.another}
               disabled={sending}
               onPress={() => {
                 setFailed(false);
                 setShown((n) => n + 1);
               }}
-            >
-              <Text
-                style={styles.secondaryText}
-                maxFontSizeMultiplier={MAX_LABEL_SCALE}
-              >
-                {t.starter.another}
-              </Text>
-            </Pressable>
+            />
           ) : null}
         </View>
       ) : null}
@@ -271,15 +263,6 @@ const styles = StyleSheet.create({
     borderTopColor: color.border,
     backgroundColor: color.bg,
   },
-  secondary: {
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: 16,
-    paddingHorizontal: space.lg,
-    alignItems: 'center',
-  },
-  secondaryText: { ...type.heading, color: color.text, textAlign: 'center' },
   muted: { ...type.body, color: color.textMuted },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.md },
   error: { ...type.body, color: color.danger },

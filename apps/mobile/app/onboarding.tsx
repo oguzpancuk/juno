@@ -21,11 +21,12 @@ import {
   type Interest,
 } from '@/lib/profile';
 import { Calculating, STEP_MS } from '@/components/Calculating';
+import { Chip, GradientButton } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, space } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
@@ -190,39 +191,26 @@ export default function Onboarding() {
         <Text style={styles.label}>{t.onboarding.gender}</Text>
         <View style={styles.row}>
           {GENDERS.map((g) => (
-            <Pressable
+            <Chip
               key={g}
               testID={`gender-${g}`}
-              style={[styles.chip, gender === g && styles.chipOn]}
+              label={t.onboarding.genders[g]}
+              selected={gender === g}
               onPress={() => setGender(g)}
-            >
-              <Text
-                style={[styles.chipText, gender === g && styles.chipTextOn]}
-              >
-                {t.onboarding.genders[g]}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
 
         <Text style={styles.label}>{t.onboarding.interest}</Text>
         <View style={styles.row}>
           {INTERESTS.map((i) => (
-            <Pressable
+            <Chip
               key={i}
               testID={`interest-${i}`}
-              style={[styles.chip, interestedIn === i && styles.chipOn]}
+              label={t.onboarding.interests[i]}
+              selected={interestedIn === i}
               onPress={() => setInterestedIn(i)}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  interestedIn === i && styles.chipTextOn,
-                ]}
-              >
-                {t.onboarding.interests[i]}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
 
@@ -331,16 +319,14 @@ export default function Onboarding() {
           {t.onboarding.consentLink}
         </Link>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable
-          testID="submit"
-          style={[styles.button, busy && styles.buttonBusy]}
-          disabled={busy}
-          onPress={() => void submit()}
-        >
-          <Text style={styles.buttonText}>
-            {busy ? t.onboarding.computing : t.onboarding.submit}
-          </Text>
-        </Pressable>
+        <View style={styles.submit}>
+          <GradientButton
+            testID="submit"
+            label={busy ? t.onboarding.computing : t.onboarding.submit}
+            disabled={busy}
+            onPress={() => void submit()}
+          />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -393,27 +379,10 @@ const styles = StyleSheet.create({
     minWidth: 72,
     textAlign: 'center',
   },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    backgroundColor: color.surface,
-  },
-  chipOn: { backgroundColor: color.cool },
-  chipText: { color: color.text },
-  chipTextOn: { color: color.onBright, fontWeight: '600' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   hit: { padding: 12, backgroundColor: color.surfaceHigh, borderRadius: 8 },
   hitText: { color: color.text },
   hint: { color: color.textFaint, fontSize: 12, marginTop: 12 },
   error: { color: color.danger },
-  button: {
-    backgroundColor: color.cool,
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonBusy: { opacity: 0.6 },
-  buttonText: { color: color.onBright, fontSize: 16, fontWeight: '600' },
+  submit: { marginTop: space.md },
 });

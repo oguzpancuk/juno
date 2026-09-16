@@ -3,7 +3,6 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -18,7 +17,7 @@ import {
 } from '@/lib/auth';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
-import { BackLink, LinkText, OrbitMark } from '@/components/ui';
+import { BackLink, GradientButton, LinkText, OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -153,22 +152,20 @@ export default function SignIn() {
         ) : mode === 'up' ? (
           <Text style={styles.hint}>{t.signUp.passwordHint(PASSWORD_MIN)}</Text>
         ) : null}
-        <Pressable
+        <GradientButton
           testID="submit"
-          style={[styles.button, !canSubmit && styles.buttonBusy]}
-          disabled={!canSubmit}
-          onPress={() => void submit()}
-        >
-          <Text style={styles.buttonText}>
-            {mode === 'up'
+          label={
+            mode === 'up'
               ? busy
                 ? t.signUp.busy
                 : t.signUp.submit
               : busy
                 ? t.signIn.busy
-                : t.signIn.submit}
-          </Text>
-        </Pressable>
+                : t.signIn.submit
+          }
+          disabled={!canSubmit}
+          onPress={() => void submit()}
+        />
         <Text style={styles.consent}>{t.signIn.consent}</Text>
         <Link href="/legal" style={styles.consentLink}>
           {t.legal.open}
@@ -213,14 +210,6 @@ const styles = StyleSheet.create({
   },
   hint: { ...type.bodySmall, color: color.textFaint },
   fieldError: { ...type.bodySmall, color: color.danger },
-  button: {
-    backgroundColor: color.pink,
-    borderRadius: radius.pill,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  buttonBusy: { opacity: 0.55 },
-  buttonText: { ...type.heading, color: color.onBright },
   consent: { ...type.bodySmall, color: color.textFaint },
   consentLink: { ...type.bodySmall, color: color.textMuted },
   error: { ...type.body, color: color.danger, marginTop: space.md },

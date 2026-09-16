@@ -12,6 +12,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
@@ -194,18 +195,24 @@ export function GradientButton({
 export function OutlineButton({
   label,
   onPress,
+  disabled = false,
   testID,
 }: {
   label: string;
   onPress: () => void;
+  disabled?: boolean;
   testID?: string;
 }) {
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [s.outlineButton, pressed && s.buttonDim]}
+      style={({ pressed }) => [
+        s.outlineButton,
+        (pressed || disabled) && s.buttonDim,
+      ]}
     >
       <Text style={s.outlineText} maxFontSizeMultiplier={MAX_LABEL_SCALE}>
         {label}
@@ -341,6 +348,120 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
   );
 }
 
+/**
+ * A choice: one of a few, or one of many. The gender and interest rows on
+ * onboarding and the element row in the filters were three private copies
+ * of this, each a little different (a border, no border; body, body
+ * small); this is the one (ROADMAP D1). Selected is the cool end of the
+ * gradient with near-black on it, the same pair the segments use.
+ *
+ * 44pt tall: `bodySmall` at lineHeight 20 inside 11 of padding and a 1pt
+ * border — the touch minimum this codebase asks for, which the 40pt
+ * element chips were under (NOTES 2026-09-16).
+ */
+export function Chip({
+  label,
+  selected,
+  onPress,
+  disabled = false,
+  fit = false,
+  style,
+  testID,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  disabled?: boolean;
+  /** Shrink the label to one line rather than wrap it — for a fixed row. */
+  fit?: boolean;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        s.chip,
+        selected && s.chipOn,
+        pressed && s.buttonDim,
+        style,
+      ]}
+    >
+      <Text
+        style={[s.chipText, selected && s.chipTextOn]}
+        {...(fit
+          ? {
+              numberOfLines: 1,
+              adjustsFontSizeToFit: true,
+              minimumFontScale: 0.75,
+            }
+          : {})}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * A glyph in a circle: the head of every card that is about one body or
+ * one aspect (sheet frames 07, 11, 12). Lifted out of the chart detail so
+ * the match page's aspect cards draw the same one.
+ */
+export function GlyphBadge({
+  glyph,
+  size = 40,
+}: {
+  glyph: string;
+  size?: number;
+}) {
+  return (
+    <View style={[s.badge, { width: size, height: size }]}>
+      <Text style={s.badgeGlyph}>{glyph}</Text>
+    </View>
+  );
+}
+
+/**
+ * A soft light behind something — the mark on the door, later the ring on
+ * the match page. A radial gradient in SVG rather than a blurred view: the
+ * same code renders on the web, where a native blur has no equivalent, and
+ * `react-native-svg` is already here for the wheel. Paint only; it takes
+ * no touches and is positioned by whoever places it.
+ */
+export function Glow({
+  size,
+  style,
+}: {
+  size: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const r = size / 2;
+  return (
+    <Svg
+      width={size}
+      height={size}
+      style={[s.glow, style]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Defs>
+        <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor={color.warm} stopOpacity={0.42} />
+          <Stop offset="0.5" stopColor={color.cool} stopOpacity={0.16} />
+          <Stop offset="1" stopColor={color.cool} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Circle cx={r} cy={r} r={r} fill="url(#glow)" />
+    </Svg>
+  );
+}
+
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   screenContent: {
@@ -385,9 +506,40 @@ const s = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: color.border,
+    // The sheet's cards catch light along the top edge; one brighter
+    // hairline is that, and it costs nothing on the web.
+    borderTopColor: color.borderStrong,
     padding: space.lg,
     gap: space.sm,
   },
+  chip: {
+    minHeight: 44,
+    justifyContent: 'center',
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    paddingVertical: 11,
+    paddingHorizontal: space.lg,
+  },
+  chipOn: { backgroundColor: color.cool, borderColor: color.cool },
+  chipText: {
+    ...type.bodySmall,
+    fontWeight: '500',
+    color: color.text,
+    textAlign: 'center',
+  },
+  chipTextOn: { color: color.onBright, fontWeight: '600' },
+  badge: {
+    borderRadius: radius.pill,
+    backgroundColor: color.surfaceHigh,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeGlyph: { fontSize: 19, color: color.pink },
+  glow: { position: 'absolute' },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
   chevronHit: {

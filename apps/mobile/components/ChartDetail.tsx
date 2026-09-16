@@ -9,9 +9,9 @@ import {
 } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
 import { ChartWheel } from '@/components/ChartWheel';
-import { Body, Card, SectionLabel } from '@/components/ui';
+import { Body, Card, GlyphBadge, SectionLabel } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * How many of `reading.placements` the profile page shows in the open —
@@ -48,9 +48,7 @@ export function PlacementCard({
   return (
     <Card {...(testID === undefined ? {} : { testID })}>
       <View style={styles.cardHead}>
-        <View style={styles.glyphBadge}>
-          <Text style={styles.glyph}>{BODY_GLYPH[placement]}</Text>
-        </View>
+        <GlyphBadge glyph={BODY_GLYPH[placement]} />
         <View style={styles.cardHeadText}>
           <Text style={styles.cardTitle}>{label}</Text>
           <Text style={styles.cardTechnical}>
@@ -169,17 +167,6 @@ export function ChartDetail({
 const styles = StyleSheet.create({
   cardHead: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   cardHeadText: { flexShrink: 1 },
-  glyphBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: color.surfaceHigh,
-    borderWidth: 1,
-    borderColor: color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glyph: { fontSize: 19, color: color.pink },
   cardTitle: { ...type.heading, color: color.text },
   cardTechnical: { ...type.caption, color: color.textMuted, marginTop: 2 },
   houseBlock: {

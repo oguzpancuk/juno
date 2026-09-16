@@ -2,7 +2,7 @@ import { BANDS, bandName, type Band } from '@juno/astro';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Track, type TrackValues } from '@/components/Track';
-import { LinkText } from '@/components/ui';
+import { Chip, LinkText } from '@/components/ui';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -297,30 +297,16 @@ export function FiltersPanel() {
           above it. */}
       <View style={[styles.elements, !ready && styles.off]}>
         {ELEMENTS.map((element) => (
-          <Pressable
+          <Chip
             key={element}
             testID={`element-${element}`}
+            label={t.filters.elementNames[element]}
+            selected={chosen.includes(element)}
             disabled={!ready}
-            style={[
-              styles.chip,
-              styles.elementChip,
-              chosen.includes(element) && styles.chipOn,
-            ]}
+            fit
+            style={styles.elementChip}
             onPress={() => toggleElement(element)}
-          >
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
-              style={[
-                styles.chipText,
-                styles.elementText,
-                chosen.includes(element) && styles.chipTextOn,
-              ]}
-            >
-              {t.filters.elementNames[element]}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <Text style={styles.hint}>{t.filters.elementsHint}</Text>
@@ -383,17 +369,6 @@ const styles = StyleSheet.create({
   elements: { flexDirection: 'row', gap: space.sm },
   // Equal parts of the row, so the four fill it end to end.
   elementChip: { flex: 1, paddingHorizontal: space.xs },
-  elementText: { textAlign: 'center' },
-  chip: {
-    backgroundColor: color.surfaceSoft,
-    borderRadius: r.pill,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.lg,
-  },
-  chipOn: { backgroundColor: color.cool, borderColor: color.cool },
-  chipText: { ...type.body, color: color.text },
   chipTextOn: { color: color.onBright, fontWeight: '600' },
   segments: {
     flexDirection: 'row',
