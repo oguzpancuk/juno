@@ -37,3 +37,6 @@ apps/mobile/android/
 
 # Written into the cwd by `packages/astro/scripts/content-audit.ts`.
 /content-audit.md
+
+# The owner's seed portraits: local, licensed by them, never committed.
+supabase/seed-photos/

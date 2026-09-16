@@ -1,14 +1,23 @@
 /**
- * Local-only: give every seeded profile one placeholder photo, so the
- * discover deck is not empty once a photo became a requirement.
+ * Local-only: give every seeded profile a photo, so the discover deck is
+ * not empty once a photo became a requirement.
  *
  *   npx tsx supabase/scripts/seed-photos.ts
  *
- * The image is generated here rather than committed: a solid colour
- * derived from the name, encoded as a PNG with zlib. Uses the local
- * service-role key from `supabase status`; refuses any non-local API URL.
+ * With a portrait in `supabase/seed-photos/` named after the profile —
+ * `kaan.jpg`, `selin.png`, `deniz.webp`; the display name lower-cased and
+ * ASCII-folded — that file is uploaded, so the deck can look the way the
+ * design sheet does (owner, 2026-09-16). The folder is not committed:
+ * the portraits are the owner's, and a licence is theirs to record.
+ * Without a file the image is generated here — a solid colour derived
+ * from the name, encoded as a PNG with zlib — so a fresh checkout still
+ * has a deck. Uses the local service-role key from `supabase status`;
+ * refuses any non-local API URL.
  */
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -81,12 +90,48 @@ const Profiles = z.array(
   z.object({ id: z.string().uuid(), display_name: z.string() }),
 );
 
+const PORTRAITS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  'seed-photos',
+);
+const TYPES = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+} as const;
+
+/** "Zeynep" → "zeynep", "Şeyma" → "seyma": the file name for a profile. */
+function slug(name: string): string {
+  return name
+    .toLocaleLowerCase('tr')
+    .replace(/ı/g, 'i')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-');
+}
+
+/** The owner's portrait for a name, or null when the folder has none. */
+function portrait(
+  name: string,
+): { body: Buffer; contentType: string; extension: string } | null {
+  for (const [extension, contentType] of Object.entries(TYPES)) {
+    const file = join(PORTRAITS, `${slug(name)}.${extension}`);
+    if (existsSync(file)) {
+      return { body: readFileSync(file), contentType, extension };
+    }
+  }
+  return null;
+}
+
 async function main(): Promise<void> {
   const { data, error } = await admin
     .from('profiles')
     .select('id, display_name');
   if (error) throw error;
   const profiles = Profiles.parse(data);
+  let portraits = 0;
   for (const profile of profiles) {
     let hue = 0;
     for (let i = 0; i < profile.display_name.length; i++) {
@@ -97,11 +142,13 @@ async function main(): Promise<void> {
       70 + ((hue * 7) % 120),
       140 + ((hue * 13) % 90),
     ];
-    const path = `${profile.id}/1.png`;
+    const own = portrait(profile.display_name);
+    if (own !== null) portraits += 1;
+    const path = `${profile.id}/1.${own?.extension ?? 'png'}`;
     const uploaded = await admin.storage
       .from('photos')
-      .upload(path, png(600, 800, colour), {
-        contentType: 'image/png',
+      .upload(path, own?.body ?? png(600, 800, colour), {
+        contentType: own?.contentType ?? 'image/png',
         upsert: true,
       });
     if (uploaded.error) throw uploaded.error;
@@ -111,7 +158,9 @@ async function main(): Promise<void> {
       .eq('id', profile.id);
     if (saved) throw saved;
   }
-  console.log(`gave ${profiles.length} profiles a placeholder photo`);
+  console.log(
+    `gave ${profiles.length} profiles a photo: ${portraits} portraits, ${profiles.length - portraits} placeholders`,
+  );
 }
 
 await main();
