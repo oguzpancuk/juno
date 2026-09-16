@@ -4733,3 +4733,33 @@ band row above them, instead of four pills that stopped short of the right
 edge (owner: "tüm satırı kaplasa daha iyi olur"). Their labels shrink
 rather than wrap, the same way the band row's do.
 `v6-filters-elements-row.png`.
+
+## 2026-09-16 — the keyboard covered the composer
+
+Reported by the owner and reproduced on the device: with the keyboard up,
+the chat's "Bir şeyler yaz…" row was behind it, not above it.
+
+The screen had a `KeyboardAvoidingView` with `behavior="padding"`, which
+looks right and cannot work here. It takes the frame it compares against
+the keyboard from its own `onLayout`, and this one lives inside the chat's
+three-page horizontal pager, so what it measured was a position inside a
+scrolling container rather than on the screen. The padding it computed was
+therefore wrong, and on this screen it came out as none at all.
+
+Replaced by asking the keyboard directly: `useKeyboardGap` (lib/keyboard.ts)
+listens to the frame events — `keyboardWillChangeFrame`/`WillHide` on iOS,
+so the composer moves with the animation, the `did` pair on Android — and
+`keyboardGap` (lib/keyboard-gap.ts, under Vitest) turns the keyboard's top
+edge into the gap this screen needs: the window height, less that edge,
+less what already sits below the screen. Under the tabs that is the tab
+bar, which the keyboard covers anyway, so only the part reaching above it
+is a lift. Measured on this device: window 874pt, keyboard top 542, tab bar
+83 — a 249pt lift, which is what the test pins.
+
+Checked on the device: the composer sits on the keyboard, the thread is
+still readable above it, and dismissing the keyboard puts the composer back
+over the tab bar. `v6-chat-keyboard.png`.
+
+Not checked: the web client. react-native-web reports no keyboard events,
+so the gap there is always 0 — which is right for a desktop browser and
+unproven on a mobile one, where the owner suspects the same problem.

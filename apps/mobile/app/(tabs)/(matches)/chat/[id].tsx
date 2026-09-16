@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +23,7 @@ import { Popup } from '@/components/Popup';
 import { ProfileView } from '@/components/ProfileView';
 import { BackChevron, BackLink, goBack } from '@/components/ui';
 import { VISIBLE_PAGES, pageAt, pageOffset, type Page } from '@/lib/chat-pages';
+import { useKeyboardGap } from '@/lib/keyboard';
 import {
   MAX_MESSAGE_LENGTH,
   isSendable,
@@ -103,6 +102,7 @@ function ChatView({
   // Portrait only (app.json), so the page width does not change under a
   // mounted pager.
   const { width } = useWindowDimensions();
+  const keyboardGap = useKeyboardGap();
 
   useEffect(() => {
     if (!matchId || !userId) return;
@@ -340,10 +340,12 @@ function ChatView({
         <View style={pageStyle} testID="chat-page-back" />
 
         <View style={pageStyle} testID="chat-page-thread">
-          <KeyboardAvoidingView
-            style={styles.page}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
+          {/* The composer rides the keyboard: the gap is measured from
+              the keyboard itself, because a KeyboardAvoidingView inside
+              this pager measured its own frame against a scrolling
+              container and left the composer underneath it (owner,
+              2026-09-16). */}
+          <View style={[styles.page, { paddingBottom: keyboardGap }]}>
             <FlatList
               inverted
               data={ordered}
@@ -515,7 +517,7 @@ function ChatView({
                 </Text>
               </Pressable>
             </View>
-          </KeyboardAvoidingView>
+          </View>
         </View>
 
         <View style={pageStyle} testID="chat-page-match">
