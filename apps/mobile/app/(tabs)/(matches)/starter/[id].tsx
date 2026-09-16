@@ -7,14 +7,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  BackLink,
-  Body,
-  Card,
-  GradientButton,
-  OutlineButton,
-  SectionLabel,
-} from '@/components/ui';
+import { CosmicGround } from '@/components/CosmicGround';
+import { BackLink, Body, GradientButton, OutlineButton } from '@/components/ui';
 import { sendMessage } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
@@ -23,7 +17,7 @@ import { starterOptions } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { useBottomGap } from '@/lib/insets';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, radius, space, type } from '@/theme/tokens';
 
 /**
  * The conversation starter as its own surface: one question at a time,
@@ -152,6 +146,8 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
 
   return (
     <View style={styles.screen} testID="starter-screen">
+      {/* Stars only: the actions bar owns the bottom. */}
+      <CosmicGround planet={false} horizon={false} />
       {/* The question and its explanation scroll; the two buttons do not.
           A long question at a large accessibility text size is taller than
           a small phone, and the send button was laid out below the bottom
@@ -163,8 +159,13 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
         <Text style={styles.title}>{t.starter.title(row.display_name)}</Text>
         {current ? (
           <>
+            {/* The sheet's frame 13: a kicker in a pill, the reading in
+                muted text, the question large and open on the page —
+                no card around it, the page is the card. */}
             <View style={styles.headRow}>
-              <SectionLabel>{t.starter.label}</SectionLabel>
+              <View style={styles.kickerPill}>
+                <Text style={styles.kicker}>{t.starter.label}</Text>
+              </View>
               {options.length > 1 ? (
                 <Text style={styles.counter} testID="starter-counter">
                   {t.starter.counter(
@@ -174,13 +175,13 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
                 </Text>
               ) : null}
             </View>
-            <Card testID="starter-card">
+            <View testID="starter-card" style={styles.starter}>
               <Text style={styles.aspect}>{current.headline}</Text>
+              <Text style={styles.meaning}>{current.meaning}</Text>
               <Text style={styles.question} testID="starter-question">
                 {current.question}
               </Text>
-              <Text style={styles.meaning}>{current.meaning}</Text>
-            </Card>
+            </View>
             <Text style={styles.hint}>{t.starter.hint}</Text>
           </>
         ) : (
@@ -245,15 +246,23 @@ const styles = StyleSheet.create({
     marginTop: space.md,
   },
   counter: { ...type.caption, color: color.textMuted },
-  aspect: { ...type.caption, color: color.textMuted },
+  kickerPill: {
+    backgroundColor: color.surfaceHigh,
+    borderRadius: radius.pill,
+    paddingVertical: 6,
+    paddingHorizontal: space.md,
+  },
+  kicker: { ...type.label, color: color.coolLight },
+  starter: { gap: space.sm, marginTop: space.sm },
+  aspect: { ...type.caption, color: color.textFaint },
+  meaning: { ...type.body, color: color.textMuted },
   question: {
     ...type.display,
+    fontSize: 28,
+    lineHeight: 36,
     color: color.text,
-    fontSize: 24,
-    lineHeight: 32,
-    marginTop: space.sm,
+    marginTop: space.xs,
   },
-  meaning: { ...type.body, color: color.textMuted, marginTop: space.md },
   hint: { ...type.bodySmall, color: color.textFaint },
   actions: {
     gap: space.sm,
