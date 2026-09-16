@@ -205,22 +205,17 @@ function Nebula({
   }, [drift, nebula.period, still]);
   const size = width * nebula.r * 2;
   const reach = width * 0.06;
-  // Four stops a quarter-turn apart, joined straight: a small diamond,
-  // whose corners are far too slow to see at a lap a minute long. The
-  // same value at 0 and 1 keeps the loop's reset continuous. Memoised:
-  // a fresh interpolation per render is a fresh native node.
-  const { translateX, translateY } = useMemo(
-    () => ({
-      translateX: drift.interpolate({
-        inputRange: [0, 0.25, 0.5, 0.75, 1],
-        outputRange: [0, reach, 0, -reach, 0],
+  // The cloud rides an arm that turns once per lap, offset from the arm's
+  // centre by `reach`, so it circles a point — the same two-stop rotation
+  // the mark's spheres use, which is the one native path measured to run
+  // a full lap. A radial gradient does not show its own rotation.
+  const spin = useMemo(
+    () =>
+      drift.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
       }),
-      translateY: drift.interpolate({
-        inputRange: [0, 0.25, 0.5, 0.75, 1],
-        outputRange: [-reach * 0.6, 0, reach * 0.6, 0, -reach * 0.6],
-      }),
-    }),
-    [drift, reach],
+    [drift],
   );
   const gradientId = `nebula-${index}`;
   return (
@@ -232,7 +227,7 @@ function Nebula({
           top: height * nebula.y - size / 2,
           width: size,
           height: size,
-          transform: [{ translateX }, { translateY }],
+          transform: [{ rotate: spin }, { translateX: reach }],
         },
       ]}
     >
