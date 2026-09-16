@@ -473,6 +473,19 @@ export default function Discover() {
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
             />
+            {/* Their own words, two lines of them, between the chart and
+                the band (sheet frame 05). The full text is on the person
+                page a tap away. */}
+            {current.row.bio ? (
+              <Text
+                style={styles.bio}
+                numberOfLines={2}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+                testID="card-bio"
+              >
+                {current.row.bio}
+              </Text>
+            ) : null}
             {/* The reading opens from the thing it explains (owner,
                 2026-09-14). */}
             <Pressable
@@ -812,6 +825,7 @@ const styles = StyleSheet.create({
   },
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
+  bio: { ...type.body, color: color.text },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

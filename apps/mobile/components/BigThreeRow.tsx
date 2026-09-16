@@ -1,14 +1,17 @@
-import { BODY_GLYPH, SIGN_GLYPH, SIGN_TR, type BigThree } from '@juno/astro';
+import { BODY_GLYPH, SIGN_TR, type BigThree } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
 /**
- * Sun, Moon and rising as three chips, each with the body's own glyph
- * (owner, 2026-09-11: the deck card carries the planet symbols the way
- * the person page does). One component so the deck, the match page and
- * another person's page cannot drift apart — the owner asked for the
- * three to look the same; the profile itself joins in Track B.
+ * Sun, Moon and rising as three pills, each the body's own glyph and the
+ * sign's name (owner, 2026-09-11: the deck card carries the planet
+ * symbols the way the person page does; the sheet's frames 05 and 06 set
+ * the pill form, ROADMAP D3). One component so the deck, the match page
+ * and another person's page cannot drift apart — the owner asked for the
+ * three to look the same. The word for the body is not drawn — the glyph
+ * is the whole point of the pill — but it is spoken: each pill is one
+ * element labelled "Güneş Koç".
  */
 const CELLS = [
   { key: 'sun', body: 'sun', label: () => t.chart.sun },
@@ -34,7 +37,13 @@ export function BigThreeRow({
       {CELLS.map(({ key, body, label }) => {
         const sign = three[key];
         return (
-          <View key={key} style={styles.chip} testID={`big-three-${key}`}>
+          <View
+            key={key}
+            style={styles.pill}
+            testID={`big-three-${key}`}
+            accessible
+            aria-label={`${label()} ${SIGN_TR[sign]}`}
+          >
             <Text
               style={styles.glyph}
               maxFontSizeMultiplier={maxFontSizeMultiplier}
@@ -42,16 +51,10 @@ export function BigThreeRow({
               {BODY_GLYPH[body]}
             </Text>
             <Text
-              style={styles.label}
-              maxFontSizeMultiplier={maxFontSizeMultiplier}
-            >
-              {label()}
-            </Text>
-            <Text
               style={styles.value}
               maxFontSizeMultiplier={maxFontSizeMultiplier}
             >
-              {SIGN_GLYPH[sign]} {SIGN_TR[sign]}
+              {SIGN_TR[sign]}
             </Text>
           </View>
         );
@@ -61,18 +64,18 @@ export function BigThreeRow({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: space.sm },
-  chip: {
-    flex: 1,
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.md,
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: space.xs,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.md,
   },
-  glyph: { fontSize: 19, color: color.pink },
-  label: { ...type.caption, color: color.textFaint },
+  glyph: { fontSize: 16, color: color.pink },
   value: { ...type.bodySmall, color: color.text, fontWeight: '600' },
 });
