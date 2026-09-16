@@ -4714,3 +4714,22 @@ with `git show <commit>:docs/NOTES.md | wc -w` at 8c099f2 and its parent —
 46,395 words before, 46,579 after, of which 125 are the title line and the
 comment block, 46,220 the entries that already existed, and 234 the entry
 8c099f2 appended.
+
+## 2026-09-16 — the tab items lift a little, the elements fill their row
+
+Two owner corrections on the device, both measured.
+
+**The tab items were centred in the whole bar and read as too low.** The
+bottom of that bar is the home indicator's strip, so dead centre puts the
+label over it. Measured at the two positions the owner has rejected: the
+items at the top of the 49pt row leave 9.7pt above the icon ("hâlâ
+yukarıda", 2026-09-15), dead centre leaves 22.7 ("çok aşağıda",
+2026-09-16). They now sit centred in the bar less 14pt of that strip:
+16.7pt above the icon, 30.0 below the label, which is between the two.
+`v6-tabbar-lifted.png`.
+
+**The four sun elements fill their row**, in four equal parts like the
+band row above them, instead of four pills that stopped short of the right
+edge (owner: "tüm satırı kaplasa daha iyi olur"). Their labels shrink
+rather than wrap, the same way the band row's do.
+`v6-filters-elements-row.png`.

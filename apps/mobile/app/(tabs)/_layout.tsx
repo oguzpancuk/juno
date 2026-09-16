@@ -28,6 +28,11 @@ const TAB_ROW = 49;
  * top (`justifyContent: 'flex-start'`), so centring is an offset from here.
  */
 const ITEM_CENTRE = 28.85;
+/**
+ * How much of the bottom inset reads as the home indicator's own strip
+ * rather than part of the bar: enough to lift the items off dead centre.
+ */
+const INDICATOR_STRIP = 14;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -48,8 +53,12 @@ export default function TabLayout() {
   // library's own place, above the inset.
   const centred = Platform.OS === 'ios';
   const barHeight = TAB_ROW + insets.bottom;
+  // Centred in the bar, less the strip the home indicator draws in: dead
+  // centre of the whole bar reads as too low, because the bottom of it is
+  // the indicator's, and the top of the 49pt row alone reads as too high
+  // (owner, 2026-09-15 and 2026-09-16 — both measured on the device).
   const itemOffset = centred
-    ? Math.max(0, Math.round(barHeight / 2 - ITEM_CENTRE))
+    ? Math.max(0, Math.round((barHeight - INDICATOR_STRIP) / 2 - ITEM_CENTRE))
     : 0;
   return (
     <Tabs

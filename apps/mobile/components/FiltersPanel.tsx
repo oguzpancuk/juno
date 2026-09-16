@@ -293,18 +293,28 @@ export function FiltersPanel() {
       <Text style={styles.hint}>{t.filters.minBandHint}</Text>
 
       <Text style={[styles.label, styles.section]}>{t.filters.elements}</Text>
-      <View style={[styles.row, !ready && styles.off]}>
+      {/* One row, four equal parts (owner, 2026-09-16), like the band row
+          above it. */}
+      <View style={[styles.elements, !ready && styles.off]}>
         {ELEMENTS.map((element) => (
           <Pressable
             key={element}
             testID={`element-${element}`}
             disabled={!ready}
-            style={[styles.chip, chosen.includes(element) && styles.chipOn]}
+            style={[
+              styles.chip,
+              styles.elementChip,
+              chosen.includes(element) && styles.chipOn,
+            ]}
             onPress={() => toggleElement(element)}
           >
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
               style={[
                 styles.chipText,
+                styles.elementText,
                 chosen.includes(element) && styles.chipTextOn,
               ]}
             >
@@ -370,6 +380,10 @@ const styles = StyleSheet.create({
   },
   value: { ...type.heading, color: color.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  elements: { flexDirection: 'row', gap: space.sm },
+  // Equal parts of the row, so the four fill it end to end.
+  elementChip: { flex: 1, paddingHorizontal: space.xs },
+  elementText: { textAlign: 'center' },
   chip: {
     backgroundColor: color.surfaceSoft,
     borderRadius: r.pill,
