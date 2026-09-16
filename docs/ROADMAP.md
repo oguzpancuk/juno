@@ -1567,7 +1567,7 @@ controls that take one gesture instead of a dozen taps.
 - [ ] **Two RLS runs on one local stack must not see each other.** The
       push gate's battery and a background battery ran the Supabase suite
       at once and `discover > shows 'everyone' seekers only profiles that
-  accept them back` failed with a user the other run had created; each
+accept them back` failed with a user the other run had created; each
       run alone is green (2026-09-16). The suite assumes it owns the
       database.
       — done when: two concurrent `npm run test -w supabase` runs both pass
