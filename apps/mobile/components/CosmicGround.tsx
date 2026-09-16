@@ -32,8 +32,9 @@ import { color, star as starColor } from '@/theme/tokens';
  * view's opacity off the JavaScript thread, and each star is one native
  * loop that never returns to JS once started. Several skies are alive at
  * once — every tab's screens stay mounted — so what this costs is a few
- * hundred native animation nodes, not JavaScript time; the falling star
- * is the one JS timer per sky. With Reduce Motion on, nothing moves.
+ * hundred native animation nodes, not JavaScript time: each star's phase
+ * delay is one JS timer that fires once at mount, and the falling star's
+ * gap is the one that keeps firing. With Reduce Motion on, nothing moves.
  */
 export const STAR_COUNT = 52;
 /** Any number; changing it moves every star, so pick once. */
@@ -155,13 +156,16 @@ export function CosmicGround({
  * One star, breathing between a third of its light and all of it.
  *
  * One value runs 0 → 1 in a loop of a single native timing, and the
- * opacity is read off it — so after the first delay nothing comes back to
- * JavaScript, and the loop's reset to 0 is continuous because both ends
- * of the breath are the full light. The delay is the star's phase, so
- * the field never pulses as one. (A loop over a sequence would have run
- * through JS every step and reset the value under the lead — review,
- * 2026-09-16.)
+ * opacity is read off it linearly — so after the first delay nothing
+ * comes back to JavaScript. The breath's shape is the timing's easing, a
+ * raised cosine that is 0 at both ends, so the loop's reset is continuous
+ * and the dip is soft; it cannot be on the interpolation, whose `easing`
+ * the native driver drops (and logs, in dev). The delay is the star's
+ * phase, so the field never pulses as one. (A loop over a sequence would
+ * have run through JS every step and reset the value under the lead —
+ * two reviews, 2026-09-16.)
  */
+const breathShape = (t: number) => (1 - Math.cos(2 * Math.PI * t)) / 2;
 function Twinkle({ star, still }: { star: Star; still: boolean }) {
   const [breath] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -175,7 +179,7 @@ function Twinkle({ star, still }: { star: Star; still: boolean }) {
         Animated.timing(breath, {
           toValue: 1,
           duration: star.period,
-          easing: Easing.linear,
+          easing: breathShape,
           useNativeDriver: NATIVE,
         }),
       ),
@@ -186,11 +190,15 @@ function Twinkle({ star, still }: { star: Star; still: boolean }) {
     };
   }, [breath, star, still]);
   const size = star.r * 2;
-  const opacity = breath.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [star.alpha, star.alpha * 0.35, star.alpha],
-    easing: Easing.inOut(Easing.sin),
-  });
+  // Memoised: a fresh interpolation per render is a fresh native node.
+  const opacity = useMemo(
+    () =>
+      breath.interpolate({
+        inputRange: [0, 1],
+        outputRange: [star.alpha, star.alpha * 0.35],
+      }),
+    [breath, star.alpha],
+  );
   return (
     <Animated.View
       style={{
@@ -227,7 +235,14 @@ function FallingStar({ width, height }: { width: number; height: number }) {
           easing: Easing.out(Easing.quad),
           useNativeDriver: NATIVE,
         }),
-        // The loop resets `progress` to 0 before each pass.
+        // Load-bearing: a loop's reset reaches only the sequence's first
+        // step, the delay, so without this the star would fall once and
+        // park (review, 2026-09-16).
+        Animated.timing(progress, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: NATIVE,
+        }),
       ]),
     );
     fall.start();
