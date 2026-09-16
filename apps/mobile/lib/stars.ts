@@ -20,8 +20,10 @@ const MODULUS = 2147483647;
 const MULTIPLIER = 16807;
 
 function lcg(seed: number): () => number {
-  // A seed of 0 would stay 0 forever; fold it onto the range.
-  let state = seed % MODULUS || 1;
+  // Folded onto [1, MODULUS): a seed of 0 would stay 0 forever, and JS
+  // keeps the sign of a negative one, which would put every star off the
+  // canvas.
+  let state = (((seed | 0) % MODULUS) + MODULUS) % MODULUS || 1;
   return () => {
     state = (state * MULTIPLIER) % MODULUS;
     return (state - 1) / (MODULUS - 1);

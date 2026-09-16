@@ -24,6 +24,9 @@ export function Meter({
   return (
     <View
       style={styles.meter}
+      // A plain View is not an element until told so; without this the
+      // role and label sit on nothing and VoiceOver walks the empty bars.
+      accessible
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
       {...(testID === undefined ? {} : { testID })}

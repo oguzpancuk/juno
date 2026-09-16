@@ -32,6 +32,14 @@ describe('starField', () => {
     expect(small).toBeGreaterThan(stars.length / 2);
   });
 
+  it('keeps a negative seed on the canvas', () => {
+    for (const { x, y, r } of starField(-5, 20, 100, 100)) {
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(r).toBeGreaterThanOrEqual(STAR_RADIUS.min);
+    }
+  });
+
   it('survives a zero seed', () => {
     expect(starField(0, 5, 100, 100)).toHaveLength(5);
     expect(starField(0, 5, 100, 100)).toEqual(starField(0, 5, 100, 100));
