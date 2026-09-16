@@ -35,26 +35,45 @@ step() {
 # default 644, the change is invisible in a content diff, and the whole
 # battery stays green while `./contracts/init.sh` stops working.
 exec_bits() {
-  local listed bad=""
+  local listed bad="" gone="" file
+  # `core.quotePath=false`, because git otherwise escapes a path with a
+  # non-ASCII character into C-quoted form and the name that comes back is
+  # not a name on disk — an executable `ölçüm.sh` would be reported as
+  # missing its bit. NUL separation would be the textbook answer and is
+  # the wrong one here: a command substitution cannot hold a NUL, so
+  # `$(git ls-files -z)` arrives as one run-together string and
+  # `read -d ''` then finds no terminator, runs the loop zero times and
+  # reports success — the silent skip this whole function exists to refuse.
+  # A path containing a newline is still quoted by git whatever this
+  # setting says; it lands in the "missing from the tree" list below,
+  # which is a failure, which is the safe direction.
+  #
   # A gate that cannot list the files must fail, not pass quietly: outside
   # a git checkout `git ls-files` prints to stderr and exits non-zero, and
   # `step` hides that unless the step itself fails.
-  listed="$(git ls-files -- '*.sh')" || {
+  listed="$(git -c core.quotePath=false ls-files -- '*.sh')" || {
     echo "cannot list tracked shell scripts (not a git checkout?)"
     return 1
   }
   [ -n "$listed" ] || { echo "no tracked shell scripts found at all"; return 1; }
   # The working tree, not the index. The accident this catches — a rename
   # over a file dropping its mode — happens before anything is staged, and
-  # a run that only read the index would report it a commit too late.
+  # a run that only read the index would report it a commit too late. A
+  # file git tracks and the tree no longer has is its own sentence: `chmod`
+  # is not the fix for it.
   while IFS= read -r file; do
-    [ -x "$file" ] || bad="$bad $file"
+    if [ ! -e "$file" ]; then
+      gone="$gone $file"
+    elif [ ! -x "$file" ]; then
+      bad="$bad $file"
+    fi
   done <<<"$listed"
+  [ -z "$gone" ] || echo "tracked shell scripts missing from the tree:$gone"
   [ -z "$bad" ] || {
     echo "tracked shell scripts without the exec bit:$bad"
     echo "fix with: chmod +x <path> && git update-index --chmod=+x <path>"
-    return 1
   }
+  [ -z "$gone$bad" ] || return 1
 }
 
 step "exec bits" exec_bits

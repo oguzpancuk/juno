@@ -5606,3 +5606,40 @@ now takes any falsy token as nothing. And a comment in the mail test
 claimed a measurement ("well under one second") that nobody had measured;
 it says what is actually known instead, which is that the positive reads
 are given ten seconds and have never needed them.
+
+## 2026-09-16 — The gate that would have skipped silently, caught by probing it
+
+The fourth review approved the door and left three minor notes on the
+`exec bits` step, two of them real traps for a file that does not exist
+yet: `git ls-files` C-quotes a path with a non-ASCII character, so an
+executable `ölçüm.sh` would come back as a name that is not a name on disk
+and be reported as missing its bit; and a tracked script deleted from the
+working tree was reported under the "no exec bit" heading, sending a
+reader to `chmod` for a file that is gone.
+
+The first attempt at the fix was the textbook one — `git ls-files -z` and
+`read -d ''` — and it was **worse than the bug**. A command substitution
+cannot hold a NUL: `listed="$(git ls-files -z)"` arrives as one
+run-together string, `read -d ''` then finds no terminator, the loop body
+runs zero times, and the function returns success having checked nothing.
+That is precisely the silent skip the step exists to refuse, and the
+battery reported `ok exec bits` throughout. What caught it was not
+reading the code but running it: a scratch repository with a file whose
+bit had been removed, where the function kept saying everything was fine.
+
+What shipped instead is `git -c core.quotePath=false ls-files` with the
+plain newline loop — the setting that stops the escaping at the source,
+with no NUL anywhere. A path containing a literal newline is still quoted
+by git whatever the setting says; it then fails to exist and lands in the
+"missing from the tree" list, which is a failure, which is the safe
+direction. A missing file now gets that sentence of its own.
+
+Four cases were provoked and watched before this was written: a file
+without its bit (fails), a file with a non-ASCII name and one with a space
+in it, both executable (pass — the case the first version broke), a
+tracked file removed from the tree (fails, with its own line), and the
+function run outside a git checkout (fails). Then the same in the real
+repository, by taking the bit off `contracts/init.sh` and putting it back.
+
+The lesson is the one the repo already states and this session kept
+re-learning: a gate that cannot be seen failing is not known to work.
