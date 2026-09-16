@@ -36,7 +36,7 @@ export function BandRing({
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const filled = (BANDS.indexOf(band) + 1) / BANDS.length;
-  const halo = size * 1.9;
+  const halo = size * 1.6;
   return (
     <View
       style={{ width: size, height: size }}

@@ -107,8 +107,14 @@ export function Screen({
   );
 }
 
-/** How much the blur behind a glass surface blurs; 0–100. */
-const GLASS_BLUR = 55;
+/**
+ * The blur at full strength, and the platform's own thin material for its
+ * tint: iOS draws that the way it draws its own glass — blurred, slightly
+ * light, vibrant — where a dark tint of ours over a blur only dimmed the
+ * view (owner, 2026-09-16, twice). Web and Android take expo-blur's
+ * approximation of the material.
+ */
+const GLASS_BLUR = 100;
 
 /**
  * True under a sheet. A sheet blurs once for everything on it, so a card
@@ -141,7 +147,7 @@ export function Glass({
       {inSheet ? null : (
         <BlurView
           intensity={GLASS_BLUR}
-          tint="dark"
+          tint="systemThinMaterialDark"
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />

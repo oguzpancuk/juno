@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -16,34 +16,36 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
-import { starField, type Star } from '@/lib/stars';
-import { color, star as starColor } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
 /**
  * The night sky the sheet puts behind the calculating screen (frame 04)
- * and, at the owner's asking, behind every screen: a field of stars that
- * breathe in their own time, in four colours, with one falling now and
- * then; a planet's limb over the top edge and a warm horizon at the
- * bottom where a host wants them. Drawn, not photographed — the same
- * code renders on the web. Paint only: it sits under everything and
- * takes no touches.
- *
- * The stars are views, not SVG circles: the native driver animates a
- * view's opacity off the JavaScript thread, and each star is one native
- * loop that never returns to JS once started. Several skies are alive at
- * once — every tab's screens stay mounted — so what this costs is a few
- * hundred native animation nodes, not JavaScript time: each star's phase
- * delay is one JS timer that fires once at mount, and the falling star's
- * gap is the one that keeps firing. With Reduce Motion on, nothing moves.
+ * and, at the owner's asking, behind every screen: soft clouds of the
+ * palette's colours, a star falling across a corner now and then, and a
+ * planet's limb over the top edge and a warm horizon at the bottom where
+ * a host wants them. The field of stars that was here is gone (owner,
+ * 2026-09-16: "yıldızları kaldıralım, sadece yıldız kayması kalsın").
+ * Drawn, not photographed — the same code renders on the web. Paint
+ * only: it sits under everything and takes no touches. With Reduce
+ * Motion on, nothing moves.
  */
-export const STAR_COUNT = 52;
-/** Any number; changing it moves every star, so pick once. */
-const SEED = 1995;
 /** How long a falling star takes, and how long the sky waits between. */
 const FALL_MS = 900;
 const FALL_GAP_MS = { min: 7000, max: 16000 } as const;
 // react-native-web has no native driver and warns once per app run.
 const NATIVE = Platform.OS !== 'web';
+
+/**
+ * Soft clouds of the palette's own colours, placed in fractions of the
+ * window so the composition holds on every size. Faint on their own; the
+ * glass over them is where they show, scattered.
+ */
+const NEBULAE = [
+  { x: 0.2, y: 0.28, r: 0.55, colour: color.cool, alpha: 0.28, period: 46000 },
+  { x: 0.85, y: 0.55, r: 0.5, colour: color.pink, alpha: 0.2, period: 61000 },
+  { x: 0.4, y: 0.85, r: 0.6, colour: color.warm, alpha: 0.16, period: 53000 },
+] as const;
+type NebulaSpec = (typeof NEBULAE)[number];
 
 export function CosmicGround({
   planet = true,
@@ -59,10 +61,6 @@ export function CosmicGround({
 }) {
   const { width, height } = useWindowDimensions();
   const still = useReducedMotion();
-  const stars = useMemo(
-    () => starField(SEED, STAR_COUNT, width, height),
-    [width, height],
-  );
 
   const planetR = width * 0.62;
   const planetCx = width * 0.5;
@@ -144,8 +142,14 @@ export function CosmicGround({
           </>
         ) : null}
       </Svg>
-      {stars.map((s, i) => (
-        <Twinkle key={i} star={s} still={still} />
+      {NEBULAE.map((n, i) => (
+        <Nebula
+          key={i}
+          nebula={n}
+          width={width}
+          height={height}
+          still={still}
+        />
       ))}
       {still ? null : <FallingStar width={width} height={height} />}
     </View>
@@ -153,65 +157,86 @@ export function CosmicGround({
 }
 
 /**
- * One star, breathing between a third of its light and all of it.
- *
- * One value runs 0 → 1 in a loop of a single native timing, and the
- * opacity is read off it linearly — so after the first delay nothing
- * comes back to JavaScript. The breath's shape is the timing's easing, a
- * raised cosine that is 0 at both ends, so the loop's reset is continuous
- * and the dip is soft; it cannot be on the interpolation, whose `easing`
- * the native driver drops (and logs, in dev). The delay is the star's
- * phase, so the field never pulses as one. (A loop over a sequence would
- * have run through JS every step and reset the value under the lead —
- * two reviews, 2026-09-16.)
+ * One cloud, drifting (owner, 2026-09-16: "biraz hareketli olsun"): a
+ * radial gradient in its own view, carried round a small ellipse by one
+ * native loop — a raised cosine on each axis, zero at both ends, so the
+ * loop's reset is continuous — over the better part of a minute. Slow
+ * enough to be felt rather than seen. Its own view rather than a circle
+ * in the sky's SVG because the native driver moves views, not SVG props.
  */
-const breathShape = (t: number) => (1 - Math.cos(2 * Math.PI * t)) / 2;
-function Twinkle({ star, still }: { star: Star; still: boolean }) {
-  const [breath] = useState(() => new Animated.Value(0));
+function Nebula({
+  nebula,
+  width,
+  height,
+  still,
+}: {
+  nebula: NebulaSpec;
+  width: number;
+  height: number;
+  still: boolean;
+}) {
+  const [drift] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (still) {
-      breath.setValue(0);
+      drift.setValue(0);
       return;
     }
-    const run = Animated.sequence([
-      Animated.delay(star.period * star.phase),
-      Animated.loop(
-        Animated.timing(breath, {
-          toValue: 1,
-          duration: star.period,
-          easing: breathShape,
-          useNativeDriver: NATIVE,
-        }),
-      ),
-    ]);
+    const run = Animated.loop(
+      Animated.timing(drift, {
+        toValue: 1,
+        duration: nebula.period,
+        easing: Easing.linear,
+        useNativeDriver: NATIVE,
+      }),
+    );
     run.start();
     return () => {
       run.stop();
     };
-  }, [breath, star, still]);
-  const size = star.r * 2;
-  // Memoised: a fresh interpolation per render is a fresh native node.
-  const opacity = useMemo(
-    () =>
-      breath.interpolate({
-        inputRange: [0, 1],
-        outputRange: [star.alpha, star.alpha * 0.35],
-      }),
-    [breath, star.alpha],
-  );
+  }, [drift, nebula.period, still]);
+  const size = width * nebula.r * 2;
+  const reach = width * 0.06;
+  // Two raised cosines a quarter-turn apart trace an ellipse.
+  const translateX = drift.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, reach, 0, -reach, 0],
+  });
+  const translateY = drift.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [-reach * 0.6, 0, reach * 0.6, 0, -reach * 0.6],
+  });
   return (
     <Animated.View
-      style={{
-        position: 'absolute',
-        left: star.x - star.r,
-        top: star.y - star.r,
-        width: size,
-        height: size,
-        borderRadius: star.r,
-        backgroundColor: starColor[star.hue] ?? starColor[0],
-        opacity,
-      }}
-    />
+      style={[
+        styles.nebula,
+        {
+          left: width * nebula.x - size / 2,
+          top: height * nebula.y - size / 2,
+          width: size,
+          height: size,
+          transform: [{ translateX }, { translateY }],
+        },
+      ]}
+    >
+      <Svg width={size} height={size}>
+        <Defs>
+          <RadialGradient id="nebula" cx="50%" cy="50%" r="50%">
+            <Stop
+              offset="0"
+              stopColor={nebula.colour}
+              stopOpacity={nebula.alpha}
+            />
+            <Stop
+              offset="0.55"
+              stopColor={nebula.colour}
+              stopOpacity={nebula.alpha * 0.35}
+            />
+            <Stop offset="1" stopColor={nebula.colour} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={size / 2} cy={size / 2} r={size / 2} fill="url(#nebula)" />
+      </Svg>
+    </Animated.View>
   );
 }
 
@@ -251,13 +276,19 @@ function FallingStar({ width, height }: { width: number; height: number }) {
     };
   }, [gap, progress]);
   const travel = Math.max(width, height) * 0.7;
+  // Down and to the left; the streak is turned to the same vector, so the
+  // tail cannot point anywhere but where the star came from (owner,
+  // 2026-09-16: "kuyrukla aynı yönde değil").
+  const dx = -1;
+  const dy = 0.6;
+  const heading = `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`;
   const translateX = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -travel],
+    outputRange: [0, travel * dx],
   });
   const translateY = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, travel * 0.6],
+    outputRange: [0, travel * dy],
   });
   // In only while it moves; parked invisible between falls.
   const opacity = progress.interpolate({
@@ -272,12 +303,14 @@ function FallingStar({ width, height }: { width: number; height: number }) {
           left: width * 0.85,
           top: height * 0.08,
           opacity,
-          transform: [{ translateX }, { translateY }, { rotate: '31deg' }],
+          transform: [{ translateX }, { translateY }, { rotate: heading }],
         },
       ]}
     >
       <LinearGradient
-        colors={[color.text, color.coolLight, color.bg]}
+        // Tail to head: the view's +x points along the heading, so the
+        // bright end is the one in front.
+        colors={[color.bg, color.coolLight, color.text]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.streakFill}
@@ -287,7 +320,8 @@ function FallingStar({ width, height }: { width: number; height: number }) {
 }
 
 const styles = StyleSheet.create({
-  ground: { position: 'absolute', top: 0, left: 0 },
+  ground: { position: 'absolute', top: 0, left: 0, overflow: 'hidden' },
+  nebula: { position: 'absolute' },
   streak: { position: 'absolute', width: 96, height: 2 },
   streakFill: { flex: 1, borderRadius: 1 },
 });

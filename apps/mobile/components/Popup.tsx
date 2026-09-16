@@ -150,8 +150,8 @@ export function Popup({
               own content are its own, and the cards on it take no blur of
               their own (InSheetProvider below). */}
           <BlurView
-            intensity={85}
-            tint="dark"
+            intensity={100}
+            tint="systemThinMaterialDark"
             style={styles.fill}
             pointerEvents="none"
           />

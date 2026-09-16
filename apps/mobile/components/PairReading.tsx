@@ -74,8 +74,12 @@ export function PairReading({
 }
 
 const styles = StyleSheet.create({
-  root: { gap: space.sm, paddingTop: space.md },
-  ring: { alignSelf: 'center' },
+  root: { gap: space.sm },
+  // The glow reaches above the ring by a third of its size; inside a
+  // sheet's scroll view that overhang is clipped at the top edge into a
+  // hard line under the title (owner, 2026-09-16), so the ring keeps
+  // that much room above itself.
+  ring: { alignSelf: 'center', paddingTop: 168 * 0.3 },
   bandName: { ...type.title, color: color.text, textAlign: 'center' },
   bandLabel: { ...type.label, color: color.textFaint },
 });
