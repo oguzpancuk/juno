@@ -13,10 +13,10 @@
      an earlier one; the earlier one stays as it was written.
 
      Refer to another entry by its date and title, never as "the entry
-     above" or "below". Five such pointers — four saying "below", one
-     saying "above" — were turned backwards by the 2026-09-16 reorder and
-     had to be named in an entry of their own, because they could not be
-     edited.
+     above" or "below". The 2026-09-16 reorder turned such pointers
+     backwards, and an entry cannot be edited to repair one; the ones it
+     broke are listed in "2026-09-16 — what the reorder broke: five
+     pointers that said below".
 
      Above the entries there is one section, the upstream candidates
      list, and that one is newest-first. -->
@@ -4697,3 +4697,20 @@ both such pairs the longer heading came second.
   file went 46,395 to 46,579, which is 125 in the header plus 46,220 plus
   those 234. Nothing is wrong with the figure; it needed the clause it did
   not have, and now nobody has to re-derive it.
+
+## 2026-09-16 — a footnote to the footnotes
+
+"2026-09-16 — two footnotes to the two entries before this one" footnotes
+one entry, not two: both of its bullets are about "2026-09-16 — what the
+reorder broke: five pointers that said below". Its heading is wrong in the
+same way as the heading it corrects.
+
+The header no longer counts those pointers either. It names the entry that
+lists them, which is the form that does not go stale and does not have to
+be right about a number.
+
+The figures in that footnote, pinned as they should have been: measured
+with `git show <commit>:docs/NOTES.md | wc -w` at 8c099f2 and its parent —
+46,395 words before, 46,579 after, of which 125 are the title line and the
+comment block, 46,220 the entries that already existed, and 234 the entry
+8c099f2 appended.
