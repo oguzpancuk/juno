@@ -56,7 +56,7 @@ export default function TabLayout() {
    * A browser usually reports no inset, and then the row ends flush with
    * the window and the labels sit on its edge; a small pad lifts them off
    * it. It is not a stand-in for a phone's strip — that is 34, and
-   * INDICATOR_STRIP below is 14 — just enough air under a label. Where
+   * INDICATOR_STRIP is 14 — just enough air under a label. Where
    * the web DOES report an inset (a page added to an iOS home screen) it
    * is the larger and wins, so the contract `lib/insets.ts` relies on
    * (the bar is `TAB_ROW + inset` tall and pads by that inset) holds on

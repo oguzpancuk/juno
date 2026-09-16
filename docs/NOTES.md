@@ -5225,12 +5225,11 @@ an empty memory has to fail loudly, and it did not.
   file for writing before the new content exists: a failure between the
   open and the write leaves it empty. Write a temp file and rename."
 
-## 2026-09-16 — Two corrections to the entries above
+## 2026-09-16 — Two corrections to "Every page on the web, against the same data"
 
-- The entry on the truncation was **edited in place** when the gate was
-  added, which this file's own rule forbids: it is append-only, and a
-  later thought belongs in a later entry. Recorded here rather than by a
-  third edit.
+- That entry was **edited in place** when the gate was added, which this
+  file's own rule forbids: it is append-only, and a later thought belongs
+  in a later entry. Recorded here rather than by a third edit.
 - The gate itself is narrower than that entry reads. It refuses a
   `docs/ROADMAP.md` or `docs/NOTES.md` that has lost its heading or
   fallen under two hundred lines — the file emptied wholesale, which is
