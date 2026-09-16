@@ -4763,3 +4763,27 @@ over the tab bar. `v6-chat-keyboard.png`.
 Not checked: the web client. react-native-web reports no keyboard events,
 so the gap there is always 0 — which is right for a desktop browser and
 unproven on a mobile one, where the owner suspects the same problem.
+
+## 2026-09-16 — the same keyboard question on the web
+
+The owner asked whether the composer is covered on the web client too.
+Read rather than guessed: react-native-web's `Keyboard` has an
+`addListener` that returns a remover and never fires, and an `isVisible`
+that returns false always (node_modules/react-native-web, exports/Keyboard)
+— so the gap there was always 0. Neither mobile browser shrinks the layout
+viewport for the keyboard; the page keeps its height and the keyboard is
+drawn over the bottom of it, which is exactly the shape of the bug that
+was just fixed on the device.
+
+So `useKeyboardGap` gained a web branch: it follows `visualViewport`,
+whose `offsetTop + height` is where the keyboard begins, through its
+`resize` and `scroll` events. The arithmetic is the same pure function,
+with two more cases pinned in `keyboard-gap.test.ts`, including a scrolled
+page.
+
+What is proven: in the browser, with the app loaded at a phone-sized
+viewport, `visualViewport` exists, reports the full window, and the gap
+computes to 0 — no lift where there is no keyboard, and no console errors.
+What is not: the actual mobile browser with a keyboard up. The chat sits
+behind sign-in, and typing a password is not something I do, so this needs
+the owner (or a phone opening the LAN URL) to confirm.

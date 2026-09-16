@@ -27,3 +27,19 @@ describe('keyboard gap', () => {
     expect(keyboardGap(WINDOW, Number.NaN, TAB_BAR)).toBe(0);
   });
 });
+
+describe('keyboard gap on the web', () => {
+  // There the keyboard's top edge is the visual viewport's bottom:
+  // `offsetTop + height`. With no keyboard that is the window's own
+  // height, so the gap is nothing.
+  it('is nothing while the visual viewport fills the window', () => {
+    expect(keyboardGap(WINDOW, 0 + WINDOW, TAB_BAR)).toBe(0);
+  });
+
+  it('is the part of a shrunken visual viewport the bar does not cover', () => {
+    // A 332pt keyboard: the viewport keeps the top 542pt of the window.
+    expect(keyboardGap(WINDOW, 0 + 542, TAB_BAR)).toBe(249);
+    // Scrolled: the viewport's top has moved down with the page.
+    expect(keyboardGap(WINDOW, 40 + 502, TAB_BAR)).toBe(249);
+  });
+});

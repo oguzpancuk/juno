@@ -25,6 +25,37 @@ export function useKeyboardGap(): number {
   const tabBar = useContext(BottomTabBarHeightContext) ?? 0;
   const [keyboardTop, setKeyboardTop] = useState<number | null>(null);
 
+  // Web: react-native-web's Keyboard never fires and reports the keyboard
+  // as never visible, and neither mobile browser shrinks the layout
+  // viewport for it — the page keeps its height and the keyboard is drawn
+  // over the bottom of it. What does move is the visual viewport, so that
+  // is what this asks (checked 2026-09-16 in node_modules/react-native-web
+  // exports/Keyboard).
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    // why: the app's TS lib has no DOM, and only the web build reaches
+    // this; the shape used is the three fields of VisualViewport.
+    const view = (
+      globalThis as unknown as {
+        visualViewport?: {
+          height: number;
+          offsetTop: number;
+          addEventListener(type: string, fn: () => void): void;
+          removeEventListener(type: string, fn: () => void): void;
+        };
+      }
+    ).visualViewport;
+    if (!view) return;
+    const update = () => setKeyboardTop(view.offsetTop + view.height);
+    update();
+    view.addEventListener('resize', update);
+    view.addEventListener('scroll', update);
+    return () => {
+      view.removeEventListener('resize', update);
+      view.removeEventListener('scroll', update);
+    };
+  }, []);
+
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const ios = Platform.OS === 'ios';
