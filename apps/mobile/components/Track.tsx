@@ -164,7 +164,10 @@ export function Track({
             accessible
             accessibilityRole="adjustable"
             accessibilityLabel={labels[index]}
-            accessibilityValue={{ text: describe(value) }}
+            // The aria spelling: react-native-web knows only this one, and
+            // React Native folds it into accessibilityValue.text itself
+            // (see Calculating's StepBar, 2026-09-16).
+            aria-valuetext={describe(value)}
             accessibilityState={{ disabled }}
             accessibilityActions={[
               { name: 'increment' },
