@@ -1,8 +1,12 @@
 # Working notes — append-only, dated
 
 <!-- The session-to-session memory. Every work session appends: what was
-     done, what was verified (and how), what is open. Newest at top.
-     Never rewrite old entries — this file is the audit trail. -->
+     done, what was verified (and how), what is open. Newest at the END:
+     the entries run oldest to newest, which is what every session has
+     done since the file started (the header said "newest at top" until
+     2026-09-16, and four hundred entries said otherwise).
+     Never rewrite old entries — this file is the audit trail.
+     The one section above the entries is the upstream candidates list. -->
 
 ## Upstream candidates
 
@@ -4518,8 +4522,8 @@ it is juno-specific, so it is maya's. It is now an upstream candidate at
 the top of this file, in the format `/update-stack` harvests, and the
 ROADMAP item is gone.
 
-One thing noticed while moving it, not changed: this file's header says
-"Newest at top", but every session so far has appended at the bottom, and
-the entries run oldest to newest. The header is what disagrees with four
-hundred entries, so it is left for the owner to decide rather than
-rewritten in passing.
+One thing noticed while moving it: this file's header said "Newest at
+top", but every session so far has appended at the bottom, and the entries
+run oldest to newest. The owner chose the header as the thing to correct
+(2026-09-16), so it now says the entries end with the newest and nothing
+was reordered.
