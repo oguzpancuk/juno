@@ -7,7 +7,7 @@ import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
 import { useUnreadTotal } from '@/lib/unread';
 import { badgeText } from '@/lib/unread-count';
-import { color, font, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 /**
  * The three places the app lives: you, the deck, the people you matched
@@ -52,7 +52,8 @@ export default function TabLayout() {
   // back and home buttons (review, 2026-09-15); there the items keep the
   // library's own place, above the inset.
   const centred = Platform.OS === 'ios';
-  const barHeight = TAB_ROW + insets.bottom;
+  const barHeight =
+    TAB_ROW + (Platform.OS === 'web' ? space.xs : insets.bottom);
   // Centred in the bar, less the strip the home indicator draws in: dead
   // centre of the whole bar reads as too low, because the bottom of it is
   // the indicator's, and the top of the 49pt row alone reads as too high
@@ -79,8 +80,22 @@ export default function TabLayout() {
           borderTopWidth: 1,
           height: barHeight,
           paddingBottom: centred ? 0 : insets.bottom,
+          // A browser has no home-indicator inset, so the row ends flush
+          // with the window and the labels sit on its edge; a little
+          // breathing room puts them where a phone's inset does.
+          ...(Platform.OS === 'web' ? { paddingBottom: space.xs } : {}),
         },
-        tabBarLabelStyle: { ...type.caption, fontSize: 11 },
+        tabBarLabelStyle: {
+          ...type.caption,
+          fontSize: 11,
+          lineHeight: 15,
+          // why: react-navigation clips its label, and on the web that box
+          // collapses to the font's content area — 10pt under an 11pt
+          // face — which cut the cedilla off "Keşfet" and "Eşleşmeler".
+          // Letting it show is enough; the label is one line either way
+          // (measured in the browser, 2026-09-16). Native's default.
+          overflow: 'visible',
+        },
         tabBarItemStyle: { paddingTop: itemOffset },
         sceneStyle: { backgroundColor: color.bg },
       }}

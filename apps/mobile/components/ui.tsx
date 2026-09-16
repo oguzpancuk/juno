@@ -518,7 +518,7 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
 }
 
 /** One lap of the spheres. Slow: this is a mark, not a loader. */
-const ORBIT_MS = 16000;
+const ORBIT_MS = 7000;
 /** The ring's tilt, matching the icon. */
 const ORBIT_TILT_DEG = -16;
 /**

@@ -405,7 +405,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
-    minWidth: 72,
+    // A pinned basis, not a minimum, and a zero floor with it: on the web
+    // an `input` carries an intrinsic width of about twenty characters,
+    // and a flex item's automatic minimum keeps it there, so three of
+    // these wrapped onto three lines where iOS put them side by side
+    // (measured in the browser, 2026-09-16). `minWidth: 0` is a no-op on
+    // native, where there is no intrinsic width to floor.
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: 84,
+    minWidth: 0,
     textAlign: 'center',
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
