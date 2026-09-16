@@ -447,8 +447,7 @@ export default function Discover() {
                 { top: stampTop, opacity: likeOpacity },
               ]}
               accessible={false}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
+              aria-hidden
               testID="stamp-like"
             >
               <Text style={[styles.stampText, styles.stampTextLike]}>
@@ -462,8 +461,7 @@ export default function Discover() {
                 { top: stampTop, opacity: passOpacity },
               ]}
               accessible={false}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
+              aria-hidden
               testID="stamp-pass"
             >
               <Text style={[styles.stampText, styles.stampTextPass]}>

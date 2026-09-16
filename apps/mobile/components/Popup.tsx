@@ -130,7 +130,7 @@ export function Popup({
           style={styles.backdrop}
           onPress={onClose}
           accessible={false}
-          importantForAccessibility="no"
+          aria-hidden
         />
         {/* The one raw `insets.bottom` left in the app (lib/insets.ts has
             the other). A Modal is its own window, above the tab bar, so

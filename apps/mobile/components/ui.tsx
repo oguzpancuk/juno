@@ -794,8 +794,7 @@ export function Glow({
       height={size}
       style={[s.glow, style]}
       pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+      aria-hidden
     >
       <Defs>
         <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
