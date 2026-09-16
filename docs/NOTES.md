@@ -4630,3 +4630,50 @@ untouched, and the word count is unchanged — 72 entries changed position
 and nothing changed content. The three entries above still describe the
 old two-regime file; they stay as written, and this is the entry that says
 they are now history.
+
+## 2026-09-16 — what the reorder broke: five pointers that said "below"
+
+Putting the file in one order moved 72 entries and changed no entry's
+text, which is what was checked — and that check was blind to the one
+thing that did change meaning. Entries written under the newest-first
+regime used "the entry below" for the entry written _earlier_, because
+that is where it sat. Those entries are now above, so five pointers read
+backwards. They cannot be edited, so here is what each one means, named by
+title rather than by direction:
+
+- "2026-09-09 — Fourth photos review: the cap that skipped the risky
+  accounts": "read the entry above rather than trusting that line" means
+  "2026-09-09 — KVKK consent, the blocked list, and a one-sided guard";
+  "the radius asymmetry ... recorded in the entry below" means "2026-09-09
+  — Third photos review: the fix that made deletion impossible", which is
+  where that asymmetry is written down.
+- "2026-09-10 — The cipher was answering a limit that does not exist":
+  both "the entry below describes a design that lasted two hours" and
+  "correction to the entry below" mean "2026-09-10 — The session is
+  sealed, and what that cost", the entry that says the change was
+  "verified in the browser".
+- "2026-09-10 — Three fixes, then stop: ADR-0008": "the residual the entry
+  below wrongly claimed was already answered" means "2026-09-10 — The
+  marker belongs to a write, not to a wipe".
+- "2026-09-10 — Two tests that could not fail, and a rule I broke": "the
+  entry below was edited in place" means "2026-09-10 — Three fixes, then
+  stop: ADR-0008", the entry whose counts it quotes (53 mobile, 41 store).
+
+Each target was confirmed by reading the entry, not by counting positions.
+The review that caught this also noted two directional pointers that were
+wrong under the old order and are right under this one; I did not re-check
+those two. Every "previous entry" and "earlier entry" phrasing is
+temporal, not spatial, and reads correctly.
+
+**From here on, an entry refers to another by its date and title.** "The
+entry above" was never safe: it survives only as long as nobody touches
+the order, and this file has now had its order touched.
+
+**Two corrections to the entry before this one.** It says the preamble was
+untouched and the word count unchanged: true of the reordering itself
+(entry blocks, 46,220 words before and after in the same commit), not of
+the commit, which also replaced the header — preamble 175 words to 125,
+whole file 46,395 to 46,579. And the tie-break recipe it records,
+`git log -S '<heading>'` taking the earliest commit, matches any heading
+that is a prefix of a longer one; it happened to be safe here because in
+both such pairs the longer heading came second.
