@@ -1303,15 +1303,6 @@ controls that take one gesture instead of a dozen taps.
       public, anon, authenticated and service_role and the battery stays
       green.
 
-- [ ] **Owner decision: a standing rule for refusal tests.** Twice in
-      `supabase/tests/rls.test.ts` a test asserting an error code passed for
-      the wrong reason — the row was refused by a different rule than the
-      one under test (NOTES 2026-09-16, "review of the recipient change").
-      Proposed wording for the project CLAUDE.md, under Standards: "A test
-      that expects a refusal uses input only the rule under test can
-      refuse, and asserts the refusal's message as well as its code." Done
-      when the owner accepts, rewords or declines it.
-
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested

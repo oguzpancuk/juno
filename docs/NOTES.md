@@ -10,6 +10,18 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+- 2026-09-16 · `CLAUDE.md` (Standards) · A test that expects a refusal
+  should use input only the rule under test can refuse, and assert the
+  refusal's message as well as its code. Twice in this repo a test asserting
+  an error code passed for the wrong reason: an update was refused by a
+  different rule of the same trigger, so the rule the test named could have
+  been deleted with the test still green (NOTES 2026-09-16, "review of the
+  recipient change"; measured by installing a guard without it). Nothing
+  here is juno-specific — it is verification discipline, which is maya's
+  (owner, 2026-09-16: "bu test kuralını mayaya önermek daha doğru değil
+  mi"). Parked, not applied: `CLAUDE.md` is template-origin and this is
+  `/update-stack`'s to carry with the owner's approval.
+
 - 2026-09-11 · `contracts/init.sh` · Metro is started with `CI=1`, which
   disables file watching. Any screen edited after `init.sh` runs never
   reaches the bundle, and the symptom is silent: the section simply does
@@ -4468,9 +4480,10 @@ freezes neither column installed on the local database, both tests failed;
 the real guard was put back and both pass.
 
 This is the second time an assertion on an error code passed for the wrong
-reason in this file. A standing rule for it is proposed to the owner rather
-than written unasked; the proposed wording is the open ROADMAP item "Owner
-decision: a standing rule for refusal tests".
+reason in this file. A standing rule for it is proposed rather than written
+unasked, and it is parked as an upstream candidate at the top of this file:
+the rule is verification discipline, which belongs to the maya template
+rather than to this product (owner, 2026-09-16).
 
 **Minor, also fixed.** The badge's realtime test now also shows the
 sender's recipient subscription staying silent when the other side reads
@@ -4496,3 +4509,17 @@ d08ff23..522e312, 28 commits — the fourth and fifth UI passes, the gear,
 the unread badge, three rounds of review fixes and `messages.recipient_id`.
 Nothing was deployed; the migration waits for the first `db push`, before
 any app build carrying the filtered badge (ADR-0010).
+
+## 2026-09-16 — the test rule goes upstream, not here
+
+The proposed rule for refusal tests was first written as an open decision
+about this repo's own `CLAUDE.md`. The owner corrected that: nothing about
+it is juno-specific, so it is maya's. It is now an upstream candidate at
+the top of this file, in the format `/update-stack` harvests, and the
+ROADMAP item is gone.
+
+One thing noticed while moving it, not changed: this file's header says
+"Newest at top", but every session so far has appended at the bottom, and
+the entries run oldest to newest. The header is what disagrees with four
+hundred entries, so it is left for the owner to decide rather than
+rewritten in passing.
