@@ -576,7 +576,11 @@ export default function Discover() {
         >
           {/* The match page's whole reading, not a digest of it (owner,
               2026-09-15). */}
-          <PairReading mine={detail.mine} theirs={detail.theirs} />
+          <PairReading
+            mine={detail.mine}
+            theirs={detail.theirs}
+            ground={color.surface}
+          />
         </Popup>
       ) : null}
       {current && theirReading ? (

@@ -66,9 +66,14 @@ export function BigThreeRow({
               >
                 {SIGN_TR[sign]}
               </Text>
+              {/* Fits itself like the sign: "Yükselen" at a large text
+                  size is wider than a third of a small phone (review,
+                  2026-09-16). No cushion on the web, where fit is a no-op. */}
               <Text
                 style={styles.body}
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
                 maxFontSizeMultiplier={maxFontSizeMultiplier}
               >
                 {label()}

@@ -51,35 +51,41 @@ export function CompatibilityDetail({
               a track filled to the level, the level's word. Thirds, not
               a number — the level has three steps and the fill is the
               step, so no figure reaches a Text (ADR-0009). */}
-          {reading.dimensions.map((d) => (
-            <View
-              key={d.dimension}
-              style={styles.dimensionRow}
-              testID={`dimension-${d.dimension}`}
-              accessible
-              aria-label={`${d.name}: ${d.label}`}
-            >
-              <Text style={styles.dimensionName} numberOfLines={1}>
-                {d.name}
-              </Text>
-              <View style={styles.track}>
-                <LinearGradient
-                  colors={[...gradient]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[
-                    styles.fill,
-                    {
-                      width: `${((LEVELS.indexOf(d.level) + 1) / LEVELS.length) * 100}%`,
-                    },
-                  ]}
-                />
+          <View role="list">
+            {reading.dimensions.map((d) => (
+              <View
+                key={d.dimension}
+                style={styles.dimensionRow}
+                testID={`dimension-${d.dimension}`}
+                accessible
+                role="listitem"
+                aria-label={`${d.name}: ${d.label}`}
+              >
+                <Text style={styles.dimensionName} numberOfLines={2}>
+                  {d.name}
+                </Text>
+                <View style={styles.track}>
+                  <LinearGradient
+                    colors={[...gradient]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[
+                      styles.fill,
+                      {
+                        width: `${((LEVELS.indexOf(d.level) + 1) / LEVELS.length) * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                {/* Two lines, not one: this word is the dimension's whole
+                    value (ADR-0009 §2), and at a large text size a one-line
+                    box would cut it to "Kolay yakın…" (review, 2026-09-16). */}
+                <Text style={styles.dimensionLevel} numberOfLines={2}>
+                  {d.label}
+                </Text>
               </View>
-              <Text style={styles.dimensionLevel} numberOfLines={1}>
-                {d.label}
-              </Text>
-            </View>
-          ))}
+            ))}
+          </View>
         </>
       )}
 

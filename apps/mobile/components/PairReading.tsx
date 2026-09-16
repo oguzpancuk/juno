@@ -28,9 +28,12 @@ import { color, space, type } from '@/theme/tokens';
 export function PairReading({
   mine,
   theirs,
+  ground,
 }: {
   mine: PublicChart;
   theirs: PublicChart;
+  /** The host's ground, for the ring's middle: a sheet is `surface`. */
+  ground?: string;
 }) {
   const reading = useMemo(
     () => synastryReading(mine, theirs, 5),
@@ -49,7 +52,7 @@ export function PairReading({
     <View style={styles.root} testID="synastry">
       {/* The band, never the number (ADR-0009 §3) — inside the ring the
           sheet draws around its percentage (frame 10). */}
-      <Halo size={168}>
+      <Halo size={168} {...(ground === undefined ? {} : { ground })}>
         <Text style={styles.bandName} testID="band">
           {reading.bandName}
         </Text>

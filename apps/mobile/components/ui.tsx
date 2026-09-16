@@ -448,10 +448,13 @@ export function GlyphBadge({
 export function Halo({
   size,
   ring = 3,
+  ground = color.bg,
   children,
 }: {
   size: number;
   ring?: number;
+  /** What the host paints under it — a sheet is `surface`, a page `bg`. */
+  ground?: string;
   children: ReactNode;
 }) {
   const glow = size * 1.9;
@@ -473,6 +476,7 @@ export function Halo({
             {
               width: size - ring * 2,
               height: size - ring * 2,
+              backgroundColor: ground,
             },
           ]}
         >
@@ -605,7 +609,6 @@ const s = StyleSheet.create({
   },
   haloInner: {
     borderRadius: radius.pill,
-    backgroundColor: color.bg,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
