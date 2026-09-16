@@ -33,6 +33,7 @@ import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
 import { usePhotoSources } from '@/lib/photos';
+import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -201,7 +202,7 @@ export default function Discover() {
         return false;
       }
       drop();
-      if (result.matchId)
+      if (result.matchId && firstSightOf(result.matchId))
         router.navigate(matchArrivedHref(result.matchId), INTO_MATCHES);
       return true;
     },

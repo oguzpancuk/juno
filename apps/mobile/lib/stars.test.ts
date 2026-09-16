@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { STAR_ALPHA, STAR_RADIUS, starField } from './stars';
+import {
+  STAR_ALPHA,
+  STAR_HUES,
+  STAR_PERIOD,
+  STAR_RADIUS,
+  starField,
+} from './stars';
 
 describe('starField', () => {
   it('is the same sky for the same seed', () => {
@@ -13,7 +19,7 @@ describe('starField', () => {
   it('draws the number asked for, every one inside the box', () => {
     const stars = starField(3, 60, 300, 500);
     expect(stars).toHaveLength(60);
-    for (const { x, y, r, alpha } of stars) {
+    for (const { x, y, r, alpha, hue, period, phase } of stars) {
       expect(x).toBeGreaterThanOrEqual(0);
       expect(x).toBeLessThanOrEqual(300);
       expect(y).toBeGreaterThanOrEqual(0);
@@ -22,6 +28,13 @@ describe('starField', () => {
       expect(r).toBeLessThanOrEqual(STAR_RADIUS.max);
       expect(alpha).toBeGreaterThanOrEqual(STAR_ALPHA.min);
       expect(alpha).toBeLessThanOrEqual(STAR_ALPHA.max);
+      expect(Number.isInteger(hue)).toBe(true);
+      expect(hue).toBeGreaterThanOrEqual(0);
+      expect(hue).toBeLessThan(STAR_HUES);
+      expect(period).toBeGreaterThanOrEqual(STAR_PERIOD.min);
+      expect(period).toBeLessThanOrEqual(STAR_PERIOD.max);
+      expect(phase).toBeGreaterThanOrEqual(0);
+      expect(phase).toBeLessThan(1);
     }
   });
 
@@ -38,6 +51,13 @@ describe('starField', () => {
       expect(y).toBeGreaterThanOrEqual(0);
       expect(r).toBeGreaterThanOrEqual(STAR_RADIUS.min);
     }
+  });
+
+  it('keeps white stars the majority', () => {
+    const stars = starField(5, 400, 402, 874);
+    expect(stars.filter((s) => s.hue === 0).length).toBeGreaterThan(
+      stars.length / 2,
+    );
   });
 
   it('survives a zero seed', () => {

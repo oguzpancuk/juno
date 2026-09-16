@@ -150,6 +150,12 @@ describe('aspectKind', () => {
     expect(aspectKind({ aspect: 'conjunction', term: 3 })).toBe('conjunction');
   });
 
+  it('reads a term of zero as flowing, the way the sections do', () => {
+    // A hard aspect exactly on its maximum orb scores 0; matchSections
+    // puts term >= 0 under "drawn", so the colour follows the section.
+    expect(aspectKind({ aspect: 'square', term: 0 })).toBe('harmony');
+  });
+
   it('follows the sign of the term for every other aspect', () => {
     expect(aspectKind({ aspect: 'trine', term: 2 })).toBe('harmony');
     expect(aspectKind({ aspect: 'sextile', term: 1 })).toBe('harmony');

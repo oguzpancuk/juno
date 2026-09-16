@@ -76,6 +76,10 @@ function MatchArrived({ id }: { id: string | undefined }) {
 
   if (session.status === 'signed-out') return <RedirectToSignIn />;
 
+  // A cold open with no id has nothing to load, and a spinner with no way
+  // out is the one state this screen must never show.
+  const stuck = failed || id === undefined;
+
   const see = () => {
     if (id === undefined) return;
     // Replace, not push: the door closes behind you, and back from the
@@ -89,7 +93,7 @@ function MatchArrived({ id }: { id: string | undefined }) {
       <CosmicGround planet={false} />
       {row === null || me === null || reading === null ? (
         <View style={styles.centre}>
-          {failed ? (
+          {stuck ? (
             <>
               <Text style={styles.subtitle}>{t.errors.generic}</Text>
               <OutlineButton
@@ -134,7 +138,8 @@ function MatchArrived({ id }: { id: string | undefined }) {
                 size={64}
                 stroke={5}
               />
-              <View>
+              {/* The ring's label already says this; read once. */}
+              <View aria-hidden>
                 <Text style={styles.bandName} testID="band">
                   {reading.bandName}
                 </Text>

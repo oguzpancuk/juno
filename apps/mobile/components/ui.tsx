@@ -108,7 +108,7 @@ export function Screen({
 }
 
 /** How much the blur behind a glass surface blurs; 0–100. */
-const GLASS_BLUR = 28;
+const GLASS_BLUR = 55;
 
 /**
  * True under a sheet. A sheet blurs once for everything on it, so a card
@@ -147,6 +147,16 @@ export function Glass({
         />
       )}
       <View style={s.glassFill} pointerEvents="none" />
+      {/* The light along the top, drawn inside rather than as a brighter
+          top border: iOS mitres a border whose sides differ in colour, and
+          the seam showed at every rounded corner (owner, 2026-09-16). */}
+      <LinearGradient
+        colors={[glass.sheen, glass.sheenEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={s.glassSheen}
+        pointerEvents="none"
+      />
       {children}
     </View>
   );
@@ -635,13 +645,11 @@ const s = StyleSheet.create({
     bottom: 0,
     backgroundColor: glass.fill,
   },
+  glassSheen: { position: 'absolute', top: 0, left: 0, right: 0, height: 48 },
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: glass.edge,
-    // The sheet's cards catch light along the top edge; one brighter
-    // hairline is that, and it costs nothing on the web.
-    borderTopColor: glass.edgeTop,
     padding: space.lg,
     gap: space.sm,
   },

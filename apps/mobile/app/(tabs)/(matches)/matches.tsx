@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: glass.edge,
-    borderTopColor: glass.edgeTop,
     padding: 14,
   },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },

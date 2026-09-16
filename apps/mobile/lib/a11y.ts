@@ -1,6 +1,32 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
+
+/**
+ * Whether the person asked the system for less motion. The sky twinkles
+ * and a star falls now and then; with this on it holds still. Starts
+ * false and corrects itself on the first read — a frame of motion before
+ * the setting lands is better than a sky that never moves for anyone
+ * while the setting is fetched.
+ */
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((on) => {
+      if (live) setReduced(on);
+    });
+    const sub = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      setReduced,
+    );
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, []);
+  return reduced;
+}
 
 /**
  * Say a screen's name to the screen reader when it takes focus.

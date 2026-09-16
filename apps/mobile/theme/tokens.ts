@@ -73,18 +73,26 @@ export const color = {
  * the top edge catching light.
  */
 export const glass = {
-  fill: 'rgba(18,16,31,0.58)',
+  fill: 'rgba(18,16,31,0.42)',
   /**
    * A sheet over a screen: denser than a card, because what is under it
    * is a page of text and a photo, not the star field — at the card's
    * alpha the deck read straight through (seen 2026-09-16).
    */
-  sheet: 'rgba(12,10,22,0.86)',
+  sheet: 'rgba(12,10,22,0.66)',
   fillSoft: 'rgba(23,21,40,0.5)',
   fillHigh: 'rgba(29,27,49,0.62)',
   edge: 'rgba(255,255,255,0.1)',
-  edgeTop: 'rgba(255,255,255,0.22)',
+  /** The light a glass surface catches along its top; fades to nothing. */
+  sheen: 'rgba(255,255,255,0.09)',
+  sheenEnd: 'rgba(255,255,255,0)',
 } as const;
+
+/**
+ * The sky's stars (owner, 2026-09-16: "farklı renklerde olsun"): white
+ * for most, then warm, lavender and a pale blue. Indexed by `Star.hue`.
+ */
+export const star = ['#F6F3FF', '#FFE0C4', '#C9B6FF', '#A9D8FF'] as const;
 
 /**
  * A colour per body, for glyphs (owner, 2026-09-16: aspects coloured

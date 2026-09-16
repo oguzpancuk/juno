@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
-import { CosmicGround } from '@/components/CosmicGround';
 import { PairReading } from '@/components/PairReading';
 import { Popup } from '@/components/Popup';
 import { useBottomGap } from '@/lib/insets';
@@ -117,9 +116,9 @@ export function MatchDetail({
 
   return (
     <View style={styles.screen}>
-      {/* Stars only: the planet would sit under the heading and the
-          horizon under the safety row. */}
-      <CosmicGround planet={false} horizon={false} />
+      {/* No sky of its own: this is a page of the chat, whose sky is under
+          both pages, so swiping between them changes nothing behind
+          (owner, 2026-09-16). */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
@@ -252,7 +251,7 @@ export function MatchDetail({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: color.bg },
+  screen: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: space.xl, paddingTop: space.lg, gap: space.sm },
   kicker: { ...type.label, color: color.pink },
@@ -271,7 +270,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: glass.edge,
-    borderTopColor: glass.edgeTop,
     padding: space.lg,
     gap: space.sm,
   },

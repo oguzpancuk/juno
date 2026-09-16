@@ -150,7 +150,7 @@ export function Popup({
               own content are its own, and the cards on it take no blur of
               their own (InSheetProvider below). */}
           <BlurView
-            intensity={60}
+            intensity={85}
             tint="dark"
             style={styles.fill}
             pointerEvents="none"
@@ -217,7 +217,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
     borderWidth: 1,
     borderColor: glass.edge,
-    borderTopColor: glass.edgeTop,
     paddingTop: space.xl,
     overflow: 'hidden',
   },

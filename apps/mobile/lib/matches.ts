@@ -67,6 +67,21 @@ export async function fetchMatch(
 
 const MatchInsertSchema = z.object({ id: z.string().uuid() });
 
+const announced = new Set<string>();
+
+/**
+ * True the first time a match id is seen this app run. The liker hears
+ * of a match twice — `swipe()` returns it and the `matches` INSERT also
+ * reaches the Realtime listener — and a late socket would otherwise
+ * push "Eşleştiniz!" a second time over wherever the person has gone
+ * (review, 2026-09-16). Both callers ask here before navigating.
+ */
+export function firstSightOf(matchId: string): boolean {
+  if (announced.has(matchId)) return false;
+  announced.add(matchId);
+  return true;
+}
+
 /**
  * Fire `onMatch(matchId)` when a `matches` row appears for me. Realtime
  * postgres_changes respects RLS, so only my matches arrive.

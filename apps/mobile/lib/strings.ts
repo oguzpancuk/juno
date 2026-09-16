@@ -100,7 +100,6 @@ export const t = {
     planetsTab: 'Gezegenler',
     housesTab: 'Evler',
     house: (n: number) => `${n}. ev`,
-    cusp: (n: number) => `${n}. ev başlangıcı`,
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
