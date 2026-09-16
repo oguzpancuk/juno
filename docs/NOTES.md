@@ -4592,3 +4592,22 @@ its end — the wrong question, confidently answered.
 
 The header no longer carries a count. It names the entry the fold is at,
 which does not go stale the next time someone appends.
+
+## 2026-09-16 — and the count in that correction was off by its own entry
+
+Third time on the same file, same mistake in a smaller place: the entry
+above retracts "105 entries" and then says "at this one 106". It is 107.
+An entry that quotes the size of this file changes it, and I keep counting
+before writing rather than after.
+
+Measured at each commit, by counting dated headings in the committed
+file — `git show <commit>:docs/NOTES.md | grep -cE '^## 20[0-9][0-9]-'`:
+522e312 has 103, 7fcaf03 has 106, and the entry above, in 00397b6, makes 107. The fold is unchanged and is the only fact here worth trusting: the
+"instantiated from maya" entry, number 68 from the top, with everything
+above it newest-first and everything below it oldest to newest.
+
+So: no more counts in this file about this file. The header names the fold
+and carries none, which is the form that survives the next append. Where a
+figure is genuinely needed, it belongs with the command that produced it
+and the commit it was produced at, as above. The two entries with wrong
+counts stay as they were written; this is their correction.
