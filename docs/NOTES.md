@@ -5152,3 +5152,63 @@ The suite assumes it owns the database; a ROADMAP item says what it
 should assume instead. Until then: one battery at a time on this
 machine, and a command that so much as mentions the push gate in its
 text starts one — the hook scans the command line.
+
+## 2026-09-16 — Every page on the web, against the same data
+
+The owner asked whether the web client is complete against iOS — "tüm
+sayfalardan bahsediyorum" — and the answer needed a session, which a
+signed-out browser does not have and which this session does not type a
+password for. The way through, in the shape the repo already uses for
+local fixtures: mint one against the local stack with the service-role
+key (`admin.generateLink` → `verifyOtp`) for `selin@seed.local`, the
+same user the simulator was on, and write it into `localStorage` under
+`sb-127-auth-token` — AsyncStorage on the web is localStorage, and
+supabase-js names its key from the URL's first hostname label. The
+script lived in the repo for one run and was deleted; nothing of it is
+committed.
+
+Walked at a 375×812 viewport: welcome, sign-in, onboarding, discover,
+the filters sheet, profile, the full-chart popup, matches, chat, the
+chat's Uyum page, the starter, the arrival screen, legal, settings.
+Every one matches iOS — Outfit, the clouds and the falling star, the
+drawn mark in orbit, the glass boxes, the ring, the coloured aspects —
+with two exceptions, both now fixed:
+
+- **The tab labels were clipped.** react-navigation's label box collapses
+  on the web to the font's content area (10pt under an 11pt face) and
+  clips what overflows: first the whole word, and when the line height
+  was lowered to fit, the cedilla off "Keşfet" and "Eşleşmeler". Letting
+  the label's own box show (`overflow: 'visible'`) is what fixed it; the
+  bar also gains a little bottom room on the web, where there is no
+  home-indicator inset to provide it.
+- **The birth date and time fields stacked.** A web `input` carries an
+  intrinsic width of about twenty characters, and a flex item's
+  automatic minimum keeps it there, so three 72pt fields wrapped onto
+  three lines. A pinned `flexBasis` with `minWidth: 0` puts them side by
+  side as on iOS; `minWidth: 0` is a no-op on native.
+
+Both are the same class — a web intrinsic size that native does not
+have — and neither is visible from a simulator, which is why the walk
+had to happen in a browser.
+
+**A near-miss worth recording.** One of the scripts in this session
+opened `docs/ROADMAP.md` for writing and then failed while computing
+what to write; `open(path, 'w')` truncates before the write, so the file
+went to zero bytes and the commit carried it. It was restored from the
+commit before. Every edit here now writes a temporary file and renames
+it over the original, so a failure leaves the file as it was.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya, an RN/Expo skill · "To walk a signed-in web client
+  without typing a password, mint a session against the local stack and
+  write it to localStorage under supabase-js's storage key
+  (`sb-<first hostname label>-auth-token`); AsyncStorage on the web is
+  localStorage."
+- 2026-09-16 · maya, an RN/Expo skill · "On the web a flex item has an
+  intrinsic minimum size that native lacks — an `input` is about twenty
+  characters wide. A row of small fields needs `minWidth: 0` beside its
+  basis, or it wraps."
+- 2026-09-16 · maya CLAUDE.md or a tooling skill · "Never open a repo
+  file for writing before the new content exists: a failure between the
+  open and the write leaves it empty. Write a temp file and rename."
