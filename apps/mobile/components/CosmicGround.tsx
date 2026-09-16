@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -21,7 +21,7 @@ import { color } from '@/theme/tokens';
 /**
  * The night sky the sheet puts behind the calculating screen (frame 04)
  * and, at the owner's asking, behind every screen: soft clouds of the
- * palette's colours, a star falling across a corner now and then, and a
+ * palette's colours, a star falling from somewhere new now and then, and a
  * planet's limb over the top edge and a warm horizon at the bottom where
  * a host wants them. The field of stars that was here is gone (owner,
  * 2026-09-16: "yıldızları kaldıralım, sadece yıldız kayması kalsın").
@@ -159,11 +159,10 @@ export function CosmicGround({
 
 /**
  * One cloud, drifting (owner, 2026-09-16: "biraz hareketli olsun"): a
- * radial gradient in its own view, carried round a small ellipse by one
- * native loop — a raised cosine on each axis, zero at both ends, so the
- * loop's reset is continuous — over the better part of a minute. Slow
- * enough to be felt rather than seen. Its own view rather than a circle
- * in the sky's SVG because the native driver moves views, not SVG props.
+ * radial gradient in its own view, carried round a small diamond of a
+ * path by one native loop over the better part of a minute — slow enough
+ * to be felt rather than seen. Its own view rather than a circle in the
+ * sky's SVG because the native driver moves views, not SVG props.
  */
 function Nebula({
   index,
@@ -269,6 +268,11 @@ function Nebula({
 function FallingStar({ width, height }: { width: number; height: number }) {
   const [progress] = useState(() => new Animated.Value(0));
   const [pass, setPass] = useState(() => nextPass(width, height));
+  // Read at the moment the next fall is drawn, not held by the effect:
+  // with the dimensions among its deps a resize replayed the current
+  // fall from its start (review, 2026-09-16).
+  const window = useRef({ width, height });
+  window.current = { width, height };
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let fall: Animated.CompositeAnimation | null = null;
@@ -277,7 +281,7 @@ function FallingStar({ width, height }: { width: number; height: number }) {
       timer = setTimeout(
         () => {
           if (!live) return;
-          setPass(nextPass(width, height));
+          setPass(nextPass(window.current.width, window.current.height));
         },
         FALL_GAP_MS.min + Math.random() * (FALL_GAP_MS.max - FALL_GAP_MS.min),
       );
@@ -297,20 +301,26 @@ function FallingStar({ width, height }: { width: number; height: number }) {
       fall?.stop();
       if (timer !== null) clearTimeout(timer);
     };
-  }, [pass, progress, width, height]);
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, pass.travel * pass.dx],
-  });
-  const translateY = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, pass.travel * pass.dy],
-  });
-  // In only while it moves; parked invisible between falls.
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.05, 0.8, 1],
-    outputRange: [0, 0.9, 0.6, 0],
-  });
+  }, [pass, progress]);
+  // Memoised per pass: a fresh interpolation per render is a fresh
+  // native node. In only while it moves; parked invisible between falls.
+  const { translateX, translateY, opacity } = useMemo(
+    () => ({
+      translateX: progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, pass.travel * pass.dx],
+      }),
+      translateY: progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, pass.travel * pass.dy],
+      }),
+      opacity: progress.interpolate({
+        inputRange: [0, 0.05, 0.8, 1],
+        outputRange: [0, 0.9, 0.6, 0],
+      }),
+    }),
+    [pass, progress],
+  );
   return (
     <Animated.View
       style={[
