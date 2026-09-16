@@ -1373,11 +1373,28 @@ controls that take one gesture instead of a dozen taps.
       sign-out) and the starter (behind a match) — both use primitives
       photographed elsewhere on this list._
 
-- [ ] **D2 — Calculating (frame 04).** The single largest gap between the
+- [x] **D2 — Calculating (frame 04).** The single largest gap between the
       sheet and the app: a cosmic ground under the step copy. No conflict
       with any decision.
       — done when: `screenshots/d2-calculating.png` shows the screen mid-run
       with the copy sequence still legible over the ground.
+      _Done. `CosmicGround` draws the sky in SVG — a planet's limb over
+      the top edge, 48 stars, a warm horizon at the bottom — so there is
+      no photograph and no licence question yet; a licensed nebula, if
+      the owner wants one, goes under the same component. The stars come
+      from `lib/stars.ts`, a seeded generator (Park–Miller) so the sky is
+      a pure function of the window and never jumps on a re-render; five
+      tests pin determinism, bounds and the small-star majority. Under
+      the step copy sits a bar in three parts, lit as each line is
+      reached — the sheet's continuous bar would have claimed a progress
+      this screen does not measure — with a `progressbar` role carrying
+      the same step to VoiceOver. `d2-calculating.png` is the first step
+      with one part lit, taken from a 44-frame burst on a cold start:
+      frames 29–35 showed the first line, 36–43 the second, 44 the
+      third, which is the sequence and its ~950 ms beat observed, not
+      assumed. The screen was reached through a temporary route file
+      that was deleted before the commit; it only ever shows after a
+      real sign-up._
 
 - [ ] **D3 — Deck (frame 05).** The frame carries no percentage, so it is
       adoptable as drawn, minus the star button and the verification badge:
