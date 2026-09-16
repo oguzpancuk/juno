@@ -45,6 +45,30 @@ export function isCompleteOtp(raw: string): boolean {
 }
 
 /**
+ * What to do with a refused request for a mail.
+ *
+ * `wait` means the server is rate-limiting this address or this project,
+ * so the countdown starts whether or not the screen was already counting.
+ * What it deliberately does NOT mean is that a code was just sent: GoTrue
+ * answers both the per-address floor (`[auth.email] max_frequency`) and
+ * the project's hourly ceiling (`[auth.rate_limit] email_sent`) with
+ * `over_email_send_rate_limit`, and under the ceiling nothing was sent at
+ * all — the address may hold nothing but a code that expired. A screen
+ * that says "the one you have still works" would be lying to the person
+ * it is least able to help.
+ *
+ * Anything else is `error`: a refusal the person can read and act on.
+ */
+export type RefusedSend = 'wait' | 'error';
+
+export function refusedSend(code: string | undefined): RefusedSend {
+  return code === 'over_email_send_rate_limit' ||
+    code === 'over_request_rate_limit'
+    ? 'wait'
+    : 'error';
+}
+
+/**
  * Seconds left on the resend countdown, rounded up so the link never reads
  * "0 sn" while it is still dark. `null` means nothing has been sent and
  * the link is free; the code screen does not use that branch — it starts

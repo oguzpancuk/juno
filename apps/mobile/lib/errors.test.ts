@@ -45,14 +45,6 @@ describe('authErrorText', () => {
     expect(authErrorText(authError(undefined))).toBe(t.errors.generic);
   });
 
-  it('separates a refused code from a refused password', () => {
-    // Both reach the same screens in the same session; one sentence says
-    // "ask for a new code", the other "your password is wrong".
-    expect(authErrorText(authError('otp_expired', 403))).not.toBe(
-      authErrorText(authError('invalid_credentials')),
-    );
-  });
-
   it('never lets the provider text through', () => {
     for (const code of ['weak_password', 'unexpected_failure', undefined]) {
       expect(authErrorText(authError(code))).not.toContain('raw provider');

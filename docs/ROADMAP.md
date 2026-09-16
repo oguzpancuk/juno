@@ -220,8 +220,10 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       kodun") → a wrong code refused with the app's own sentence → the
       mailed code → onboarding, with the resend countdown watched running
       down. A sign-in on an unconfirmed address lands on the same screen
-      and a second, different code arrives. `screenshots/v1-verify-code.png`
-      is the code screen on iOS. Not covered anywhere: real SMTP, which
+      and a second, different code arrives; a request the server rate-limits
+      shows a notice that claims nothing about the inbox rather than a red
+      error, watched in the browser and held by `lib/otp.ts` `refusedSend`.
+      `screenshots/v1-verify-code.png` is the code screen on iOS. Not covered anywhere: real SMTP, which
       needs the hosted project (`docs/auth-setup.md`)._
 - [ ] **Sign in with Apple and Google (Apple).** Alongside e-mail and
       password, through each provider's own SDK; the inert buttons of
@@ -231,11 +233,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       profile flow (manual; not simulator-testable).
       _Built, and taken as far as credentials allow. On a dev build in the
       simulator the welcome screen shows Apple and no Google — no client ID
-      was compiled in — and tapping Apple opens iOS's own Sign in with
-      Apple sheet, which stops at "Apple Hesabı'nıza giriş yapın" because
-      the simulator has no Apple account; closing it returns the app's own
-      sentence, not a dead button. `screenshots/v1-welcome-providers.png`
-      and `screenshots/v1-apple-sheet.png`. The Google URL scheme was read
+      was compiled in — and tapping Apple hands the request to iOS, which
+      answers with the alert it raises when the device has no Apple
+      account ("Apple Hesabı'nıza giriş yapın"). Apple's own consent sheet
+      is past that gate and a simulator signed into nothing cannot reach
+      it. Dismissing the alert came back as a failure, not a cancellation,
+      so the app showed its own sentence rather than nothing.
+      `screenshots/v1-welcome-providers.png` and
+      `screenshots/v1-apple-sheet.png`. The Google URL scheme was read
       out of a prebuild made with a client ID set. What is missing is only
       the credentials: a Google Cloud project and an Apple Developer
       account, neither of which existed on 2026-09-16. The owner's steps

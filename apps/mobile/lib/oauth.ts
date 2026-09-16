@@ -56,6 +56,40 @@ export function reversedClientId(clientId: string): string {
   return `com.googleusercontent.apps.${id}`;
 }
 
+/**
+ * What a provider's sheet handed back: a token, or the reason there is
+ * none. The two reasons are not the same thing, and folding them together
+ * is the bug this type exists to prevent — a sheet the person closed gets
+ * no sentence, while a sheet that completed and produced nothing must get
+ * one, or it is a button that did nothing.
+ */
+export type TokenResult =
+  | { readonly token: string }
+  | { readonly token: null; readonly cancelled: boolean };
+
+/** A token worth exchanging with the auth provider. */
+export interface Exchange {
+  readonly status: 'exchange';
+  readonly token: string;
+}
+
+/**
+ * Either something to exchange, or the end of the round trip. `message` is
+ * the sentence a failure shows; it is passed in so this file needs no UI
+ * strings and the battery can hold the decision.
+ */
+export function tokenOutcome(
+  result: TokenResult,
+  message: string,
+): Exchange | ProviderOutcome {
+  if (result.token !== null) {
+    return { status: 'exchange', token: result.token };
+  }
+  return result.cancelled
+    ? { status: 'cancelled' }
+    : { status: 'failed', message };
+}
+
 export interface AvailabilityInput {
   /** `Platform.OS`. */
   readonly platform: string;

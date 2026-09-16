@@ -86,14 +86,20 @@ Postgres and Storage.
 **No provider has signed anybody in, and the battery cannot change that.**
 Both paths need credentials that only exist in a Google Cloud project and
 an Apple Developer account, neither of which existed on 2026-09-16. What
-was verified stops one step short of the token: a dev build was made and
-run on the simulator, where the welcome screen showed Apple alone (no
-Google client ID was compiled in) and the Apple button opened iOS's own
-Sign in with Apple sheet — which is the native module, the entitlement and
-the plumbing between them, all working. It got as far as iOS asking for an
-Apple account the simulator does not have. Google's URL scheme was read out
-of a prebuild made with a client ID set; no prebuild without one produces
-it, by design. The pure half is covered by `lib/oauth.test.ts`. The first
+was verified stops well short of the token: a dev build was made and run on
+the simulator, where the welcome screen showed Apple alone (no Google
+client ID was compiled in), and tapping Apple handed the request to iOS,
+which answered with its own alert — "Apple Hesabı'nıza giriş yapın", the
+gate it raises when the device has no Apple account. That is the native
+module reached and the request accepted by the OS; it is NOT the Sign in
+with Apple consent sheet, which never opened and cannot on a simulator
+signed into nothing. The entitlement is true on disk
+(`com.apple.developer.applesignin` in the generated `Juno.entitlements`),
+not because of that screenshot. Dismissing the alert came back as a
+failure rather than a cancellation, so the app showed its own sentence —
+useful to know, because a cancellation deliberately shows nothing.
+Google's URL scheme was read out of a prebuild made with a client ID set;
+no prebuild without one produces it, by design. The pure half is covered by `lib/oauth.test.ts`. The first
 real sign-in is an owner step, and it is the last item of
 `docs/auth-setup.md`.
 

@@ -51,10 +51,12 @@ export const t = {
     resend: 'Kodu tekrar gönder',
     resendIn: (seconds: number) => `Kodu tekrar gönder (${seconds} sn)`,
     resent: 'Yeni kod gönderildi.',
-    // When the server refuses a send because it made one moments ago —
-    // which is the usual answer to the automatic request made on arrival
-    // from a refused sign-in. Nothing is wrong: the code is in the inbox.
-    stillValid: 'Az önce gönderilen kod hâlâ geçerli. Gelen kutunu kontrol et.',
+    // When the server refuses to send one. It refuses both for a mail it
+    // sent moments ago and because the project has sent too many this
+    // hour, and the two leave the person in different places — one has a
+    // code, the other has none — so the sentence claims neither.
+    notSent:
+      'Şu an yeni kod gönderemedik. Gelen kutunda kod varsa onu yaz, yoksa birazdan tekrar iste.',
     spamHint: 'Gelmediyse birkaç saniye bekle, sonra spam klasörüne bak.',
     wrongAddress: 'Adresi yanlış mı yazdın? Geri dön, baştan kaydol.',
     back: '‹ Geri',

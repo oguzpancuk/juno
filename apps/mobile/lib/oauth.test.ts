@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { availability, googleClientIdSchema, reversedClientId } from './oauth';
+import {
+  availability,
+  googleClientIdSchema,
+  reversedClientId,
+  tokenOutcome,
+} from './oauth';
 
 const CLIENT_ID = '123456789012-abcdefghijklmnop.apps.googleusercontent.com';
 
@@ -33,6 +38,33 @@ describe('reversedClientId', () => {
     // The failure it replaces is mute: iOS registers a scheme nothing
     // calls back on, and the Google sheet simply never returns.
     expect(() => reversedClientId('nope')).toThrow();
+  });
+});
+
+describe('tokenOutcome', () => {
+  const MESSAGE = 'giriş tamamlanamadı';
+
+  it('hands a token on to be exchanged', () => {
+    expect(tokenOutcome({ token: 'eyJhbGciOi' }, MESSAGE)).toEqual({
+      status: 'exchange',
+      token: 'eyJhbGciOi',
+    });
+  });
+
+  it('says nothing about a sheet the person closed', () => {
+    expect(tokenOutcome({ token: null, cancelled: true }, MESSAGE)).toEqual({
+      status: 'cancelled',
+    });
+  });
+
+  it('does not let an empty credential pass as a cancellation', () => {
+    // A sheet that completed and produced no token. Reported as a
+    // cancellation it would draw nothing at all — a provider button that
+    // does nothing, which is the state this whole feature replaced.
+    expect(tokenOutcome({ token: null, cancelled: false }, MESSAGE)).toEqual({
+      status: 'failed',
+      message: MESSAGE,
+    });
   });
 });
 

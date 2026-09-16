@@ -8,9 +8,11 @@ import { Platform } from 'react-native';
 import { env } from './env';
 import {
   availability,
+  tokenOutcome,
   type Availability,
   type Provider,
   type ProviderOutcome,
+  type TokenResult,
 } from './oauth';
 import { t } from './strings';
 import { supabase } from './supabase';
@@ -69,17 +71,6 @@ function cancelled(error: unknown): boolean {
   return isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED;
 }
 
-/**
- * What a provider handed back. A token, or the reason there is none —
- * and the two reasons are not the same thing. Closing the sheet is an
- * answer and gets no sentence; a sheet that completed and produced no
- * token is a failure, and saying nothing about it would be the "tap it
- * and nothing happens" that this screen exists to stop.
- */
-type TokenResult =
-  | { readonly token: string }
-  | { readonly token: null; readonly cancelled: boolean };
-
 async function appleToken(): Promise<TokenResult> {
   const credential = await AppleAuthentication.signInAsync({
     // Only the address. Apple returns the full name once and only on the
@@ -118,14 +109,13 @@ export async function signInWithProvider(
   try {
     const result =
       provider === 'apple' ? await appleToken() : await googleToken();
-    if (result.token === null) {
-      return result.cancelled
-        ? { status: 'cancelled' }
-        : { status: 'failed', message: t.errors.providerFailed };
-    }
+    // `tokenOutcome` decides, so the battery can hold the rule that a
+    // closed sheet and an empty credential are different answers.
+    const outcome = tokenOutcome(result, t.errors.providerFailed);
+    if (outcome.status !== 'exchange') return outcome;
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider,
-      token: result.token,
+      token: outcome.token,
     });
     if (error) return { status: 'failed', message: t.errors.providerFailed };
     if (!data.session) {

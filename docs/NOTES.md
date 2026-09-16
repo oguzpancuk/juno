@@ -27,6 +27,13 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+- 2026-09-16 · maya `.claude/hooks/verify.sh` · An `exec bits` step: fail
+  the battery if any tracked `*.sh` is not mode 100755. Three commits in
+  five here went to restoring one, and the cause is generic to every
+  product an agent edits — writing a temporary file and renaming it over
+  the original drops the mode, and no content diff shows it. Applied here
+  on the same footing as the docs gate; parked for `/update-stack`.
+
 - 2026-09-16 · maya, an RN/Expo skill · On macOS, `pod install` under a
   Homebrew Ruby crashes with `Unicode Normalization not appropriate for
 ASCII-8BIT` when the shell has no UTF-8 locale — which an agent's shell
@@ -5480,3 +5487,76 @@ has no such scheme. The claim is true of what was run and false of what a
 reader would find on disk, which is close enough to a wrong claim to
 rewrite. `docs/adr/0011-sign-in.md` and `docs/ROADMAP.md` now say which
 prebuild showed what.
+
+## 2026-09-16 — Second review of the door, and three corrections to what the simulator proved
+
+**The notice that would have lied.** The fix committed an hour earlier read
+`over_email_send_rate_limit` as "a mail went out moments ago, the code is
+in your inbox". GoTrue answers with that same code for two different
+things: the per-address floor (`[auth.email] max_frequency`) and the
+project's hourly ceiling (`[auth.rate_limit] email_sent`). Under the
+ceiling nothing was sent at all — so the person told to check their inbox
+would find, at best, a code that expired ten minutes after they signed up,
+and no way to learn the mail never left. The sentence now claims nothing:
+"Şu an yeni kod gönderemedik. Gelen kutunda kod varsa onu yaz, yoksa
+birazdan tekrar iste." `over_request_rate_limit`, which reaches the same
+endpoint, takes the same branch — before, it still fell through to the red
+error the change set out to remove.
+
+**Two decisions moved where the battery can hold them.** The review made
+the point the repo already lives by: `lib/otp.ts` and `lib/oauth.ts` exist
+so that anything decidable without a device is decided there and tested.
+Both new rules were sitting in screens and in a module the battery cannot
+load, so `refusedSend(code)` (wait or show) and `tokenOutcome(result,
+message)` (exchange, cancelled or failed) are now pure functions with
+tables against them. The second is the one worth having: it is the rule
+that a sheet the person closed and a sheet that finished with nothing are
+different answers, and folding them back together would put a silent
+button back on the welcome screen.
+
+**Three corrections to the entry above, "The dev build, and the review of
+The door, rebuilt".**
+
+- It said tapping Apple "opened iOS's own Sign in with Apple sheet". It did
+  not. What opened is the alert iOS raises when the device has no Apple
+  account at all — "Apple Hesabı'nıza giriş yapın / Ayarlar'da..." — which
+  sits _before_ the authorization request proper. What that proves is
+  real but smaller: the native module was reached and the OS took the
+  request. Apple's consent sheet never opened and cannot on a simulator
+  signed into nothing.
+- The entitlement is true on disk (`com.apple.developer.applesignin` in the
+  generated `Juno.entitlements`), which is how it is known — not from that
+  screenshot, which the entry had leaning on it.
+- "Closing it returns the app's own sentence" is what happened, but it is
+  worth saying why, because read against `lib/oauth.ts` it looks like a
+  contradiction: a cancellation deliberately draws nothing. Dismissing that
+  OS alert comes back as a failure, not a cancellation. Useful to know
+  about `expo-apple-authentication`, and now written down.
+
+**The exec bit, for the third time in five commits — and this time the
+cause.** `contracts/init.sh` went from 755 to 644 in a commit whose only
+change to it was one word in a comment. The cause is the editing pattern
+this repo adopted after the truncation near-miss: write a temporary file,
+rename it over the original. The rename is atomic and safe, and the new
+file carries the umask's 644 — the mode is not part of the content, so
+nothing in a diff shows it and the whole battery stays green while
+`./contracts/init.sh` stops working. Two fixes: every edit here now copies
+the original's mode onto the temp file before the rename, and the battery
+has an `exec bits` step that fails if any tracked `*.sh` is not `100755`.
+It is the first step, because it costs nothing.
+
+**Not fixed, recorded instead.** The three new screenshots were 6.7 MB
+together; a lossless recompress halved them, and they are still three
+times the size of screenshots of the same screens at the same resolution
+taken on 2026-09-09. Quantising to 256 colours would halve them again and
+band every gradient in a dark UI — which is the one thing a screenshot
+kept as evidence must not do. Left large.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya `.claude/hooks/verify.sh` · An `exec bits` step: fail
+  the battery if any tracked `*.sh` is not mode 100755. Three commits in
+  five here were spent restoring one, and the cause is generic to every
+  product an agent edits — writing a temp file and renaming it over the
+  original drops the mode, and no content diff shows it. Applied here;
+  parked for `/update-stack`.

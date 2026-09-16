@@ -29,6 +29,23 @@ step() {
   fi
 }
 
+# Every tracked shell script must keep its exec bit. Three commits in five
+# were spent putting one back (NOTES 2026-09-16): an editor that writes a
+# temporary file and renames it over the original gives the new file the
+# default 644, the change is invisible in a content diff, and the whole
+# battery stays green while `./contracts/init.sh` stops working.
+exec_bits() {
+  local bad
+  bad="$(git ls-files -s -- '*.sh' | awk '$1 != "100755"' | cut -f2-)"
+  [ -z "$bad" ] || {
+    echo "tracked shell scripts without the exec bit:"
+    echo "$bad"
+    echo "fix with: git update-index --chmod=+x <path>"
+    return 1
+  }
+}
+
+step "exec bits" exec_bits
 step "typecheck" npm run typecheck --workspaces --if-present
 step "lint"      npm run lint --workspaces --if-present
 step "format"    npx prettier --check .

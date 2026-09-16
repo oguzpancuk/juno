@@ -4,6 +4,7 @@ import {
   RESEND_COOLDOWN_MS,
   isCompleteOtp,
   normalizeOtp,
+  refusedSend,
   resendSecondsLeft,
 } from './otp';
 
@@ -43,6 +44,26 @@ describe('isCompleteOtp', () => {
 
   it('is the length the mail template promises', () => {
     expect(OTP_LENGTH).toBe(6);
+  });
+});
+
+describe('refusedSend', () => {
+  it("waits out both of GoTrue's rate limits", () => {
+    // The per-address floor and the project's hourly ceiling. The screen
+    // starts its countdown on either, because the server is counting.
+    expect(refusedSend('over_email_send_rate_limit')).toBe('wait');
+    expect(refusedSend('over_request_rate_limit')).toBe('wait');
+  });
+
+  it('shows anything else as the error it is', () => {
+    for (const code of [
+      'email_address_invalid',
+      'user_already_exists',
+      'unexpected_failure',
+      undefined,
+    ]) {
+      expect(refusedSend(code)).toBe('error');
+    }
   });
 });
 

@@ -130,9 +130,11 @@ describe('sign-up', () => {
     expect(error?.status).toBe(422);
     expect(data.user).toBeNull();
     expect(data.session).toBeNull();
-    // Given as long to arrive as a real one is given in the tests above,
-    // so this proves no mail was sent rather than that none had arrived
-    // yet. `waitForMail` throws when nothing lands, which is the pass.
+    // Three seconds, where a real mail in this suite has landed in well
+    // under one: long enough that this reads as "none was sent" rather
+    // than "none had arrived yet", short enough not to add ten seconds to
+    // every battery run. `waitForMail` throws when nothing lands, which
+    // is the pass here.
     await expect(waitForMail(weak, 1, 3000)).rejects.toThrow(/no mail/u);
     expect(await mailsFor(weak)).toEqual([]);
   });

@@ -14,6 +14,7 @@ import {
   OTP_LENGTH,
   isCompleteOtp,
   normalizeOtp,
+  refusedSend,
   resendSecondsLeft,
 } from '@/lib/otp';
 import { supabase } from '@/lib/supabase';
@@ -43,8 +44,10 @@ import { color, font, glass, radius, space, type } from '@/theme/tokens';
  * `email_not_confirmed`, and it asks for a fresh code on arrival. That
  * request is often refused — the server's own floor is a minute on the
  * hosted project, and signing up and then signing in takes less — which
- * is why a refusal there reads as "the code you already have still works"
- * rather than as an error.
+ * is why a refusal there is a notice rather than a red error. It is a
+ * careful notice: the same refusal covers the project's hourly ceiling,
+ * where no mail was sent at all, so it points at the inbox without
+ * promising anything is in it.
  */
 
 const emailParamSchema = z.string().trim().toLowerCase().email();
@@ -97,17 +100,17 @@ export default function Verify() {
       });
       setSending(false);
       if (err) {
-        // The server sent one moments ago and is counting
-        // (`[auth.email] max_frequency`). That is the commonest answer to
-        // the automatic request, and it is not a failure: the code it
-        // refuses to resend is already in the inbox. Either way the
-        // countdown starts, because the server is counting whether or not
-        // this screen was.
-        if (err.code === 'over_email_send_rate_limit') {
+        // Rate-limited, per address or per project (`lib/otp.ts`
+        // `refusedSend`). The countdown starts either way, because the
+        // server is counting whether or not this screen was — and for the
+        // automatic send, which nobody asked for, the sentence is a notice
+        // rather than a red error. What it does not say is that a code is
+        // waiting: under the project's hourly ceiling nothing was sent.
+        if (refusedSend(err.code) === 'wait') {
           const refusedAt = Date.now();
           setSentAt(refusedAt);
           setNow(refusedAt);
-          if (automatic) setNotice(t.verify.stillValid);
+          if (automatic) setNotice(t.verify.notSent);
           else setError(authErrorText(err));
           return;
         }
