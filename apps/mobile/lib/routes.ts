@@ -4,14 +4,22 @@ import type { Href } from 'expo-router';
  * The two links that more than one screen builds, built in one place.
  *
  * The match detail is the second page of the chat — the "Uyum" tab of
- * `(matches)/chat/[id]` — and this is the one place that knows it. The
- * root layout (a match arriving over Realtime) and the deck after a like
- * both land there through this function; a new match therefore opens the
- * chat on its Uyum page, kicker and all (owner default of 2026-09-11: no
- * separate "EŞLEŞTİNİZ" screen).
+ * `(matches)/chat/[id]` — and this is the one place that knows it.
  */
 export function matchDetailHref(matchId: string): Href {
   return { pathname: '/chat/[id]', params: { id: matchId, page: 'match' } };
+}
+
+/**
+ * The moment a match lands: the root layout (a match arriving over
+ * Realtime) and the deck after a like both go here first, and this screen
+ * hands on to the chat's Uyum page. It reverses the owner's default of
+ * 2026-09-11 (no separate "EŞLEŞTİNİZ" screen) at their request of
+ * 2026-09-16 ("its a match ekranımız var mı? yoksa yarat"). Inside the
+ * matches stack like every signed-in screen, so the bar stays under it.
+ */
+export function matchArrivedHref(matchId: string): Href {
+  return { pathname: '/match/[id]', params: { id: matchId } };
 }
 
 /** The chat itself, on its thread page. */

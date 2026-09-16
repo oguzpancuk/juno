@@ -147,6 +147,13 @@ export const t = {
       'Uyum bölümü yüklenemedi. Sayfayı yenilersen tekrar denenir.',
     moreOverlays: (n: number) => `${n} tane daha ›`,
     fewerOverlays: 'Daha az göster',
+    /** The moment a match lands (sheet frame 09); owner review pending. */
+    arrived: {
+      title: 'Eşleştiniz!',
+      subtitle: (name: string) => `${name} ile haritalarınız kesişti.`,
+      see: 'Bağlantınızı gör',
+      notNow: 'Şimdi değil',
+    },
   },
   calculating: {
     title: 'Haritan hesaplanıyor',

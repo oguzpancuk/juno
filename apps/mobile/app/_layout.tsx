@@ -11,7 +11,7 @@ import { color } from '@/theme/tokens';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { useMatchListener } from '@/lib/matches';
-import { INTO_MATCHES, matchDetailHref } from '@/lib/routes';
+import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
 
 // The splash stays up until the faces are in: a first frame in the system
@@ -35,7 +35,7 @@ export default function RootLayout() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const onMatch = useCallback((matchId: string) => {
-    router.navigate(matchDetailHref(matchId), INTO_MATCHES);
+    router.navigate(matchArrivedHref(matchId), INTO_MATCHES);
   }, []);
   useMatchListener(userId, onMatch);
 
