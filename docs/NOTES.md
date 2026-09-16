@@ -4887,3 +4887,41 @@ are in the repo. D2 and D5 either draw their ground with the gradient
 primitives or take a licensed image credited beside GeoNames.
 
 Battery: green on `e161263`, tree clean before and after.
+
+## 2026-09-16 — D2, and an accessibility prop that reached one platform
+
+The calculating screen has its sky (`CosmicGround`: a planet's limb, 48
+seeded stars, a warm horizon, all SVG — no photograph, so the nebula
+question stays open without blocking anything) and a bar under the copy
+in as many parts as there are lines. The bar is deliberately not a
+progress bar: the parts are the steps, lit as each is reached, because
+nothing on this screen measures progress and the sheet's continuous bar
+would have claimed it does.
+
+Catching the mid-run frame took a 44-frame burst on a cold start: Expo
+Router keeps a mounted screen across a deep link to the same route, so
+the interval never restarted, and the first burst was all "Opening
+project". Frames 29–35 showed the first line, 36–43 the second, 44 the
+third — the ~950 ms beat observed. Frame 29 still had Expo Go's launch
+overlay fading; 35 is the one in `screenshots/`. The screen was reached
+through a temporary `app/preview.tsx` deleted before the commit; it only
+ever shows after a real sign-up.
+
+**The review loop earned its keep, three rounds on one View.** Round one:
+the bar's `progressbar` role sat on a plain View with no `accessible`,
+so on iOS it was not an element at all — `Meter` had the same gap, fixed
+alongside. Round two: the fix used `accessibilityValue={{ text }}`, which
+react-native-web 0.21 does not know, so the value reached iOS and not
+the DOM; and "1. adım, 3 adımdan" was English word order. Round three,
+on `aria-valuetext` + `role` + `aria-label` and "3 adımdan 1. adım":
+APPROVE, traced through the installed sources on both sides. One more
+of the same class in `Track.tsx` is fixed in the closing commit.
+
+Twice the same class, so a gate rather than a memory: a ROADMAP item for
+an ESLint rule refusing the `accessibility*` spellings that have an
+`aria-*` twin, with the migration of the six files that still carry
+them. Android note from round two, not acted on (Android is deferred):
+`BandMeter` inside the deck's accessible Pressable would be a second
+TalkBack stop announcing the band twice.
+
+Battery: green on every commit; review chain `4138eec..d0d2252`.

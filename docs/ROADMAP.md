@@ -1444,6 +1444,20 @@ controls that take one gesture instead of a dozen taps.
       — done when: the brief matches the shipped surface list, and
       `screenshots/d8-*.png` show each screen dressed.
 
+- [ ] **Accessibility props in the spelling every target reads.** Two
+      reviews on D2 found the same class: `accessibilityValue`,
+      `accessibilityRole` and `accessibilityElementsHidden` reach iOS
+      and not the DOM under react-native-web 0.21, while `aria-valuetext`,
+      `role`, `aria-label` and `aria-hidden` reach both (React Native
+      folds them into its own props). The step bar and the track thumbs
+      now use the aria spelling; `Meter`, `Chip`, `Glow`, `CosmicGround`,
+      `discover.tsx` and `Popup.tsx` still carry the old one, and nothing
+      stops the next screen from adding more.
+      — done when: an ESLint rule (`no-restricted-syntax` on the JSX
+      attribute names) refuses the `accessibility*` spellings that have
+      an `aria-*`/`role` twin, every existing use is migrated, and the
+      battery is green (battery).
+
 <!-- Assets: the sheet's nebula grounds are photographs, and none are in
      the repo. Whatever D2 and D5 ground themselves on has to be either
      drawn with the gradient primitives (no shader, because the same code
