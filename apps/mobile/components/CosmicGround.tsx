@@ -29,9 +29,15 @@ import { color } from '@/theme/tokens';
  * only: it sits under everything and takes no touches. With Reduce
  * Motion on, nothing moves.
  */
-/** How long a falling star takes, and how long the sky waits between. */
+/**
+ * How long a falling star takes, how long the sky waits between, and how
+ * soon the first one comes: a screen a person has just arrived on shows
+ * one within a few seconds (owner, 2026-09-16: the door had none to
+ * see), then settles into the longer rhythm.
+ */
 const FALL_MS = 900;
 const FALL_GAP_MS = { min: 7000, max: 16000 } as const;
+const FIRST_FALL_MS = { min: 1200, max: 3200 } as const;
 // react-native-web has no native driver and warns once per app run.
 const NATIVE = Platform.OS !== 'web';
 
@@ -267,7 +273,9 @@ function Nebula({
  */
 function FallingStar({ width, height }: { width: number; height: number }) {
   const [progress] = useState(() => new Animated.Value(0));
-  const [pass, setPass] = useState(() => nextPass(width, height));
+  // Nothing until the first timer: the sky arrives still, and the first
+  // star comes a moment later rather than mid-fall on the first frame.
+  const [pass, setPass] = useState<Pass | null>(null);
   // Read at the moment the next fall is drawn, not held by the effect:
   // with the dimensions among its deps a resize replayed the current
   // fall from its start (review, 2026-09-16).
@@ -279,15 +287,22 @@ function FallingStar({ width, height }: { width: number; height: number }) {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let fall: Animated.CompositeAnimation | null = null;
     let live = true;
-    const wait = () => {
+    const wait = (gap: { readonly min: number; readonly max: number }) => {
       timer = setTimeout(
         () => {
           if (!live) return;
           setPass(nextPass(window.current.width, window.current.height));
         },
-        FALL_GAP_MS.min + Math.random() * (FALL_GAP_MS.max - FALL_GAP_MS.min),
+        gap.min + Math.random() * (gap.max - gap.min),
       );
     };
+    if (pass === null) {
+      wait(FIRST_FALL_MS);
+      return () => {
+        live = false;
+        if (timer !== null) clearTimeout(timer);
+      };
+    }
     progress.setValue(0);
     fall = Animated.timing(progress, {
       toValue: 1,
@@ -296,7 +311,7 @@ function FallingStar({ width, height }: { width: number; height: number }) {
       useNativeDriver: NATIVE,
     });
     fall.start(({ finished }) => {
-      if (finished && live) wait();
+      if (finished && live) wait(FALL_GAP_MS);
     });
     return () => {
       live = false;
@@ -310,11 +325,11 @@ function FallingStar({ width, height }: { width: number; height: number }) {
     () => ({
       translateX: progress.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, pass.travel * pass.dx],
+        outputRange: [0, (pass?.travel ?? 0) * (pass?.dx ?? 0)],
       }),
       translateY: progress.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, pass.travel * pass.dy],
+        outputRange: [0, (pass?.travel ?? 0) * (pass?.dy ?? 0)],
       }),
       opacity: progress.interpolate({
         inputRange: [0, 0.05, 0.8, 1],
@@ -323,6 +338,7 @@ function FallingStar({ width, height }: { width: number; height: number }) {
     }),
     [pass, progress],
   );
+  if (pass === null) return null;
   return (
     <Animated.View
       style={[

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Card, OutlineButton } from '@/components/ui';
 import { BlockedList } from '@/components/BlockedList';
 import { LegalText } from '@/components/LegalText';
 import { updateLocation } from '@/lib/discover';
@@ -8,7 +9,7 @@ import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color, font, space, type } from '@/theme/tokens';
+import { color, font, radius, space, type } from '@/theme/tokens';
 
 export type SettingsView = 'menu' | 'blocked' | 'legal';
 
@@ -135,33 +136,34 @@ export function SettingsPanel({
 
   return (
     <View style={styles.panel} testID="settings-screen">
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => onView('blocked')}
-        testID="open-blocked"
-      >
-        <Text style={styles.link}>{t.blocked.open}</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => onView('legal')}
-        testID="open-legal"
-      >
-        <Text style={styles.link}>{t.legal.open}</Text>
-      </Pressable>
-      <Text style={styles.label}>{t.settings.location}</Text>
-      <Pressable
-        testID="refresh-location"
-        style={[styles.button, locating === 'working' && styles.buttonBusy]}
-        disabled={locating === 'working'}
-        onPress={() => void refreshLocation()}
-      >
-        <Text style={styles.buttonText}>
-          {locating === 'working'
-            ? t.settings.locating
-            : t.settings.updateLocation}
-        </Text>
-      </Pressable>
+      {/* Grouped rows, the way a settings list reads on the platform
+          (owner, 2026-09-16: the flat buttons were disliked): what opens
+          something ends in a chevron, what does something does not, and
+          the one that cannot be undone sits alone in its own group. */}
+      <Card style={styles.group}>
+        <Row
+          label={t.blocked.open}
+          chevron
+          onPress={() => onView('blocked')}
+          testID="open-blocked"
+        />
+        <Row
+          label={t.legal.open}
+          chevron
+          onPress={() => onView('legal')}
+          testID="open-legal"
+        />
+        <Row
+          label={
+            locating === 'working'
+              ? t.settings.locating
+              : t.settings.updateLocation
+          }
+          disabled={locating === 'working'}
+          onPress={() => void refreshLocation()}
+          testID="refresh-location"
+        />
+      </Card>
       {locating === 'done' ? (
         <Text style={styles.ok} testID="location-updated">
           {t.settings.locationUpdated}
@@ -175,51 +177,81 @@ export function SettingsPanel({
       ) : null}
       <Text style={styles.hint}>{t.settings.locationHint}</Text>
 
-      <Text style={styles.label}>{t.safety.title}</Text>
-      <Pressable
-        testID="sign-out"
-        style={[styles.button, deleting && styles.buttonBusy]}
-        // A deletion in flight signs out on its own when it finishes.
-        disabled={deleting}
-        onPress={() => onLeave(signOutAndLeave)}
-      >
-        <Text style={styles.buttonText}>{t.settings.signOut}</Text>
-      </Pressable>
-      <Pressable
-        testID="delete-account"
-        style={[styles.button, deleting && styles.buttonBusy]}
-        disabled={deleting}
-        onPress={() => {
-          setDeleteError(null);
-          setConfirmingDelete((open) => !open);
-        }}
-      >
-        <Text style={styles.danger}>
-          {deleting ? t.safety.deleting : t.safety.deleteAccount}
-        </Text>
-      </Pressable>
-      {confirmingDelete && !deleting ? (
-        <View style={styles.confirm} testID="delete-confirm">
-          <Text style={styles.hint}>{t.safety.deleteConfirm}</Text>
-          <Pressable
-            testID="delete-yes"
-            style={styles.confirmDanger}
-            onPress={doDelete}
-          >
-            <Text style={styles.danger}>{t.safety.deleteTitle}</Text>
-          </Pressable>
-          <Pressable
-            style={styles.button}
-            onPress={() => {
-              setConfirmingDelete(false);
-            }}
-          >
-            <Text style={styles.buttonText}>{t.safety.cancel}</Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <Card style={styles.group}>
+        <Row
+          label={t.settings.signOut}
+          // A deletion in flight signs out on its own when it finishes.
+          disabled={deleting}
+          onPress={() => onLeave(signOutAndLeave)}
+          testID="sign-out"
+        />
+      </Card>
+
+      <Card style={styles.group}>
+        <Row
+          label={deleting ? t.safety.deleting : t.safety.deleteAccount}
+          danger
+          disabled={deleting}
+          onPress={() => {
+            setDeleteError(null);
+            setConfirmingDelete((open) => !open);
+          }}
+          testID="delete-account"
+        />
+        {confirmingDelete && !deleting ? (
+          <View style={styles.confirm} testID="delete-confirm">
+            <Text style={styles.hint}>{t.safety.deleteConfirm}</Text>
+            <Pressable
+              testID="delete-yes"
+              style={({ pressed }) => [
+                styles.confirmDanger,
+                pressed && styles.dim,
+              ]}
+              onPress={doDelete}
+            >
+              <Text style={styles.danger}>{t.safety.deleteTitle}</Text>
+            </Pressable>
+            <OutlineButton
+              label={t.safety.cancel}
+              onPress={() => {
+                setConfirmingDelete(false);
+              }}
+            />
+          </View>
+        ) : null}
+      </Card>
       {deleteError ? <Text style={styles.error}>{deleteError}</Text> : null}
     </View>
+  );
+}
+
+/** One line of a group: a label, and a chevron where it opens a page. */
+function Row({
+  label,
+  chevron = false,
+  danger = false,
+  disabled = false,
+  onPress,
+  testID,
+}: {
+  label: string;
+  chevron?: boolean;
+  danger?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, (pressed || disabled) && styles.dim]}
+      {...(testID === undefined ? {} : { testID })}
+    >
+      <Text style={[styles.rowLabel, danger && styles.danger]}>{label}</Text>
+      {chevron ? <Text style={styles.chevron}>›</Text> : null}
+    </Pressable>
   );
 }
 
@@ -230,35 +262,28 @@ const styles = StyleSheet.create({
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
   back: { ...type.body, color: color.textMuted },
   dim: { opacity: 0.6 },
-  link: {
-    fontFamily: font.regular,
-    color: color.textMuted,
-    fontSize: 15,
-    paddingVertical: 8,
+  // A group is a card with its padding on the rows, so a row's press
+  // state and separator run edge to edge inside it.
+  group: { padding: 0, gap: 0 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 52,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
   },
-  label: {
-    fontFamily: font.regular,
-    color: color.textMuted,
-    fontSize: 14,
-    marginTop: 12,
-  },
+  rowLabel: { ...type.body, color: color.text },
+  chevron: { fontSize: 22, lineHeight: 24, color: color.textFaint },
   hint: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
   error: { fontFamily: font.regular, color: color.danger },
   ok: { fontFamily: font.regular, color: color.ok, fontSize: 13 },
-  danger: { color: color.danger, fontSize: 15, fontFamily: font.semibold },
-  confirm: { gap: 8 },
+  danger: { ...type.body, color: color.danger, fontFamily: font.semibold },
+  confirm: { gap: space.sm, padding: space.lg, paddingTop: 0 },
   confirmDanger: {
     backgroundColor: color.dangerSurface,
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: radius.pill,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  button: {
-    backgroundColor: color.surfaceSoft,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  buttonBusy: { opacity: 0.6 },
-  buttonText: { color: color.text, fontSize: 15, fontFamily: font.semibold },
 });
