@@ -1,0 +1,18 @@
+<!--
+  The sign-up mail. It carries a code and no link on purpose: the app is a
+  phone app, the person is already looking at the code screen
+  (`app/verify.tsx`), and a link would have to come back into the app
+  through a deep link that the web client and the simulator resolve
+  differently. `{{ .Token }}` is the six-digit code
+  (`[auth.email] otp_length`); "10 dakika" is `otp_expiry = 600`, so the
+  two move together.
+-->
+<h2>Juno doğrulama kodun</h2>
+<p>
+  Kodun:
+  <strong style="font-size: 24px; letter-spacing: 4px">{{ .Token }}</strong>
+</p>
+<p>10 dakika geçerli. Uygulamadaki ekrana yaz, hesabın açılsın.</p>
+<p style="color: #888">
+  Sen istemediysen bu e-postayı yok say; kimse hesabına giremez.
+</p>

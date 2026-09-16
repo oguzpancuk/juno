@@ -40,4 +40,7 @@ fi
 curl -sf http://localhost:8082/status >/dev/null  # smoke: Metro up
 
 echo "init: Supabase at $API_URL, Expo at http://localhost:8082 (log: /tmp/juno-expo.log)"
-echo "init: open in the simulator with: xcrun simctl openurl booted exp://127.0.0.1:8082"
+# Expo Go cannot run this app any more: Apple and Google sign-in are native
+# modules (docs/adr/0011-native-sign-in.md), so the simulator needs the dev
+# build — `npx expo run:ios` once, then just open Juno.
+echo "init: open Juno in the simulator (dev build; \`npx expo run:ios\` if it is not installed)"

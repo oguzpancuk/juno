@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { env } from './env';
 import { sessionStorage } from './session-storage';
 
@@ -66,7 +66,11 @@ export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
     storage: sessionStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // The web client comes back from Google carrying a code in its URL
+    // (`lib/providers.web.ts`), and this is what spends it. Off on a
+    // phone, where nothing is ever redirected into the app and the only
+    // URLs it opens are its own deep links.
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
 

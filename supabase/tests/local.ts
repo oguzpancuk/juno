@@ -15,6 +15,10 @@ const StatusSchema = z.object({
   API_URL: z.string().url(),
   ANON_KEY: z.string().min(1),
   SERVICE_ROLE_KEY: z.string().min(1),
+  // The local mail server (Mailpit, `[local_smtp]`). It accepts every mail
+  // GoTrue sends and delivers none, which is what lets the battery read a
+  // sign-up code the way a person reads their inbox.
+  MAILPIT_URL: z.string().url(),
 });
 
 export type LocalStack = z.infer<typeof StatusSchema>;

@@ -7,6 +7,7 @@ export const t = {
     withGoogle: 'Google ile giriş yap',
     haveAccount: 'Zaten hesabın var mı? Giriş yap',
     withEmail: 'E-posta ile devam et',
+    connecting: 'Bağlanıyor…',
   },
   signIn: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
@@ -28,15 +29,31 @@ export const t = {
     busy: 'Hesap açılıyor…',
     toSignIn: 'Zaten hesabın var mı? Giriş yap',
     passwordHint: (min: number) => `En az ${min} karakter.`,
-    // Only when the auth project confirms addresses by mail: the account
-    // exists but there is no session until the mail is acted on.
-    confirmSent:
-      'Hesabın açıldı. E-postana gelen doğrulama adımını tamamla, sonra giriş yap.',
     errors: {
       email: 'Geçerli bir e-posta adresi gir.',
       password: (min: number, max: number) =>
         `Parola en az ${min}, en fazla ${max} karakter olmalı.`,
     },
+  },
+  /**
+   * The code screen. It stands between `signUp` and a session: the account
+   * exists, the address is not confirmed yet, and nothing else in the app
+   * is reachable until the code from the mail is typed here.
+   */
+  verify: {
+    title: 'Kodu gir',
+    subtitle: (email: string) =>
+      `${email} adresine altı haneli bir kod gönderdik.`,
+    label: 'Doğrulama kodu',
+    placeholder: '••••••',
+    submit: 'Doğrula',
+    busy: 'Doğrulanıyor…',
+    resend: 'Kodu tekrar gönder',
+    resendIn: (seconds: number) => `Kodu tekrar gönder (${seconds} sn)`,
+    resent: 'Yeni kod gönderildi.',
+    spamHint: 'Gelmediyse birkaç saniye bekle, sonra spam klasörüne bak.',
+    wrongAddress: 'Adresi yanlış mı yazdın? Geri dön, baştan kaydol.',
+    back: '‹ Geri',
   },
   onboarding: {
     title: 'Doğum bilgilerin',
@@ -315,10 +332,21 @@ export const t = {
     accountExists: 'Bu e-postayla zaten bir hesap var. Giriş yapmayı dene.',
     emailNotConfirmed:
       'E-posta adresin henüz doğrulanmamış. Gelen kutunu kontrol et.',
+    // One sentence for two cases because GoTrue answers both with
+    // `otp_expired` and "Token has expired or is invalid": a code that was
+    // never issued and a code that ran out are the same 403 (probed
+    // against the local stack, 2026-09-16).
+    otpInvalid:
+      'Kod yanlış ya da süresi dolmuş. Yeni bir kod iste, on dakika içinde kullan.',
     emailInvalid: 'E-posta adresi geçersiz görünüyor.',
     rateLimited: 'Çok sık denedin, biraz bekle.',
     alreadyExists: 'Bu kayıt zaten var.',
     invalidData: 'Girdiğin bilgiler kabul edilmedi, kontrol et.',
     notAllowed: 'Bunu yapmaya iznin yok.',
+    // Apple or Google refused, or answered with something unusable. The
+    // person did nothing wrong and e-mail is still open to them, so the
+    // sentence points there rather than explaining an OAuth failure.
+    providerFailed:
+      'Giriş tamamlanamadı. Tekrar dene ya da e-posta ile devam et.',
   },
 } as const;

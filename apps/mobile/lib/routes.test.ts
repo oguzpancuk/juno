@@ -24,6 +24,9 @@ const SIGNED_OUT = new Set([
   'index.tsx',
   'welcome.tsx',
   'sign-in.tsx',
+  // The code screen: an account exists, but there is no session until the
+  // mailed code is spent here.
+  'verify.tsx',
   'onboarding.tsx',
   'legal.tsx',
 ]);

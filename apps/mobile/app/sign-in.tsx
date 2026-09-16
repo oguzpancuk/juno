@@ -33,10 +33,13 @@ import { color, font, glass, radius, space, type } from '@/theme/tokens';
  * password. The mode arrives as a route param (welcome links to each) and
  * a link at the bottom flips it in place, keeping what was typed.
  *
- * Sign-up gives a session at once because the auth project does not
- * confirm addresses by mail (`supabase/config.toml`, owner 2026-09-11). A
- * project that does answers with no session and no error; that case shows
- * a sentence instead of a spinner that never ends.
+ * Neither door ends here any more. Sign-up answers with a user and no
+ * session — the project confirms addresses by mail (`supabase/config.toml`
+ * `enable_confirmations`, owner 2026-09-16) — so it hands on to
+ * `/verify`, where the mailed code is spent. Sign-in on an address that
+ * was never confirmed is refused with `email_not_confirmed`, and goes to
+ * the same screen with `?resend=1` so a fresh code is on its way before
+ * the person has read the sentence.
  */
 export default function SignIn() {
   const params = useLocalSearchParams<{ mode?: string }>();
@@ -49,7 +52,6 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const parsed = parseCredentials({ email, password });
   const canSubmit = parsed.ok && !busy;
@@ -68,23 +70,42 @@ export default function SignIn() {
     if (!parsed.ok) return;
     setBusy(true);
     setError(null);
-    setNotice(null);
     const { data, error: err } =
       mode === 'up'
         ? await supabase.auth.signUp(parsed.value)
         : await supabase.auth.signInWithPassword(parsed.value);
     if (err) {
+      // An account whose address was never confirmed: the code screen is
+      // where it is finished, and it asks for a fresh code on arrival.
+      // This is a push, not a dismiss — the form is still behind it and
+      // must be usable if the person comes back, so busy goes off.
+      if (err.code === 'email_not_confirmed') {
+        router.push({
+          pathname: '/verify',
+          params: { email: parsed.value.email, resend: '1' },
+        });
+        setBusy(false);
+        return;
+      }
       setBusy(false);
       setError(authErrorText(err));
       return;
     }
     if (!data.session) {
-      // The account exists but the provider wants the address confirmed
-      // first (a hosted project with confirmations on). Nothing to wait
-      // for here: say so, and leave the form for the sign-in that follows.
+      // Sign-up, every time: GoTrue has mailed a six-digit code and given
+      // no session. `/verify` trades one for the other. A sign-in with no
+      // session and no error is not a case GoTrue produces; it would leave
+      // a spinner running for ever, so it reads as a failure instead.
+      if (mode === 'up') {
+        router.push({
+          pathname: '/verify',
+          params: { email: parsed.value.email },
+        });
+        setBusy(false);
+        return;
+      }
       setBusy(false);
-      if (mode === 'up') setNotice(t.signUp.confirmSent);
-      else setError(t.errors.generic);
+      setError(t.errors.generic);
       return;
     }
     // Busy stays on: the screen is leaving. The dismiss pops the root stack
@@ -100,7 +121,6 @@ export default function SignIn() {
   const flip = () => {
     setMode(mode === 'up' ? 'in' : 'up');
     setError(null);
-    setNotice(null);
   };
 
   return (
@@ -181,7 +201,6 @@ export default function SignIn() {
         </Link>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       {/* Not while a request is in flight: its answer would land under
           the other mode's title. */}
       <LinkText
@@ -223,6 +242,5 @@ const styles = StyleSheet.create({
   consent: { ...type.bodySmall, color: color.textFaint },
   consentLink: { ...type.bodySmall, color: color.textMuted },
   error: { ...type.body, color: color.danger, marginTop: space.md },
-  notice: { ...type.body, color: color.textMuted, marginTop: space.md },
   flip: { textAlign: 'center', marginTop: space.md },
 });

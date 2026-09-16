@@ -27,6 +27,21 @@
      CLAUDE.md) that maya should inherit. /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
 
+- 2026-09-16 · maya, an RN/Expo skill · On macOS, `pod install` under a
+  Homebrew Ruby crashes with `Unicode Normalization not appropriate for
+ASCII-8BIT` when the shell has no UTF-8 locale — which an agent's shell
+  does not have. `LANG=en_US.UTF-8` before `expo run:ios` fixes it.
+  CocoaPods prints the remedy as a warning and then fails with an
+  unrelated-looking Ruby backtrace, so the warning is easy to scroll past.
+  Cost two failed builds here (NOTES 2026-09-16, "The door, rebuilt").
+
+- 2026-09-16 · maya, an RN/Expo skill · React's `react-hooks/purity` rule
+  fails the lint on `Date.now()` in a render body but allows it in a
+  `useState` lazy initialiser, and a second rule refuses a mount effect
+  that calls `setState` synchronously. A clock a screen needs from its
+  first frame therefore belongs in `useState(() => Date.now())` with an
+  interval updating it — not in an effect, and not in the render body.
+
 - 2026-09-16 · `CLAUDE.md` (Standards) · A test that expects a refusal
   should use input only the rule under test can refuse, and assert the
   refusal's message as well as its code. Twice in this repo a test asserting
@@ -5238,3 +5253,151 @@ an empty memory has to fail loudly, and it did not.
   all. The guard that does cover a partial write is on the writing side:
   compute the content, write a temporary file, rename it over the
   original.
+
+## 2026-09-16 — The door, rebuilt: a code that really arrives, and two buttons that really sign in
+
+The owner's ask of the evening, both halves at once: "kayıt olma esnasında
+gerçekten kodun mail olarak iletilmesini sağlamamız lazım. ayrıca google ve
+apple ile girişi. her şeyi kur, ben yapmam gerekenleri en son yapayım." So:
+everything that can be built is built and verified here, and what needs an
+account, a card or a domain is written down as a checklist —
+`docs/auth-setup.md`, in Turkish, because it is the owner's to click
+through. The decision behind both halves is ADR-0011.
+
+**Two owner questions asked up front, because each one changes the
+checklist.** Native providers or a browser redirect — the owner took
+native, knowing the cost (Expo Go can no longer run this app). And which
+mail service — Resend on the owner's own domain. The second answer is why
+`docs/auth-setup.md` names Resend's host and DNS records rather than
+listing options.
+
+### The code that arrives
+
+`[auth.email] enable_confirmations` is on. `signUp` now returns a user and
+no session; GoTrue mails the six digits of `{{ .Token }}` and
+`app/verify.tsx` spends them through `verifyOtp({ type: 'signup' })`. A
+sign-in refused with `email_not_confirmed` goes to the same screen with
+`?resend=1`, so a fresh code is already on its way before the person has
+read anything. The mail carries a code and no link on purpose: a link would
+have to come back into the app through a deep link that Expo Go, a dev
+build and the web client each resolve differently.
+
+Five things were probed against the local stack rather than assumed, and
+each one decided a line of code:
+
+- A wrong code and an expired code are the same answer — `otp_expired`,
+  403, "Token has expired or is invalid". So `lib/errors.ts` has one
+  sentence for both, and it says so.
+- A second sign-up on a confirmed address is still `user_already_exists`,
+  which the app already had a sentence for. (GoTrue obfuscates that case in
+  some configurations; this one does not.)
+- An unconfirmed sign-in is `email_not_confirmed`, 400 — the code that
+  drives the push to the verify screen.
+- A resend within `max_frequency` is `over_email_send_rate_limit`. That is
+  why the code screen's countdown starts at **mount**, not at its first
+  tap: the sign-up one screen back has just sent a mail, and a resend link
+  that is bright on arrival only buys a rate-limit sentence.
+- The local mail server is **Mailpit**, not Inbucket — the CLI renamed the
+  section to `[local_smtp]` and changed the API with it. `/api/v1/search`
+  and `/api/v1/message/{id}`, not `/api/v1/mailbox/{name}`.
+
+The battery reads the inbox. `supabase/tests/auth.test.ts` is nine tests
+now, three of which fetch the mail out of Mailpit through
+`tests/mailpit.ts` and verify the code they find. That is the point: a test
+that only asserted "signUp returns no session" would pass with the mailer
+switched off entirely, which is precisely the failure the owner asked to
+close. The sender and subject are pinned there too, because both come from
+config rather than from the template and both are what a person scans for
+in a crowded inbox. `[local_smtp]` now sets them, so what Mailpit shows is
+what the hosted project will send — before this the mails were signed
+"Admin <admin@email.com>".
+
+Two config numbers moved with it. `email_sent` was 2 an hour, which is a
+sign-up and a half and less than one battery run; it is 100 locally, with a
+comment that the hosted project needs its own figure. And `max_frequency`
+stays a second locally so the resend test does not sleep for a minute,
+where the app's own countdown is sixty — the server floor and the button's
+promise are different numbers on purpose, and the hosted project should
+raise the floor to match.
+
+**Walked end to end in the web client** against the local stack, at 375×812:
+sign-up → the mail in Mailpit, from "Juno <hesap@juno.app>", subject "Juno
+doğrulama kodun" → a wrong code refused with the app's own Turkish sentence
+→ the mailed code → onboarding. The countdown was watched running down from 59.
+
+### The two buttons
+
+They have been placeholders since 2026-09-11, on the owner's instruction
+("arkası şimdilik boş kalsın"), with the App Store Review 4.8 risk recorded
+against the TestFlight item. That risk is closed from the code's side.
+
+Apple goes through `expo-apple-authentication` and Google through
+`@react-native-google-signin/google-signin`; each returns an ID token and
+Supabase exchanges it with `signInWithIdToken`. Nothing is redirected, so
+no deep link and no URL allow-list is in the path on a phone. The web
+client has neither module, so Metro swaps in `lib/providers.web.ts`, which
+sends the tab to Google and back — `detectSessionInUrl` is now on for the
+web and only the web, which is what spends the code in the returned URL.
+Apple is not offered off iOS at all: the browser route to it needs an Apple
+Services ID and a signing key that the App ID does not give, and a button
+that opens a page saying `invalid_client` is worse than no button.
+
+Which is the shape of the whole thing: **a provider that cannot work is not
+drawn.** `lib/oauth.ts` `availability` is the one decision — Apple where
+the device offers it, Google where a client ID was compiled into the build
+— and it is pure, so the battery holds it. Everything that needs a phone
+sits behind it in `lib/providers.ts`, which the battery cannot load at all.
+
+The credentials reach the build as `EXPO_PUBLIC_*` variables. `app.config.ts`
+is new and layers them onto `app.json`, which stays the readable base (and
+the file `theme/tokens.test.ts` reads the colours out of). It derives the
+iOS URL scheme from the client ID rather than taking it as a second
+variable, because the two being out of step is a mute failure: iOS
+registers a scheme nothing calls back on, and Google's sheet simply never
+returns. The same rule is in `lib/oauth.ts` under test; it is repeated in
+`app.config.ts` rather than imported because that file is evaluated outside
+the app's module graph.
+
+### Expo Go is gone, and what replaced it
+
+A native module is not in Expo Go, so `contracts/init.sh` no longer prints
+an `exp://` URL — the simulator needs a dev build. That cost was the
+owner's to accept and they did; it also had to be paid before TestFlight
+regardless.
+
+Getting the first one built cost two failed runs, both worth recording:
+
+- `pod install` died with `Unicode Normalization not appropriate for
+ASCII-8BIT` and a Ruby backtrace. The cause is a shell with no `LANG`:
+  CocoaPods warns about it in the same breath and then crashes anyway. With
+  `LANG=en_US.UTF-8` it installs. An agent's shell has no locale by
+  default, so this will happen again in every product built this way.
+- The next run failed downloading React Native's prebuilt core from Maven
+  Central, while the same URL answered 200 to curl a minute later.
+
+### What is NOT verified, and why it is left that way
+
+Neither provider has signed anybody in. Both need credentials that exist
+only in a Google Cloud project and an Apple Developer account, and neither
+existed tonight — which is exactly the part the owner reserved for
+themselves. What is verified is everything up to the token: a prebuild
+produces the Sign in with Apple entitlement and the reversed-client-id URL
+scheme (checked in the generated `Juno.entitlements` and `Info.plist`); the
+pure half is covered by `lib/oauth.test.ts`; the welcome screen renders
+correctly with no provider at all, which is what a build without
+credentials gets. The first real sign-in is the last line of
+`docs/auth-setup.md` and the thing that ticks the ROADMAP box.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya, an RN/Expo skill · "`pod install` under a Homebrew
+  Ruby crashes with `Unicode Normalization not appropriate for ASCII-8BIT`
+  when the shell has no UTF-8 locale — which an agent's shell does not.
+  Export `LANG=en_US.UTF-8` before `expo run:ios`. CocoaPods prints the
+  remedy as a warning and then fails with an unrelated-looking Ruby
+  backtrace, so the warning is easy to scroll past."
+- 2026-09-16 · maya, an RN/Expo skill · "React's new `react-hooks/purity`
+  rule fails a build on `Date.now()` in a render body, but allows it inside
+  a `useState` lazy initialiser — and a mount effect that calls `setState`
+  synchronously is refused by a second rule. A clock a screen needs at
+  mount goes in `useState(() => Date.now())`, with an interval updating it."

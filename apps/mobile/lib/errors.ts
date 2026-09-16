@@ -22,6 +22,14 @@ export function authErrorText(error: AuthError): string {
       return t.errors.accountExists;
     case 'email_not_confirmed':
       return t.errors.emailNotConfirmed;
+    // Every refused code, whatever was wrong with it: GoTrue answers a
+    // wrong code and an expired one identically, so the app cannot tell
+    // them apart and the sentence covers both. `otp_disabled` is the
+    // project having e-mail OTP switched off — nothing a person can fix,
+    // but the same screen is where they would read it.
+    case 'otp_expired':
+    case 'otp_disabled':
+      return t.errors.otpInvalid;
     case 'over_email_send_rate_limit':
     case 'over_request_rate_limit':
       return t.errors.rateLimited;

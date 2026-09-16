@@ -108,8 +108,12 @@ port = 54324
 # Uncomment to expose additional ports for testing user applications that send emails.
 # smtp_port = 54325
 # pop3_port = 54326
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# The sender the local mails carry. Set so what Mailpit shows is what the
+# hosted project will send once `[auth.email.smtp]` is filled in; with
+# these unset GoTrue signs its mails "Admin <admin@email.com>", which is
+# not what the code screen tells people to look for.
+admin_email = "hesap@juno.app"
+sender_name = "Juno"
 
 [storage]
 enabled = true
@@ -198,7 +202,13 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+# 2 is the CLI default and the ceiling Supabase's own built-in sender
+# imposes; with confirmations on it is one and a half sign-ups per hour,
+# which the battery alone exceeds. 100 here covers a test run and a
+# session's worth of manual sign-ups against the local Mailpit, which
+# sends nothing anywhere. The hosted project needs a value matched to its
+# SMTP plan (docs/auth-setup.md).
+email_sent = 100
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -219,56 +229,66 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Confirmations OFF (owner, 2026-09-11: "maili sonra ayarlarız, şimdilik
-# direkt kaydolsun"): a password sign-up yields a session at once and no
-# mail is sent, so an address is not verified at sign-up. The hosted
-# project, when it exists, must mirror this or the app shows "confirmation
-# sent" instead of signing the person in. Turn it back on together with
-# a verification step in the app.
+# Confirmations ON (owner, 2026-09-16: "kayıt olma esnasında gerçekten
+# kodun mail olarak iletilmesini sağlamamız lazım"). A password sign-up
+# now yields NO session: GoTrue mails the six-digit `{{ .Token }}` of the
+# confirmation template, and `app/verify.tsx` exchanges it for a session
+# through `verifyOtp({ type: 'signup' })`. The hosted project must mirror
+# this AND carry SMTP credentials (`[auth.email.smtp]` below) — without
+# them the mail never leaves and the code screen waits for a code nobody
+# can read.
 # Allow/disallow new user signups via email to your project.
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
+# 1s so the battery's resend test does not sleep for a minute. The app's own
+# resend button is on a 60 s countdown (`lib/otp.ts` RESEND_COOLDOWN_MS);
+# the hosted project should raise this to "60s" so the server enforces what
+# the button suggests.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 600
 
-# Use a production-ready SMTP server
+# Production SMTP. Locally this stays off: the stack runs Mailpit
+# (`[local_smtp]` above, http://127.0.0.1:54324), which accepts every mail
+# and delivers none, so a sign-up here shows its code in a browser instead
+# of an inbox.
+#
+# The hosted project is where the code has to reach a real address. Set
+# these four values there — dashboard (Project Settings → Authentication →
+# SMTP Settings), or by exporting RESEND_API_KEY and running
+# `npx supabase config push` with the block below uncommented. Both paths
+# and the DNS records they need are written out in `docs/auth-setup.md`.
+# The sender address must be on a domain verified with the provider;
+# Resend's own onboarding@resend.dev only reaches the account owner.
 # [auth.email.smtp]
 # enabled = true
-# host = "smtp.sendgrid.net"
+# host = "smtp.resend.com"
 # port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# user = "resend"
+# pass = "env(RESEND_API_KEY)"
+# admin_email = "hesap@juno.app"
+# sender_name = "Juno"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
-# Kept from the OTP flow the app no longer has (password sign-in since
-# 2026-09-11): the template renders {{ .Token }}, which nothing in the app
-# reads any more. Harmless while no magic link is sent; if the flow ever
-# returns, the app needs a place to type the code before the mail does.
-[auth.email.template.magic_link]
-subject = "Juno giriş kodun"
-content_path = "./supabase/templates/magic_link.html"
-# Only used while enable_confirmations is on (it is off above); kept so
-# turning confirmations back on sends the same code the OTP mail did.
-# The app has nowhere to type that code: turning confirmations on means
-# a verification step in the app first (docs/NOTES.md, Track A).
+# The one mail the product sends. `signUp` renders it, and so does
+# `resend({ type: 'signup' })` behind the code screen's "Tekrar gönder".
+# There is no magic-link template: nothing in the app calls
+# `signInWithOtp`, so GoTrue is never asked for one.
 [auth.email.template.confirmation]
-subject = "Juno giriş kodun"
-content_path = "./supabase/templates/magic_link.html"
+subject = "Juno doğrulama kodun"
+content_path = "./supabase/templates/verification_code.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -341,6 +361,22 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# Both providers are OFF here and ON in the hosted project, which is the one
+# place their credentials exist (docs/auth-setup.md). Turning either on
+# locally would need a real client ID written into this file for
+# `supabase start` to come up at all, and neither native SDK can be
+# exercised against a stack on 127.0.0.1 anyway — Apple and Google sign the
+# token, and the app hands it to whichever project it points at. What the
+# local stack does still cover is everything after that moment: the profile
+# the session lands on, and the RLS the battery proves.
+#
+# In the hosted project (Authentication → Sign In / Providers):
+#   Apple — Authorized Client IDs: com.oguzpancuk.juno. No Services ID and
+#     no key: those are for the browser flow, which this product does not
+#     use for Apple (`apps/mobile/lib/oauth.ts`).
+#   Google — client ID and secret of the WEB client, plus the iOS client ID
+#     under Authorized Client IDs, or a phone's token is refused for having
+#     the wrong audience.
 [auth.external.apple]
 enabled = false
 client_id = ""

@@ -201,12 +201,39 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       `screenshots/v1-blocked.png` shows the screen in the simulator.
       Undoing a block restores the thread on both sides, which is a
       recorded trade: ADR-0007._
-- [ ] **Sign in with Apple (Apple).** Alongside e-mail and password.
-      The welcome screen already shows an inert "Apple ile giriş yap"
-      button (owner, 2026-09-11); App Store Review Guideline 4.8 means it
-      must work, or go, before the first TestFlight submission.
+- [x] **E-posta doğrulama kodu (owner, 2026-09-16).** Sign-up no longer
+      hands out a session: GoTrue mails a six-digit code and
+      `app/verify.tsx` spends it. Confirmations on, the confirmation
+      template renders `{{ .Token }}`, a resend link with a minute's
+      countdown, and a sign-in refused as `email_not_confirmed` lands on
+      the same screen with a fresh code on its way (ADR-0011).
+      — done when: the battery proves a sign-up mails a code, that a code
+      nobody issued is refused and that the mailed one opens the account —
+      reading the mail out of the local inbox, not assuming it (battery);
+      and the whole path is walked in a client (screenshot).
+      _Done: nine tests in `supabase/tests/auth.test.ts`, three of which
+      read Mailpit through `tests/mailpit.ts`; they also pin the sender
+      and subject, which come from config rather than from the template.
+      Walked end to end in the web client against the local stack: sign-up
+      → the mail in Mailpit (from "Juno <hesap@juno.app>", subject "Juno
+      doğrulama kodun") → a wrong code refused with the app's own sentence
+      → the mailed code → onboarding, with the resend countdown watched
+      running down. Not covered anywhere: real SMTP, which needs the hosted
+      project (`docs/auth-setup.md`)._
+- [ ] **Sign in with Apple and Google (Apple).** Alongside e-mail and
+      password, through each provider's own SDK; the inert buttons of
+      2026-09-11 are gone (ADR-0011). App Store Review Guideline 4.8 means
+      Apple must work before the first TestFlight submission.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).
+      _Built and unverified, deliberately: both paths need credentials that
+      only exist in a Google Cloud project and an Apple Developer account,
+      and neither existed on 2026-09-16. What holds today is the code
+      (`lib/providers.ts`, `lib/providers.web.ts`, the pure half under
+      `lib/oauth.test.ts`), the config plugins (a prebuild produces the
+      Sign in with Apple entitlement and the reversed-client-id URL scheme)
+      and the screens with and without each provider. The owner's steps are
+      `docs/auth-setup.md`; this box is ticked by the first real sign-in._
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
       privacy policy hosted at a URL; about/legal screen credits GeoNames
