@@ -1412,35 +1412,39 @@ controls that take one gesture instead of a dozen taps.
       which the `discover` view already carried. `d3-deck.png` is a seed
       with a bio written into the local database for the picture._
 
-- [x] **D4 — Chart (frame 07).** The frame's colour language on the
-      placement cards: the sign's symbol in a circle tinted by its
-      element. The Overview / Full chart segmented control is not built —
-      the profile keeps its three cards and "Tüm haritanı gör" (C2, C8),
-      and the popup is the full chart — and the full-chart planet list
-      was never drawn with a Juno row here, so there is nothing to drop.
-      — done when: `screenshots/d4-chart.png` shows the cards with the
-      element-coloured sign badges (screenshot).
-      _Done. The engine's `PlacementReading` carries `sign`, pinned by a
-      test against the chart, so a badge cannot disagree with the
-      technical line beside it._
+- [x] **D4 — Chart (frames 07 and 08).** The frame's colour language on
+      the placement cards, and the full chart's two tables.
+      — done when: `screenshots/d4-chart.png` shows the profile's cards
+      with the sign large, the product's title under it and the element
+      badge; `d4-chart-full.png` shows the wheel, the Gezegenler / Evler
+      control and the planet table (screenshot).
+      _Done, in two passes. First the badges (the engine's
+      `PlacementReading` carries `sign`, pinned by a test). Then, on the
+      owner's "chart attığım ss'lerdeki gibi değil": the card leads with
+      the sign's name and keeps the title under it, the technical line
+      and the house readings move to the full chart, and the full chart
+      gains the sheet's tables — every planet with sign and degree, every
+      cusp with its sign — under a segmented control. The wheel's aspect
+      lines take the aspect's kind as colour._
 
-- [x] **D5 — Match and connection (frames 10, 11, 12).** The ring with
-      the band inside it where the frames print 86 %, the five dimensions
-      as tracks, and the aspect cards — glyphs, orb to the arcminute,
-      title, headline, reading — which C2 already built and this dresses.
-      Frame 12 minus the Juno card; frame 09 (the arrival moment) is not
-      a screen of this app — a match lands in the chat's Uyum page.
+- [x] **D5 — Match and connection (frames 09–12).** The ring with the
+      band inside it where the frames print 86 %, the five dimensions as
+      tracks, the aspect cards — glyphs, orb to the arcminute, title,
+      headline, reading — and, at the owner's asking, the arrival moment
+      of frame 09 as its own screen.
       — done when: `screenshots/d5-match.png` shows the ring, the tracks
-      and the two sections, and no digit followed by a percent sign
-      appears on it (screenshot).
-      _Done. `Halo` is the ring, painted with its host's ground (a sheet
-      is `surface`); the tracks fill in thirds with the level's word
-      beside them on up to two lines, since that word is the dimension's
-      value (ADR-0009 §2); each aspect card opens with its glyphs in a
-      pill and the orb across from them. The match page sits on the
-      star field. `d5-match.png` is the deck's Uyum detayı sheet — the
-      same `PairReading` the match page shows — with the ring painted on
-      the sheet's own ground and the tracks under it._
+      and the two sections with no digit followed by a percent sign, and
+      `d9-match-arrived.png` shows the arrival screen (screenshot).
+      _Done. `BandRing` is the one device for the band everywhere (D10);
+      the tracks fill in thirds with the level's word beside them on up
+      to two lines; each aspect card opens with its glyphs coloured by
+      planet and by the aspect's kind (D11). The arrival screen lives in
+      the matches stack like every signed-in screen, loads the two first
+      photos and the band, and hands on to the chat's Uyum page; the deck
+      after a like and the Realtime listener both go there first, once
+      per match id (`firstSightOf`). It reverses the 2026-09-11 default —
+      no separate "EŞLEŞTİNİZ" screen — at the owner's request of
+      2026-09-16. Its four strings await the owner's review._
 
 - [ ] **D6 — Starter and chat (frames 13, 14).** The starter's suggested
       card and its "try another" (already supported: `starterOptions`
@@ -1481,6 +1485,66 @@ controls that take one gesture instead of a dozen taps.
       attribute names) refuses the `accessibility*` spellings that have
       an `aria-*`/`role` twin, every existing use is migrated, and the
       battery is green (battery).
+
+<!-- The owner's six requests of 2026-09-16, after the sheet was on the
+     screens: stars everywhere, glass, one band device, coloured aspects,
+     the chart as drawn, an arrival screen. D9–D12; the chart and the
+     arrival screen are folded into D4 and D5 above. -->
+
+- [x] **D9 — The night sky under every screen, and glass over it.** The
+      star field the owner liked on the match page goes under every
+      screen but settings, and every box, pill, sheet, bubble and input
+      becomes glass — a blur where the platform has one, a translucent
+      fill over it, the light along the top drawn inside — so the sky
+      shows through. Stars in four colours, each breathing in its own
+      time, one falling across a corner now and then; still under Reduce
+      Motion. The chat's two pages share one sky.
+      — done when: `screenshots/g-deck.png`, `g-matches.png`,
+      `g-profile.png`, `g-chat.png` show the sky and the glass on four
+      screens, `g-sheet.png` shows a sheet scattering the deck behind it
+      rather than dimming it, and `g-uyum.png` shows the chat's Uyum page
+      on the same sky (screenshot); the star generator's colour, period
+      and phase are pinned in `stars.test.ts` and every ink clears AA on
+      the glass grounds in `tokens.test.ts` (battery).
+      _Done in three passes: the first put stars and glass everywhere;
+      the owner found the glass "tam olmamış" — a brighter top border
+      mitred into a seam at every rounded corner on iOS, and the blur
+      only dimmed — so the border is one colour with the light drawn
+      inside, the blur is stronger and the tint lighter, and the sheet
+      denser still; the third made the stars breathe in colour. Review
+      caught that a loop over a sequence reset each star under its lead
+      (a blink per mount) and ran through JavaScript every step: each
+      star is one native loop now, its phase a delay before it. Not
+      measured: scroll frame rate on a device with several skies alive;
+      the cost is native animation nodes, not JS time, but that is a
+      claim about the design, not a number._
+
+- [x] **D10 — One band device.** The deck showed bars and the detail a
+      ring (owner: "biri daire biri bar"); the ring is the one form —
+      small beside the word on the deck, on the arrival screen, large
+      around it on the match page — its arc filled in quarters from the
+      engine's BANDS, no figure drawn or spoken. `Meter` is gone.
+      — done when: `screenshots/g-deck.png` shows the small ring beside
+      the band word and `d5-match.png` the large one (screenshot).
+      _Done._
+
+- [x] **D11 — Aspects coloured by planet and by kind.** The owner asked
+      for "hem açılara hem gezegenlere göre": each planet's glyph in its
+      own colour (`planet` in tokens), the aspect's symbol, pill and the
+      wheel's line in its kind's — flowing, friction, conjunction.
+      — done when: the kind comes from the engine (`aspectKind`, from the
+      term's sign, so a hard conjunction reads as the friction it was
+      scored as), pinned by tests (battery), and `d5-match.png` /
+      `d4-chart-full.png` show the colours (screenshot).
+      _Done. The first version classified by the aspect's name in a
+      component and disagreed with the engine on Saturn's conjunctions;
+      review moved it into `@juno/astro`._
+
+- [x] **D12 — Accessibility spellings, part.** The rings, the dimension
+      rows, the tables' tabs and the arrival screen use `role` /
+      `aria-*` throughout; the gate item below still stands for the rest.
+      _Folded into the work above; listed so the gate's migration count
+      is honest._
 
 <!-- Assets: the sheet's nebula grounds are photographs, and none are in
      the repo. Whatever D2 and D5 ground themselves on has to be either

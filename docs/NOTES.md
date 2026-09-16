@@ -4985,3 +4985,60 @@ dropped. Upstream candidate below.
   `accessibility*` throughout — React Native folds them into its own
   props, react-native-web only knows these." Caught twice in one day on
   juno; holds for any Expo product that also renders on the web.
+
+## 2026-09-16 — Six requests, and what the reviews found in them
+
+The owner's list after the sheet was on the screens: the match page's
+stars everywhere; Apple-style glass; one band device instead of bars
+here and a ring there; aspect cards in colour "hem açılara hem
+gezegenlere göre"; the chart as the sheet draws it; an "It's a match"
+screen. All six are in (`bc3c89f`, `51eb2fc`, `d64c1b8`, `dec4adc`, the
+fixes after); ROADMAP D4, D5, D9–D12.
+
+What is worth keeping:
+
+- **Glass is two things, and the first version had only one.** A blur
+  behind near-black stars is invisible — it only dims — so the owner saw
+  "sadece daha az parlak". What reads as glass is the blur _scattering
+  something bright_ (the sheet over the deck's photo now does, at 85)
+  plus a light along the top edge. And that light must not be a brighter
+  top _border_: iOS mitres a border whose sides differ in colour and the
+  seam shows at every rounded corner ("köşeleri garip"). It is a gradient
+  drawn inside now. Cards inside a sheet take no blur of their own — the
+  sheet blurs once.
+- **A loop over a sequence is not a native loop.** Each step of an
+  `Animated.sequence` returns to JavaScript, and `Animated.loop` resets
+  the value before its first pass — so the lead timing that was meant to
+  start each star mid-breath was thrown away and every sky blinked once
+  at mount. The fix is the shape that stays native: one value 0 → 1 in a
+  loop of a single timing, the opacity read off it with an interpolation
+  whose two ends are equal so the reset is continuous, and the phase as
+  a delay before the loop. Reviewer's finding, traced in RN's source.
+- **Classification belongs to the engine.** `aspectKind` first lived in
+  a component and read the aspect's name; the engine scores Saturn's
+  conjunctions with the Moon, Venus and Mars as hard, so the colour and
+  the section disagreed for exactly those. It reads the term's sign now,
+  from `@juno/astro`, with the zero-term case pinned.
+- **The liker hears of a match twice** — `swipe()` returns it and the
+  Realtime INSERT arrives too. Invisible while both landed on the chat;
+  with an arrival screen, a late socket would have opened it a second
+  time over wherever the person had gone. `firstSightOf` guards both.
+- **A sampling test's budget is the test's to declare.** The calibration
+  suite (44 850 pairs) runs in two to five seconds alone and timed out
+  at the 5 s default once, under the battery with the Supabase suite and
+  a bundler beside it. It carries a 30 s budget now.
+
+Open, the owner's: the six seed portraits (the deck's plates are the
+last thing between it and the sheet), the four arrival-screen strings,
+the push.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya, an RN/Expo skill · "Animate decoratively with one
+  native loop per element (a single timing, 0 → 1, the property read
+  off it by interpolation); `Animated.loop` over a sequence runs through
+  JS every step and resets the value before the first pass." Found by
+  review on juno's star field; holds for any RN product.
+- 2026-09-16 · maya, an RN/Expo skill · "Never give a rounded view a
+  border whose sides differ in colour; iOS mitres the corner. Draw the
+  highlight inside." Same session, the glass cards.
