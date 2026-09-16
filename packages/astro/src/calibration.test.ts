@@ -35,7 +35,11 @@ const results = (() => {
   return out;
 })();
 
-describe('calibration', () => {
+// 300 charts pair into 44 850 readings, and the tests below walk them with
+// an expect per dimension. Alone that is two to five seconds; under the
+// battery, with the Supabase suite and a bundler beside it, the 5 s default
+// timed one out (2026-09-16). The budget is the work's, declared here.
+describe('calibration', { timeout: 30_000 }, () => {
   it('puts a pair in the band its raw score falls in', () => {
     const [first, second, third] = CALIBRATION.bands;
     if (first === undefined || second === undefined || third === undefined)
