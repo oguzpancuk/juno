@@ -1492,32 +1492,33 @@ controls that take one gesture instead of a dozen taps.
      arrival screen are folded into D4 and D5 above. -->
 
 - [x] **D9 — The night sky under every screen, and glass over it.** The
-      star field the owner liked on the match page goes under every
-      screen but settings, and every box, pill, sheet, bubble and input
-      becomes glass — a blur where the platform has one, a translucent
-      fill over it, the light along the top drawn inside — so the sky
-      shows through. Stars in four colours, each breathing in its own
-      time, one falling across a corner now and then; still under Reduce
-      Motion. The chat's two pages share one sky.
-      — done when: `screenshots/g-deck.png`, `g-matches.png`,
-      `g-profile.png`, `g-chat.png` show the sky and the glass on four
-      screens, `g-sheet.png` shows a sheet scattering the deck behind it
-      rather than dimming it, and `g-uyum.png` shows the chat's Uyum page
-      on the same sky (screenshot); the star generator's colour, period
-      and phase are pinned in `stars.test.ts` and every ink clears AA on
-      the glass grounds in `tokens.test.ts` (battery).
-      _Done in three passes: the first put stars and glass everywhere;
-      the owner found the glass "tam olmamış" — a brighter top border
-      mitred into a seam at every rounded corner on iOS, and the blur
-      only dimmed — so the border is one colour with the light drawn
-      inside, the blur is stronger and the tint lighter, and the sheet
-      denser still; the third made the stars breathe in colour. Review
-      caught that a loop over a sequence reset each star under its lead
-      (a blink per mount) and ran through JavaScript every step: each
-      star is one native loop now, its phase a delay before it. Not
-      measured: scroll frame rate on a device with several skies alive;
-      the cost is native animation nodes, not JS time, but that is a
-      claim about the design, not a number._
+      sky the owner liked on the match page goes under every screen but
+      settings, and every box, pill, sheet, bubble and input becomes a
+      surface the sky shows through. The chat's two pages share one sky.
+      — done when: `screenshots/g-deck.png`, `g-matches.png` and
+      `g-profile.png` show the sky and the surfaces on three screens and
+      `g-sheet.png` shows a sheet over the deck (screenshot); every ink
+      clears AA on the surfaces' fills in `tokens.test.ts` (battery).
+      _Done, in five passes, each the owner's correction of the last. The
+      sky first held a field of stars — coloured, breathing, a star
+      falling now and then — and ended with none: "yıldızları kaldıralım,
+      sadece yıldız kayması kalsın". What remains is three clouds of the
+      palette's colours drifting round small paths on their own native
+      loops, and a star that falls from a new place at a new angle each
+      time — one native timing per fall, a JS timer between. The glass
+      went from a dark tint over a blur ("sadece daha az parlak"), to a
+      stronger blur with the light drawn inside (a brighter top border
+      had mitred into a seam at every rounded corner), to iOS's own thin
+      material ("arkasını aynen gösteriyor"), to what the owner pointed
+      at: the match page's starter box — a translucent fill and a
+      hairline, no blur. Only the sheet still blurs, because it sits over
+      a photo. Two reviews on the way caught a loop over a sequence that
+      reset each star under its lead, an `interpolate` easing the native
+      driver drops, a falling star that fell once and parked, and three
+      nebulae sharing one gradient id, which on the web would have
+      coloured all three alike. Not measured: frame rate on a device
+      with several skies alive; the cost is native animation nodes, not
+      JS time, but that is a claim about the design, not a number._
 
 - [x] **D10 — One band device.** The deck showed bars and the detail a
       ring (owner: "biri daire biri bar"); the ring is the one form —

@@ -5042,3 +5042,48 @@ the push.
 - 2026-09-16 · maya, an RN/Expo skill · "Never give a rounded view a
   border whose sides differ in colour; iOS mitres the corner. Draw the
   highlight inside." Same session, the glass cards.
+
+## 2026-09-16 — The sky and the glass, five corrections later
+
+The owner's corrections came one after another, each on the last pass:
+the star's tail pointed away from its motion; the ring's glow was cut
+into a line under the sheet's title; the glass still only dimmed; fewer,
+smaller, star-shaped stars; no stars at all, only the falling one; keep
+the nebula colours and let them move; the falling star must not always
+fall from the same place; and finally "liquid glass çok kötü, hepsi uyum
+detayındaki sohbet başlatıcı gibi olsun" — the plain translucent box the
+match page already had.
+
+Two things to keep from it:
+
+- **Ask what the reference is before building an effect.** "Apple'ın
+  liquid glass'i gibi" turned out to mean a translucent box with a
+  hairline, which the app had on one screen all along. Three rounds of
+  blur — dark tint, stronger blur with an inner light, the platform's
+  thin material — were three guesses at a word. A screenshot of the box
+  the owner meant would have cost one message. The blur survives only on
+  the sheet, where it earns its place over a photo.
+- **Every animation is one native loop, or one native timing per event.**
+  The reviews caught the same class three times: a loop over a sequence
+  that ran through JS every step and reset the value under the lead; an
+  easing on `interpolate` that the native driver drops and logs; a
+  falling star that fell once because a loop's reset reaches only a
+  sequence's first step. The shape that survives: one value 0 → 1, the
+  property read off it by a linear interpolation whose two ends match,
+  any shape in the timing's easing, and for a one-off event a single
+  timing started from JS with a timer between. Both maya candidates
+  below say this.
+
+Also: three SVG gradients with the same id in one web document resolve
+to the first — native scopes them per root, so the simulator could not
+show it. Per-instance ids now.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya, an RN/Expo skill · "When the owner names a visual
+  effect by analogy ('like Apple's X'), ask for a screenshot of the
+  thing they mean before building; a word cost juno three rounds of
+  glass."
+- 2026-09-16 · maya, an RN/Expo skill · "An SVG gradient id is
+  document-global on the web: give every instance its own id, or two
+  same-named gradients paint alike."
