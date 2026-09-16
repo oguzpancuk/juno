@@ -4787,3 +4787,45 @@ computes to 0 — no lift where there is no keyboard, and no console errors.
 What is not: the actual mobile browser with a keyboard up. The chat sits
 behind sign-in, and typing a password is not something I do, so this needs
 the owner (or a phone opening the LAN URL) to confirm.
+
+## 2026-09-16 — the keyboard fix was wrong on two platforms and unproven on the third
+
+Review of the three commits above, and it was right three times.
+
+**The web branch could never lift anything.** It fed
+`useWindowDimensions().height` as the window, and react-native-web takes
+that from the _visual_ viewport (`visualViewport.height * scale`, in its
+Dimensions module), the very box that shrinks for the keyboard. The two
+cancelled: the gap was always `-offsetTop - tabBar`, clamped to 0. The
+browser check that "the gap computes to 0" could not tell a working fix
+from this one, because 0 is also what the clamp emits. It now reads
+`window.innerHeight`, the layout viewport, which the keyboard does not
+change, and `webKeyboardTop` turns the visual viewport's bottom into that
+frame — with `scale` undone, so pinch zoom is not read as a keyboard. The
+two web test cases pinned numbers react-native-web cannot produce; they
+now use the layout viewport and have a zoom case beside them.
+
+**iOS could crush the screen.** With Accessibility → Motion → Prefer
+Cross-Fade Transitions on, iOS reports the keyboard frame's top as 0
+rather than its position; RN's own `KeyboardAvoidingView` discards that,
+and this did not — it would have read as a keyboard filling the window and
+left the thread in the top few points. A frame top of 0 is now no
+keyboard.
+
+**Android would have lifted twice.** `adjustResize` is the Expo default
+this app keeps, so the window has already shrunk by the keyboard; adding
+the gap on top would float the composer a keyboard's-worth above it. The
+Android branch is gone: nothing to do there, and it says so.
+
+Re-checked on the device after the rewrite: the composer still sits on the
+keyboard and returns when it closes.
+
+**A correction to "the tab items lift a little".** Its three numbers are
+not one triple: 9.7 and 22.7 are measured inside the bar's 1pt top border,
+the new 16.7 from the bar's outer edge. In the border frame the new
+position is 15.7. The conclusion — between the two rejected ones — holds
+either way.
+
+**Known and not changed here** (both predate this pass): the element chips
+carry no accessibility role or state, unlike the band row they now mirror,
+and at 40pt they are under the 44pt touch target this codebase asks for.
