@@ -4829,3 +4829,61 @@ either way.
 **Known and not changed here** (both predate this pass): the element chips
 carry no accessibility role or state, unlike the band row they now mirror,
 and at 40pt they are under the 44pt touch target this codebase asks for.
+
+## 2026-09-16 — The visual pass begins (D1)
+
+The owner brought the 2026-09-11 mockup sheet back and asked how to dress
+the app — and whether to hand it to Claude Design. Read against the repo,
+the sheet's language was already in `tokens.ts`; what the screens lacked
+was its execution, and what the sheet carried beyond that was a list of
+things the product had already decided against. So the answer was no:
+map the seventeen frames to the surfaces that exist, take the execution
+onto them, and let Claude Design draw only the screens the sheet never
+did. The plan is the D series in the ROADMAP.
+
+Three scope decisions from the owner, each holding an older one: no
+percentage and no numeric dimension scores (ADR-0009 stands), no Juno
+signature (ADR-0004: no asteroids), no interest chips or verification
+badge in this pass. Also out, with reasons that predate the sheet: the
+star button, a fourth tab, phone auth, the notifications frame, voice in
+chat, and English copy.
+
+D1 landed (`297bae9`). Two things worth keeping from it:
+
+- **`textFaint` was a contrast debt for five days and the fix was one
+  token.** Measured: #6E6890 read 3.9:1 on `bg` and 3.2:1 on `surfaceHigh`;
+  #8A84AD reads 5.7 and 4.8. `theme/tokens.test.ts` now holds every ink
+  on every ground at 4.5, so the next palette edit cannot drop below it
+  quietly, and the same file refuses a colour literal in `app/`,
+  `components/` or `lib/`. It reads `.ts`/`.tsx` only — the stale
+  `scripts/brand-assets.py` still holds five hex values for the old mark,
+  which `ui.tsx` already calls stale. Candidate for deletion, owner's
+  call: the script and `assets/brand/mark.svg` together.
+- **Three private copies of the choice pill, three slightly different
+  pills.** Onboarding had no border, the filters had `type.body`, the
+  profile had `bodySmall` 600. `Chip` is the one now, at 44pt, which
+  also closes the 40pt note from the fifth pass. The profile's "Düzenle"
+  pill was left alone on purpose: it is a toggle button beside a 36pt
+  control the owner measured, not a choice.
+
+Seen on the simulator via deep links (`exp://127.0.0.1:8082/--/<route>`
+— the running Metro was started without `CI=1`, so edits reached the
+bundle): `d1-welcome.png`, `d1-onboarding.png`, `d1-chart.png`,
+`d1-filters.png`. On the filters sheet the Su chip was tapped off and on
+again — the state is real and the tester's stored filter is as found.
+
+Review (`929f887..HEAD`): APPROVE, no blockers. Two forward notes for
+later items: `Glow` uses a fixed SVG gradient id, harmless until a
+second variant with different stops exists (D5's ring — give it
+`useId()` then, since on the web `url(#glow)` resolves to the first in
+DOM order); and `accessibilityElementsHidden` /
+`importantForAccessibility` do not reach the DOM under react-native-web
+0.21 — `aria-hidden` is the cross-platform prop, and the same pattern
+sits in `discover.tsx` and `Popup.tsx`, so it is one fix for three places
+when it is made.
+
+Open, owner's call: the sheet's nebula grounds are photographs and none
+are in the repo. D2 and D5 either draw their ground with the gradient
+primitives or take a licensed image credited beside GeoNames.
+
+Battery: green on `e161263`, tree clean before and after.

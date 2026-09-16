@@ -1337,7 +1337,8 @@ controls that take one gesture instead of a dozen taps.
       (lighter weight, wider tracking), a card surface with the frames'
       edge lift, the halo ring and glow the match and chart frames lean
       on, chips, and the gradient button shape. `color.textFaint`
-      (#6E6890 on #07060F, about 2.8:1, used for hints on six screens) is
+      (#6E6890: 3.9:1 on `bg`, 3.2:1 on `surfaceHigh`, used for hints on
+      six screens) is
       resolved here — it has been carried as a palette decision waiting
       for a design session since C7.
       — done when: nothing outside `theme/tokens.ts` holds a colour, every
