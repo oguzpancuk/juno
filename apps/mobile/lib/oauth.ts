@@ -82,10 +82,13 @@ export function tokenOutcome(
   result: TokenResult,
   message: string,
 ): Exchange | ProviderOutcome {
-  if (result.token !== null) {
-    return { status: 'exchange', token: result.token };
-  }
-  return result.cancelled
+  // An empty string is nothing came back, whatever the type says. No SDK
+  // is known to return one, and the exchange would fail anyway — but the
+  // whole point of this function is that "nothing came back" has exactly
+  // one meaning, and a falsy token reaching the provider would give it a
+  // second.
+  if (result.token) return { status: 'exchange', token: result.token };
+  return result.token === null && result.cancelled
     ? { status: 'cancelled' }
     : { status: 'failed', message };
 }

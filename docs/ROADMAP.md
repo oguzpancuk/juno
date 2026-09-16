@@ -220,9 +220,11 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       kodun") → a wrong code refused with the app's own sentence → the
       mailed code → onboarding, with the resend countdown watched running
       down. A sign-in on an unconfirmed address lands on the same screen
-      and a second, different code arrives; a request the server rate-limits
-      shows a notice that claims nothing about the inbox rather than a red
-      error, watched in the browser and held by `lib/otp.ts` `refusedSend`.
+      and a second, different code arrives; a request the server
+      rate-limits shows a notice that claims nothing about the inbox rather
+      than a red error — watched in the browser after that sentence was
+      written, provoked by opening the code screen twice inside the local
+      one-second `max_frequency`, and held by `lib/otp.ts` `refusedSend`.
       `screenshots/v1-verify-code.png` is the code screen on iOS. Not covered anywhere: real SMTP, which
       needs the hosted project (`docs/auth-setup.md`)._
 - [ ] **Sign in with Apple and Google (Apple).** Alongside e-mail and

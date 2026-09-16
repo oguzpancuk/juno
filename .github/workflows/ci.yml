@@ -22,11 +22,15 @@ jobs:
       # Only services no test touches may be excluded: photo.test.ts and
       # delete-account.test.ts call /functions/v1/*, so edge-runtime has to
       # boot or Kong answers 503 and those suites fail on a stack defect
-      # rather than on the code.
+      # rather than on the code. Mailpit left that list on 2026-09-16:
+      # auth.test.ts reads the sign-up code out of the inbox, and
+      # `supabase status` omits MAILPIT_URL when it is not running, which
+      # fails the Zod parse in tests/local.ts and takes down every suite
+      # that touches the stack — not only the mail ones.
       - uses: supabase/setup-cli@v1
         with:
           version: 2.117.0 # keep in step with SUPABASE_CLI_VERSION in supabase/tests/local.ts
-      - run: supabase start -x studio,imgproxy,logflare,vector,mailpit
+      - run: supabase start -x studio,imgproxy,logflare,vector
       - run: bash .claude/hooks/verify.sh
       - if: always()
         run: supabase stop

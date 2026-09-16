@@ -57,6 +57,13 @@ describe('tokenOutcome', () => {
     });
   });
 
+  it('treats an empty token as nothing came back, never as a token', () => {
+    expect(tokenOutcome({ token: '' }, MESSAGE)).toEqual({
+      status: 'failed',
+      message: MESSAGE,
+    });
+  });
+
   it('does not let an empty credential pass as a cancellation', () => {
     // A sheet that completed and produced no token. Reported as a
     // cancellation it would draw nothing at all — a provider button that

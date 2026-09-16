@@ -5560,3 +5560,49 @@ kept as evidence must not do. Left large.
   product an agent edits — writing a temp file and renaming it over the
   original drops the mode, and no content diff shows it. Applied here;
   parked for `/update-stack`.
+
+## 2026-09-16 — The thing that would have gone red on push
+
+Third review of the door, and the finding that mattered was not in any of
+the three commits: `.github/workflows/ci.yml` started its stack with
+`-x studio,imgproxy,logflare,vector,mailpit`. Mailpit was on that list
+because until tonight nothing read it. `supabase/tests/auth.test.ts` now
+does, and `supabase status -o json` omits `MAILPIT_URL` entirely when the
+service is not running — so `StatusSchema.parse` in `tests/local.ts` would
+have thrown and taken down **every** suite that touches the stack, not
+only the mail ones. On top of that, GoTrue with `enable_confirmations` on
+and no mail server answers `signUp` with a mailer error, so the sign-up
+tests would have failed on a stack defect rather than on the code. The
+battery being green here proved nothing about there:
+`contracts/init.sh` has always started Mailpit.
+
+It is fixed by deleting one word, and verified rather than reasoned about:
+the local stack was restarted with CI's exact exclusion list
+(`-x studio,imgproxy,logflare,vector`), `supabase status` was read for
+`MAILPIT_URL`, and all 141 tests in `supabase/tests` were run against it.
+Then the stack went back to `contracts/init.sh`'s list, which keeps Studio
+up for the ROADMAP's manual row checks.
+
+The file's own comment already carried the rule this broke — "Only
+services no test touches may be excluded" — and it stopped being true the
+moment the mail tests landed. The comment now names Mailpit and says what
+its absence does, so the next exclusion has the failure written next to it.
+
+**The exec-bit gate added an hour ago had two holes, both closed.** It
+read the index rather than the working tree, so the accident it exists to
+catch — a rename dropping a mode — was invisible until the change was
+staged. And it discarded `git ls-files`'s exit status: outside a git
+checkout it printed a fatal error to a log nobody reads and returned
+success, which is the silent skip this repo's battery header forbids in
+the same breath as everything else. It now walks the working tree with
+`test -x` and fails when it cannot list the files at all. Both branches
+were provoked and watched fail before this was written.
+
+Two smaller things from the same review. `tokenOutcome` discriminated on
+`!== null`, so an empty-string token would have been forwarded as
+something to exchange — no SDK is known to return one, but the function's
+whole purpose is that "nothing came back" has exactly one meaning, so it
+now takes any falsy token as nothing. And a comment in the mail test
+claimed a measurement ("well under one second") that nobody had measured;
+it says what is actually known instead, which is that the positive reads
+are given ten seconds and have never needed them.

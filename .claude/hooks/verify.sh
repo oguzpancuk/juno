@@ -35,12 +35,24 @@ step() {
 # default 644, the change is invisible in a content diff, and the whole
 # battery stays green while `./contracts/init.sh` stops working.
 exec_bits() {
-  local bad
-  bad="$(git ls-files -s -- '*.sh' | awk '$1 != "100755"' | cut -f2-)"
+  local listed bad=""
+  # A gate that cannot list the files must fail, not pass quietly: outside
+  # a git checkout `git ls-files` prints to stderr and exits non-zero, and
+  # `step` hides that unless the step itself fails.
+  listed="$(git ls-files -- '*.sh')" || {
+    echo "cannot list tracked shell scripts (not a git checkout?)"
+    return 1
+  }
+  [ -n "$listed" ] || { echo "no tracked shell scripts found at all"; return 1; }
+  # The working tree, not the index. The accident this catches — a rename
+  # over a file dropping its mode — happens before anything is staged, and
+  # a run that only read the index would report it a commit too late.
+  while IFS= read -r file; do
+    [ -x "$file" ] || bad="$bad $file"
+  done <<<"$listed"
   [ -z "$bad" ] || {
-    echo "tracked shell scripts without the exec bit:"
-    echo "$bad"
-    echo "fix with: git update-index --chmod=+x <path>"
+    echo "tracked shell scripts without the exec bit:$bad"
+    echo "fix with: chmod +x <path> && git update-index --chmod=+x <path>"
     return 1
   }
 }
