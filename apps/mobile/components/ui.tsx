@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { createContext, useContext, type ReactNode } from 'react';
@@ -89,8 +88,8 @@ export function Screen({
 }) {
   return (
     <View style={s.screen}>
-      {/* The star field under every screen (owner, 2026-09-16); the
-          scroll view over it paints nothing of its own. */}
+      {/* The sky under every screen (owner, 2026-09-16); the scroll view
+          over it paints nothing of its own. */}
       <CosmicGround planet={false} horizon={false} />
       <ScrollView
         style={s.scroll}
@@ -108,29 +107,12 @@ export function Screen({
 }
 
 /**
- * The blur at full strength, and the platform's own thin material for its
- * tint: iOS draws that the way it draws its own glass — blurred, slightly
- * light, vibrant — where a dark tint of ours over a blur only dimmed the
- * view (owner, 2026-09-16, twice). Web and Android take expo-blur's
- * approximation of the material.
- */
-const GLASS_BLUR = 100;
-
-/**
- * True under a sheet. A sheet blurs once for everything on it, so a card
- * inside it takes the tint alone: another effect view per card would
- * re-sample a backdrop that is already blurred stars (review,
- * 2026-09-16), and a chart popup has a couple of dozen cards.
- */
-const InSheet = createContext(false);
-export const InSheetProvider = InSheet.Provider;
-
-/**
- * A surface the stars show through (owner, 2026-09-16): a blur where the
- * platform draws one — iOS and the web; Android gets the tint alone — and
- * a translucent fill over it, both absolute so the children lay out as
- * they would on a plain view. The host sets the shape: radius, border,
- * padding. `overflow: hidden` here keeps the blur inside the corners.
+ * A surface the sky shows through: a translucent fill and a hairline —
+ * the shape the owner pointed at ("hepsi uyum detayındaki sohbet
+ * başlatıcı gibi olsun", 2026-09-16) after three rounds of blurred glass
+ * that read as dimming, then as grey. No blur here; the sheet keeps one
+ * of its own because it sits over a photo. The host sets the shape:
+ * radius, border, padding.
  */
 export function Glass({
   children,
@@ -141,28 +123,8 @@ export function Glass({
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
-  const inSheet = useContext(InSheet);
   return (
     <View testID={testID} style={[s.glass, style]}>
-      {inSheet ? null : (
-        <BlurView
-          intensity={GLASS_BLUR}
-          tint="systemThinMaterialDark"
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-      )}
-      <View style={s.glassFill} pointerEvents="none" />
-      {/* The light along the top, drawn inside rather than as a brighter
-          top border: iOS mitres a border whose sides differ in colour, and
-          the seam showed at every rounded corner (owner, 2026-09-16). */}
-      <LinearGradient
-        colors={[glass.sheen, glass.sheenEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={s.glassSheen}
-        pointerEvents="none"
-      />
       {children}
     </View>
   );
@@ -642,16 +604,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   outlineText: { ...type.heading, color: color.text, textAlign: 'center' },
-  glass: { overflow: 'hidden' },
-  glassFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: glass.fill,
-  },
-  glassSheen: { position: 'absolute', top: 0, left: 0, right: 0, height: 48 },
+  glass: { backgroundColor: glass.fill, overflow: 'hidden' },
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,

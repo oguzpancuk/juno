@@ -66,28 +66,23 @@ export const color = {
  * literal because nothing outside this file may hold a colour.
  */
 /**
- * Glass (owner, 2026-09-16: "Apple'ın liquid glass'i gibi"): a surface
- * that lets the star field through. The fills are the surfaces above at
- * about half opacity; `Glass` in ui.tsx puts a blur behind them where the
- * platform has one. The edges are the borders, a little brighter, with
- * the top edge catching light.
+ * Glass: a surface the sky shows through — a translucent fill and a
+ * hairline, the shape of the match page's starter box, which the owner
+ * pointed at after three rounds of blurred glass (2026-09-16). Only the
+ * sheet blurs, because it sits over a photo.
  */
 export const glass = {
-  fill: 'rgba(18,16,31,0.16)',
+  fill: 'rgba(18,16,31,0.3)',
   /**
-   * A sheet over a screen: denser than a card and blurred harder (85 to
-   * a card's 55), because what is under it is a page of text and a
-   * photo, not the star field. The blur is what keeps the deck from
-   * reading through; the tint alone did not, at any alpha that still
-   * looked like glass (seen 2026-09-16).
+   * A sheet over a screen: denser than a card and blurred, because what
+   * is under it is a page of text and a photo, not the sky. The blur is
+   * what keeps the deck from reading through; the tint alone did not, at
+   * any alpha that still looked like glass (seen 2026-09-16).
    */
-  sheet: 'rgba(12,10,22,0.4)',
-  fillSoft: 'rgba(23,21,40,0.34)',
-  fillHigh: 'rgba(29,27,49,0.5)',
+  sheet: 'rgba(12,10,22,0.66)',
+  fillSoft: 'rgba(23,21,40,0.4)',
+  fillHigh: 'rgba(29,27,49,0.55)',
   edge: 'rgba(255,255,255,0.1)',
-  /** The light a glass surface catches along its top; fades to nothing. */
-  sheen: 'rgba(255,255,255,0.09)',
-  sheenEnd: 'rgba(255,255,255,0)',
 } as const;
 
 /**

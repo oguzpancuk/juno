@@ -6,7 +6,7 @@ import {
 } from '@juno/astro';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { BandRing } from '@/components/BandRing';
+import { BandRing, ringOverhang } from '@/components/BandRing';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
 import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
@@ -25,6 +25,8 @@ import { color, space, type } from '@/theme/tokens';
  * Nothing here computes astrology beyond calling the engine: `mine` is
  * chart A, so headlines read from the viewer's side.
  */
+const RING = 168;
+
 export function PairReading({
   mine,
   theirs,
@@ -54,7 +56,7 @@ export function PairReading({
         <BandRing
           band={reading.band}
           label={`${reading.bandName} ${t.discover.scoreLabel}`}
-          size={168}
+          size={RING}
           stroke={6}
           glow
         >
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
   // sheet's scroll view that overhang is clipped at the top edge into a
   // hard line under the title (owner, 2026-09-16), so the ring keeps
   // that much room above itself.
-  ring: { alignSelf: 'center', paddingTop: 168 * 0.3 },
+  ring: { alignSelf: 'center', paddingTop: ringOverhang(RING) },
   bandName: { ...type.title, color: color.text, textAlign: 'center' },
   bandLabel: { ...type.label, color: color.textFaint },
 });

@@ -13,6 +13,11 @@ import { color, gradient } from '@/theme/tokens';
  * and no figure is drawn or spoken; the label is the band's word. Steps,
  * not a measure (ADR-0009 §2–§3).
  */
+/** How far the glow reaches past the ring on each side; hosts pad for it. */
+export function ringOverhang(size: number): number {
+  return size * 0.3;
+}
+
 export function BandRing({
   band,
   size,
@@ -36,7 +41,7 @@ export function BandRing({
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const filled = (BANDS.indexOf(band) + 1) / BANDS.length;
-  const halo = size * 1.6;
+  const halo = size + ringOverhang(size) * 2;
   return (
     <View
       style={{ width: size, height: size }}

@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -145,6 +145,7 @@ export function CosmicGround({
       {NEBULAE.map((n, i) => (
         <Nebula
           key={i}
+          index={i}
           nebula={n}
           width={width}
           height={height}
@@ -165,11 +166,14 @@ export function CosmicGround({
  * in the sky's SVG because the native driver moves views, not SVG props.
  */
 function Nebula({
+  index,
   nebula,
   width,
   height,
   still,
 }: {
+  /** Into the gradient's id: on the web every sky shares one document. */
+  index: number;
   nebula: NebulaSpec;
   width: number;
   height: number;
@@ -196,15 +200,24 @@ function Nebula({
   }, [drift, nebula.period, still]);
   const size = width * nebula.r * 2;
   const reach = width * 0.06;
-  // Two raised cosines a quarter-turn apart trace an ellipse.
-  const translateX = drift.interpolate({
-    inputRange: [0, 0.25, 0.5, 0.75, 1],
-    outputRange: [0, reach, 0, -reach, 0],
-  });
-  const translateY = drift.interpolate({
-    inputRange: [0, 0.25, 0.5, 0.75, 1],
-    outputRange: [-reach * 0.6, 0, reach * 0.6, 0, -reach * 0.6],
-  });
+  // Four stops a quarter-turn apart, joined straight: a small diamond,
+  // whose corners are far too slow to see at a lap a minute long. The
+  // same value at 0 and 1 keeps the loop's reset continuous. Memoised:
+  // a fresh interpolation per render is a fresh native node.
+  const { translateX, translateY } = useMemo(
+    () => ({
+      translateX: drift.interpolate({
+        inputRange: [0, 0.25, 0.5, 0.75, 1],
+        outputRange: [0, reach, 0, -reach, 0],
+      }),
+      translateY: drift.interpolate({
+        inputRange: [0, 0.25, 0.5, 0.75, 1],
+        outputRange: [-reach * 0.6, 0, reach * 0.6, 0, -reach * 0.6],
+      }),
+    }),
+    [drift, reach],
+  );
+  const gradientId = `nebula-${index}`;
   return (
     <Animated.View
       style={[
@@ -220,7 +233,7 @@ function Nebula({
     >
       <Svg width={size} height={size}>
         <Defs>
-          <RadialGradient id="nebula" cx="50%" cy="50%" r="50%">
+          <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
             <Stop
               offset="0"
               stopColor={nebula.colour}
@@ -234,61 +247,64 @@ function Nebula({
             <Stop offset="1" stopColor={nebula.colour} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Circle cx={size / 2} cy={size / 2} r={size / 2} fill="url(#nebula)" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={`url(#${gradientId})`}
+        />
       </Svg>
     </Animated.View>
   );
 }
 
 /**
- * A streak that crosses a corner of the sky every so often. One value
- * drives it from off the top right to off the bottom left; a random wait
- * — fixed for the life of the screen — sits between falls.
+ * A streak that crosses the sky every so often, each time from somewhere
+ * else and at its own angle (owner, 2026-09-16: "rastgele olmalı"). One
+ * fall is one native timing; between falls a JS timer waits a random
+ * while, then draws the next start and heading — so JavaScript runs once
+ * per fall, never per frame. A star falls downward, left or right, from
+ * the upper half of the sky.
  */
 function FallingStar({ width, height }: { width: number; height: number }) {
   const [progress] = useState(() => new Animated.Value(0));
-  const [gap] = useState(
-    () => FALL_GAP_MS.min + Math.random() * (FALL_GAP_MS.max - FALL_GAP_MS.min),
-  );
+  const [pass, setPass] = useState(() => nextPass(width, height));
   useEffect(() => {
-    const fall = Animated.loop(
-      Animated.sequence([
-        Animated.delay(gap),
-        Animated.timing(progress, {
-          toValue: 1,
-          duration: FALL_MS,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: NATIVE,
-        }),
-        // Load-bearing: a loop's reset reaches only the sequence's first
-        // step, the delay, so without this the star would fall once and
-        // park (review, 2026-09-16).
-        Animated.timing(progress, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: NATIVE,
-        }),
-      ]),
-    );
-    fall.start();
-    return () => {
-      fall.stop();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let fall: Animated.CompositeAnimation | null = null;
+    let live = true;
+    const wait = () => {
+      timer = setTimeout(
+        () => {
+          if (!live) return;
+          setPass(nextPass(width, height));
+        },
+        FALL_GAP_MS.min + Math.random() * (FALL_GAP_MS.max - FALL_GAP_MS.min),
+      );
     };
-  }, [gap, progress]);
-  const travel = Math.max(width, height) * 0.7;
-  // Down and to the left; the streak is turned to the same vector, so the
-  // tail cannot point anywhere but where the star came from (owner,
-  // 2026-09-16: "kuyrukla aynı yönde değil").
-  const dx = -1;
-  const dy = 0.6;
-  const heading = `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`;
+    progress.setValue(0);
+    fall = Animated.timing(progress, {
+      toValue: 1,
+      duration: FALL_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: NATIVE,
+    });
+    fall.start(({ finished }) => {
+      if (finished && live) wait();
+    });
+    return () => {
+      live = false;
+      fall?.stop();
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [pass, progress, width, height]);
   const translateX = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, travel * dx],
+    outputRange: [0, pass.travel * pass.dx],
   });
   const translateY = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, travel * dy],
+    outputRange: [0, pass.travel * pass.dy],
   });
   // In only while it moves; parked invisible between falls.
   const opacity = progress.interpolate({
@@ -300,16 +316,15 @@ function FallingStar({ width, height }: { width: number; height: number }) {
       style={[
         styles.streak,
         {
-          left: width * 0.85,
-          top: height * 0.08,
+          left: pass.x,
+          top: pass.y,
+          width: pass.length,
           opacity,
-          transform: [{ translateX }, { translateY }, { rotate: heading }],
+          transform: [{ translateX }, { translateY }, { rotate: pass.heading }],
         },
       ]}
     >
       <LinearGradient
-        // Tail to head: the view's +x points along the heading, so the
-        // bright end is the one in front.
         colors={[color.bg, color.coolLight, color.text]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
@@ -319,9 +334,42 @@ function FallingStar({ width, height }: { width: number; height: number }) {
   );
 }
 
+interface Pass {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  travel: number;
+  length: number;
+  heading: string;
+}
+
+/**
+ * Where the next star starts and where it goes. Anywhere across the
+ * upper half; down at 25–65° below the horizontal, to the left or the
+ * right; the streak turned to that same vector so the tail cannot point
+ * anywhere but where it came from. The view's +x points along the
+ * heading, so the bright end of the gradient leads.
+ */
+function nextPass(width: number, height: number): Pass {
+  const angle = (25 + Math.random() * 40) * (Math.PI / 180);
+  const toLeft = Math.random() < 0.5;
+  const dx = Math.cos(angle) * (toLeft ? -1 : 1);
+  const dy = Math.sin(angle);
+  return {
+    x: width * (0.1 + Math.random() * 0.8),
+    y: height * (0.05 + Math.random() * 0.4),
+    dx,
+    dy,
+    travel: Math.max(width, height) * (0.45 + Math.random() * 0.35),
+    length: 72 + Math.random() * 48,
+    heading: `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`,
+  };
+}
+
 const styles = StyleSheet.create({
   ground: { position: 'absolute', top: 0, left: 0, overflow: 'hidden' },
   nebula: { position: 'absolute' },
-  streak: { position: 'absolute', width: 96, height: 2 },
+  streak: { position: 'absolute', height: 2 },
   streakFill: { flex: 1, borderRadius: 1 },
 });

@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
   GradientButton,
-  InSheetProvider,
   SCREEN_PADDING,
   TopGapContextProvider,
 } from '@/components/ui';
@@ -144,14 +143,13 @@ export function Popup({
             { paddingBottom: Math.max(insets.bottom, space.lg) },
           ]}
         >
-          {/* The sheet is glass: on iOS and the web the screen under the
-              scrim shows through a blur (owner, 2026-09-16); Android has
-              no blur here and gets the tint. The stars under the sheet's
-              own content are its own, and the cards on it take no blur of
-              their own (InSheetProvider below). */}
+          {/* The sheet sits over a page — a photo, usually — so on iOS and
+              the web that page shows through a blur (owner, 2026-09-16);
+              Android has no blur here and gets the tint. The sky under
+              the sheet's own content is its own. */}
           <BlurView
-            intensity={100}
-            tint="systemThinMaterialDark"
+            intensity={85}
+            tint="dark"
             style={styles.fill}
             pointerEvents="none"
           />
@@ -182,7 +180,7 @@ export function Popup({
                 child would cancel a padding this host never applied. */}
             <TopGapContextProvider value={0}>
               <SheetScrollLock.Provider value={setLocked}>
-                <InSheetProvider value>{children}</InSheetProvider>
+                {children}
               </SheetScrollLock.Provider>
             </TopGapContextProvider>
           </ScrollView>
