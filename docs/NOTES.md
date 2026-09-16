@@ -4,14 +4,15 @@
      done, what was verified (and how), what is open.
 
      Where to append: at the END of the file. The entries are in two
-     regimes, counted on 2026-09-16 — 105 dated entries in all. The first
-     54 are newest-first, the order the header asked for until then
-     (2026-09-11 down to 2026-09-09, ending above the 2026-09-08
-     instantiation entry); from that entry on, the remaining 51 run
-     oldest to newest, which is where every session since has appended.
-     Read from the bottom for the recent past; the oldest material is in
-     the middle, not the top. Nothing was reordered to make this tidy: the
-     file is the audit trail.
+     regimes, and the fold between them is an entry, not a count, so this
+     stays true as the file grows: everything from the top down to and
+     including "2026-09-08 — instantiated from maya 22e7efe" is
+     newest-first, the order this header asked for until 2026-09-16;
+     everything after that entry runs oldest to newest, which is where
+     every session since has appended. So the oldest material sits in the
+     middle of the file, not at the top, and the recent past is at the
+     bottom. Nothing was reordered to make this tidy: the file is the
+     audit trail.
 
      Never rewrite an entry once it is committed. A later entry corrects
      an earlier one; the earlier one stays as it was written.
@@ -4571,3 +4572,23 @@ filter names a column that does not exist raises `invalid column for
 filter nope_column` from `realtime.subscription_check_filters()`. The ADR
 now says where that comes from, and keeps the socket-wide effect marked as
 inferred, which it still is.
+
+## 2026-09-16 — the header again: my count was wrong, the reviewer's was right
+
+The entry above says 105 dated entries, a 54/51 split, and that the
+newest-first block ends above the 2026-09-08 instantiation entry. All
+three are wrong, and it dismissed the reviewer's 68/37 while doing it.
+
+Measured again, by listing every dated heading in file order and locating
+the instantiation entry by name: at the commit before this one there were
+105 entries, at this one 106 — the earlier count was taken before that
+entry's own commit appended it, and never redone. The fold is at the
+instantiation entry itself (line 2661), which is entry 68: the first 68
+run 2026-09-11 down to 2026-09-08 and include a block of fourteen
+2026-09-08 entries that are themselves newest-first; the remaining 38 run
+2026-09-09 up to today. My earlier number came from asking where the dates
+stop decreasing, which lands inside that equal-dated block rather than at
+its end — the wrong question, confidently answered.
+
+The header no longer carries a count. It names the entry the fold is at,
+which does not go stale the next time someone appends.
