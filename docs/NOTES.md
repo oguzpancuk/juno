@@ -5087,3 +5087,47 @@ show it. Per-instance ids now.
 - 2026-09-16 · maya, an RN/Expo skill · "An SVG gradient id is
   document-global on the web: give every instance its own id, or two
   same-named gradients paint alike."
+
+## 2026-09-16 — The mark in motion, measured; the web confirmed
+
+The owner asked for the planets to orbit the mark — the ring still, the
+two spheres moving with their light — then for a slower lap, then for
+the web to look the same as iOS, "eksiksiz".
+
+**Three tries, two of them measured wrong.** A screen recording
+(`xcrun simctl io recordVideo`, frames at 8 fps through ffmpeg, the
+warm sphere's centroid tracked by colour) was the only instrument that
+told the truth; stills could not. The first orbit, a 37-point table of
+ellipse positions interpolated on the native driver, covered half the
+ellipse in its duration and snapped back. Rebuilt as nested two-stop
+rotations — a frame that tilts and squashes a circle into the ring, an
+arm turning 0 → 360° on one linear native loop, the sphere un-turning
+and un-squashing in its own box — it ran full, seamless laps: 360.3° at
+16.0 s, 720.6° at 32.0 s, no step over 6.2° per eighth-second. Then an
+easing meant to even out the eye's angle (the squash makes the arm's
+steady rate rush past the ring's ends) was measured to halve the lap
+exactly as the table had. Why a non-linear easing, or a multi-stop
+interpolation, covers half its range on iOS's native driver in RN 0.86
+is not known; it is recorded here with the data so the next person
+does not re-derive it by eye. The nebulae drift by the same two-stop
+rotation now, rather than a five-stop translation that may have had the
+same fault unseen.
+
+**The web.** `localhost:8082` at a phone viewport: the welcome and
+sign-in screens match iOS — Outfit, the drawn mark and wordmark, the
+glass fields, the clouds, a falling star — with one difference the
+console reported: `accessibilityElementsHidden` and
+`importantForAccessibility` never reach the DOM and React logs each as
+an unknown prop. `aria-hidden` replaces them in the three places they
+were. The signed-in screens on the web need a session, which means a
+password this session does not type; the owner signs in to see them.
+
+**Not settled by this session:** the settings capture (`g-settings.png`,
+D13) for the same reason.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya, an RN/Expo skill · "Verify a native-driven
+  animation from a screen recording, never a still or the maths: on
+  juno two constructions that were correct on paper drew half a lap on
+  iOS. What survived: two-stop rotations on a linear timing."
