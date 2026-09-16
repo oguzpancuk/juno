@@ -14,6 +14,11 @@ describe('authErrorText', () => {
     ['user_already_exists', t.errors.accountExists],
     ['email_exists', t.errors.accountExists],
     ['email_not_confirmed', t.errors.emailNotConfirmed],
+    // The code screen's whole failure surface: GoTrue answers a wrong code
+    // and an expired one alike, and `otp_disabled` is the project having
+    // e-mail OTP switched off.
+    ['otp_expired', t.errors.otpInvalid],
+    ['otp_disabled', t.errors.otpInvalid],
     ['validation_failed', t.errors.emailInvalid],
     ['email_address_invalid', t.errors.emailInvalid],
     ['over_email_send_rate_limit', t.errors.rateLimited],
@@ -33,10 +38,19 @@ describe('authErrorText', () => {
   });
 
   it('gives an error with no code the generic line, whatever its status', () => {
-    // The OTP flow used to read a bare 403 as a wrong code; there is no
-    // such request any more, so a 403 is as unnamed as any other.
+    // `verifyOtp` answers a refused code with 403, and this is the line
+    // that keeps the mapping keyed on the code rather than on the status:
+    // an unnamed 403 from anywhere else must not be read as a wrong code.
     expect(authErrorText(authError(undefined, 403))).toBe(t.errors.generic);
     expect(authErrorText(authError(undefined))).toBe(t.errors.generic);
+  });
+
+  it('separates a refused code from a refused password', () => {
+    // Both reach the same screens in the same session; one sentence says
+    // "ask for a new code", the other "your password is wrong".
+    expect(authErrorText(authError('otp_expired', 403))).not.toBe(
+      authErrorText(authError('invalid_credentials')),
+    );
   });
 
   it('never lets the provider text through', () => {

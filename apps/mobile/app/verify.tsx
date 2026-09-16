@@ -32,12 +32,19 @@ import { color, font, glass, radius, space, type } from '@/theme/tokens';
  * give.
  *
  * The address arrives as a route param and nothing else does — a password
- * must not sit in a URL, and this screen has no use for one. The mail is
- * already on its way when the screen opens (the sign-up sent it), so the
- * resend link starts available rather than counting down from a send this
- * screen did not make; `?resend=1` is the other door in, from a sign-in
- * that was refused with `email_not_confirmed`, and it asks for a fresh
- * code on arrival because the old one is long gone.
+ * must not sit in a URL, and this screen has no use for one. The address
+ * itself does end up in the web client's URL bar and history, which is a
+ * trade taken deliberately: it is what lets a reload keep working, and it
+ * is the one field the person has just typed on the screen before.
+ *
+ * A mail is already on its way when the screen opens (the sign-up sent
+ * it), so the resend countdown starts at mount rather than at the first
+ * tap. `?resend=1` is the other door in, from a sign-in refused with
+ * `email_not_confirmed`, and it asks for a fresh code on arrival. That
+ * request is often refused — the server's own floor is a minute on the
+ * hosted project, and signing up and then signing in takes less — which
+ * is why a refusal there reads as "the code you already have still works"
+ * rather than as an error.
  */
 
 const emailParamSchema = z.string().trim().toLowerCase().email();
@@ -74,34 +81,53 @@ export default function Verify() {
     return () => clearInterval(id);
   }, [cooling]);
 
-  const sendCode = useCallback(async () => {
-    if (!email) return;
-    setSending(true);
-    setError(null);
-    setNotice(null);
-    const { error: err } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-    });
-    setSending(false);
-    if (err) {
-      setError(authErrorText(err));
-      return;
-    }
-    // Only a send that happened starts the countdown: a refused one leaves
-    // the link as it was, because the person has nothing new to wait for.
-    const sent = Date.now();
-    setSentAt(sent);
-    setNow(sent);
-    setNotice(t.verify.resent);
-  }, [email]);
+  /**
+   * Ask for a mail. `automatic` is the send this screen makes on arrival
+   * from a refused sign-in — nobody asked for it, so it cannot fail loudly.
+   */
+  const sendCode = useCallback(
+    async (automatic: boolean) => {
+      if (!email) return;
+      setSending(true);
+      setError(null);
+      setNotice(null);
+      const { error: err } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      setSending(false);
+      if (err) {
+        // The server sent one moments ago and is counting
+        // (`[auth.email] max_frequency`). That is the commonest answer to
+        // the automatic request, and it is not a failure: the code it
+        // refuses to resend is already in the inbox. Either way the
+        // countdown starts, because the server is counting whether or not
+        // this screen was.
+        if (err.code === 'over_email_send_rate_limit') {
+          const refusedAt = Date.now();
+          setSentAt(refusedAt);
+          setNow(refusedAt);
+          if (automatic) setNotice(t.verify.stillValid);
+          else setError(authErrorText(err));
+          return;
+        }
+        setError(authErrorText(err));
+        return;
+      }
+      const sent = Date.now();
+      setSentAt(sent);
+      setNow(sent);
+      setNotice(t.verify.resent);
+    },
+    [email],
+  );
 
   // The sign-in door's arrival: ask for a code once, for this address.
   const asked = useRef(false);
   useEffect(() => {
     if (!wantsFreshCode || asked.current || !email) return;
     asked.current = true;
-    void sendCode();
+    void sendCode(true);
   }, [wantsFreshCode, email, sendCode]);
 
   // A screen opened without a usable address cannot verify anything — a
@@ -188,7 +214,7 @@ export default function Verify() {
         style={styles.resend}
         {...(cooling || sending || busy
           ? {}
-          : { onPress: () => void sendCode() })}
+          : { onPress: () => void sendCode(false) })}
       >
         {secondsLeft > 0 ? t.verify.resendIn(secondsLeft) : t.verify.resend}
       </LinkText>

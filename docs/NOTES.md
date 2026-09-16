@@ -5401,3 +5401,82 @@ credentials gets. The first real sign-in is the last line of
   a `useState` lazy initialiser — and a mount effect that calls `setState`
   synchronously is refused by a second rule. A clock a screen needs at
   mount goes in `useState(() => Date.now())`, with an interval updating it."
+
+## 2026-09-16 — The dev build, and the review of "The door, rebuilt"
+
+Two things happened after the commit that entry describes, and one of them
+corrects it.
+
+**The dev build exists.** `npx expo run:ios` succeeded on the third attempt
+and Juno — its own icon, not Expo Go's — is installed on the iPhone 17 Pro
+simulator (`25419446-CDE6-4206-8728-29B6A60556B5`; the UDID recorded on
+2026-09-11 belongs to a simulator that is gone). The two failures before it
+are in that entry. A third thing that cost a few minutes and is worth
+knowing: `expo run:ios` hands the dev client a URL pointing at port 8081,
+which on this machine is another product's Metro, so the app loads the
+wrong bundle. `xcrun simctl openurl <udid>
+"exp+juno://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8082"`
+points it at juno's.
+
+**What the simulator then showed, which is more than the entry claimed.**
+
+- The welcome screen drew **Apple and no Google**. That build carried no
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, so this is `lib/oauth.ts`
+  `availability` working on a real build rather than in a unit test.
+  `screenshots/v1-welcome-providers.png`.
+- Tapping Apple opened **iOS's own Sign in with Apple sheet**, which got as
+  far as "Apple Hesabı'nıza giriş yapın — Ayarlar'da Apple Hesabı'nıza
+  giriş yapmanız gerekiyor": the simulator has no Apple account. That is
+  the native module, the entitlement and the plumbing between them all
+  working; only Apple's side is missing. `screenshots/v1-apple-sheet.png`.
+  Closing it left the button live again with the app's own sentence, not a
+  dead button.
+- The whole mail path again, on iOS this time: sign-up → the code screen
+  (`screenshots/v1-verify-code.png`) → the six digits out of Mailpit →
+  onboarding.
+- One incidental: iOS's "Güçlü Parola Kullanılsın mı?" sheet opens over the
+  password field, because it is marked `newPassword`. It swallows typing
+  while it is up, which is a thing to know before blaming HID.
+
+**The review found four things worth fixing, all fixed in the commit that
+carries this entry.**
+
+- The `?resend=1` arrival asked for a fresh code unconditionally. On the
+  hosted project, where `max_frequency` is to be a minute, the commonest
+  path into that screen — sign up, go back, sign in — is inside the floor,
+  so the screen would have greeted people with a red "çok sık denedin"
+  while a perfectly good code sat in their inbox. Now a refusal with
+  `over_email_send_rate_limit` starts the countdown and, for the automatic
+  send, says the code already sent is still valid. A manual resend refused
+  the same way also starts the countdown, because the server is counting
+  whether or not the screen was.
+- A credential that came back with no ID token was reported as a
+  cancellation, and a cancellation deliberately shows nothing — so a sheet
+  that completed and produced nothing would have been a button that does
+  nothing, which is what this work removed. Cancelled and empty are two
+  outcomes now.
+- `otp_expired` → the Turkish sentence had no test. It is the one error
+  every user of that screen eventually sees.
+- `docs/auth-setup.md` offered `supabase config push` as an alternative to
+  the dashboard "with the same result". It is not: the push carries the
+  whole `[auth]` section, including `max_frequency = "1s"` and
+  `email_sent = 100`, both tuned for a mail server that delivers nothing.
+  Pushed as they are, the app's sixty-second countdown has nothing behind
+  it. The document now says which two lines to change first.
+
+Also from the review, and smaller: the battery's cleanup took the account
+id from a paged `listUsers` instead of from `signUp`'s own response (a
+silent skip on a crowded local database); the "a weak password mails
+nothing" assertion read the inbox with no settle time, so it would have
+passed against a merely slow mailer; `contracts/init.sh` pointed at an ADR
+filename that does not exist.
+
+**And one correction to the entry above.** It said a prebuild produced
+"the Sign in with Apple entitlement and the reversed-client-id URL scheme"
+and named the generated files. Both were read, but not from the same
+prebuild: the URL scheme came from a run made with a client ID exported,
+and the prebuild left on disk afterwards was made without one and correctly
+has no such scheme. The claim is true of what was run and false of what a
+reader would find on disk, which is close enough to a wrong claim to
+rewrite. `docs/adr/0011-sign-in.md` and `docs/ROADMAP.md` now say which
+prebuild showed what.

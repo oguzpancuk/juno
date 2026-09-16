@@ -83,20 +83,32 @@ off — which is exactly the failure this ADR exists to prevent. It ties the
 suite to the local stack's mail server, which it was already tied to for
 Postgres and Storage.
 
-**The provider buttons cannot be proven by the battery, and were not proven
-on a device in the session that built them.** Both paths need credentials
-that only exist in a Google Cloud project and an Apple Developer account,
-neither of which existed on 2026-09-16. What was verified is everything up
-to the token: the config plugins produce the Sign in with Apple entitlement
-and the reversed-client-id URL scheme, the pure half is covered by
-`lib/oauth.test.ts`, and the screens render with and without each provider.
-The first real sign-in is an owner step, and it is the last item of
+**No provider has signed anybody in, and the battery cannot change that.**
+Both paths need credentials that only exist in a Google Cloud project and
+an Apple Developer account, neither of which existed on 2026-09-16. What
+was verified stops one step short of the token: a dev build was made and
+run on the simulator, where the welcome screen showed Apple alone (no
+Google client ID was compiled in) and the Apple button opened iOS's own
+Sign in with Apple sheet — which is the native module, the entitlement and
+the plumbing between them, all working. It got as far as iOS asking for an
+Apple account the simulator does not have. Google's URL scheme was read out
+of a prebuild made with a client ID set; no prebuild without one produces
+it, by design. The pure half is covered by `lib/oauth.test.ts`. The first
+real sign-in is an owner step, and it is the last item of
 `docs/auth-setup.md`.
 
 **Apple is missing on the web and on Android.** Reaching Apple through a
 browser needs a Services ID and a signing key that the iOS App ID does not
 provide. E-mail and password are the way in on those platforms. If the web
 client ever becomes the main door, this is the first thing to revisit.
+
+**The address travels as a route param, and on the web that means the URL
+bar.** `/verify?email=…` is what lets a reload keep working — there is no
+session yet to read it from, and a module-level variable does not survive
+one. The password never travels; the address does, into the web client's
+history. Taken deliberately for a value the person typed on the screen
+before, and the first thing to revisit if the web client becomes the main
+door.
 
 **Two more values must match across three places.** The OTP length and
 expiry live in `supabase/config.toml`, in the mail template's prose ("10

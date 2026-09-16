@@ -28,13 +28,6 @@ const freshAddress = (tag: string): string =>
 
 const email = freshAddress('door');
 
-/** Remembers an account by address, so cleanup covers it whatever fails. */
-async function remember(address: string): Promise<void> {
-  const { data } = await admin.auth.admin.listUsers();
-  const user = data.users.find((candidate) => candidate.email === address);
-  if (user) users.push({ id: user.id, email: address, client: anonClient() });
-}
-
 afterAll(async () => {
   await deleteUsers(admin, users);
 });
@@ -46,8 +39,12 @@ describe('sign-up', () => {
       password: PASSWORD,
     });
     expect(error).toBeNull();
-    await remember(email);
     if (!data.user) throw new Error('signUp returned no user');
+    // Remembered from the response itself: a lookup through `listUsers`
+    // reads one page, and an id that is not on it would leave the account
+    // behind with nothing reported — a silent skip, which the battery's
+    // own rule forbids.
+    users.push({ id: data.user.id, email, client: anonClient() });
     expect(data.user.email).toBe(email);
     // The two halves of confirmations being on: no session yet, and the
     // address not confirmed. These are the lines that turn red if the
@@ -133,6 +130,10 @@ describe('sign-up', () => {
     expect(error?.status).toBe(422);
     expect(data.user).toBeNull();
     expect(data.session).toBeNull();
+    // Given as long to arrive as a real one is given in the tests above,
+    // so this proves no mail was sent rather than that none had arrived
+    // yet. `waitForMail` throws when nothing lands, which is the pass.
+    await expect(waitForMail(weak, 1, 3000)).rejects.toThrow(/no mail/u);
     expect(await mailsFor(weak)).toEqual([]);
   });
 });

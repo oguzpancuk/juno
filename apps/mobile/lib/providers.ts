@@ -69,24 +69,42 @@ function cancelled(error: unknown): boolean {
   return isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED;
 }
 
-async function appleToken(): Promise<string | null> {
+/**
+ * What a provider handed back. A token, or the reason there is none —
+ * and the two reasons are not the same thing. Closing the sheet is an
+ * answer and gets no sentence; a sheet that completed and produced no
+ * token is a failure, and saying nothing about it would be the "tap it
+ * and nothing happens" that this screen exists to stop.
+ */
+type TokenResult =
+  | { readonly token: string }
+  | { readonly token: null; readonly cancelled: boolean };
+
+async function appleToken(): Promise<TokenResult> {
   const credential = await AppleAuthentication.signInAsync({
     // Only the address. Apple returns the full name once and only on the
     // very first authorisation, so a product that stored it would have a
     // name for some accounts and not others; onboarding asks everyone.
     requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
   });
-  return credential.identityToken;
+  // A dismissed sheet throws (`ERR_REQUEST_CANCELED`), so reaching here
+  // with no token is the credential itself being unusable.
+  return credential.identityToken === null
+    ? { token: null, cancelled: false }
+    : { token: credential.identityToken };
 }
 
-async function googleToken(): Promise<string | null> {
+async function googleToken(): Promise<TokenResult> {
   // Android's Google Play services may be missing or out of date; on iOS
   // this resolves true. Left unawaited, the failure would arrive as an
   // unnamed one from `signIn`.
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
-  if (response.type !== 'success') return null;
-  return response.data.idToken;
+  // Google reports a closed sheet by returning, not by throwing.
+  if (response.type !== 'success') return { token: null, cancelled: true };
+  return response.data.idToken === null
+    ? { token: null, cancelled: false }
+    : { token: response.data.idToken };
 }
 
 /**
@@ -98,15 +116,16 @@ export async function signInWithProvider(
   provider: Provider,
 ): Promise<ProviderOutcome> {
   try {
-    const token =
+    const result =
       provider === 'apple' ? await appleToken() : await googleToken();
-    // Google answers a closed sheet with `{ type: 'cancelled' }` rather
-    // than by throwing, and both providers can hand back a credential with
-    // no ID token in it — nothing to exchange either way.
-    if (token === null) return { status: 'cancelled' };
+    if (result.token === null) {
+      return result.cancelled
+        ? { status: 'cancelled' }
+        : { status: 'failed', message: t.errors.providerFailed };
+    }
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider,
-      token,
+      token: result.token,
     });
     if (error) return { status: 'failed', message: t.errors.providerFailed };
     if (!data.session) {

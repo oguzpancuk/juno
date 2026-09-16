@@ -214,26 +214,33 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       _Done: nine tests in `supabase/tests/auth.test.ts`, three of which
       read Mailpit through `tests/mailpit.ts`; they also pin the sender
       and subject, which come from config rather than from the template.
-      Walked end to end in the web client against the local stack: sign-up
-      → the mail in Mailpit (from "Juno <hesap@juno.app>", subject "Juno
-      doğrulama kodun") → a wrong code refused with the app's own sentence
-      → the mailed code → onboarding, with the resend countdown watched
-      running down. Not covered anywhere: real SMTP, which needs the hosted
-      project (`docs/auth-setup.md`)._
+      Walked end to end twice against the local stack — in the web client
+      and, on a dev build, in the iOS simulator: sign-up → the mail in
+      Mailpit (from "Juno <hesap@juno.app>", subject "Juno doğrulama
+      kodun") → a wrong code refused with the app's own sentence → the
+      mailed code → onboarding, with the resend countdown watched running
+      down. A sign-in on an unconfirmed address lands on the same screen
+      and a second, different code arrives. `screenshots/v1-verify-code.png`
+      is the code screen on iOS. Not covered anywhere: real SMTP, which
+      needs the hosted project (`docs/auth-setup.md`)._
 - [ ] **Sign in with Apple and Google (Apple).** Alongside e-mail and
       password, through each provider's own SDK; the inert buttons of
       2026-09-11 are gone (ADR-0011). App Store Review Guideline 4.8 means
       Apple must work before the first TestFlight submission.
       — done when: manual sign-in on a real device works and creates the same
       profile flow (manual; not simulator-testable).
-      _Built and unverified, deliberately: both paths need credentials that
-      only exist in a Google Cloud project and an Apple Developer account,
-      and neither existed on 2026-09-16. What holds today is the code
-      (`lib/providers.ts`, `lib/providers.web.ts`, the pure half under
-      `lib/oauth.test.ts`), the config plugins (a prebuild produces the
-      Sign in with Apple entitlement and the reversed-client-id URL scheme)
-      and the screens with and without each provider. The owner's steps are
-      `docs/auth-setup.md`; this box is ticked by the first real sign-in._
+      _Built, and taken as far as credentials allow. On a dev build in the
+      simulator the welcome screen shows Apple and no Google — no client ID
+      was compiled in — and tapping Apple opens iOS's own Sign in with
+      Apple sheet, which stops at "Apple Hesabı'nıza giriş yapın" because
+      the simulator has no Apple account; closing it returns the app's own
+      sentence, not a dead button. `screenshots/v1-welcome-providers.png`
+      and `screenshots/v1-apple-sheet.png`. The Google URL scheme was read
+      out of a prebuild made with a client ID set. What is missing is only
+      the credentials: a Google Cloud project and an Apple Developer
+      account, neither of which existed on 2026-09-16. The owner's steps
+      are `docs/auth-setup.md`; this box is ticked by the first real
+      sign-in._
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
       privacy policy hosted at a URL; about/legal screen credits GeoNames

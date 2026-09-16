@@ -27,7 +27,15 @@ gerekiyor; sonrasında her kod değişikliği yine anında yansır.
 npx expo run:ios
 ```
 
+**Bu adım 2026-09-16'da bu makinede bir kere yapıldı** — simülatörde Juno
+kurulu ve çalışıyor. Yeniden alman gereken tek an, `app.config.ts`'i
+etkileyen bir değişiklikten sonra; aşağıda Google ve Apple bölümleri bunu
+ayrıca söylüyor.
+
 - CocoaPods gerekiyor. `pod --version` çalışmıyorsa: `brew install cocoapods`.
+- Kabuğunda UTF-8 yoksa `pod install` anlamsız bir Ruby hatasıyla ölüyor
+  (`Unicode Normalization ... ASCII-8BIT`). Çaresi: komutun başına
+  `LANG=en_US.UTF-8`.
 - İlk derleme 10–20 dakika sürer; sonrakiler saniyeler.
 - Simülatörde beliren uygulama artık "Expo Go" değil, "Juno".
 - `bash contracts/init.sh` yerel Supabase + Metro'yu ayağa kaldırmaya devam
@@ -92,8 +100,17 @@ TestFlight maddesi). Sonra:
 > Panoya tıklamak yerine depodan da gönderilebilir: projeyi
 > `npx supabase link` ile bağla, `supabase/config.toml` içindeki
 > `[auth.email.smtp]` bloğunu yorumdan çıkar, `RESEND_API_KEY` değişkenini
-> ver ve `npx supabase config push` çalıştır. Aynı sonuç, farkı
-> ayarların depoda kayıtlı kalması.
+> ver ve `npx supabase config push` çalıştır. Ayarların depoda kayıtlı
+> kalması iyi, ama **aynı sonuç değil**: `config push` bütün `[auth]`
+> bölümünü gönderir, yani yereldeki Mailpit'e göre ayarlanmış iki değeri de
+> üretime taşır ve bu belgede elle girdiğin değerlerin üzerine yazar:
+>
+> - `max_frequency = "1s"` → üretimde `"60s"` yap. Kalırsa uygulamadaki 60
+>   saniyelik sayaç arkasız kalır; bir betik doğrulanmamış herhangi bir
+>   adrese saniyede bir mail attırıp Resend kotanı bitirebilir.
+> - `email_sent = 100` → SMTP planına uyan rakamı yaz.
+>
+> İkisini düzeltmeden `config push` çalıştırma.
 
 **Bitti mi:** kendi adresinle kaydol; mail gelen kutuna (spam'e değil)
 düşüyor, içindeki altı haneyi ekrana yazınca hesap açılıyor.
@@ -191,6 +208,12 @@ Web'de Apple yok, Google tarayıcı yönlendirmesiyle çalışıyor. Yayınlanı
 **Authentication → URL Configuration → Redirect URLs** listesine web
 sürümünün adresini ekle (örn. `https://juno.app`). Listede olmayan bir
 adrese Supabase kimseyi geri göndermez.
+
+Web build'ini alırken `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` de ortamda
+olmalı. Tarayıcı akışı o değeri kullanmıyor (client ID Supabase panosunda
+duruyor), ama uygulama "Google düğmesini göster" kararını ona bakarak
+veriyor — kural her platformda aynı: client ID'si olmayan build'de Google
+düğmesi yok.
 
 ---
 
