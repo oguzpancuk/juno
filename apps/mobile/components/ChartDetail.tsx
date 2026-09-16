@@ -1,6 +1,5 @@
 import {
   SIGN_GLYPH,
-  aspectGlyphs,
   elementOf,
   formatDegree,
   natalAspectTitleTr,
@@ -9,6 +8,7 @@ import {
   type PublicChart,
 } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
+import { AspectGlyphs } from '@/components/AspectGlyphs';
 import { ChartWheel } from '@/components/ChartWheel';
 import { Body, Card, GlyphBadge, SectionLabel } from '@/components/ui';
 import { t } from '@/lib/strings';
@@ -157,7 +157,7 @@ export function ChartDetail({
             key={`${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
             testID={`aspect-${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`}
           >
-            <Text style={styles.aspectGlyphs}>{aspectGlyphs(aspect)}</Text>
+            <AspectGlyphs aspect={aspect} />
             <Text style={styles.planetName}>
               {natalAspectTitleTr(aspect)}
               <Text style={styles.orb}>
@@ -188,6 +188,5 @@ const styles = StyleSheet.create({
   houseLabel: { ...type.label, color: color.textFaint },
   wheelWrap: { alignItems: 'center', paddingVertical: space.sm },
   planetName: { ...type.body, color: color.text, fontFamily: font.semibold },
-  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
   orb: { ...type.caption, color: color.textFaint, fontFamily: font.regular },
 });

@@ -1,6 +1,5 @@
 import {
   LEVELS,
-  aspectGlyphs,
   formatDegree,
   type MatchSections,
   type OverlayReading,
@@ -10,6 +9,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AspectGlyphs } from '@/components/AspectGlyphs';
+import { Card } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
@@ -123,7 +124,7 @@ export function CompatibilityDetail({
         <View testID="overlays">
           <Text style={styles.label}>{t.match.overlays}</Text>
           {(showOverlays ? overlays : overlays.slice(0, 1)).map((o) => (
-            <View
+            <Card
               key={`${o.direction}-${o.house}`}
               style={styles.aspect}
               testID={`overlay-${o.direction}-${o.house}`}
@@ -139,7 +140,7 @@ export function CompatibilityDetail({
                   {placement.text}
                 </Text>
               ))}
-            </View>
+            </Card>
           ))}
           {overlays.length > 1 ? (
             <Pressable
@@ -172,17 +173,15 @@ export function CompatibilityDetail({
  */
 function AspectCard({ card }: { card: SynastryAspectReading }) {
   return (
-    <View style={styles.aspect}>
+    <Card style={styles.aspect}>
       <View style={styles.aspectTop}>
-        <View style={styles.glyphPill}>
-          <Text style={styles.aspectGlyphs}>{aspectGlyphs(card.aspect)}</Text>
-        </View>
+        <AspectGlyphs aspect={card.aspect} />
         <Text style={styles.aspectOrb}>{formatDegree(card.aspect.orb)}</Text>
       </View>
       <Text style={styles.aspectTitle}>{card.title}</Text>
       <Text style={styles.aspectHead}>{card.headline}</Text>
       <Text style={styles.body}>{card.meaning}</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -224,29 +223,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   aspectLine: { gap: 2 },
-  aspect: {
-    backgroundColor: color.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: color.border,
-    padding: space.lg,
-    gap: space.xs,
-    marginBottom: space.sm,
-  },
+  aspect: { gap: space.xs, marginBottom: space.sm },
   aspectTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: space.xs,
   },
-  glyphPill: {
-    backgroundColor: color.surfaceHigh,
-    borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: space.md,
-  },
   aspectTitle: { ...type.heading, color: color.text },
-  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 3 },
   aspectOrb: {
     ...type.caption,
     fontFamily: font.medium,

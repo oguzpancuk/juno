@@ -1,3 +1,4 @@
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { createContext, useContext, type ReactNode } from 'react';
@@ -13,7 +14,16 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { color, font, gradient, radius, space, type } from '@/theme/tokens';
+import { CosmicGround } from '@/components/CosmicGround';
+import {
+  color,
+  font,
+  glass,
+  gradient,
+  radius,
+  space,
+  type,
+} from '@/theme/tokens';
 
 /**
  * The shared pieces every screen is built from. One file: the set is small
@@ -78,17 +88,55 @@ export function Screen({
   testID?: string;
 }) {
   return (
-    <ScrollView
-      style={s.screen}
-      contentContainerStyle={s.screenContent}
-      bounces={!bleed}
-      overScrollMode={bleed ? 'never' : 'auto'}
-      testID={testID}
-    >
-      <TopGapContext.Provider value={bleed ? SCREEN_TOP_PADDING : 0}>
-        {children}
-      </TopGapContext.Provider>
-    </ScrollView>
+    <View style={s.screen}>
+      {/* The star field under every screen (owner, 2026-09-16); the
+          scroll view over it paints nothing of its own. */}
+      <CosmicGround planet={false} horizon={false} />
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.screenContent}
+        bounces={!bleed}
+        overScrollMode={bleed ? 'never' : 'auto'}
+        testID={testID}
+      >
+        <TopGapContext.Provider value={bleed ? SCREEN_TOP_PADDING : 0}>
+          {children}
+        </TopGapContext.Provider>
+      </ScrollView>
+    </View>
+  );
+}
+
+/** How much the blur behind a glass surface blurs; 0–100. */
+const GLASS_BLUR = 28;
+
+/**
+ * A surface the stars show through (owner, 2026-09-16): a blur where the
+ * platform draws one — iOS and the web; Android gets the tint alone — and
+ * a translucent fill over it, both absolute so the children lay out as
+ * they would on a plain view. The host sets the shape: radius, border,
+ * padding. `overflow: hidden` here keeps the blur inside the corners.
+ */
+export function Glass({
+  children,
+  style,
+  testID,
+}: {
+  children?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+}) {
+  return (
+    <View testID={testID} style={[s.glass, style]}>
+      <BlurView
+        intensity={GLASS_BLUR}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <View style={s.glassFill} pointerEvents="none" />
+      {children}
+    </View>
   );
 }
 
@@ -135,9 +183,12 @@ export function Card({
   testID?: string;
 }) {
   return (
-    <View testID={testID} style={[s.card, style]}>
+    <Glass
+      style={[s.card, style]}
+      {...(testID === undefined ? {} : { testID })}
+    >
       {children}
-    </View>
+    </Glass>
   );
 }
 
@@ -525,6 +576,7 @@ export function Glow({
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
+  scroll: { flex: 1 },
   screenContent: {
     padding: SCREEN_PADDING,
     paddingTop: SCREEN_TOP_PADDING,
@@ -562,24 +614,32 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   outlineText: { ...type.heading, color: color.text, textAlign: 'center' },
+  glass: { overflow: 'hidden' },
+  glassFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: glass.fill,
+  },
   card: {
-    backgroundColor: color.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: color.border,
+    borderColor: glass.edge,
     // The sheet's cards catch light along the top edge; one brighter
     // hairline is that, and it costs nothing on the web.
-    borderTopColor: color.borderStrong,
+    borderTopColor: glass.edgeTop,
     padding: space.lg,
     gap: space.sm,
   },
   chip: {
     minHeight: 44,
     justifyContent: 'center',
-    backgroundColor: color.surfaceSoft,
+    backgroundColor: glass.fillSoft,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: color.borderStrong,
+    borderColor: glass.edge,
     paddingVertical: 11,
     paddingHorizontal: space.lg,
   },
@@ -593,9 +653,9 @@ const s = StyleSheet.create({
   chipTextOn: { color: color.onBright, fontFamily: font.semibold },
   badge: {
     borderRadius: radius.pill,
-    backgroundColor: color.surfaceHigh,
+    backgroundColor: glass.fillHigh,
     borderWidth: 1,
-    borderColor: color.borderStrong,
+    borderColor: glass.edge,
     alignItems: 'center',
     justifyContent: 'center',
   },

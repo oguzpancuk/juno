@@ -65,6 +65,53 @@ export const color = {
  * circle behind it — the tint is the ink at low alpha, kept here as a
  * literal because nothing outside this file may hold a colour.
  */
+/**
+ * Glass (owner, 2026-09-16: "Apple'ın liquid glass'i gibi"): a surface
+ * that lets the star field through. The fills are the surfaces above at
+ * about half opacity; `Glass` in ui.tsx puts a blur behind them where the
+ * platform has one. The edges are the borders, a little brighter, with
+ * the top edge catching light.
+ */
+export const glass = {
+  fill: 'rgba(18,16,31,0.58)',
+  fillSoft: 'rgba(23,21,40,0.5)',
+  fillHigh: 'rgba(29,27,49,0.62)',
+  edge: 'rgba(255,255,255,0.1)',
+  edgeTop: 'rgba(255,255,255,0.22)',
+} as const;
+
+/**
+ * A colour per body, for glyphs (owner, 2026-09-16: aspects coloured
+ * "hem açılara hem gezegenlere göre"). Traditional where a tradition
+ * exists — a gold Sun, a silver Moon, a red Mars — and kept inside the
+ * palette's warmth otherwise. Glyphs only, at 17pt and up; none of these
+ * is body text.
+ */
+export const planet = {
+  sun: '#F7C98C',
+  moon: '#DCE0F7',
+  mercury: '#8CD7E0',
+  venus: '#E98FA0',
+  mars: '#F08A6C',
+  jupiter: '#C9A0FF',
+  saturn: '#C4B594',
+  uranus: '#8CC8E0',
+  neptune: '#A78BFA',
+  pluto: '#B989A8',
+  ascendant: '#F6F3FF',
+} as const;
+
+/**
+ * An aspect's kind as a colour: the flowing ones, the ones with friction
+ * (a dynamic, never a fault — ADR-0009), and the conjunction, which is
+ * neither. Ink for the aspect's symbol and tint for the card's pill.
+ */
+export const aspectTone = {
+  harmony: { ink: color.ok, tint: 'rgba(140,224,176,0.16)' },
+  tension: { ink: color.tense, tint: 'rgba(201,160,255,0.16)' },
+  conjunction: { ink: color.coolLight, tint: 'rgba(201,182,255,0.14)' },
+} as const;
+
 export const element = {
   fire: { ink: color.warm, tint: 'rgba(247,169,140,0.24)' },
   earth: { ink: color.ok, tint: 'rgba(140,224,176,0.2)' },

@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { BlurView } from 'expo-blur';
 import {
   Modal,
   Platform,
@@ -16,13 +17,14 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CosmicGround } from '@/components/CosmicGround';
 import {
   GradientButton,
   SCREEN_PADDING,
   TopGapContextProvider,
 } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * Lets a control inside a sheet hold the sheet still while it is being
@@ -141,6 +143,16 @@ export function Popup({
             { paddingBottom: Math.max(insets.bottom, space.lg) },
           ]}
         >
+          {/* The sheet is glass: the screen under the scrim shows through
+              a blur (owner, 2026-09-16), and the stars under the sheet's
+              own content are its own. */}
+          <BlurView
+            intensity={28}
+            tint="dark"
+            style={styles.fill}
+            pointerEvents="none"
+          />
+          <CosmicGround planet={false} horizon={false} />
           {title === undefined ? null : (
             <Text style={styles.title}>{title}</Text>
           )}
@@ -185,6 +197,7 @@ export function Popup({
 }
 
 const styles = StyleSheet.create({
+  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   layer: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
     position: 'absolute',
@@ -196,11 +209,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     maxHeight: '88%',
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 1,
-    borderColor: color.borderStrong,
+    borderColor: glass.edge,
+    borderTopColor: glass.edgeTop,
     paddingTop: space.xl,
     overflow: 'hidden',
   },

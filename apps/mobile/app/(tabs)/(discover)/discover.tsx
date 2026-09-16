@@ -24,7 +24,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
-import { BandMeter } from '@/components/Meter';
+import { BandRing } from '@/components/BandRing';
+import { CosmicGround } from '@/components/CosmicGround';
 import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
 import { Popup } from '@/components/Popup';
 import { SlidersIcon } from '@/components/SlidersIcon';
@@ -331,6 +332,7 @@ export default function Discover() {
     // birim olmasin"): one screen, the photo taking whatever the block
     // below it leaves.
     <View style={styles.screen} testID="discover-screen">
+      <CosmicGround planet={false} horizon={false} />
       {state.status === 'loading' ? (
         <View style={styles.center}>
           <ActivityIndicator color={color.textMuted} />
@@ -499,9 +501,11 @@ export default function Discover() {
               hitSlop={space.md}
               testID="open-detail"
             >
-              <BandMeter
+              <BandRing
                 band={bandOf(current.match.score)}
                 label={bandName(current.match.score)}
+                size={56}
+                stroke={5}
               />
               <View>
                 <Text
@@ -576,11 +580,7 @@ export default function Discover() {
         >
           {/* The match page's whole reading, not a digest of it (owner,
               2026-09-15). */}
-          <PairReading
-            mine={detail.mine}
-            theirs={detail.theirs}
-            ground={color.surface}
-          />
+          <PairReading mine={detail.mine} theirs={detail.theirs} />
         </Popup>
       ) : null}
       {current && theirReading ? (

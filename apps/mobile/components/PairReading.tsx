@@ -6,8 +6,8 @@ import {
 } from '@juno/astro';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { BandRing } from '@/components/BandRing';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
-import { Halo } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
 
@@ -28,12 +28,9 @@ import { color, space, type } from '@/theme/tokens';
 export function PairReading({
   mine,
   theirs,
-  ground,
 }: {
   mine: PublicChart;
   theirs: PublicChart;
-  /** The host's ground, for the ring's middle: a sheet is `surface`. */
-  ground?: string;
 }) {
   const reading = useMemo(
     () => synastryReading(mine, theirs, 5),
@@ -51,13 +48,22 @@ export function PairReading({
   return (
     <View style={styles.root} testID="synastry">
       {/* The band, never the number (ADR-0009 §3) — inside the ring the
-          sheet draws around its percentage (frame 10). */}
-      <Halo size={168} {...(ground === undefined ? {} : { ground })}>
-        <Text style={styles.bandName} testID="band">
-          {reading.bandName}
-        </Text>
-        <Text style={styles.bandLabel}>{t.discover.scoreLabel}</Text>
-      </Halo>
+          sheet draws around its percentage (frame 10), the same ring the
+          deck shows small. */}
+      <View style={styles.ring}>
+        <BandRing
+          band={reading.band}
+          label={reading.bandName}
+          size={168}
+          stroke={6}
+          glow
+        >
+          <Text style={styles.bandName} testID="band">
+            {reading.bandName}
+          </Text>
+          <Text style={styles.bandLabel}>{t.discover.scoreLabel}</Text>
+        </BandRing>
+      </View>
       <CompatibilityDetail
         reading={reading}
         sections={sections}
@@ -69,6 +75,7 @@ export function PairReading({
 
 const styles = StyleSheet.create({
   root: { gap: space.sm, paddingTop: space.md },
+  ring: { alignSelf: 'center' },
   bandName: { ...type.title, color: color.text, textAlign: 'center' },
   bandLabel: { ...type.label, color: color.textFaint },
 });

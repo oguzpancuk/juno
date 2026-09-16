@@ -18,8 +18,9 @@ import {
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { BackLink, GradientButton, LinkText, OrbitMark } from '@/components/ui';
+import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
-import { color, font, radius, space, type } from '@/theme/tokens';
+import { color, font, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * One screen for both doors: sign-up and sign-in with an e-mail and a
@@ -101,6 +102,7 @@ export default function SignIn() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <CosmicGround planet={false} horizon={false} />
       {/* Pops, never pushes: a Link here grew the root stack by two
           screens per round trip, and what an edge swipe revealed after
           signing out was that history. */}
@@ -201,10 +203,10 @@ const styles = StyleSheet.create({
   label: { ...type.bodySmall, color: color.textMuted },
   input: {
     fontFamily: font.regular,
-    backgroundColor: color.surface,
-    borderRadius: radius.md,
+    backgroundColor: glass.fill,
     borderWidth: 1,
-    borderColor: color.border,
+    borderColor: glass.edge,
+    borderRadius: radius.md,
     color: color.text,
     fontSize: 17,
     padding: space.lg,

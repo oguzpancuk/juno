@@ -25,8 +25,9 @@ import { Chip, GradientButton } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
-import { color, font, space } from '@/theme/tokens';
+import { color, font, glass, space } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
@@ -159,6 +160,7 @@ export default function Onboarding() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <CosmicGround planet={false} horizon={false} />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -386,7 +388,9 @@ const styles = StyleSheet.create({
   },
   input: {
     fontFamily: font.regular,
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
     color: color.text,
     borderRadius: 10,
     padding: 12,
@@ -394,7 +398,9 @@ const styles = StyleSheet.create({
   },
   small: {
     fontFamily: font.regular,
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
     color: color.text,
     borderRadius: 10,
     padding: 12,

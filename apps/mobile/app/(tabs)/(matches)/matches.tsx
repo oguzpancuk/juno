@@ -15,9 +15,10 @@ import { usePhotoSources } from '@/lib/photos';
 import { chatHref } from '@/lib/routes';
 import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
+import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
 import { notifyUnreadChanged } from '@/lib/unread';
-import { color, font, space, type } from '@/theme/tokens';
+import { color, font, glass, radius, space, type } from '@/theme/tokens';
 
 /** The new-match faces: large enough to read as people, not as badges. */
 const STRIP_AVATAR = 64;
@@ -94,127 +95,131 @@ export default function Matches() {
   if (session.status === 'signed-out') return <RedirectToSignIn />;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      testID="matches-screen"
-    >
-      {rows === 'loading' ? (
-        <ActivityIndicator color={color.textMuted} />
-      ) : rows === null ? (
-        <Text style={styles.muted}>{t.errors.generic}</Text>
-      ) : (
-        <>
-          {/* The top of the screen, now that it has no heading (owner,
+    <View style={styles.screen}>
+      <CosmicGround planet={false} horizon={false} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        testID="matches-screen"
+      >
+        {rows === 'loading' ? (
+          <ActivityIndicator color={color.textMuted} />
+        ) : rows === null ? (
+          <Text style={styles.muted}>{t.errors.generic}</Text>
+        ) : (
+          <>
+            {/* The top of the screen, now that it has no heading (owner,
               2026-09-15): the matches nobody has written to yet, as a row
               of faces. Always there once the rows are in, so the top is
               never bare — with nothing new it says so rather than
               collapsing. A match leaves this row for the list below the
               moment its first message is sent. */}
-          <Text style={styles.sectionLabel}>{t.matches.newMatches}</Text>
-          {fresh(rows).length === 0 ? (
-            <Text style={styles.stripEmpty} testID="new-matches-empty">
-              {t.matches.noNewMatches}
-            </Text>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.strip}
-              // The strip scrolls sideways inside a page that scrolls down;
-              // it must not swallow the page's own content inset.
-              style={styles.stripFrame}
-              testID="new-matches"
-            >
-              {fresh(rows).map((row) => {
-                const first = row.photos[0];
-                return (
-                  // `asChild` so the tap target is a View: a bare `Link`
-                  // renders as Text on iOS, and its line box cut the top
-                  // off the round photo.
-                  <Link
-                    key={row.match_id}
-                    href={chatHref(row.match_id)}
-                    asChild
-                  >
-                    <Pressable
-                      // A plain style, not a function: `asChild` hands the
-                      // props through a slot that drops a style callback,
-                      // which left the name unaligned under the photo.
-                      style={styles.stripItem}
-                      accessibilityRole="button"
-                      accessibilityLabel={row.display_name}
-                      testID={`new-match-${row.match_id}`}
-                    >
-                      <Avatar
-                        name={row.display_name}
-                        source={
-                          first === undefined
-                            ? null
-                            : (sourceByPath.get(first) ?? null)
-                        }
-                        size={STRIP_AVATAR}
-                      />
-                      <Text style={styles.stripName} numberOfLines={1}>
-                        {row.display_name}
-                      </Text>
-                    </Pressable>
-                  </Link>
-                );
-              })}
-            </ScrollView>
-          )}
-          {threads(rows).map((row) => {
-            const first = row.photos[0];
-            return (
-              <Link
-                key={row.match_id}
-                href={chatHref(row.match_id)}
-                style={styles.card}
-                testID={`conversation-${row.match_id}`}
+            <Text style={styles.sectionLabel}>{t.matches.newMatches}</Text>
+            {fresh(rows).length === 0 ? (
+              <Text style={styles.stripEmpty} testID="new-matches-empty">
+                {t.matches.noNewMatches}
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.strip}
+                // The strip scrolls sideways inside a page that scrolls down;
+                // it must not swallow the page's own content inset.
+                style={styles.stripFrame}
+                testID="new-matches"
               >
-                <View style={styles.cardRow}>
-                  <Avatar
-                    name={row.display_name}
-                    source={
-                      first === undefined
-                        ? null
-                        : (sourceByPath.get(first) ?? null)
-                    }
-                    size={44}
-                    testID="conversation-avatar"
-                  />
-                  <View style={styles.cardBody}>
-                    <Text style={styles.name} numberOfLines={1}>
-                      {row.display_name}, {row.age}
-                    </Text>
-                    <Text style={styles.preview} numberOfLines={2}>
-                      {row.last_body === null
-                        ? ((userId
-                            ? starterFor(row, userId)?.question
-                            : null) ?? t.matches.noMessages)
-                        : `${row.last_sender_id === userId ? t.matches.youPrefix : ''}${row.last_body}`}
-                    </Text>
-                  </View>
-                  {/* Beside the whole row, centred on it, rather than on
+                {fresh(rows).map((row) => {
+                  const first = row.photos[0];
+                  return (
+                    // `asChild` so the tap target is a View: a bare `Link`
+                    // renders as Text on iOS, and its line box cut the top
+                    // off the round photo.
+                    <Link
+                      key={row.match_id}
+                      href={chatHref(row.match_id)}
+                      asChild
+                    >
+                      <Pressable
+                        // A plain style, not a function: `asChild` hands the
+                        // props through a slot that drops a style callback,
+                        // which left the name unaligned under the photo.
+                        style={styles.stripItem}
+                        accessibilityRole="button"
+                        accessibilityLabel={row.display_name}
+                        testID={`new-match-${row.match_id}`}
+                      >
+                        <Avatar
+                          name={row.display_name}
+                          source={
+                            first === undefined
+                              ? null
+                              : (sourceByPath.get(first) ?? null)
+                          }
+                          size={STRIP_AVATAR}
+                        />
+                        <Text style={styles.stripName} numberOfLines={1}>
+                          {row.display_name}
+                        </Text>
+                      </Pressable>
+                    </Link>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {threads(rows).map((row) => {
+              const first = row.photos[0];
+              return (
+                <Link
+                  key={row.match_id}
+                  href={chatHref(row.match_id)}
+                  style={styles.card}
+                  testID={`conversation-${row.match_id}`}
+                >
+                  <View style={styles.cardRow}>
+                    <Avatar
+                      name={row.display_name}
+                      source={
+                        first === undefined
+                          ? null
+                          : (sourceByPath.get(first) ?? null)
+                      }
+                      size={44}
+                      testID="conversation-avatar"
+                    />
+                    <View style={styles.cardBody}>
+                      <Text style={styles.name} numberOfLines={1}>
+                        {row.display_name}, {row.age}
+                      </Text>
+                      <Text style={styles.preview} numberOfLines={2}>
+                        {row.last_body === null
+                          ? ((userId
+                              ? starterFor(row, userId)?.question
+                              : null) ?? t.matches.noMessages)
+                          : `${row.last_sender_id === userId ? t.matches.youPrefix : ''}${row.last_body}`}
+                      </Text>
+                    </View>
+                    {/* Beside the whole row, centred on it, rather than on
                       the name's line (owner, 2026-09-15). */}
-                  {row.unread_count > 0 ? (
-                    <Text style={styles.badge} testID="unread-badge">
-                      {row.unread_count}
-                    </Text>
-                  ) : null}
-                </View>
-              </Link>
-            );
-          })}
-        </>
-      )}
-    </ScrollView>
+                    {row.unread_count > 0 ? (
+                      <Text style={styles.badge} testID="unread-badge">
+                        {row.unread_count}
+                      </Text>
+                    ) : null}
+                  </View>
+                </Link>
+              );
+            })}
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
+  scroll: { flex: 1 },
   content: { padding: 24, paddingTop: 64, gap: 12 },
   muted: { fontFamily: font.regular, color: color.textMuted },
   sectionLabel: { ...type.label, color: color.textFaint },
@@ -237,7 +242,14 @@ const styles = StyleSheet.create({
     color: color.textMuted,
     paddingBottom: space.sm,
   },
-  card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
+  card: {
+    backgroundColor: glass.fill,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    borderTopColor: glass.edgeTop,
+    padding: 14,
+  },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   cardBody: { flex: 1 },
   name: {

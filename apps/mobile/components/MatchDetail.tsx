@@ -24,7 +24,7 @@ import {
 } from '@/lib/safety';
 import { starterFor } from '@/lib/starter';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * The match page — "EŞLEŞTİNİZ", the photos, the starter, the compatibility
@@ -267,10 +267,11 @@ const styles = StyleSheet.create({
     marginBottom: space.xs,
   },
   starterBox: {
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: color.borderStrong,
+    borderColor: glass.edge,
+    borderTopColor: glass.edgeTop,
     padding: space.lg,
     gap: space.sm,
   },
@@ -285,10 +286,10 @@ const styles = StyleSheet.create({
   safetyRow: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
   safetyButton: {
     flex: 1,
-    backgroundColor: color.surfaceSoft,
+    backgroundColor: glass.fillSoft,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: color.border,
+    borderColor: glass.edge,
     paddingVertical: space.md,
     alignItems: 'center',
   },

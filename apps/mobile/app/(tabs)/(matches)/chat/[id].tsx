@@ -35,6 +35,7 @@ import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { usePhotoSources } from '@/lib/photos';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { starterFor } from '@/lib/starter';
+import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
 import {
   excerpt,
@@ -43,7 +44,7 @@ import {
   quoteFor,
   showsAvatar,
 } from '@/lib/thread-view';
-import { color, font, radius, space, type } from '@/theme/tokens';
+import { color, font, glass, radius, space, type } from '@/theme/tokens';
 
 /** The `page` param: anything but "match" opens the thread. */
 const PageParam = z.enum(VISIBLE_PAGES).catch('thread');
@@ -257,6 +258,7 @@ function ChatView({
 
   return (
     <View style={styles.screen} testID="chat-screen">
+      <CosmicGround planet={false} horizon={false} />
       <View
         style={[
           styles.header,
@@ -604,7 +606,11 @@ const styles = StyleSheet.create({
   bubbleColumn: { maxWidth: '82%', flexShrink: 1 },
   bubble: { borderRadius: 16, padding: 12, gap: space.sm },
   mine: { backgroundColor: color.mine },
-  theirs: { backgroundColor: color.surface },
+  theirs: {
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
+  },
   bubbleText: {
     fontFamily: font.regular,
     color: color.text,
@@ -631,7 +637,7 @@ const styles = StyleSheet.create({
     paddingRight: space.xs,
   },
   starterBox: {
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
     borderRadius: 16,
     padding: 16,
     gap: 6,
@@ -664,7 +670,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     borderLeftWidth: 2,
     borderLeftColor: color.pink,
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
     borderRadius: radius.sm,
   },
   replyBarText: { flex: 1, gap: 2 },
@@ -692,7 +698,7 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     flex: 1,
     maxHeight: 120,
-    backgroundColor: color.surface,
+    backgroundColor: glass.fill,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,

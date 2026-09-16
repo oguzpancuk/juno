@@ -9,9 +9,10 @@ import {
 } from '@juno/astro';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { aspectKind } from '@/components/AspectGlyphs';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import { MAX_GLYPH_LEVEL, glyphGapDegrees, glyphLevels } from '@/lib/wheel';
-import { color } from '@/theme/tokens';
+import { aspectTone, color } from '@/theme/tokens';
 
 /**
  * The chart wheel: houses, signs, planets and the aspects between them.
@@ -183,7 +184,7 @@ export function ChartWheel({
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={aspect.term >= 0 ? color.pink : color.tense}
+                stroke={aspectTone[aspectKind(aspect.aspect)].ink}
                 strokeWidth={1}
                 opacity={0.55}
               />
