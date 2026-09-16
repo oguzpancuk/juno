@@ -5224,3 +5224,18 @@ an empty memory has to fail loudly, and it did not.
 - 2026-09-16 · maya CLAUDE.md or a tooling skill · "Never open a repo
   file for writing before the new content exists: a failure between the
   open and the write leaves it empty. Write a temp file and rename."
+
+## 2026-09-16 — Two corrections to the entries above
+
+- The entry on the truncation was **edited in place** when the gate was
+  added, which this file's own rule forbids: it is append-only, and a
+  later thought belongs in a later entry. Recorded here rather than by a
+  third edit.
+- The gate itself is narrower than that entry reads. It refuses a
+  `docs/ROADMAP.md` or `docs/NOTES.md` that has lost its heading or
+  fallen under two hundred lines — the file emptied wholesale, which is
+  what happened. A script that writes three hundred good lines and then
+  dies still passes, and `docs/PRD.md` and the ADRs are not covered at
+  all. The guard that does cover a partial write is on the writing side:
+  compute the content, write a temporary file, rename it over the
+  original.

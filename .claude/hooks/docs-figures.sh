@@ -27,8 +27,14 @@ import re, sys, pathlib
 # to see. A script that opened docs/ROADMAP.md for writing and then threw
 # before writing left it at zero bytes, and a commit carried it with every
 # gate green (2026-09-16). These two files are the ones a session reads to
-# know what to do next; a floor on each is enough to catch a truncation,
-# and it cannot be met by accident.
+# know what to do next.
+#
+# What this catches is that class: a file emptied or replaced wholesale.
+# It does NOT catch a partial write — 300 surviving lines keep the heading
+# and clear the floor — and it does not cover docs/PRD.md or the ADRs
+# (0009 is incidentally covered by needing its figures block). The real
+# guard against a partial write is on the writing side: build the new
+# content, write a temporary file, rename it over the original.
 FLOORS = {'docs/ROADMAP.md': ('# Juno — Roadmap', 200),
           'docs/NOTES.md': ('# Working notes', 200)}
 for name, (heading, min_lines) in FLOORS.items():
