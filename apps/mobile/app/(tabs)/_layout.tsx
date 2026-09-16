@@ -52,8 +52,17 @@ export default function TabLayout() {
   // back and home buttons (review, 2026-09-15); there the items keep the
   // library's own place, above the inset.
   const centred = Platform.OS === 'ios';
-  const barHeight =
-    TAB_ROW + (Platform.OS === 'web' ? space.xs : insets.bottom);
+  /**
+   * A browser usually reports no inset, and then the row ends flush with
+   * the window and the labels sit on its edge; a floor puts them where a
+   * phone's indicator strip does. Where the web DOES report one — a page
+   * added to an iOS home screen — it is the larger and it wins, so the
+   * contract `lib/insets.ts` relies on (the bar is `TAB_ROW + inset` tall
+   * and pads by that inset) holds on every target.
+   */
+  const bottomInset =
+    Platform.OS === 'web' ? Math.max(insets.bottom, space.xs) : insets.bottom;
+  const barHeight = TAB_ROW + bottomInset;
   // Centred in the bar, less the strip the home indicator draws in: dead
   // centre of the whole bar reads as too low, because the bottom of it is
   // the indicator's, and the top of the 49pt row alone reads as too high
@@ -79,22 +88,21 @@ export default function TabLayout() {
           borderTopColor: color.border,
           borderTopWidth: 1,
           height: barHeight,
-          paddingBottom: centred ? 0 : insets.bottom,
-          // A browser has no home-indicator inset, so the row ends flush
-          // with the window and the labels sit on its edge; a little
-          // breathing room puts them where a phone's inset does.
-          ...(Platform.OS === 'web' ? { paddingBottom: space.xs } : {}),
+          paddingBottom: centred ? 0 : bottomInset,
         },
         tabBarLabelStyle: {
           ...type.caption,
           fontSize: 11,
-          lineHeight: 15,
-          // why: react-navigation clips its label, and on the web that box
-          // collapses to the font's content area — 10pt under an 11pt
-          // face — which cut the cedilla off "Keşfet" and "Eşleşmeler".
-          // Letting it show is enough; the label is one line either way
-          // (measured in the browser, 2026-09-16). Native's default.
-          overflow: 'visible',
+          // why: on the web react-navigation's label box collapses to the
+          // font's content area — 10pt under an 11pt face — and its own
+          // `overflow: hidden` then cut the cedilla off "Keşfet" and
+          // "Eşleşmeler" (measured in the browser, 2026-09-16). Showing
+          // the box is what fixes it, at the price of the ellipsis RNW
+          // would have drawn: the three labels are single Turkish words
+          // that fit a third of the narrowest bar, and this app ships one
+          // locale (PRD). Web only, so the metrics ITEM_CENTRE was
+          // measured against are untouched.
+          ...(Platform.OS === 'web' ? { overflow: 'visible' as const } : {}),
         },
         tabBarItemStyle: { paddingTop: itemOffset },
         sceneStyle: { backgroundColor: color.bg },

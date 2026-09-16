@@ -23,6 +23,30 @@ fi
 exec python3 - "$@" <<'PY'
 import re, sys, pathlib
 
+# The repo is the memory, so an empty memory is a failure the battery has
+# to see. A script that opened docs/ROADMAP.md for writing and then threw
+# before writing left it at zero bytes, and a commit carried it with every
+# gate green (2026-09-16). These two files are the ones a session reads to
+# know what to do next; a floor on each is enough to catch a truncation,
+# and it cannot be met by accident.
+FLOORS = {'docs/ROADMAP.md': ('# Juno — Roadmap', 200),
+          'docs/NOTES.md': ('# Working notes', 200)}
+for name, (heading, min_lines) in FLOORS.items():
+    doc = pathlib.Path(name)
+    if not doc.exists():
+        print(f'FAIL docs — {name} is missing', file=sys.stderr)
+        sys.exit(1)
+    body = doc.read_text()
+    if not body.lstrip().startswith(heading):
+        print(f'FAIL docs — {name} does not start with "{heading}"; '
+              'truncated or overwritten?', file=sys.stderr)
+        sys.exit(1)
+    if len(body.splitlines()) < min_lines:
+        print(f'FAIL docs — {name} is {len(body.splitlines())} lines, under '
+              f'the {min_lines} it has long exceeded; truncated?',
+              file=sys.stderr)
+        sys.exit(1)
+
 BLOCK_FILE = pathlib.Path('docs/adr/0009-presentation.md')
 EXEMPT = {'docs/NOTES.md', 'docs/design-brief.md'}
 

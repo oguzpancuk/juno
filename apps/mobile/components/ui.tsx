@@ -517,7 +517,11 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
   );
 }
 
-/** One lap of the spheres. Slow: this is a mark, not a loader. */
+/**
+ * One lap of the spheres. Seven seconds: slow enough to read as a mark
+ * rather than a spinner, quick enough that a lap is visible while the
+ * door is on screen (owner, 2026-09-16, after sixteen read as stalled).
+ */
 const ORBIT_MS = 7000;
 /** The ring's tilt, matching the icon. */
 const ORBIT_TILT_DEG = -16;

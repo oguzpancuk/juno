@@ -5189,14 +5189,26 @@ with two exceptions, both now fixed:
 
 Both are the same class — a web intrinsic size that native does not
 have — and neither is visible from a simulator, which is why the walk
-had to happen in a browser.
+had to happen in a browser. Review made the point that followed: a bug
+only the web has does not license a fix both platforms take. The first
+pass had lowered the tab label's line height (which iOS's ITEM_CENTRE
+was measured against) and pinned the birth fields' width (which on a
+phone is what lets them grow with the system text size); both are web
+branches now, and native is byte-identical to before. The tab bar's web
+branch also takes `Math.max(insets.bottom, space.xs)` rather than a flat
+4, because a page added to an iOS home screen does report an inset and
+`lib/insets.ts` promises the bar honours it.
 
-**A near-miss worth recording.** One of the scripts in this session
-opened `docs/ROADMAP.md` for writing and then failed while computing
-what to write; `open(path, 'w')` truncates before the write, so the file
-went to zero bytes and the commit carried it. It was restored from the
-commit before. Every edit here now writes a temporary file and renames
-it over the original, so a failure leaves the file as it was.
+**A near-miss worth recording, now a gate.** One of the scripts in this
+session opened `docs/ROADMAP.md` for writing and then failed while
+computing what to write; `open(path, 'w')` truncates before the write,
+so the file went to zero bytes and the commit carried it with the whole
+battery green. It was restored from the commit before. Two things came
+of it: every edit here writes a temporary file and renames it over the
+original, so a failure leaves the file as it was; and the battery's docs
+step now refuses a `docs/ROADMAP.md` or `docs/NOTES.md` that has lost
+its heading or fallen under two hundred lines. The repo is the memory —
+an empty memory has to fail loudly, and it did not.
 
 **Upstream candidates**
 
