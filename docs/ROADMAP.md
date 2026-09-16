@@ -1396,12 +1396,24 @@ controls that take one gesture instead of a dozen taps.
       that was deleted before the commit; it only ever shows after a
       real sign-up._
 
-- [ ] **D3 — Deck (frame 05).** The frame carries no percentage, so it is
+- [x] **D3 — Deck (frame 05).** The frame carries no percentage, so it is
       adoptable as drawn, minus the star button and the verification badge:
       photo to the top edge, name/city/big-three over the scrim, the band
       where the frame puts its chips, two round actions.
       — done when: `screenshots/d3-deck.png` matches the frame's layout and
       the band, not a number, sits under the chips.
+      _Done. `BigThreeRow` is the frame's pill row now — body glyph and
+      sign name, one element per pill labelled "Güneş Koç" for a screen
+      reader — and since it is the one component the deck, the person
+      page and the match page share, all three changed together
+      (`d3-profile-pills.png` is the profile). Under the pills the deck
+      shows the person's bio, two lines of it, which the `discover` view
+      already carried and the card never drew; the person page has the
+      whole text. The band row and the two round actions are as they
+      were. `d3-deck.png` is a seed with a bio written into the local
+      database for the picture, taken after the filters sheet closed —
+      the deck reloads on that, not on a tab switch, which is how the
+      first two captures still showed the old row._
 
 - [ ] **D4 — Chart, preview and full (frames 07, 08).** The Overview /
       Full chart segmented control, the icon-in-circle card head, and the
