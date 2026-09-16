@@ -559,8 +559,16 @@ function Sphere({
       ]}
     >
       <View style={[s.orbitSeat, { left: '50%', marginLeft: radius }]}>
+        {/* The sphere's own box carries the counter-transform, so its
+            origin is the sphere's centre on every renderer — a wrapper
+            with no box of its own put the origin elsewhere on the web
+            (review, 2026-09-16). */}
         <Animated.View
           style={{
+            width: size,
+            height: size,
+            marginLeft: -size / 2,
+            marginTop: -size / 2,
             transform: [
               { rotate: unspin },
               { rotate: `${-offsetDeg}deg` },
@@ -569,14 +577,7 @@ function Sphere({
             ],
           }}
         >
-          <View
-            style={{
-              width: size,
-              height: size,
-              marginLeft: -size / 2,
-              marginTop: -size / 2,
-            }}
-          >
+          <View>
             <Glow
               size={glow}
               style={{ top: -(glow - size) / 2, left: -(glow - size) / 2 }}
