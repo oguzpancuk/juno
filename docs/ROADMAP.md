@@ -1402,49 +1402,44 @@ controls that take one gesture instead of a dozen taps.
       where the frame puts its chips, two round actions.
       — done when: `screenshots/d3-deck.png` matches the frame's layout and
       the band, not a number, sits under the chips.
-      _Done. `BigThreeRow` is the frame's pill row now — body glyph and
-      sign name, one element per pill labelled "Güneş Koç" for a screen
-      reader — and since it is the one component the deck, the person
-      page and the match page share, all three changed together
-      (`d3-profile-pills.png` is the profile). Under the pills the deck
-      shows the person's bio, two lines of it, which the `discover` view
-      already carried and the card never drew; the person page has the
-      whole text. The band row and the two round actions are as they
-      were. `d3-deck.png` is a seed with a bio written into the local
-      database for the picture, taken after the filters sheet closed —
-      the deck reloads on that, not on a tab switch, which is how the
-      first two captures still showed the old row._
+      _Done, twice. The first pass drew the frame's pills; the owner did
+      not want them ("daha büyük olup satırı kaplamalı", the sheet's
+      chart page) and `BigThreeRow` became three cells filling the row,
+      each the sign's symbol large in a circle tinted by its element,
+      the sign's name and the body's word — one component, so the deck,
+      the profile (`d3-profile.png`) and the match page changed
+      together. Under it the deck shows the person's bio, two lines,
+      which the `discover` view already carried. `d3-deck.png` is a seed
+      with a bio written into the local database for the picture._
 
-- [x] **D4 — Chart, preview and full (frames 07, 08).** The Overview /
-      Full chart segmented control, the icon-in-circle card head, and the
-      wheel's own styling. The full-chart planet list drops the Juno row.
-      — done when: `screenshots/d4-chart.png` and `d4-chart-full.png` show
-      both halves, and the planet list is the ten the engine computes.
-      _Done as far as the frames' colour language: every placement card
-      leads with the sign's symbol in a circle tinted by its element —
-      the engine's `PlacementReading` now carries `sign`, pinned by a
-      test against the chart — and the same badge is the big three on
-      the deck, the profile and the match page. Not built: the
-      Overview / Full chart segmented control; the profile's three cards
-      plus "Tüm haritanı gör" stays, and the popup is the full chart.
-      `d4-chart.png`._
+- [x] **D4 — Chart (frame 07).** The frame's colour language on the
+      placement cards: the sign's symbol in a circle tinted by its
+      element. The Overview / Full chart segmented control is not built —
+      the profile keeps its three cards and "Tüm haritanı gör" (C2, C8),
+      and the popup is the full chart — and the full-chart planet list
+      was never drawn with a Juno row here, so there is nothing to drop.
+      — done when: `screenshots/d4-chart.png` shows the cards with the
+      element-coloured sign badges (screenshot).
+      _Done. The engine's `PlacementReading` carries `sign`, pinned by a
+      test against the chart, so a badge cannot disagree with the
+      technical line beside it._
 
-- [x] **D5 — Match and connection (frames 09, 10, 11, 12).** The halo ring
-      with the band inside it where the frames print 86 %, the five
-      dimensions as qualitative rows, and the aspect cards — glyph, orb to
-      the arcminute, strength label — which C2 already built and this only
-      dresses. Frame 12 minus the Juno card.
-      — done when: `screenshots/d5-match.png`, `d5-connection.png` and
-      `d5-interesting.png` show the three, and no digit followed by a
-      percent sign appears on any of them.
-      _Done. `Halo` is the ring, with the band word inside it where the
-      frame prints 86 %; the five dimensions are rows with a gradient
-      track filled to the level in thirds and the level's word beside it
-      (no figure reaches a Text); each aspect card opens with its glyphs
-      in a pill and the orb to the arcminute across from them. The match
-      page sits on the star field. `d5-match.png` is the deck's Uyum
-      detayı sheet, which is the same `PairReading` the match page
-      shows._
+- [x] **D5 — Match and connection (frames 10, 11, 12).** The ring with
+      the band inside it where the frames print 86 %, the five dimensions
+      as tracks, and the aspect cards — glyphs, orb to the arcminute,
+      title, headline, reading — which C2 already built and this dresses.
+      Frame 12 minus the Juno card; frame 09 (the arrival moment) is not
+      a screen of this app — a match lands in the chat's Uyum page.
+      — done when: `screenshots/d5-match.png` shows the ring, the tracks
+      and the two sections, and no digit followed by a percent sign
+      appears on it (screenshot).
+      _Done. `Halo` is the ring, painted with its host's ground (a sheet
+      is `surface`); the tracks fill in thirds with the level's word
+      beside them on up to two lines, since that word is the dimension's
+      value (ADR-0009 §2); each aspect card opens with its glyphs in a
+      pill and the orb across from them. The match page sits on the
+      star field. `d5-match.png` is the deck's Uyum detayı sheet, the
+      same `PairReading` the match page shows._
 
 - [ ] **D6 — Starter and chat (frames 13, 14).** The starter's suggested
       card and its "try another" (already supported: `starterOptions`

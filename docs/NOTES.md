@@ -4925,3 +4925,62 @@ them. Android note from round two, not acted on (Android is deferred):
 TalkBack stop announcing the band twice.
 
 Battery: green on every commit; review chain `4138eec..d0d2252`.
+
+## 2026-09-16 — The pass that made a visible difference
+
+After D1–D3 the owner said the UI had not changed and the work had
+nothing to do with the sheet ("bende ui hiç değişmedi"). They were right:
+the app already had the sheet's structure, so tidying structure showed
+nothing. What was missing was the sheet's execution — the typeface, the
+grounds, the colour, the air. Recorded as a memory so it does not repeat:
+when the ask is "make it look like these", lead with what dominates a
+side-by-side, and send the owner the screens as they land.
+
+What landed, in the order the owner saw it:
+
+- **Outfit** (`3d81886`), the owner's pick from four. A weight is a face
+  once a family is set, so `tokens.ts` names four faces and no style
+  outside it says `fontWeight`; every ad-hoc word style got the regular
+  face by a script, which also put it on three overlay styles (`*On`,
+  `*Disabled`) and downgraded their weight — caught in review, fixed in
+  `e373a85`. Loaded by the root layout behind the splash. Metro had to be
+  restarted for the new package, and the restart needed the
+  `EXPO_PUBLIC_*` env passed explicitly — `ps eww` of the old process
+  is not a reliable source.
+- **The big three** as the owner wanted them (`c4371c4`): not the sheet's
+  deck pills ("beğenmedim") but its chart page's coloured symbols —
+  sign glyph in a circle tinted by its element, three cells across the
+  row. `element` in `tokens.ts` holds the four ink/tint pairs.
+- **Chart cards and the match page** (`e373a85`): element-coloured sign
+  badges on every placement card (the engine's `PlacementReading` now
+  carries `sign`); the band inside a gradient ring, dimensions as
+  tracks filled in thirds, aspect cards opening with glyphs and orb;
+  stars behind the match page and the starter (`26a7d4f`).
+
+**The seed photos are the remaining gap.** `seed-photos.ts` uploads
+solid-colour plates, and a deck without portraits will not look like the
+sheet whatever else is right. Six portrait files from the owner are the
+unblock; the script then uploads them instead of the plates.
+
+**Reviews.** The font pass: three overlay-weight regressions, a
+`lineHeight` inherited under a 46pt brand, two device-measured constants
+(`ITEM_CENTRE`, `BAND_LIFT`) now describing the system font — re-measure
+on device before trusting them. The chart/match pass: a one-line level
+word truncating at Dynamic Type (now two lines), "Yükselen" without a
+fit on a small phone (fits itself now; no cushion on the web, where
+`adjustsFontSizeToFit` is a no-op), the ring painting `bg` on a `surface`
+sheet (a `ground` prop), and D4/D5 ticked against clauses their notes
+admitted were unmet — the clauses now say what was built.
+
+Twice now a review has found `aria-label` on a role-less View (the pills,
+then the dimension rows): on react-native-web a label on a bare div is
+dropped. Upstream candidate below.
+
+**Upstream candidates**
+
+- 2026-09-16 · maya CLAUDE.md or an RN skill · "An `aria-label` needs a
+  `role`: on react-native-web a label on a role-less View never reaches
+  a screen reader. Prefer the `aria-*`/`role` spellings over
+  `accessibility*` throughout — React Native folds them into its own
+  props, react-native-web only knows these." Caught twice in one day on
+  juno; holds for any Expo product that also renders on the web.
