@@ -7,9 +7,11 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CosmicGround } from '@/components/CosmicGround';
 import { OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, gradient, radius, space, type } from '@/theme/tokens';
 
 /** One turn of the mark. Slow on purpose: this is a pause, not a spinner. */
 const TURN_MS = 14000;
@@ -72,6 +74,7 @@ export function Calculating() {
 
   return (
     <View style={styles.screen} testID="calculating">
+      <CosmicGround />
       <Animated.View style={{ transform: [{ rotate }] }}>
         <OrbitMark size={112} />
       </Animated.View>
@@ -79,6 +82,38 @@ export function Calculating() {
       <Text style={styles.step} testID="calculating-step">
         {t.calculating.steps[step]}
       </Text>
+      <StepBar steps={t.calculating.steps.length} at={step} />
+    </View>
+  );
+}
+
+/**
+ * Which line is up, as a bar in as many parts as there are lines. Not a
+ * progress bar: the parts are the steps of the copy, lit as each is
+ * reached, and the sheet's continuous bar (frame 04) would have claimed
+ * a precision this screen does not have. The label reads the same thing
+ * to VoiceOver.
+ */
+function StepBar({ steps, at }: { steps: number; at: number }) {
+  return (
+    <View
+      style={styles.bar}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: steps, now: at + 1 }}
+      testID="calculating-bar"
+    >
+      {Array.from({ length: steps }, (_, i) => (
+        <View key={i} style={styles.segment}>
+          {i <= at ? (
+            <LinearGradient
+              colors={[...gradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.segmentOn}
+            />
+          ) : null}
+        </View>
+      ))}
     </View>
   );
 }
@@ -101,4 +136,18 @@ const styles = StyleSheet.create({
     // from stepping up and down as they cycle.
     minHeight: 48,
   },
+  bar: {
+    flexDirection: 'row',
+    gap: space.xs,
+    width: '56%',
+    marginTop: space.sm,
+  },
+  segment: {
+    flex: 1,
+    height: 4,
+    borderRadius: radius.pill,
+    backgroundColor: color.track,
+    overflow: 'hidden',
+  },
+  segmentOn: { flex: 1 },
 });
