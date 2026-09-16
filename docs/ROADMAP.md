@@ -1332,7 +1332,7 @@ controls that take one gesture instead of a dozen taps.
      and the English copy, which stays the reviewed Turkish of
      lib/strings.ts throughout. -->
 
-- [ ] **D1 — Token and primitive layer.** The sheet's execution expressed
+- [x] **D1 — Token and primitive layer.** The sheet's execution expressed
       once, where every screen reads it: the display/title type scale
       (lighter weight, wider tracking), a card surface with the frames'
       edge lift, the halo ring and glow the match and chart frames lean
@@ -1346,6 +1346,31 @@ controls that take one gesture instead of a dozen taps.
       (asserted in Vitest against the token values, so a later palette
       edit cannot quietly drop below it), and the battery is green on a
       committed HEAD.
+      _Done. `textFaint` went from #6E6890 to #8A84AD — 4.77:1 on
+      `surfaceHigh`, 5.74:1 on `bg`; every other ink already cleared 4.5
+      on every ground, which the new `theme/tokens.test.ts` now pins for
+      ten inks on four grounds, `onBright` on the three gradient stops,
+      and the four filled surfaces that carry text. The same file walks
+      `app/`, `components/` and `lib/` for a hex or rgb() literal and
+      asserts `app.json`'s two splash colours equal `color.bg`. Type:
+      display and title from 700 to 600, the kicker's tracking from 1.4
+      to 2.2. Primitives: `Chip` replaces the three private copies
+      (onboarding's gender and interest rows, the filters' element row)
+      and is 44pt tall, which closes the 40pt note of 2026-09-16;
+      `GlyphBadge` is lifted out of the chart detail; `Glow` is an SVG
+      radial behind the mark on welcome; `Card` catches light on its top
+      edge; `OutlineButton` gains `disabled` and replaces the starter's
+      private copy; `GradientButton` replaces the flat pink and flat cool
+      submit buttons on sign-in and onboarding. The halo ring named in
+      this item's first line is not here — it has exactly one use, the
+      match page, so it is built in D5 where it is used.
+      Seen on the simulator: `screenshots/d1-welcome.png`,
+      `d1-onboarding.png`, `d1-chart.png`, `d1-filters.png`; on the
+      filters sheet the Su chip was tapped off and on again, so the
+      state and the new touch height are real, and the tester's stored
+      filter is as it was. Not photographed: sign-in (behind a
+      sign-out) and the starter (behind a match) — both use primitives
+      photographed elsewhere on this list._
 
 - [ ] **D2 — Calculating (frame 04).** The single largest gap between the
       sheet and the app: a cosmic ground under the step copy. No conflict
