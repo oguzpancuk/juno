@@ -1561,6 +1561,16 @@ controls that take one gesture instead of a dozen taps.
       owner had signed out, and a password is not something this
       session types._
 
+- [ ] **Two RLS runs on one local stack must not see each other.** The
+      push gate's battery and a background battery ran the Supabase suite
+      at once and `discover > shows 'everyone' seekers only profiles that
+    accept them back` failed with a user the other run had created; each
+      run alone is green (2026-09-16). The suite assumes it owns the
+      database.
+      — done when: two concurrent `npm run test -w supabase` runs both pass
+      — per-run tagged users, or a lock the second run waits on — and the
+      battery stays green (battery).
+
 <!-- Assets: the sheet's nebula grounds are photographs, and none are in
      the repo. Whatever D2 and D5 ground themselves on has to be either
      drawn with the gradient primitives (no shader, because the same code

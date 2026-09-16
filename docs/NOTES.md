@@ -5135,3 +5135,20 @@ D13) for the same reason.
   two constructions that checked out in node drew half a lap on the
   device, for a cause never isolated. When that happens, reproduce on
   the JS driver before blaming the native one."
+
+## 2026-09-16 — Pushed, and one thing the push found
+
+`929f887..81d874a` is on `origin/main`: the visual pass end to end —
+Outfit, the sky, glass as the owner meant it, the ring, the coloured
+aspects, the chart as drawn, the arrival screen, the drawn mark in
+orbit, the settings rows, the web brought level with iOS on the two
+screens a signed-out session can see.
+
+The push gate runs the battery itself. It ran while a background battery
+was already in the Supabase suite, and one RLS test saw a user the other
+run had made: `discover > shows 'everyone' seekers only profiles that
+accept them back` expected none and got one. Alone, both runs are green.
+The suite assumes it owns the database; a ROADMAP item says what it
+should assume instead. Until then: one battery at a time on this
+machine, and a command that so much as mentions the push gate in its
+text starts one — the hook scans the command line.
