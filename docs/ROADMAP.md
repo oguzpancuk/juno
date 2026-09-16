@@ -1303,6 +1303,111 @@ controls that take one gesture instead of a dozen taps.
       public, anon, authenticated and service_role and the battery stays
       green.
 
+## The visual pass (D series, owner request 2026-09-16)
+
+<!-- The owner brought the 2026-09-11 mockup sheet back — seventeen frames,
+     the same sheet whose visual language already became
+     apps/mobile/theme/tokens.ts. What is missing is not the direction but
+     its execution: the frames carry cosmic grounds, glow, halo rings and a
+     lighter, wider-tracked display type that the shipped screens do not.
+     So this pass lifts the execution onto the screens that exist, rather
+     than redrawing the product.
+
+     Three scope decisions taken by the owner on 2026-09-16, all of them
+     holding an older decision rather than reopening it:
+     1. No percentage and no numeric dimension scores. ADR-0009 stands;
+        frames 09, 10, 15 and 16 are built with bands and qualitative
+        labels in place of 86 %, 92 % and the five bars (92/95/68/88/81).
+     2. No Juno signature (frame 12). astronomy-engine has no asteroids
+        (ADR-0004), so the card comes out and the rest of the frame is
+        built. An asteroid ephemeris is its own item, not this pass.
+     3. No interest chips and no verification badge (frames 05, 06).
+        Both are product features, not dressing; the profile keeps its bio.
+
+     Also out, each for a reason older than the sheet: the star /
+     super-like button (PRD non-goal), a fourth tab splitting Messages
+     from Matches (C8 settled three), "Continue with Phone" (no phone
+     auth), the notifications frame (C7: no notifications screen, and no
+     push infrastructure), the voice control in chat (deferred: no media),
+     and the English copy, which stays the reviewed Turkish of
+     lib/strings.ts throughout. -->
+
+- [ ] **D1 — Token and primitive layer.** The sheet's execution expressed
+      once, where every screen reads it: the display/title type scale
+      (lighter weight, wider tracking), a card surface with the frames'
+      edge lift, the halo ring and glow the match and chart frames lean
+      on, chips, and the gradient button shape. `color.textFaint`
+      (#6E6890 on #07060F, about 2.8:1, used for hints on six screens) is
+      resolved here — it has been carried as a palette decision waiting
+      for a design session since C7.
+      — done when: nothing outside `theme/tokens.ts` holds a colour, every
+      new primitive is used by at least one screen, contrast on every text
+      token is at or above 4.5:1 against the surface it is printed on
+      (asserted in Vitest against the token values, so a later palette
+      edit cannot quietly drop below it), and the battery is green on a
+      committed HEAD.
+
+- [ ] **D2 — Calculating (frame 04).** The single largest gap between the
+      sheet and the app: a cosmic ground under the step copy. No conflict
+      with any decision.
+      — done when: `screenshots/d2-calculating.png` shows the screen mid-run
+      with the copy sequence still legible over the ground.
+
+- [ ] **D3 — Deck (frame 05).** The frame carries no percentage, so it is
+      adoptable as drawn, minus the star button and the verification badge:
+      photo to the top edge, name/city/big-three over the scrim, the band
+      where the frame puts its chips, two round actions.
+      — done when: `screenshots/d3-deck.png` matches the frame's layout and
+      the band, not a number, sits under the chips.
+
+- [ ] **D4 — Chart, preview and full (frames 07, 08).** The Overview /
+      Full chart segmented control, the icon-in-circle card head, and the
+      wheel's own styling. The full-chart planet list drops the Juno row.
+      — done when: `screenshots/d4-chart.png` and `d4-chart-full.png` show
+      both halves, and the planet list is the ten the engine computes.
+
+- [ ] **D5 — Match and connection (frames 09, 10, 11, 12).** The halo ring
+      with the band inside it where the frames print 86 %, the five
+      dimensions as qualitative rows, and the aspect cards — glyph, orb to
+      the arcminute, strength label — which C2 already built and this only
+      dresses. Frame 12 minus the Juno card.
+      — done when: `screenshots/d5-match.png`, `d5-connection.png` and
+      `d5-interesting.png` show the three, and no digit followed by a
+      percent sign appears on any of them.
+
+- [ ] **D6 — Starter and chat (frames 13, 14).** The starter's suggested
+      card and its "try another" (already supported: `starterOptions`
+      offers five), and the thread with the starter pinned. No voice
+      control.
+      — done when: `screenshots/d6-starter.png` and `d6-chat.png` show
+      both, and the keyboard behaviour of the fifth pass still holds.
+
+- [ ] **D7 — Onboarding, welcome, filters, profile (frames 01, 02, 03,
+      15, 17).** The frames draw fewer fields than the app requires — the
+      birth form also carries name, gender, who you want to meet and the
+      consent checkbox — so this takes the frames' chrome (progress bar,
+      segmented control, slider, field shape) over the real forms. Filters
+      keep the band, not a minimum-compatibility percentage.
+      — done when: `screenshots/d7-welcome.png`, `d7-onboarding.png`,
+      `d7-filters.png` and `d7-profile.png` show them, and the tab bar is
+      still the three of C8.
+
+- [ ] **D8 — The screens the sheet never drew.** Sign-in and its code
+      step, the matches list, settings, the blocked list, legal, and
+      account deletion. `docs/design-brief.md` is regenerated first — it
+      is dated 2026-09-11, counts eleven screens where the app now has
+      about fourteen surfaces, and predates the tab bar and the popups —
+      and Claude Design draws only these, in the language D1 fixes.
+      — done when: the brief matches the shipped surface list, and
+      `screenshots/d8-*.png` show each screen dressed.
+
+<!-- Assets: the sheet's nebula grounds are photographs, and none are in
+     the repo. Whatever D2 and D5 ground themselves on has to be either
+     drawn with the gradient primitives (no shader, because the same code
+     renders on the web) or a licensed image recorded with its licence
+     next to the GeoNames and astronomy-engine credits. Owner decision,
+     open at the time of writing. -->
+
 ## Deferred
 
 - **Android** — the Expo codebase keeps it possible; nothing is tested
