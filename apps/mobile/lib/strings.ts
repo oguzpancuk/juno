@@ -155,8 +155,9 @@ export const t = {
       'Gezegenler ve ev sınırların çıkarılıyor…',
       'Haritan okunuyor…',
     ],
-    /** What VoiceOver reads for the bar under the steps. */
-    progress: (n: number, total: number) => `${n}. adım, ${total} adımdan`,
+    /** What a screen reader calls the bar under the steps, and its value. */
+    progressLabel: 'Hesaplama adımı',
+    progress: (n: number, total: number) => `${total} adımdan ${n}. adım`,
   },
   starter: {
     back: '‹ Sohbet',

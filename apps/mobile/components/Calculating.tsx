@@ -91,18 +91,22 @@ export function Calculating() {
  * Which line is up, as a bar in as many parts as there are lines. Not a
  * progress bar: the parts are the steps of the copy, lit as each is
  * reached, and the sheet's continuous bar (frame 04) would have claimed
- * a precision this screen does not have. VoiceOver is told the step in
- * words, not a percentage — `text`, not `now`, for the same reason — and
- * `accessible` is what makes a plain View an element at all; without it
- * the role and value sit on nothing (review, 2026-09-16).
+ * a precision this screen does not have. The screen reader is told the
+ * step in words, not a percentage — a value text, not a number, for the
+ * same reason. The `aria-*` spellings, not `accessibilityValue`: React
+ * Native folds them into the same native props, and react-native-web
+ * only knows these, so one set of props reaches iOS and the DOM alike
+ * (two reviews, 2026-09-16). `accessible` is what makes a plain View an
+ * element at all; without it the role and value sit on nothing.
  */
 function StepBar({ steps, at }: { steps: number; at: number }) {
   return (
     <View
       style={styles.bar}
       accessible
-      accessibilityRole="progressbar"
-      accessibilityValue={{ text: t.calculating.progress(at + 1, steps) }}
+      role="progressbar"
+      aria-label={t.calculating.progressLabel}
+      aria-valuetext={t.calculating.progress(at + 1, steps)}
       testID="calculating-bar"
     >
       {Array.from({ length: steps }, (_, i) => (
