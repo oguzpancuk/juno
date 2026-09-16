@@ -1438,8 +1438,9 @@ controls that take one gesture instead of a dozen taps.
       beside them on up to two lines, since that word is the dimension's
       value (ADR-0009 §2); each aspect card opens with its glyphs in a
       pill and the orb across from them. The match page sits on the
-      star field. `d5-match.png` is the deck's Uyum detayı sheet, the
-      same `PairReading` the match page shows._
+      star field. `d5-match.png` is the deck's Uyum detayı sheet — the
+      same `PairReading` the match page shows — with the ring painted on
+      the sheet's own ground and the tracks under it._
 
 - [ ] **D6 — Starter and chat (frames 13, 14).** The starter's suggested
       card and its "try another" (already supported: `starterOptions`

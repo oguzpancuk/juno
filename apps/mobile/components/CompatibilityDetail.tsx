@@ -51,7 +51,7 @@ export function CompatibilityDetail({
               a track filled to the level, the level's word. Thirds, not
               a number — the level has three steps and the fill is the
               step, so no figure reaches a Text (ADR-0009). */}
-          <View role="list">
+          <View role="list" style={styles.dimensions}>
             {reading.dimensions.map((d) => (
               <View
                 key={d.dimension}
@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
   },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
+  dimensions: { gap: space.sm },
   dimensionRow: {
     flexDirection: 'row',
     alignItems: 'center',

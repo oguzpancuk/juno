@@ -4954,8 +4954,9 @@ What landed, in the order the owner saw it:
 - **Chart cards and the match page** (`e373a85`): element-coloured sign
   badges on every placement card (the engine's `PlacementReading` now
   carries `sign`); the band inside a gradient ring, dimensions as
-  tracks filled in thirds, aspect cards opening with glyphs and orb;
-  stars behind the match page and the starter (`26a7d4f`).
+  tracks filled in thirds, aspect cards opening with glyphs and orb,
+  stars behind the match page; stars behind the starter too
+  (`26a7d4f`).
 
 **The seed photos are the remaining gap.** `seed-photos.ts` uploads
 solid-colour plates, and a deck without portraits will not look like the
