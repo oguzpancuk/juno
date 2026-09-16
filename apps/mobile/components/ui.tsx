@@ -388,12 +388,17 @@ export function BackChevron({
 /**
  * The brand mark, drawn: a gradient ring, tilted, and two spheres that
  * travel round it with their light (owner, 2026-09-16: the ring stays,
- * the planets orbit — not a spin of the whole). The ring is SVG; each
- * sphere is a view moved by one native loop through a table of points
- * on the ellipse, so nothing returns to JavaScript once it starts. With
- * Reduce Motion on, the spheres hold at their first positions. The old
- * `assets/brand/orbit-mark.png` is the icon's source and stays for the
- * splash and the store; this is the same picture in motion.
+ * the planets orbit — not a spin of the whole). The ring is SVG. Each
+ * sphere rides a stack of views: the outermost tilts and squashes a
+ * circle into the ring's ellipse, the next turns 0 → 360° on one native
+ * loop, the sphere sits at the ring's radius inside it and, in its own
+ * views, turns back and un-squashes so it stays a lit sphere. Every
+ * transform is a two-stop rotation or a constant, which is the one path
+ * the native driver runs the same on every platform — a table of points
+ * on the ellipse drew half a lap on iOS and snapped (measured from a
+ * screen recording, 2026-09-16). 0° and 360° are one place, so a lap
+ * closes without a seam. With Reduce Motion on, the spheres hold.
+ * `assets/brand/orbit-mark.png` stays as the icon's source.
  */
 export function OrbitMark({ size = 96 }: { size?: number }) {
   const still = useReducedMotion();
@@ -416,8 +421,22 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
       run.stop();
     };
   }, [still, turn]);
-  const orbit = useMemo(() => orbitTable(size), [size]);
-  const sphere = size * 0.24;
+  const a = size * ORBIT_A;
+  const b = size * ORBIT_B;
+  const sphere = size * 0.22;
+  const { spin, unspin } = useMemo(
+    () => ({
+      spin: turn.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+      }),
+      unspin: turn.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '-360deg'],
+      }),
+    }),
+    [turn],
+  );
   return (
     <View
       style={{ width: size, height: size }}
@@ -433,19 +452,61 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
             <Stop offset="1" stopColor={gradient[2]} />
           </SvgLinearGradient>
         </Defs>
+        {/* A faint wide pass under the ring is its light. */}
         <Ellipse
           cx={size / 2}
           cy={size / 2}
-          rx={orbit.a}
-          ry={orbit.b}
+          rx={a}
+          ry={b}
           transform={`rotate(${ORBIT_TILT_DEG} ${size / 2} ${size / 2})`}
           stroke="url(#orbit-ring)"
-          strokeWidth={Math.max(1.5, size * 0.02)}
+          strokeWidth={Math.max(6, size * 0.09)}
+          opacity={0.18}
+          fill="none"
+        />
+        <Ellipse
+          cx={size / 2}
+          cy={size / 2}
+          rx={a}
+          ry={b}
+          transform={`rotate(${ORBIT_TILT_DEG} ${size / 2} ${size / 2})`}
+          stroke="url(#orbit-ring)"
+          strokeWidth={Math.max(1.5, size * 0.028)}
           fill="none"
         />
       </Svg>
-      <Sphere turn={turn} table={orbit.warm} size={sphere} tone="warm" />
-      <Sphere turn={turn} table={orbit.cool} size={sphere} tone="cool" />
+      {/* The ellipse's frame: tilted, and a circle of radius `a` squashed
+          to `b` tall. Both spheres orbit inside it. */}
+      <View
+        style={[
+          s.orbitFrame,
+          {
+            width: size,
+            height: size,
+            transform: [{ rotate: `${ORBIT_TILT_DEG}deg` }, { scaleY: b / a }],
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <Sphere
+          spin={spin}
+          unspin={unspin}
+          radius={a}
+          squash={a / b}
+          size={sphere}
+          tone="cool"
+          offsetDeg={0}
+        />
+        <Sphere
+          spin={spin}
+          unspin={unspin}
+          radius={a}
+          squash={a / b}
+          size={sphere}
+          tone="warm"
+          offsetDeg={180}
+        />
+      </View>
     </View>
   );
 }
@@ -453,67 +514,38 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
 /** One lap of the spheres. Slow: this is a mark, not a loader. */
 const ORBIT_MS = 11000;
 /** The ring's tilt, matching the icon. */
-const ORBIT_TILT_DEG = -22;
-/** Points per lap in the interpolation tables; straight between them. */
-const ORBIT_STEPS = 36;
+const ORBIT_TILT_DEG = -16;
+/**
+ * The icon's ellipse: about seven tenths of the mark wide and, before the
+ * tilt, two thirds as tall as it is wide (owner, 2026-09-16: "bu kadar
+ * eliptik değildi").
+ */
+const ORBIT_A = 0.36;
+const ORBIT_B = 0.24;
 
 /**
- * The ellipse's radii for a mark of `size`, and for each sphere the
- * x and y it takes at each step of a lap — the warm one a half-lap
- * ahead of the cool one, as on the icon. Offsets from the centre.
+ * One sphere on the ring. `spin` turns the arm that carries it; at the
+ * arm's end the sphere turns back by the same angle and stretches back
+ * by the frame's squash, so it is the same lit ball at every point of
+ * the lap. `offsetDeg` puts the second sphere across from the first.
  */
-function orbitTable(size: number) {
-  const a = size * 0.42;
-  const b = size * 0.2;
-  const phi = (ORBIT_TILT_DEG * Math.PI) / 180;
-  const at = (theta: number) => {
-    const x = a * Math.cos(theta);
-    const y = b * Math.sin(theta);
-    return {
-      x: x * Math.cos(phi) - y * Math.sin(phi),
-      y: x * Math.sin(phi) + y * Math.cos(phi),
-    };
-  };
-  const inputRange: number[] = [];
-  const warm = { inputRange, x: [] as number[], y: [] as number[] };
-  const cool = { inputRange, x: [] as number[], y: [] as number[] };
-  for (let i = 0; i <= ORBIT_STEPS; i += 1) {
-    const theta = (i / ORBIT_STEPS) * Math.PI * 2;
-    inputRange.push(i / ORBIT_STEPS);
-    const w = at(theta + Math.PI);
-    const c = at(theta);
-    warm.x.push(w.x);
-    warm.y.push(w.y);
-    cool.x.push(c.x);
-    cool.y.push(c.y);
-  }
-  return { a, b, warm, cool };
-}
-
 function Sphere({
-  turn,
-  table,
+  spin,
+  unspin,
+  radius,
+  squash,
   size,
   tone,
+  offsetDeg,
 }: {
-  turn: Animated.Value;
-  table: { inputRange: number[]; x: number[]; y: number[] };
+  spin: Animated.AnimatedInterpolation<string>;
+  unspin: Animated.AnimatedInterpolation<string>;
+  radius: number;
+  squash: number;
   size: number;
   tone: 'warm' | 'cool';
+  offsetDeg: 0 | 180;
 }) {
-  const { translateX, translateY } = useMemo(
-    () => ({
-      translateX: turn.interpolate({
-        inputRange: table.inputRange,
-        outputRange: table.x,
-      }),
-      translateY: turn.interpolate({
-        inputRange: table.inputRange,
-        outputRange: table.y,
-      }),
-    }),
-    [turn, table],
-  );
   const glow = size * 2.6;
   const [light, mid, dark] =
     tone === 'warm'
@@ -522,35 +554,51 @@ function Sphere({
   return (
     <Animated.View
       style={[
-        s.sphere,
-        {
-          width: size,
-          height: size,
-          marginLeft: -size / 2,
-          marginTop: -size / 2,
-          transform: [{ translateX }, { translateY }],
-        },
+        s.orbitArm,
+        { transform: [{ rotate: `${offsetDeg}deg` }, { rotate: spin }] },
       ]}
     >
-      <Glow
-        size={glow}
-        style={{ top: -(glow - size) / 2, left: -(glow - size) / 2 }}
-      />
-      <Svg width={size} height={size}>
-        <Defs>
-          <RadialGradient id={`sphere-${tone}`} cx="35%" cy="30%" r="70%">
-            <Stop offset="0" stopColor={light} />
-            <Stop offset="0.35" stopColor={mid} />
-            <Stop offset="1" stopColor={dark} />
-          </RadialGradient>
-        </Defs>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={size / 2}
-          fill={`url(#sphere-${tone})`}
-        />
-      </Svg>
+      <View style={[s.orbitSeat, { left: '50%', marginLeft: radius }]}>
+        <Animated.View
+          style={{
+            transform: [
+              { rotate: unspin },
+              { rotate: `${-offsetDeg}deg` },
+              { scaleY: squash },
+              { rotate: `${-ORBIT_TILT_DEG}deg` },
+            ],
+          }}
+        >
+          <View
+            style={{
+              width: size,
+              height: size,
+              marginLeft: -size / 2,
+              marginTop: -size / 2,
+            }}
+          >
+            <Glow
+              size={glow}
+              style={{ top: -(glow - size) / 2, left: -(glow - size) / 2 }}
+            />
+            <Svg width={size} height={size}>
+              <Defs>
+                <RadialGradient id={`sphere-${tone}`} cx="35%" cy="30%" r="70%">
+                  <Stop offset="0" stopColor={light} />
+                  <Stop offset="0.35" stopColor={mid} />
+                  <Stop offset="1" stopColor={dark} />
+                </RadialGradient>
+              </Defs>
+              <Circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size / 2}
+                fill={`url(#sphere-${tone})`}
+              />
+            </Svg>
+          </View>
+        </Animated.View>
+      </View>
     </Animated.View>
   );
 }
@@ -824,8 +872,11 @@ const s = StyleSheet.create({
   },
   badgeGlyph: { fontSize: 19 },
   glow: { position: 'absolute' },
-  // At the centre; the transform carries it round the ring.
-  sphere: { position: 'absolute', left: '50%', top: '50%' },
+  orbitFrame: { position: 'absolute', top: 0, left: 0 },
+  // The arm fills the frame and turns about its centre; the seat is a
+  // point at the arm's end, on the ring.
+  orbitArm: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  orbitSeat: { position: 'absolute', top: '50%', width: 0, height: 0 },
   wordmark: {
     fontFamily: font.light,
     color: color.text,
