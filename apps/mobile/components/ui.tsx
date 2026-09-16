@@ -412,6 +412,12 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
       Animated.timing(turn, {
         toValue: 1,
         duration: ORBIT_MS,
+        // Linear: what ran full, seamless laps in every screen recording.
+        // A table of ellipse points and, later, an angle-evening easing
+        // each drew half a lap here and snapped; both checked out in
+        // node, and a review found nothing in RN's driver that could
+        // halve a range — the cause was not isolated. If it comes back,
+        // run the same code on the JS driver first (2026-09-16).
         easing: Easing.linear,
         useNativeDriver: Platform.OS !== 'web',
       }),
@@ -522,18 +528,6 @@ const ORBIT_TILT_DEG = -16;
  */
 const ORBIT_A = 0.36;
 const ORBIT_B = 0.24;
-
-/**
- * Linear, and only linear: with the arm turned at a steady rate the eye's
- * angle runs faster past the ring's ends than along its sides (the
- * squash), which is how an orbit seen at an angle looks. An easing that
- * evened the eye's angle out was tried and measured: on iOS's native
- * driver the lap then covered half a turn in its duration and snapped
- * (2026-09-16, screen recording), for a reason not found. A table of
- * points on the ellipse did the same. What ran a full, seamless lap in
- * every recording is this — two-stop rotations on a linear timing — so
- * this is what ships.
- */
 
 /**
  * One sphere on the ring. `spin` turns the arm that carries it; at the

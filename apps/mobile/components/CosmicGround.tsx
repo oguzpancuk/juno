@@ -206,9 +206,9 @@ function Nebula({
   const size = width * nebula.r * 2;
   const reach = width * 0.06;
   // The cloud rides an arm that turns once per lap, offset from the arm's
-  // centre by `reach`, so it circles a point — the same two-stop rotation
-  // the mark's spheres use, which is the one native path measured to run
-  // a full lap. A radial gradient does not show its own rotation.
+  // centre by `reach`, so it circles a point of radius `reach` — the
+  // two-stop rotation the mark's spheres use, measured there to run full
+  // laps. A radial gradient does not show its own rotation.
   const spin = useMemo(
     () =>
       drift.interpolate({

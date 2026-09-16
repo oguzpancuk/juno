@@ -5106,12 +5106,15 @@ and un-squashing in its own box — it ran full, seamless laps: 360.3° at
 16.0 s, 720.6° at 32.0 s, no step over 6.2° per eighth-second. Then an
 easing meant to even out the eye's angle (the squash makes the arm's
 steady rate rush past the ring's ends) was measured to halve the lap
-exactly as the table had. Why a non-linear easing, or a multi-stop
-interpolation, covers half its range on iOS's native driver in RN 0.86
-is not known; it is recorded here with the data so the next person
-does not re-derive it by eye. The nebulae drift by the same two-stop
-rotation now, rather than a five-stop translation that may have had the
-same fault unseen.
+exactly as the table had. Both were checked in node — monotone, full
+range, closing at 1 — and a review read RN 0.86's frame driver and
+interpolation end to end and found nothing that could halve a range;
+so the cause is not isolated, and the notes must not blame the native
+driver for it. If it recurs: run the same code on the JS driver first
+(the web), and pin the easing's range in a test. The nebulae drift by
+the same two-stop rotation now, a circle of radius `reach` (the old
+diamond's vertical travel was six tenths of that); the new drift ships
+unmeasured.
 
 **The web.** `localhost:8082` at a phone viewport: the welcome and
 sign-in screens match iOS — Outfit, the drawn mark and wordmark, the
@@ -5127,7 +5130,8 @@ D13) for the same reason.
 
 **Upstream candidates**
 
-- 2026-09-16 · maya, an RN/Expo skill · "Verify a native-driven
-  animation from a screen recording, never a still or the maths: on
-  juno two constructions that were correct on paper drew half a lap on
-  iOS. What survived: two-stop rotations on a linear timing."
+- 2026-09-16 · maya, an RN/Expo skill · "Verify a looping animation
+  from a screen recording, not a still and not the maths alone: on juno
+  two constructions that checked out in node drew half a lap on the
+  device, for a cause never isolated. When that happens, reproduce on
+  the JS driver before blaming the native one."
