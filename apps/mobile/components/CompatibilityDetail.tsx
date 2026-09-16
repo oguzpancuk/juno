@@ -1,4 +1,5 @@
 import {
+  LEVELS,
   aspectGlyphs,
   formatDegree,
   type MatchSections,
@@ -6,11 +7,11 @@ import {
   type SynastryAspectReading,
   type SynastryReading,
 } from '@juno/astro';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { LevelMeter } from '@/components/Meter';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
  * Everything the engine says about a pair below the band word: the band's
@@ -46,21 +47,39 @@ export function CompatibilityDetail({
       {reading.dimensions.length === 0 ? null : (
         <>
           <Text style={styles.label}>{t.match.dimensions}</Text>
-          <View style={styles.dimensionRow}>
-            {reading.dimensions.map((d) => (
-              <View
-                key={d.dimension}
-                style={styles.dimensionChip}
-                testID={`dimension-${d.dimension}`}
-              >
-                <Text style={styles.dimensionName}>{d.name}</Text>
-                {/* Bars, not the level word; the word stays as the
-                    meter's accessibility label. No number reaches a Text
-                    (ADR-0009). */}
-                <LevelMeter level={d.level} label={d.label} />
+          {/* One row per dimension, the sheet's bars (frame 10): the name,
+              a track filled to the level, the level's word. Thirds, not
+              a number — the level has three steps and the fill is the
+              step, so no figure reaches a Text (ADR-0009). */}
+          {reading.dimensions.map((d) => (
+            <View
+              key={d.dimension}
+              style={styles.dimensionRow}
+              testID={`dimension-${d.dimension}`}
+              accessible
+              aria-label={`${d.name}: ${d.label}`}
+            >
+              <Text style={styles.dimensionName} numberOfLines={1}>
+                {d.name}
+              </Text>
+              <View style={styles.track}>
+                <LinearGradient
+                  colors={[...gradient]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${((LEVELS.indexOf(d.level) + 1) / LEVELS.length) * 100}%`,
+                    },
+                  ]}
+                />
               </View>
-            ))}
-          </View>
+              <Text style={styles.dimensionLevel} numberOfLines={1}>
+                {d.label}
+              </Text>
+            </View>
+          ))}
         </>
       )}
 
@@ -140,18 +159,21 @@ export function CompatibilityDetail({
   );
 }
 
-/** Title first, then the astrology, then the reading: show the calculation. */
+/**
+ * The sheet's aspect card (frames 11 and 12): the glyphs in a pill with
+ * the orb to the arcminute beside them — the calculation, first — then
+ * the title, the headline that names the two planets, and the reading.
+ */
 function AspectCard({ card }: { card: SynastryAspectReading }) {
   return (
     <View style={styles.aspect}>
+      <View style={styles.aspectTop}>
+        <View style={styles.glyphPill}>
+          <Text style={styles.aspectGlyphs}>{aspectGlyphs(card.aspect)}</Text>
+        </View>
+        <Text style={styles.aspectOrb}>{formatDegree(card.aspect.orb)}</Text>
+      </View>
       <Text style={styles.aspectTitle}>{card.title}</Text>
-      <Text style={styles.aspectGlyphs}>
-        {aspectGlyphs(card.aspect)}
-        <Text style={styles.aspectOrb}>
-          {'  '}
-          {formatDegree(card.aspect.orb)}
-        </Text>
-      </Text>
       <Text style={styles.aspectHead}>{card.headline}</Text>
       <Text style={styles.body}>{card.meaning}</Text>
     </View>
@@ -172,48 +194,27 @@ const styles = StyleSheet.create({
   },
   body: { ...type.body, color: color.text },
   bodyMuted: { ...type.bodySmall, color: color.textMuted },
-  // Five chips, one row, equal widths (owner, 2026-09-12: the longest
-  // name was pushing Gelişim onto a second line). No `numberOfLines`
-  // either: clipped to one line at a large Dynamic Type setting every
-  // name comes back as "Yakınlı…", which is the same complaint in a
-  // worse form.
-  //
-  // No `flexWrap`: Yoga collects flex lines from the basis, before any
-  // shrink is resolved, so a wrapping row breaks at 252pt however much
-  // the chips could have given up — and the one left alone on the second
-  // line is then stretched across it by `flexGrow`. Wrap and shrink
-  // cannot both be the cushion; the owner asked for one row, so shrink
-  // is.
-  //
-  // What shrink cannot do is make a name fit. The five are single words,
-  // so once the longest no longer fits its chip there is no good way to
-  // lay it out: the browser overflows it past the border, and iOS and
-  // Android break inside the word instead — where exactly is theirs to
-  // decide, and nothing here has watched them do it. Measured on
-  // the web client in the popup, the narrower of the two containers: a
-  // 44pt label box against 45.6pt of chip content at 360dp and 48.6 at
-  // 375pt — the two narrowest widths that ship. A chip is `(W − 82) / 5`
-  // in here and its content box is ten less, which puts the crossover at
-  // 352 exactly. Below it the result is ugly either way.
-  // Shortening a name buys width here, a larger `space` value costs it.
-  dimensionRow: { flexDirection: 'row', gap: space.sm },
-  dimensionChip: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 44,
+  dimensionRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.xs,
-    gap: space.xs,
+    gap: space.md,
+    paddingVertical: space.xs,
   },
-  dimensionName: {
+  // The name and the word take fixed widths so the five tracks line up.
+  dimensionName: { ...type.bodySmall, color: color.textMuted, width: 104 },
+  track: {
+    flex: 1,
+    height: 6,
+    borderRadius: radius.pill,
+    backgroundColor: color.track,
+    overflow: 'hidden',
+  },
+  fill: { height: '100%', borderRadius: radius.pill },
+  dimensionLevel: {
     ...type.caption,
     color: color.textFaint,
-    textAlign: 'center',
+    width: 92,
+    textAlign: 'right',
   },
   aspectLine: { gap: 2 },
   aspect: {
@@ -225,9 +226,25 @@ const styles = StyleSheet.create({
     gap: space.xs,
     marginBottom: space.sm,
   },
+  aspectTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space.xs,
+  },
+  glyphPill: {
+    backgroundColor: color.surfaceHigh,
+    borderRadius: radius.pill,
+    paddingVertical: 6,
+    paddingHorizontal: space.md,
+  },
   aspectTitle: { ...type.heading, color: color.text },
-  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
-  aspectOrb: { ...type.caption, color: color.textFaint, letterSpacing: 0 },
+  aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 3 },
+  aspectOrb: {
+    ...type.caption,
+    fontFamily: font.medium,
+    color: color.textMuted,
+  },
   aspectHead: { ...type.caption, color: color.textMuted },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
 });

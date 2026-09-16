@@ -23,10 +23,18 @@ describe('natalReading', () => {
   // 2026-09-11).
   it('cards every body exactly once, in placement order', () => {
     expect(reading.placements.map((p) => p.placement)).toEqual([...PLACEMENTS]);
+    const chart = pub(istanbul);
     for (const p of reading.placements) {
       expect(p.text.length).toBeGreaterThan(20);
       expect(p.label.length).toBeGreaterThan(2);
       expect(p.degree).toMatch(/^\d{1,2}°\d{2}′$/);
+      // The sign a card carries is the chart's own, so a badge coloured
+      // by it cannot disagree with the technical line beside it.
+      expect(p.sign).toBe(
+        p.placement === 'ascendant'
+          ? 'gemini'
+          : chart.planets[p.placement].sign,
+      );
     }
     expect(reading.risingText).toMatch(/Meraklı|konuşkan/); // Gemini rising
   });

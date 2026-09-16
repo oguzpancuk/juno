@@ -134,8 +134,6 @@ export const type = {
   // rule above the section, not as a word.
   label: { fontFamily: font.medium, fontSize: 11.5, letterSpacing: 2.4 },
   caption: { fontFamily: font.regular, fontSize: 12.5, lineHeight: 17 },
-  /** A strong word inside body-sized text: the face, nothing else. */
-  strong: { fontFamily: font.semibold },
 } as const;
 
 export const shadow = {

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
+import { CosmicGround } from '@/components/CosmicGround';
 import { PairReading } from '@/components/PairReading';
 import { Popup } from '@/components/Popup';
 import { useBottomGap } from '@/lib/insets';
@@ -115,132 +116,144 @@ export function MatchDetail({
   };
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
-      testID="match-screen"
-    >
-      <Text style={styles.kicker}>{t.match.kicker}</Text>
-      <Text style={styles.title}>{t.match.title(row.display_name)}</Text>
-      {sources.some((source) => source !== null) ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.photoStrip}
-        >
-          {sources.map((source, index) =>
-            source === null ? null : (
-              <Image
-                key={source.uri}
-                testID={`match-photo-${index}`}
-                source={source}
-                style={styles.photo}
-                resizeMode="cover"
-              />
-            ),
-          )}
-        </ScrollView>
-      ) : null}
-      {row.bio ? <Text style={styles.bio}>{row.bio}</Text> : null}
-      <BigThreeRow three={row.big_three} />
-
-      <Text style={styles.label}>{t.match.starterLabel}</Text>
-      {starter ? (
-        <View style={styles.starterBox} testID="starter">
-          <Text style={styles.starterHead}>{starter.headline}</Text>
-          <Text style={styles.starterMeaning}>{starter.meaning}</Text>
-          <Text style={styles.starterQuestion}>{starter.question}</Text>
-        </View>
-      ) : (
-        <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
-      )}
-      <Link
-        href={{ pathname: '/starter/[id]', params: { id: row.match_id } }}
-        style={styles.link}
+    <View style={styles.screen}>
+      {/* Stars only: the planet would sit under the heading and the
+          horizon under the safety row. */}
+      <CosmicGround planet={false} horizon={false} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
+        testID="match-screen"
       >
-        {t.starter.open}
-      </Link>
+        <Text style={styles.kicker}>{t.match.kicker}</Text>
+        <Text style={styles.title}>{t.match.title(row.display_name)}</Text>
+        {sources.some((source) => source !== null) ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.photoStrip}
+          >
+            {sources.map((source, index) =>
+              source === null ? null : (
+                <Image
+                  key={source.uri}
+                  testID={`match-photo-${index}`}
+                  source={source}
+                  style={styles.photo}
+                  resizeMode="cover"
+                />
+              ),
+            )}
+          </ScrollView>
+        ) : null}
+        {row.bio ? <Text style={styles.bio}>{row.bio}</Text> : null}
+        <BigThreeRow three={row.big_three} />
 
-      {meFailed ? (
-        <Text style={styles.notice} testID="synastry-failed">
-          {t.match.synastryFailed}
-        </Text>
-      ) : null}
-      {me ? (
-        <View style={styles.summary}>
-          <Text style={styles.label}>{t.match.summary}</Text>
-          {/* Shared with the deck's "Uyum detayı" sheet. */}
-          <PairReading mine={me.chart} theirs={row.chart} />
-        </View>
-      ) : null}
+        <Text style={styles.label}>{t.match.starterLabel}</Text>
+        {starter ? (
+          <View style={styles.starterBox} testID="starter">
+            <Text style={styles.starterHead}>{starter.headline}</Text>
+            <Text style={styles.starterMeaning}>{starter.meaning}</Text>
+            <Text style={styles.starterQuestion}>{starter.question}</Text>
+          </View>
+        ) : (
+          <Text style={styles.starterMeaning}>{t.match.noStarter}</Text>
+        )}
+        <Link
+          href={{ pathname: '/starter/[id]', params: { id: row.match_id } }}
+          style={styles.link}
+        >
+          {t.starter.open}
+        </Link>
 
-      <Text style={styles.label}>{t.safety.title}</Text>
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-      <View style={styles.safetyRow}>
-        <Pressable
-          testID="block"
-          style={styles.safetyButton}
-          onPress={() => {
-            setNotice(null);
-            setReporting(false);
-            setConfirmingBlock((open) => !open);
-          }}
-        >
-          <Text style={styles.safetyText}>{t.safety.block}</Text>
-        </Pressable>
-        <Pressable
-          testID="report"
-          style={styles.safetyButton}
-          onPress={() => {
-            setNotice(null);
-            setConfirmingBlock(false);
-            setReporting(true);
-          }}
-        >
-          <Text style={styles.safetyText}>{t.safety.report}</Text>
-        </Pressable>
-      </View>
-      {confirmingBlock ? (
-        <View style={styles.reasons} testID="block-confirm">
-          <Text style={styles.bodyMuted}>{t.safety.blockConfirm(name)}</Text>
-          <Pressable testID="block-yes" style={styles.danger} onPress={doBlock}>
-            <Text style={styles.dangerText}>{t.safety.blockConfirmTitle}</Text>
+        {meFailed ? (
+          <Text style={styles.notice} testID="synastry-failed">
+            {t.match.synastryFailed}
+          </Text>
+        ) : null}
+        {me ? (
+          <View style={styles.summary}>
+            <Text style={styles.label}>{t.match.summary}</Text>
+            {/* Shared with the deck's "Uyum detayı" sheet. */}
+            <PairReading mine={me.chart} theirs={row.chart} />
+          </View>
+        ) : null}
+
+        <Text style={styles.label}>{t.safety.title}</Text>
+        {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+        <View style={styles.safetyRow}>
+          <Pressable
+            testID="block"
+            style={styles.safetyButton}
+            onPress={() => {
+              setNotice(null);
+              setReporting(false);
+              setConfirmingBlock((open) => !open);
+            }}
+          >
+            <Text style={styles.safetyText}>{t.safety.block}</Text>
           </Pressable>
           <Pressable
-            style={styles.reason}
+            testID="report"
+            style={styles.safetyButton}
             onPress={() => {
+              setNotice(null);
               setConfirmingBlock(false);
+              setReporting(true);
             }}
           >
-            <Text style={styles.body}>{t.safety.cancel}</Text>
+            <Text style={styles.safetyText}>{t.safety.report}</Text>
           </Pressable>
         </View>
-      ) : null}
-      <Popup
-        visible={reporting}
-        onClose={() => setReporting(false)}
-        title={t.safety.reportTitle}
-        testID="report-reasons"
-      >
-        {REPORT_REASONS.map((reason) => (
-          <Pressable
-            key={reason.value}
-            testID={`reason-${reason.value}`}
-            style={({ pressed }) => [styles.reason, pressed && styles.dim]}
-            onPress={() => {
-              file(reason.value);
-            }}
-          >
-            <Text style={styles.body}>{reason.label}</Text>
-          </Pressable>
-        ))}
-      </Popup>
-    </ScrollView>
+        {confirmingBlock ? (
+          <View style={styles.reasons} testID="block-confirm">
+            <Text style={styles.bodyMuted}>{t.safety.blockConfirm(name)}</Text>
+            <Pressable
+              testID="block-yes"
+              style={styles.danger}
+              onPress={doBlock}
+            >
+              <Text style={styles.dangerText}>
+                {t.safety.blockConfirmTitle}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={styles.reason}
+              onPress={() => {
+                setConfirmingBlock(false);
+              }}
+            >
+              <Text style={styles.body}>{t.safety.cancel}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+        <Popup
+          visible={reporting}
+          onClose={() => setReporting(false)}
+          title={t.safety.reportTitle}
+          testID="report-reasons"
+        >
+          {REPORT_REASONS.map((reason) => (
+            <Pressable
+              key={reason.value}
+              testID={`reason-${reason.value}`}
+              style={({ pressed }) => [styles.reason, pressed && styles.dim]}
+              onPress={() => {
+                file(reason.value);
+              }}
+            >
+              <Text style={styles.body}>{reason.label}</Text>
+            </Pressable>
+          ))}
+        </Popup>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
+  scroll: { flex: 1 },
   content: { padding: space.xl, paddingTop: space.lg, gap: space.sm },
   kicker: { ...type.label, color: color.pink },
   title: { ...type.display, color: color.text, marginBottom: space.md },

@@ -1,6 +1,7 @@
 import {
-  BODY_GLYPH,
+  SIGN_GLYPH,
   aspectGlyphs,
+  elementOf,
   formatDegree,
   natalAspectTitleTr,
   type NatalReading,
@@ -11,7 +12,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ChartWheel } from '@/components/ChartWheel';
 import { Body, Card, GlyphBadge, SectionLabel } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, font, space, type } from '@/theme/tokens';
+import { color, element, font, space, type } from '@/theme/tokens';
 
 /**
  * How many of `reading.placements` the profile page shows in the open —
@@ -44,11 +45,19 @@ export function PlacementCard({
   degree?: boolean;
   testID?: string | undefined;
 }) {
-  const { placement, label, technical, text, houseText, house } = reading;
+  const { sign, label, technical, text, houseText, house } = reading;
+  const tone = element[elementOf(sign)];
   return (
     <Card {...(testID === undefined ? {} : { testID })}>
       <View style={styles.cardHead}>
-        <GlyphBadge glyph={BODY_GLYPH[placement]} />
+        {/* The sign's symbol in its element's colour (sheet frame 07); the
+            planet is named in the line beside it. */}
+        <GlyphBadge
+          glyph={SIGN_GLYPH[sign]}
+          size={44}
+          ink={tone.ink}
+          tint={tone.tint}
+        />
         <View style={styles.cardHeadText}>
           <Text style={styles.cardTitle}>{label}</Text>
           <Text style={styles.cardTechnical}>

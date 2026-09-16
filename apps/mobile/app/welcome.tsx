@@ -102,6 +102,9 @@ const styles = StyleSheet.create({
     ...type.display,
     color: color.text,
     fontSize: 46,
+    // Its own line box: the display scale's 38 is smaller than Outfit's
+    // ascent and descent at this size, and Android clips to the box.
+    lineHeight: 56,
     fontFamily: font.light,
     letterSpacing: 7,
   },

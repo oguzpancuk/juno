@@ -415,13 +415,70 @@ export function Chip({
 export function GlyphBadge({
   glyph,
   size = 40,
+  ink = color.pink,
+  tint,
 }: {
   glyph: string;
   size?: number;
+  /** The glyph's colour; the sheet colours a sign's by its element. */
+  ink?: string;
+  /** A fill behind it; without one the circle is the raised surface. */
+  tint?: string;
 }) {
   return (
-    <View style={[s.badge, { width: size, height: size }]}>
-      <Text style={s.badgeGlyph}>{glyph}</Text>
+    <View
+      style={[
+        s.badge,
+        { width: size, height: size },
+        tint === undefined ? null : { backgroundColor: tint, borderWidth: 0 },
+      ]}
+    >
+      <Text style={[s.badgeGlyph, { color: ink }]}>{glyph}</Text>
+    </View>
+  );
+}
+
+/**
+ * The gradient ring the sheet draws around the thing that matters on a
+ * page — the band on the match page (frames 09 and 10), where it stands
+ * in for the number the product never prints. A gradient disc with the
+ * ground painted back over its middle, a glow behind, and whatever is
+ * passed in centred inside. Paint only.
+ */
+export function Halo({
+  size,
+  ring = 3,
+  children,
+}: {
+  size: number;
+  ring?: number;
+  children: ReactNode;
+}) {
+  const glow = size * 1.9;
+  return (
+    <View style={[s.haloWrap, { width: size, height: size }]}>
+      <Glow
+        size={glow}
+        style={{ top: -(glow - size) / 2, left: -(glow - size) / 2 }}
+      />
+      <LinearGradient
+        colors={[...gradient]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[s.haloRing, { width: size, height: size }]}
+      >
+        <View
+          style={[
+            s.haloInner,
+            {
+              width: size - ring * 2,
+              height: size - ring * 2,
+            },
+          ]}
+        >
+          {children}
+        </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -538,8 +595,21 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeGlyph: { fontSize: 19, color: color.pink },
+  badgeGlyph: { fontSize: 19 },
   glow: { position: 'absolute' },
+  haloWrap: { alignSelf: 'center' },
+  haloRing: {
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  haloInner: {
+    borderRadius: radius.pill,
+    backgroundColor: color.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
   link: { ...type.body, color: color.textMuted, paddingVertical: space.sm },
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
   chevronHit: {

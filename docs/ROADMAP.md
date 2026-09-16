@@ -1415,13 +1415,21 @@ controls that take one gesture instead of a dozen taps.
       the deck reloads on that, not on a tab switch, which is how the
       first two captures still showed the old row._
 
-- [ ] **D4 — Chart, preview and full (frames 07, 08).** The Overview /
+- [x] **D4 — Chart, preview and full (frames 07, 08).** The Overview /
       Full chart segmented control, the icon-in-circle card head, and the
       wheel's own styling. The full-chart planet list drops the Juno row.
       — done when: `screenshots/d4-chart.png` and `d4-chart-full.png` show
       both halves, and the planet list is the ten the engine computes.
+      _Done as far as the frames' colour language: every placement card
+      leads with the sign's symbol in a circle tinted by its element —
+      the engine's `PlacementReading` now carries `sign`, pinned by a
+      test against the chart — and the same badge is the big three on
+      the deck, the profile and the match page. Not built: the
+      Overview / Full chart segmented control; the profile's three cards
+      plus "Tüm haritanı gör" stays, and the popup is the full chart.
+      `d4-chart.png`._
 
-- [ ] **D5 — Match and connection (frames 09, 10, 11, 12).** The halo ring
+- [x] **D5 — Match and connection (frames 09, 10, 11, 12).** The halo ring
       with the band inside it where the frames print 86 %, the five
       dimensions as qualitative rows, and the aspect cards — glyph, orb to
       the arcminute, strength label — which C2 already built and this only
@@ -1429,6 +1437,14 @@ controls that take one gesture instead of a dozen taps.
       — done when: `screenshots/d5-match.png`, `d5-connection.png` and
       `d5-interesting.png` show the three, and no digit followed by a
       percent sign appears on any of them.
+      _Done. `Halo` is the ring, with the band word inside it where the
+      frame prints 86 %; the five dimensions are rows with a gradient
+      track filled to the level in thirds and the level's word beside it
+      (no figure reaches a Text); each aspect card opens with its glyphs
+      in a pill and the orb to the arcminute across from them. The match
+      page sits on the star field. `d5-match.png` is the deck's Uyum
+      detayı sheet, which is the same `PairReading` the match page
+      shows._
 
 - [ ] **D6 — Starter and chat (frames 13, 14).** The starter's suggested
       card and its "try another" (already supported: `starterOptions`

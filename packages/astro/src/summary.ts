@@ -46,7 +46,7 @@ import {
 } from './content';
 import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
-import { degreeInSign, roundLongitude, signOf } from './signs';
+import { degreeInSign, roundLongitude, signOf, type Sign } from './signs';
 import {
   BODY_TR,
   SIGN_TR_LOCATIVE,
@@ -71,6 +71,8 @@ import {
  */
 export interface PlacementReading {
   readonly placement: Body;
+  /** The sign the body is in — the Ascendant's is the rising sign. */
+  readonly sign: Sign;
   /** "Nasıl seversin". */
   readonly label: string;
   /** "Venüs Akrep'te · 7. ev" — the astrology, kept visible. */
@@ -139,6 +141,7 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       : chart.planets[placement].degree;
     return {
       placement,
+      sign,
       label: placementLabel(placement),
       technical:
         house === null

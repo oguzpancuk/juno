@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   pillOn: { backgroundColor: color.cool, borderColor: color.cool },
   pillText: { ...type.bodySmall, color: color.text, fontFamily: font.semibold },
-  pillTextOn: { fontFamily: font.regular, color: color.onBright },
+  pillTextOn: { color: color.onBright },
   dim: { opacity: 0.6 },
   error: {
     ...type.bodySmall,

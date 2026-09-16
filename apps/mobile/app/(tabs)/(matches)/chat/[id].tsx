@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: space.sm,
   },
-  segmentLabelOn: { fontFamily: font.regular, color: color.text },
+  segmentLabelOn: { color: color.text },
   underline: { height: 2, backgroundColor: 'transparent' },
   underlineOn: { backgroundColor: color.pink },
   pager: { flex: 1 },
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   // screen opens; the label has to follow it or it disappears. `textMuted`
   // rather than `textFaint`: 5.19:1 on this fill against 2.76:1, and this
   // branch put four other colours right for being under 3:1.
-  sendLabelDisabled: { fontFamily: font.regular, color: color.textMuted },
+  sendLabelDisabled: { color: color.textMuted },
   failed: {
     fontFamily: font.regular,
     color: color.danger,

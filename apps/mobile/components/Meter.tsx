@@ -1,4 +1,4 @@
-import { BANDS, LEVELS, type Band, type Level } from '@juno/astro';
+import { BANDS, type Band } from '@juno/astro';
 import { StyleSheet, View } from 'react-native';
 import { color } from '@/theme/tokens';
 
@@ -57,23 +57,6 @@ export function BandMeter({ band, label }: { band: Band; label: string }) {
       filled={BANDS.indexOf(band) + 1}
       accessibilityLabel={label}
       testID={`band-meter-${band}`}
-    />
-  );
-}
-
-/**
- * One dimension's level as three steps, the same bars as the band meter
- * (owner, 2026-09-11: score the categories with bars, not with a word).
- * The word is not lost — it is the accessibility label, so VoiceOver
- * still reads "Kolay yakınlık" where a sighted user sees three lit bars.
- */
-export function LevelMeter({ level, label }: { level: Level; label: string }) {
-  return (
-    <Meter
-      steps={LEVELS.length}
-      filled={LEVELS.indexOf(level) + 1}
-      accessibilityLabel={label}
-      testID={`level-meter-${level}`}
     />
   );
 }

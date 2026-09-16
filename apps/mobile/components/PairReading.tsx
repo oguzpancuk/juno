@@ -7,6 +7,8 @@ import {
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CompatibilityDetail } from '@/components/CompatibilityDetail';
+import { Halo } from '@/components/ui';
+import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
 
 /**
@@ -45,10 +47,14 @@ export function PairReading({
   const overlays = useMemo(() => houseOverlays(mine, theirs), [mine, theirs]);
   return (
     <View style={styles.root} testID="synastry">
-      {/* The band, never the number (ADR-0009 §3). */}
-      <Text style={styles.bandName} testID="band">
-        {reading.bandName}
-      </Text>
+      {/* The band, never the number (ADR-0009 §3) — inside the ring the
+          sheet draws around its percentage (frame 10). */}
+      <Halo size={168}>
+        <Text style={styles.bandName} testID="band">
+          {reading.bandName}
+        </Text>
+        <Text style={styles.bandLabel}>{t.discover.scoreLabel}</Text>
+      </Halo>
       <CompatibilityDetail
         reading={reading}
         sections={sections}
@@ -59,6 +65,7 @@ export function PairReading({
 }
 
 const styles = StyleSheet.create({
-  root: { gap: space.sm },
-  bandName: { ...type.display, color: color.text },
+  root: { gap: space.sm, paddingTop: space.md },
+  bandName: { ...type.title, color: color.text, textAlign: 'center' },
+  bandLabel: { ...type.label, color: color.textFaint },
 });
