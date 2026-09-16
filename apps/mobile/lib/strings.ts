@@ -96,6 +96,11 @@ export const t = {
     risingHasNoHouse:
       'Yükselen bir evin içinde değil: 1. evin başlangıcı. Haritandaki bütün ev sınırları ondan hesaplanır, o yüzden doğum saatin en çok burayı etkiler.',
     fullChart: 'Tüm haritanı gör',
+    /** The full chart's two tables (sheet frame 08). */
+    planetsTab: 'Gezegenler',
+    housesTab: 'Evler',
+    house: (n: number) => `${n}. ev`,
+    cusp: (n: number) => `${n}. ev başlangıcı`,
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',

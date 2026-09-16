@@ -130,7 +130,7 @@ function MatchArrived({ id }: { id: string | undefined }) {
             <View style={styles.band}>
               <BandRing
                 band={reading.band}
-                label={reading.bandName}
+                label={`${reading.bandName} ${t.discover.scoreLabel}`}
                 size={64}
                 stroke={5}
               />

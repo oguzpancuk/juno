@@ -53,7 +53,7 @@ export function PairReading({
       <View style={styles.ring}>
         <BandRing
           band={reading.band}
-          label={reading.bandName}
+          label={`${reading.bandName} ${t.discover.scoreLabel}`}
           size={168}
           stroke={6}
           glow

@@ -1,18 +1,34 @@
 import {
+  BODY_GLYPH,
+  BODY_TR,
+  PLANETS,
   SIGN_GLYPH,
+  SIGN_TR,
+  degreeInSign,
   elementOf,
+  signOf,
   formatDegree,
   natalAspectTitleTr,
   type NatalReading,
   type PlacementReading,
   type PublicChart,
 } from '@juno/astro';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AspectGlyphs } from '@/components/AspectGlyphs';
 import { ChartWheel } from '@/components/ChartWheel';
 import { Body, Card, GlyphBadge, SectionLabel } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, element, font, space, type } from '@/theme/tokens';
+import {
+  color,
+  element,
+  font,
+  glass,
+  planet,
+  radius,
+  space,
+  type,
+} from '@/theme/tokens';
 
 /**
  * How many of `reading.placements` the profile page shows in the open —
@@ -45,13 +61,15 @@ export function PlacementCard({
   degree?: boolean;
   testID?: string | undefined;
 }) {
-  const { sign, label, technical, text, houseText, house } = reading;
+  const { sign, label, text, houseText, house } = reading;
   const tone = element[elementOf(sign)];
   return (
     <Card {...(testID === undefined ? {} : { testID })}>
       <View style={styles.cardHead}>
-        {/* The sign's symbol in its element's colour (sheet frame 07); the
-            planet is named in the line beside it. */}
+        {/* The sign's symbol in its element's colour, the sign's name
+            large, the product's title under it (sheet frame 07). The
+            technical line — degree, house, retrograde — is the full
+            chart's; the profile's three cards stay short. */}
         <GlyphBadge
           glyph={SIGN_GLYPH[sign]}
           size={44}
@@ -59,17 +77,21 @@ export function PlacementCard({
           tint={tone.tint}
         />
         <View style={styles.cardHeadText}>
-          <Text style={styles.cardTitle}>{label}</Text>
-          <Text style={styles.cardTechnical}>
-            {degree ? withDegree(reading) : technical}
+          <Text style={styles.cardTitle}>{SIGN_TR[sign]}</Text>
+          <Text style={styles.cardLabel}>
+            {label}
+            {house === null || degree ? '' : ` · ${t.chart.house(house)}`}
           </Text>
+          {degree ? (
+            <Text style={styles.cardTechnical}>{withDegree(reading)}</Text>
+          ) : null}
         </View>
       </View>
       <Body>{text}</Body>
       {/* The sign says how; the house says where in a life it shows up.
           Both belong on the card — the house meant nothing while it was a
           number in a subtitle. */}
-      {houseText !== null ? (
+      {!degree ? null : houseText !== null ? (
         <View style={styles.houseBlock}>
           <Text style={styles.houseLabel}>
             {t.chart.houseMeaning(house ?? 1)}
@@ -137,6 +159,8 @@ export function ChartDetail({
         />
       </View>
 
+      <ChartTables chart={chart} />
+
       <SectionLabel>{t.chart.placements}</SectionLabel>
       {reading.placements.map((placement) => (
         <PlacementCard
@@ -173,7 +197,116 @@ export function ChartDetail({
   );
 }
 
+/**
+ * The sheet's two tables under the wheel (frame 08): every planet with
+ * its sign and degree, and every house cusp with the sign it starts in.
+ * Read straight off the public chart — the placements list above them
+ * is the same data explained; this is the same data tabulated.
+ */
+function ChartTables({ chart }: { chart: PublicChart }) {
+  const [tab, setTab] = useState<'planets' | 'houses'>('planets');
+  return (
+    <View style={styles.tables} testID="chart-tables">
+      <View style={styles.segments} role="tablist">
+        {(['planets', 'houses'] as const).map((key) => {
+          const on = tab === key;
+          return (
+            <Pressable
+              key={key}
+              role="tab"
+              aria-selected={on}
+              testID={`chart-tab-${key}`}
+              style={[styles.segment, on && styles.segmentOn]}
+              onPress={() => setTab(key)}
+            >
+              <Text style={[styles.segmentText, on && styles.segmentTextOn]}>
+                {key === 'planets' ? t.chart.planetsTab : t.chart.housesTab}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Card style={styles.table}>
+        {tab === 'planets'
+          ? PLANETS.map((body) => {
+              const p = chart.planets[body];
+              return (
+                <View key={body} style={styles.row} testID={`row-${body}`}>
+                  <GlyphBadge
+                    glyph={BODY_GLYPH[body]}
+                    size={36}
+                    ink={planet[body]}
+                    tint={glass.fillHigh}
+                  />
+                  <Text style={styles.rowName}>{BODY_TR[body]}</Text>
+                  <Text style={styles.rowSign}>
+                    {SIGN_GLYPH[p.sign]} {SIGN_TR[p.sign]}
+                  </Text>
+                  <Text style={styles.rowDegree}>
+                    {formatDegree(p.degree)}
+                    {p.retrograde ? ` ${t.chart.retrograde}` : ''}
+                  </Text>
+                </View>
+              );
+            })
+          : chart.houses.cusps.map((cusp, index) => {
+              const sign = signOf(cusp);
+              const tone = element[elementOf(sign)];
+              return (
+                <View
+                  key={index}
+                  style={styles.row}
+                  testID={`row-house-${index + 1}`}
+                >
+                  <GlyphBadge
+                    glyph={SIGN_GLYPH[sign]}
+                    size={36}
+                    ink={tone.ink}
+                    tint={tone.tint}
+                  />
+                  <Text style={styles.rowName}>{t.chart.house(index + 1)}</Text>
+                  <Text style={styles.rowSign}>{SIGN_TR[sign]}</Text>
+                  <Text style={styles.rowDegree}>
+                    {formatDegree(degreeInSign(cusp))}
+                  </Text>
+                </View>
+              );
+            })}
+      </Card>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  tables: { gap: space.sm, marginTop: space.sm },
+  segments: {
+    flexDirection: 'row',
+    backgroundColor: glass.fillSoft,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    padding: 3,
+  },
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    borderRadius: radius.pill,
+    paddingVertical: space.sm,
+  },
+  segmentOn: { backgroundColor: color.cool },
+  segmentText: { ...type.body, color: color.text },
+  segmentTextOn: { color: color.onBright, fontFamily: font.semibold },
+  table: { gap: space.xs, paddingVertical: space.sm },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingVertical: space.xs,
+  },
+  rowName: { ...type.body, color: color.text, width: 84 },
+  rowSign: { ...type.body, color: color.textMuted, flex: 1 },
+  rowDegree: { ...type.caption, color: color.textFaint },
+  cardLabel: { ...type.bodySmall, color: color.textMuted, marginTop: 1 },
   cardHead: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   cardHeadText: { flexShrink: 1 },
   cardTitle: { ...type.heading, color: color.text },

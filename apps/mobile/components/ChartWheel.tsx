@@ -1,15 +1,15 @@
 import {
   BODY_GLYPH,
-  PLANETS,
-  SIGN_GLYPH,
-  SIGNS,
   type Body,
   type InterAspect,
+  PLANETS,
   type PublicChart,
+  SIGNS,
+  SIGN_GLYPH,
+  aspectKind,
 } from '@juno/astro';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { aspectKind } from '@/components/AspectGlyphs';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import { MAX_GLYPH_LEVEL, glyphGapDegrees, glyphLevels } from '@/lib/wheel';
 import { aspectTone, color } from '@/theme/tokens';
@@ -184,7 +184,7 @@ export function ChartWheel({
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={aspectTone[aspectKind(aspect.aspect)].ink}
+                stroke={aspectTone[aspectKind(aspect)].ink}
                 strokeWidth={1}
                 opacity={0.55}
               />

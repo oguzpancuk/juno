@@ -4,14 +4,15 @@ import { computeChart } from './chart';
 import {
   BODIES,
   aspectBetween,
+  aspectKind,
   compatibility,
   elementsAgree,
+  natalAspects,
   parseStarterKey,
   scoreFrom,
   starterKey,
   strongestOf,
   type ChartForScoring,
-  natalAspects,
 } from './compatibility';
 import { toPublicChart } from './public';
 import { signOf } from './signs';
@@ -137,6 +138,23 @@ describe('aspectBetween (ADR-0003 table)', () => {
 
   it('returns null outside every orb', () => {
     expect(aspectBetween('sun', 0, 'moon', 45)).toBeNull();
+  });
+});
+
+describe('aspectKind', () => {
+  // The name says conjunction; the table says Saturn on the Moon is hard,
+  // and the term carries that. The colour on screen has to follow the
+  // term, or a card lands in the friction section painted as neutral.
+  it('reads a hard conjunction as friction and a soft one as neither', () => {
+    expect(aspectKind({ aspect: 'conjunction', term: -4 })).toBe('tension');
+    expect(aspectKind({ aspect: 'conjunction', term: 3 })).toBe('conjunction');
+  });
+
+  it('follows the sign of the term for every other aspect', () => {
+    expect(aspectKind({ aspect: 'trine', term: 2 })).toBe('harmony');
+    expect(aspectKind({ aspect: 'sextile', term: 1 })).toBe('harmony');
+    expect(aspectKind({ aspect: 'square', term: -2 })).toBe('tension');
+    expect(aspectKind({ aspect: 'opposition', term: -1 })).toBe('tension');
   });
 });
 

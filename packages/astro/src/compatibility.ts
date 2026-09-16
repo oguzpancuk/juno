@@ -422,3 +422,20 @@ export function natalAspects(chart: ChartForScoring): InterAspect[] {
 export function elementOf(sign: Sign): 'fire' | 'earth' | 'air' | 'water' {
   return ELEMENT[sign];
 }
+
+export type AspectKind = 'harmony' | 'tension' | 'conjunction';
+
+/**
+ * How an aspect reads: flowing, with friction, or the conjunction — which
+ * is neither, except where the table makes it hard (Saturn on the Moon,
+ * Venus or Mars), and then it is friction. The sign of `term` is the
+ * engine's verdict; the aspect's name alone is not, which is why this
+ * lives here and not in a component (review, 2026-09-16).
+ */
+export function aspectKind(aspect: {
+  readonly aspect: Aspect;
+  readonly term: number;
+}): AspectKind {
+  if (aspect.term < 0) return 'tension';
+  return aspect.aspect === 'conjunction' ? 'conjunction' : 'harmony';
+}

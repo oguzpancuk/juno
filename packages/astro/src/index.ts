@@ -134,3 +134,4 @@ export {
   describeAspectTr,
   formatDegree,
 } from './tr';
+export { aspectKind, type AspectKind } from './compatibility';

@@ -111,6 +111,15 @@ export function Screen({
 const GLASS_BLUR = 28;
 
 /**
+ * True under a sheet. A sheet blurs once for everything on it, so a card
+ * inside it takes the tint alone: another effect view per card would
+ * re-sample a backdrop that is already blurred stars (review,
+ * 2026-09-16), and a chart popup has a couple of dozen cards.
+ */
+const InSheet = createContext(false);
+export const InSheetProvider = InSheet.Provider;
+
+/**
  * A surface the stars show through (owner, 2026-09-16): a blur where the
  * platform draws one — iOS and the web; Android gets the tint alone — and
  * a translucent fill over it, both absolute so the children lay out as
@@ -126,14 +135,17 @@ export function Glass({
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
+  const inSheet = useContext(InSheet);
   return (
     <View testID={testID} style={[s.glass, style]}>
-      <BlurView
-        intensity={GLASS_BLUR}
-        tint="dark"
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
+      {inSheet ? null : (
+        <BlurView
+          intensity={GLASS_BLUR}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+      )}
       <View style={s.glassFill} pointerEvents="none" />
       {children}
     </View>

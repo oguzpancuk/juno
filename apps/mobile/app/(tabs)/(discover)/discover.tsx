@@ -503,7 +503,7 @@ export default function Discover() {
             >
               <BandRing
                 band={bandOf(current.match.score)}
-                label={bandName(current.match.score)}
+                label={`${bandName(current.match.score)} ${t.discover.scoreLabel}`}
                 size={56}
                 stroke={5}
               />
