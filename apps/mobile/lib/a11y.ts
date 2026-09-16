@@ -22,7 +22,9 @@ export function useReducedMotion(): boolean {
     );
     return () => {
       live = false;
-      sub.remove();
+      // why: react-native-web returns undefined here where `matchMedia`
+      // is absent (jsdom); the type says a subscription.
+      sub?.remove();
     };
   }, []);
   return reduced;

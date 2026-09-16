@@ -29,9 +29,11 @@ import { color, star as starColor } from '@/theme/tokens';
  * takes no touches.
  *
  * The stars are views, not SVG circles: the native driver animates a
- * view's opacity off the JavaScript thread, and fifty of them cost
- * nothing that way, where fifty animated SVG props would run on the JS
- * thread every frame. With Reduce Motion on, nothing moves.
+ * view's opacity off the JavaScript thread, and each star is one native
+ * loop that never returns to JS once started. Several skies are alive at
+ * once — every tab's screens stay mounted — so what this costs is a few
+ * hundred native animation nodes, not JavaScript time; the falling star
+ * is the one JS timer per sky. With Reduce Motion on, nothing moves.
  */
 export const STAR_COUNT = 52;
 /** Any number; changing it moves every star, so pick once. */
@@ -149,45 +151,46 @@ export function CosmicGround({
   );
 }
 
-/** One star, breathing between a third of its light and all of it. */
+/**
+ * One star, breathing between a third of its light and all of it.
+ *
+ * One value runs 0 → 1 in a loop of a single native timing, and the
+ * opacity is read off it — so after the first delay nothing comes back to
+ * JavaScript, and the loop's reset to 0 is continuous because both ends
+ * of the breath are the full light. The delay is the star's phase, so
+ * the field never pulses as one. (A loop over a sequence would have run
+ * through JS every step and reset the value under the lead — review,
+ * 2026-09-16.)
+ */
 function Twinkle({ star, still }: { star: Star; still: boolean }) {
-  const [light] = useState(() => new Animated.Value(star.alpha));
+  const [breath] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (still) {
-      light.setValue(star.alpha);
+      breath.setValue(0);
       return;
     }
-    const low = star.alpha * 0.35;
-    const breath = Animated.loop(
-      Animated.sequence([
-        Animated.timing(light, {
-          toValue: low,
-          duration: star.period / 2,
-          easing: Easing.inOut(Easing.sin),
+    const run = Animated.sequence([
+      Animated.delay(star.period * star.phase),
+      Animated.loop(
+        Animated.timing(breath, {
+          toValue: 1,
+          duration: star.period,
+          easing: Easing.linear,
           useNativeDriver: NATIVE,
         }),
-        Animated.timing(light, {
-          toValue: star.alpha,
-          duration: star.period / 2,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: NATIVE,
-        }),
-      ]),
-    );
-    // Start partway through the breath, so the field never pulses as one.
-    const lead = Animated.timing(light, {
-      toValue: low + (star.alpha - low) * star.phase,
-      duration: star.period * star.phase,
-      easing: Easing.linear,
-      useNativeDriver: NATIVE,
-    });
-    const run = Animated.sequence([lead, breath]);
+      ),
+    ]);
     run.start();
     return () => {
       run.stop();
     };
-  }, [light, star, still]);
+  }, [breath, star, still]);
   const size = star.r * 2;
+  const opacity = breath.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [star.alpha, star.alpha * 0.35, star.alpha],
+    easing: Easing.inOut(Easing.sin),
+  });
   return (
     <Animated.View
       style={{
@@ -198,7 +201,7 @@ function Twinkle({ star, still }: { star: Star; still: boolean }) {
         height: size,
         borderRadius: star.r,
         backgroundColor: starColor[star.hue] ?? starColor[0],
-        opacity: light,
+        opacity,
       }}
     />
   );
@@ -224,11 +227,7 @@ function FallingStar({ width, height }: { width: number; height: number }) {
           easing: Easing.out(Easing.quad),
           useNativeDriver: NATIVE,
         }),
-        Animated.timing(progress, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: NATIVE,
-        }),
+        // The loop resets `progress` to 0 before each pass.
       ]),
     );
     fall.start();

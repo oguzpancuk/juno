@@ -75,9 +75,11 @@ export const color = {
 export const glass = {
   fill: 'rgba(18,16,31,0.42)',
   /**
-   * A sheet over a screen: denser than a card, because what is under it
-   * is a page of text and a photo, not the star field — at the card's
-   * alpha the deck read straight through (seen 2026-09-16).
+   * A sheet over a screen: denser than a card and blurred harder (85 to
+   * a card's 55), because what is under it is a page of text and a
+   * photo, not the star field. The blur is what keeps the deck from
+   * reading through; the tint alone did not, at any alpha that still
+   * looked like glass (seen 2026-09-16).
    */
   sheet: 'rgba(12,10,22,0.66)',
   fillSoft: 'rgba(23,21,40,0.5)',
