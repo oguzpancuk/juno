@@ -131,6 +131,10 @@ export function Popup({
           onPress={onClose}
           accessible={false}
           aria-hidden
+          // Not a tab stop: on the web a Pressable is focusable by default,
+          // and a hidden element that takes focus is a contradiction a
+          // keyboard user lands on (review, 2026-09-16).
+          tabIndex={-1}
         />
         {/* The one raw `insets.bottom` left in the app (lib/insets.ts has
             the other). A Modal is its own window, above the tab bar, so

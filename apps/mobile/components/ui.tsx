@@ -782,23 +782,23 @@ export function Glow({
   style?: StyleProp<ViewStyle>;
 }) {
   const r = size / 2;
+  // The Svg inside a View that carries the hiding: `aria-hidden` on the
+  // Svg itself reaches neither VoiceOver nor TalkBack, since the element
+  // bypasses RN's View (review, 2026-09-16); the View folds it natively
+  // and the web emits it on the wrapper.
   return (
-    <Svg
-      width={size}
-      height={size}
-      style={[s.glow, style]}
-      pointerEvents="none"
-      aria-hidden
-    >
-      <Defs>
-        <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor={color.warm} stopOpacity={0.42} />
-          <Stop offset="0.5" stopColor={color.cool} stopOpacity={0.16} />
-          <Stop offset="1" stopColor={color.cool} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={r} cy={r} r={r} fill="url(#glow)" />
-    </Svg>
+    <View style={[s.glow, style]} pointerEvents="none" aria-hidden>
+      <Svg width={size} height={size}>
+        <Defs>
+          <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={color.warm} stopOpacity={0.42} />
+            <Stop offset="0.5" stopColor={color.cool} stopOpacity={0.16} />
+            <Stop offset="1" stopColor={color.cool} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={r} cy={r} r={r} fill="url(#glow)" />
+      </Svg>
+    </View>
   );
 }
 
