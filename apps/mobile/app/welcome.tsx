@@ -1,5 +1,6 @@
 import { Link, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { CosmicGround } from '@/components/CosmicGround';
 import {
   Glow,
   GradientButton,
@@ -8,7 +9,7 @@ import {
   OutlineButton,
 } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 /**
  * The door. Everything before this screen is a redirect, so it is the first
@@ -33,6 +34,9 @@ const GLOW = 300;
 export default function WelcomeScreen() {
   return (
     <View style={styles.screen} testID="welcome-screen">
+      {/* Stars and the horizon; no planet, the mark has the top, and the
+          curve stays under the legal link rather than through it. */}
+      <CosmicGround planet={false} horizonRise={0.05} />
       <View style={styles.hero}>
         <View>
           <Glow size={GLOW} style={styles.glow} />
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
     ...type.display,
     color: color.text,
     fontSize: 46,
-    fontWeight: '300',
+    fontFamily: font.light,
     letterSpacing: 7,
   },
   tagline: { ...type.label, color: color.textMuted },

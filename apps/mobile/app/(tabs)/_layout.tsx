@@ -7,7 +7,7 @@ import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
 import { useUnreadTotal } from '@/lib/unread';
 import { badgeText } from '@/lib/unread-count';
-import { color, type } from '@/theme/tokens';
+import { color, font, type } from '@/theme/tokens';
 
 /**
  * The three places the app lives: you, the deck, the people you matched
@@ -123,7 +123,7 @@ export default function TabLayout() {
             tabBarBadgeStyle: {
               backgroundColor: color.cool,
               color: color.onBright,
-              fontWeight: '700',
+              fontFamily: font.semibold,
             },
             // Spread rather than set to undefined: the option types are
             // exact. The badge itself is not announced, so with a count the

@@ -39,7 +39,7 @@ import {
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, font, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
@@ -351,8 +351,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
   },
   pillOn: { backgroundColor: color.cool, borderColor: color.cool },
-  pillText: { ...type.bodySmall, color: color.text, fontWeight: '600' },
-  pillTextOn: { color: color.onBright },
+  pillText: { ...type.bodySmall, color: color.text, fontFamily: font.semibold },
+  pillTextOn: { fontFamily: font.regular, color: color.onBright },
   dim: { opacity: 0.6 },
   error: {
     ...type.bodySmall,

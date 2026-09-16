@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, font } from '@/theme/tokens';
 
 const BULLET = '• ';
 
@@ -38,11 +38,27 @@ export function LegalText() {
 }
 
 const styles = StyleSheet.create({
-  updated: { color: color.textFaint, fontSize: 12 },
+  updated: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
   section: { marginTop: 20, gap: 8 },
-  heading: { color: color.text, fontSize: 17, fontWeight: '700' },
-  paragraph: { color: color.textMuted, fontSize: 14, lineHeight: 21 },
+  heading: { color: color.text, fontSize: 17, fontFamily: font.semibold },
+  paragraph: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+  },
   bulletRow: { flexDirection: 'row', gap: 2 },
-  bullet: { color: color.textMuted, fontSize: 14, lineHeight: 21 },
-  bulletText: { color: color.textMuted, fontSize: 14, lineHeight: 21, flex: 1 },
+  bullet: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  bulletText: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    flex: 1,
+  },
 });

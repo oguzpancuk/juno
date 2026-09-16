@@ -179,7 +179,7 @@ strong as the photo.
 - If the user has no photo yet, a banner: **Keşfette görünmek için bir
   fotoğraf ekle ›**
 - Card: portrait photo; name and age ("Elif, 27"); distance ("3 km" or
-  **1 km altı**); bio (up to 3 lines); big-three chips (Güneş / Ay /
+  **1 km altı**); bio (two lines, the rest on the person page); big-three chips (Güneş / Ay /
   Yükselen with sign); **the compatibility band** — a word beside a
   four-step meter, with the small label **uyum** under it; one-line why,
   e.g. _Ay'ın onun Venüs'üyle üçgen yapıyor._ Fallback why:

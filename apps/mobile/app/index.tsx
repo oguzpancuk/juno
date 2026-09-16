@@ -10,7 +10,7 @@ import {
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, font } from '@/theme/tokens';
 
 /** Entry: route by auth + profile state. */
 export default function Index() {
@@ -67,6 +67,6 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  text: { color: color.textMuted },
-  link: { color: color.textMuted, padding: 12 },
+  text: { fontFamily: font.regular, color: color.textMuted },
+  link: { fontFamily: font.regular, color: color.textMuted, padding: 12 },
 });

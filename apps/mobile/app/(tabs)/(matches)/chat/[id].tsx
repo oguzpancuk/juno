@@ -43,7 +43,7 @@ import {
   quoteFor,
   showsAvatar,
 } from '@/lib/thread-view';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, font, radius, space, type } from '@/theme/tokens';
 
 /** The `page` param: anything but "match" opens the thread. */
 const PageParam = z.enum(VISIBLE_PAGES).catch('thread');
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: space.sm,
   },
-  segmentLabelOn: { color: color.text },
+  segmentLabelOn: { fontFamily: font.regular, color: color.text },
   underline: { height: 2, backgroundColor: 'transparent' },
   underlineOn: { backgroundColor: color.pink },
   pager: { flex: 1 },
@@ -605,14 +605,23 @@ const styles = StyleSheet.create({
   bubble: { borderRadius: 16, padding: 12, gap: space.sm },
   mine: { backgroundColor: color.mine },
   theirs: { backgroundColor: color.surface },
-  bubbleText: { color: color.text, fontSize: 15, lineHeight: 21 },
+  bubbleText: {
+    fontFamily: font.regular,
+    color: color.text,
+    fontSize: 15,
+    lineHeight: 21,
+  },
   quote: {
     borderLeftWidth: 2,
     borderLeftColor: color.borderStrong,
     paddingLeft: space.sm,
     gap: 2,
   },
-  quoteWho: { ...type.caption, color: color.textMuted, fontWeight: '600' },
+  quoteWho: {
+    ...type.caption,
+    color: color.textMuted,
+    fontFamily: font.semibold,
+  },
   quoteText: { ...type.bodySmall, color: color.textMuted },
   read: {
     ...type.caption,
@@ -628,9 +637,24 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 12,
   },
-  starterLabel: { color: color.textMuted, fontSize: 11, letterSpacing: 1 },
-  starterQuestion: { color: color.text, fontSize: 17, lineHeight: 24 },
-  starterLink: { color: color.textMuted, fontSize: 14, paddingTop: 10 },
+  starterLabel: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  starterQuestion: {
+    fontFamily: font.regular,
+    color: color.text,
+    fontSize: 17,
+    lineHeight: 24,
+  },
+  starterLink: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    paddingTop: 10,
+  },
   replyBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -644,7 +668,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   replyBarText: { flex: 1, gap: 2 },
-  replyBarLabel: { ...type.caption, color: color.pink, fontWeight: '600' },
+  replyBarLabel: {
+    ...type.caption,
+    color: color.pink,
+    fontFamily: font.semibold,
+  },
   replyBarExcerpt: { ...type.bodySmall, color: color.textMuted },
   replyCancel: { padding: space.xs },
   replyCancelGlyph: { color: color.textMuted, fontSize: 17 },
@@ -661,6 +689,7 @@ const styles = StyleSheet.create({
     borderTopColor: color.border,
   },
   input: {
+    fontFamily: font.regular,
     flex: 1,
     maxHeight: 120,
     backgroundColor: color.surface,
@@ -677,12 +706,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sendDisabled: { backgroundColor: color.disabled },
-  sendLabel: { color: color.onBright, fontSize: 15, fontWeight: '600' },
+  sendLabel: { color: color.onBright, fontSize: 15, fontFamily: font.semibold },
   // The button's fill goes dark when it is disabled, which is how the
   // screen opens; the label has to follow it or it disappears. `textMuted`
   // rather than `textFaint`: 5.19:1 on this fill against 2.76:1, and this
   // branch put four other colours right for being under 3:1.
-  sendLabelDisabled: { color: color.textMuted },
-  failed: { color: color.danger, fontSize: 13, paddingHorizontal: 16 },
-  muted: { color: color.textMuted, textAlign: 'center' },
+  sendLabelDisabled: { fontFamily: font.regular, color: color.textMuted },
+  failed: {
+    fontFamily: font.regular,
+    color: color.danger,
+    fontSize: 13,
+    paddingHorizontal: 16,
+  },
+  muted: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    textAlign: 'center',
+  },
 });

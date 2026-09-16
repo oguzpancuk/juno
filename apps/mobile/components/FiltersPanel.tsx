@@ -9,7 +9,7 @@ import { t } from '@/lib/strings';
 import { READ_TIMEOUT_MS, supabase } from '@/lib/supabase';
 import { PendingWrites } from '@/lib/pending-writes';
 import { nearestStop, optionToWrite } from '@/lib/track';
-import { color, radius as r, space, type } from '@/theme/tokens';
+import { color, font, radius as r, space, type } from '@/theme/tokens';
 
 const RADIUS_OPTIONS = [5, 25, 50, 100, 500] as const;
 const AGE_FLOOR = 18;
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   elements: { flexDirection: 'row', gap: space.sm },
   // Equal parts of the row, so the four fill it end to end.
   elementChip: { flex: 1, paddingHorizontal: space.xs },
-  chipTextOn: { color: color.onBright, fontWeight: '600' },
+  chipTextOn: { color: color.onBright, fontFamily: font.semibold },
   segments: {
     flexDirection: 'row',
     backgroundColor: color.surfaceSoft,

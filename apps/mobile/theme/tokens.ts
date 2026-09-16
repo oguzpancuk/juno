@@ -80,22 +80,48 @@ export const radius = {
 } as const;
 
 /**
+ * The typeface: Outfit, the geometric sans the sheet is set in (owner,
+ * 2026-09-16), loaded by the root layout from `@expo-google-fonts/outfit`.
+ * A weight is a face of its own — `fontWeight` does not pick one once a
+ * family is named, on iOS or in react-native-web — so every text style
+ * names its face here and nothing outside this file sets `fontWeight`.
+ * There is no bold: the sheet stops at medium for titles and semibold
+ * for a strong word inside running text.
+ */
+export const font = {
+  light: 'Outfit_300Light',
+  regular: 'Outfit_400Regular',
+  medium: 'Outfit_500Medium',
+  semibold: 'Outfit_600SemiBold',
+} as const;
+
+/**
  * Light weights and open leading; the design leans on space, not on bold.
  * Kickers are pre-uppercased in `strings.ts` — RN's textTransform maps
  * Turkish i to I, not İ — so nothing here sets textTransform.
  */
 export const type = {
-  // Semibold, not bold, at the two largest sizes: the sheet's titles sit
-  // on the page rather than shouting from it (ROADMAP D1).
-  display: { fontSize: 34, fontWeight: '600', letterSpacing: -0.5 },
-  title: { fontSize: 25, fontWeight: '600', letterSpacing: -0.3 },
-  heading: { fontSize: 19, fontWeight: '600' },
-  body: { fontSize: 15, fontWeight: '400', lineHeight: 22 },
-  bodySmall: { fontSize: 13.5, fontWeight: '400', lineHeight: 20 },
+  display: {
+    fontFamily: font.medium,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.4,
+  },
+  title: {
+    fontFamily: font.medium,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.3,
+  },
+  heading: { fontFamily: font.medium, fontSize: 18, lineHeight: 24 },
+  body: { fontFamily: font.regular, fontSize: 15, lineHeight: 23 },
+  bodySmall: { fontFamily: font.regular, fontSize: 13.5, lineHeight: 20 },
   // About 0.2 em: the sheet's kickers are set wide enough to read as a
   // rule above the section, not as a word.
-  label: { fontSize: 11.5, fontWeight: '600', letterSpacing: 2.2 },
-  caption: { fontSize: 12.5, fontWeight: '400' },
+  label: { fontFamily: font.medium, fontSize: 11.5, letterSpacing: 2.4 },
+  caption: { fontFamily: font.regular, fontSize: 12.5, lineHeight: 17 },
+  /** A strong word inside body-sized text: the face, nothing else. */
+  strong: { fontFamily: font.semibold },
 } as const;
 
 export const shadow = {

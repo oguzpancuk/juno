@@ -11,7 +11,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ChartWheel } from '@/components/ChartWheel';
 import { Body, Card, GlyphBadge, SectionLabel } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 /**
  * How many of `reading.placements` the profile page shows in the open —
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   houseLabel: { ...type.label, color: color.textFaint },
   wheelWrap: { alignItems: 'center', paddingVertical: space.sm },
-  planetName: { ...type.body, color: color.text, fontWeight: '600' },
+  planetName: { ...type.body, color: color.text, fontFamily: font.semibold },
   aspectGlyphs: { fontSize: 17, color: color.pink, letterSpacing: 2 },
-  orb: { ...type.caption, color: color.textFaint, fontWeight: '400' },
+  orb: { ...type.caption, color: color.textFaint, fontFamily: font.regular },
 });

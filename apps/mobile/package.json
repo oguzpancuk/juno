@@ -12,6 +12,7 @@
     "lint": "expo lint --no-cache app components lib theme"
   },
   "dependencies": {
+    "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/metro-runtime": "~57.0.15",
     "@juno/astro": "*",
     "@juno/geo": "*",

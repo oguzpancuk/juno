@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import type { PhotoSource } from '@/lib/photos';
 import { initialOf } from '@/lib/thread-view';
-import { color } from '@/theme/tokens';
+import { color, font } from '@/theme/tokens';
 
 /**
  * A person's first photo as a circle, or their initial on a raised
@@ -61,6 +61,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  letter: { color: color.textMuted, fontWeight: '600' },
+  letter: { color: color.textMuted, fontFamily: font.semibold },
   photo: { backgroundColor: color.surfaceHigh },
 });

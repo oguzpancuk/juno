@@ -1,7 +1,7 @@
 import { BODY_GLYPH, SIGN_TR, type BigThree } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, font, radius, space, type } from '@/theme/tokens';
 
 /**
  * Sun, Moon and rising as three pills, each the body's own glyph and the
@@ -11,7 +11,9 @@ import { color, radius, space, type } from '@/theme/tokens';
  * and another person's page cannot drift apart — the owner asked for the
  * three to look the same. The word for the body is not drawn — the glyph
  * is the whole point of the pill — but it is spoken: each pill is one
- * element labelled "Güneş Koç".
+ * element labelled "Güneş Koç". A list of items, so the DOM has a role to
+ * hang the label on — a label on a bare div is dropped by every web
+ * screen reader (review, 2026-09-16); on iOS the roles add no trait.
  */
 const CELLS = [
   { key: 'sun', body: 'sun', label: () => t.chart.sun },
@@ -33,7 +35,7 @@ export function BigThreeRow({
   maxFontSizeMultiplier?: number | undefined;
 }) {
   return (
-    <View style={styles.row}>
+    <View style={styles.row} role="list">
       {CELLS.map(({ key, body, label }) => {
         const sign = three[key];
         return (
@@ -42,6 +44,7 @@ export function BigThreeRow({
             style={styles.pill}
             testID={`big-three-${key}`}
             accessible
+            role="listitem"
             aria-label={`${label()} ${SIGN_TR[sign]}`}
           >
             <Text
@@ -77,5 +80,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   glyph: { fontSize: 16, color: color.pink },
-  value: { ...type.bodySmall, color: color.text, fontWeight: '600' },
+  value: { ...type.bodySmall, color: color.text, fontFamily: font.semibold },
 });

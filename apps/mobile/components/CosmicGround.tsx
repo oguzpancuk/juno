@@ -26,7 +26,18 @@ export const STAR_COUNT = 48;
 /** Any number; changing it moves every star, so pick once. */
 const SEED = 1995;
 
-export function CosmicGround() {
+export function CosmicGround({
+  planet = true,
+  horizon = true,
+  horizonRise = 0.16,
+}: {
+  /** The limb over the top edge; off where the top belongs to a mark. */
+  planet?: boolean;
+  /** The curve at the bottom; off where a sheet or a bar sits there. */
+  horizon?: boolean;
+  /** How far the curve's top sits above the bottom edge, in widths. */
+  horizonRise?: number;
+}) {
   const { width, height } = useWindowDimensions();
   const stars = useMemo(
     () => starField(SEED, STAR_COUNT, width, height),
@@ -41,7 +52,7 @@ export function CosmicGround() {
   const planetCy = -width * 0.24;
   // The horizon: a curve that just enters the bottom of the window.
   const horizonR = width * 1.1;
-  const horizonCy = height + horizonR - width * 0.16;
+  const horizonCy = height + horizonR - width * horizonRise;
 
   return (
     <Svg
@@ -80,49 +91,57 @@ export function CosmicGround() {
         />
       ))}
 
-      <Circle
-        cx={planetCx}
-        cy={planetCy}
-        r={planetR}
-        stroke="url(#ground-rim)"
-        strokeWidth={28}
-        opacity={0.14}
-        fill="none"
-      />
-      <Circle
-        cx={planetCx}
-        cy={planetCy}
-        r={planetR}
-        fill="url(#ground-planet)"
-      />
-      <Circle
-        cx={planetCx}
-        cy={planetCy}
-        r={planetR}
-        stroke="url(#ground-rim)"
-        strokeWidth={1.5}
-        opacity={0.85}
-        fill="none"
-      />
+      {planet ? (
+        <>
+          <Circle
+            cx={planetCx}
+            cy={planetCy}
+            r={planetR}
+            stroke="url(#ground-rim)"
+            strokeWidth={28}
+            opacity={0.14}
+            fill="none"
+          />
+          <Circle
+            cx={planetCx}
+            cy={planetCy}
+            r={planetR}
+            fill="url(#ground-planet)"
+          />
+          <Circle
+            cx={planetCx}
+            cy={planetCy}
+            r={planetR}
+            stroke="url(#ground-rim)"
+            strokeWidth={1.5}
+            opacity={0.85}
+            fill="none"
+          />
+        </>
+      ) : null}
 
-      <Circle
-        cx={width * 0.5}
-        cy={horizonCy}
-        r={horizonR}
-        stroke="url(#ground-horizon)"
-        strokeWidth={24}
-        opacity={0.12}
-        fill="none"
-      />
-      <Circle
-        cx={width * 0.5}
-        cy={horizonCy}
-        r={horizonR}
-        stroke="url(#ground-horizon)"
-        strokeWidth={1}
-        opacity={0.6}
-        fill="none"
-      />
+      {horizon ? (
+        <>
+          <Circle
+            cx={width * 0.5}
+            cy={horizonCy}
+            r={horizonR}
+            stroke="url(#ground-horizon)"
+            strokeWidth={24}
+            opacity={0.12}
+            fill="none"
+          />
+          <Circle
+            cx={width * 0.5}
+            cy={horizonCy}
+            r={horizonR}
+            stroke="url(#ground-horizon)"
+            strokeWidth={1}
+            opacity={0.6}
+            fill="none"
+          />
+        </>
+      ) : null}
     </Svg>
   );
 }

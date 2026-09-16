@@ -26,7 +26,7 @@ import { dbErrorText } from '@/lib/errors';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/strings';
-import { color, space } from '@/theme/tokens';
+import { color, font, space } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
@@ -335,7 +335,7 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 8 },
-  title: { color: color.text, fontSize: 26, fontWeight: '700' },
+  title: { color: color.text, fontSize: 26, fontFamily: font.semibold },
   consentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -354,16 +354,38 @@ const styles = StyleSheet.create({
   boxOn: { backgroundColor: color.cool, borderColor: color.cool },
   tick: { color: color.onBright, fontSize: 14, lineHeight: 18 },
   consentText: {
+    fontFamily: font.regular,
     color: color.textMuted,
     fontSize: 13,
     flex: 1,
     lineHeight: 19,
   },
-  consentLink: { color: color.textMuted, fontSize: 12, marginTop: 6 },
-  subtitle: { color: color.textMuted, fontSize: 14, marginBottom: 4 },
-  switchAccount: { color: color.textFaint, fontSize: 12, marginBottom: 12 },
-  label: { color: color.textMuted, fontSize: 14, marginTop: 10 },
+  consentLink: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 12,
+    marginTop: 6,
+  },
+  subtitle: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  switchAccount: {
+    fontFamily: font.regular,
+    color: color.textFaint,
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  label: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    marginTop: 10,
+  },
   input: {
+    fontFamily: font.regular,
     backgroundColor: color.surface,
     color: color.text,
     borderRadius: 10,
@@ -371,6 +393,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   small: {
+    fontFamily: font.regular,
     backgroundColor: color.surface,
     color: color.text,
     borderRadius: 10,
@@ -381,8 +404,13 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   hit: { padding: 12, backgroundColor: color.surfaceHigh, borderRadius: 8 },
-  hitText: { color: color.text },
-  hint: { color: color.textFaint, fontSize: 12, marginTop: 12 },
-  error: { color: color.danger },
+  hitText: { fontFamily: font.regular, color: color.text },
+  hint: {
+    fontFamily: font.regular,
+    color: color.textFaint,
+    fontSize: 12,
+    marginTop: 12,
+  },
+  error: { fontFamily: font.regular, color: color.danger },
   submit: { marginTop: space.md },
 });

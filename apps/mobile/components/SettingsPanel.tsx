@@ -8,7 +8,7 @@ import { deleteAccount } from '@/lib/safety';
 import { supabase } from '@/lib/supabase';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color, space, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 export type SettingsView = 'menu' | 'blocked' | 'legal';
 
@@ -230,12 +230,22 @@ const styles = StyleSheet.create({
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
   back: { ...type.body, color: color.textMuted },
   dim: { opacity: 0.6 },
-  link: { color: color.textMuted, fontSize: 15, paddingVertical: 8 },
-  label: { color: color.textMuted, fontSize: 14, marginTop: 12 },
-  hint: { color: color.textFaint, fontSize: 12 },
-  error: { color: color.danger },
-  ok: { color: color.ok, fontSize: 13 },
-  danger: { color: color.danger, fontSize: 15, fontWeight: '600' },
+  link: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 15,
+    paddingVertical: 8,
+  },
+  label: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 14,
+    marginTop: 12,
+  },
+  hint: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
+  error: { fontFamily: font.regular, color: color.danger },
+  ok: { fontFamily: font.regular, color: color.ok, fontSize: 13 },
+  danger: { color: color.danger, fontSize: 15, fontFamily: font.semibold },
   confirm: { gap: 8 },
   confirmDanger: {
     backgroundColor: color.dangerSurface,
@@ -250,5 +260,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonBusy: { opacity: 0.6 },
-  buttonText: { color: color.text, fontSize: 15, fontWeight: '600' },
+  buttonText: { color: color.text, fontSize: 15, fontFamily: font.semibold },
 });

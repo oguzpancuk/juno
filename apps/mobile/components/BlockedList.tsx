@@ -9,7 +9,7 @@ import {
 import { fetchBlocked, unblockUser, type BlockedPerson } from '@/lib/safety';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { color } from '@/theme/tokens';
+import { color, font } from '@/theme/tokens';
 
 /**
  * Everyone the member has blocked, and a way back. Apple requires the
@@ -92,7 +92,7 @@ export function BlockedList() {
 
 const styles = StyleSheet.create({
   list: { gap: 10 },
-  hint: { color: color.textFaint, fontSize: 12 },
+  hint: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  name: { color: color.text, fontSize: 15 },
-  undo: { color: color.textMuted, fontSize: 13 },
-  error: { color: color.danger, fontSize: 13 },
+  name: { fontFamily: font.regular, color: color.text, fontSize: 15 },
+  undo: { fontFamily: font.regular, color: color.textMuted, fontSize: 13 },
+  error: { fontFamily: font.regular, color: color.danger, fontSize: 13 },
 });

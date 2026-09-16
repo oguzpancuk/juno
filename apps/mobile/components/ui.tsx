@@ -13,7 +13,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { color, gradient, radius, space, type } from '@/theme/tokens';
+import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
  * The shared pieces every screen is built from. One file: the set is small
@@ -525,11 +525,11 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: color.cool, borderColor: color.cool },
   chipText: {
     ...type.bodySmall,
-    fontWeight: '500',
+    fontFamily: font.medium,
     color: color.text,
     textAlign: 'center',
   },
-  chipTextOn: { color: color.onBright, fontWeight: '600' },
+  chipTextOn: { color: color.onBright, fontFamily: font.semibold },
   badge: {
     borderRadius: radius.pill,
     backgroundColor: color.surfaceHigh,

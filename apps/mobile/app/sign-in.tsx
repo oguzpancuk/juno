@@ -19,7 +19,7 @@ import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { BackLink, GradientButton, LinkText, OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, font, radius, space, type } from '@/theme/tokens';
 
 /**
  * One screen for both doors: sign-up and sign-in with an e-mail and a
@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
   form: { gap: space.md, marginTop: space.md },
   label: { ...type.bodySmall, color: color.textMuted },
   input: {
+    fontFamily: font.regular,
     backgroundColor: color.surface,
     borderRadius: radius.md,
     borderWidth: 1,

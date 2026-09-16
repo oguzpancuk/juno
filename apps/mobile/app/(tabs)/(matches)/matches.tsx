@@ -17,7 +17,7 @@ import { starterFor } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { notifyUnreadChanged } from '@/lib/unread';
-import { color, space, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 /** The new-match faces: large enough to read as people, not as badges. */
 const STRIP_AVATAR = 64;
@@ -216,7 +216,7 @@ export default function Matches() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, paddingTop: 64, gap: 12 },
-  muted: { color: color.textMuted },
+  muted: { fontFamily: font.regular, color: color.textMuted },
   sectionLabel: { ...type.label, color: color.textFaint },
   // Runs to both screen edges like the photos do, so the faces scroll out
   // from under the gutter rather than being cut off inside it.
@@ -240,13 +240,23 @@ const styles = StyleSheet.create({
   card: { backgroundColor: color.surface, borderRadius: 14, padding: 14 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   cardBody: { flex: 1 },
-  name: { color: color.text, fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  preview: { color: color.textMuted, fontSize: 13, marginTop: 4 },
+  name: {
+    color: color.text,
+    fontSize: 18,
+    fontFamily: font.semibold,
+    flexShrink: 1,
+  },
+  preview: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 13,
+    marginTop: 4,
+  },
   badge: {
     color: color.onBright,
     backgroundColor: color.cool,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: font.semibold,
     minWidth: 22,
     textAlign: 'center',
     borderRadius: 11,
