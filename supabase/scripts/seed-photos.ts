@@ -15,7 +15,7 @@
  * refuses any non-local API URL.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
@@ -112,15 +112,24 @@ function slug(name: string): string {
     .replace(/[^a-z0-9]+/g, '-');
 }
 
+/** The bucket's own cap; a larger file fails the upload with no name. */
+const MAX_BYTES = 5 * 1024 * 1024;
+
 /** The owner's portrait for a name, or null when the folder has none. */
 function portrait(
   name: string,
 ): { body: Buffer; contentType: string; extension: string } | null {
   for (const [extension, contentType] of Object.entries(TYPES)) {
     const file = join(PORTRAITS, `${slug(name)}.${extension}`);
-    if (existsSync(file)) {
-      return { body: readFileSync(file), contentType, extension };
+    if (!existsSync(file)) continue;
+    const { size } = statSync(file);
+    if (size > MAX_BYTES) {
+      console.error(
+        `${file} is ${(size / 1024 / 1024).toFixed(1)} MB; the bucket takes 5 MB`,
+      );
+      process.exit(1);
     }
+    return { body: readFileSync(file), contentType, extension };
   }
   return null;
 }
@@ -145,6 +154,13 @@ async function main(): Promise<void> {
     const own = portrait(profile.display_name);
     if (own !== null) portraits += 1;
     const path = `${profile.id}/1.${own?.extension ?? 'png'}`;
+    // A rerun after a portrait arrived (or left) would otherwise leave
+    // the other extension's object behind in the folder.
+    await admin.storage.from('photos').remove(
+      Object.keys(TYPES)
+        .map((extension) => `${profile.id}/1.${extension}`)
+        .filter((other) => other !== path),
+    );
     const uploaded = await admin.storage
       .from('photos')
       .upload(path, own?.body ?? png(600, 800, colour), {
