@@ -74,11 +74,14 @@ nothing (`supabase/tests/realtime.test.ts`).
 - The migration reaches the hosted database with the first
   `npx supabase db push`, which is ask-tier. **Order matters**: the
   database first, then any app build or update carrying the filtered
-  badge. A subscription filtering on a column the server does not have is
-  refused (`realtime.subscription_check_filters` raises `invalid column
-for filter`). That such a refusal also disturbs the other channels on
-  the same socket — the chat thread's among them — is inferred from the
-  one failing subscription that was measured, an `in` filter over too many
-  ids (NOTES, 2026-09-15); a missing column was not measured. The measured figures above
-  come from the local stack; the hosted Realtime version may differ and is
-  worth rechecking then.
+  badge. A subscription whose filter names a column the server does not
+  have is refused: on the local stack (Realtime v2.130.0), inserting such
+  a subscription raises `invalid column for filter <name>` from
+  `realtime.subscription_check_filters()`, checked in a rolled-back
+  transaction on 2026-09-16. That the refusal also disturbs the other
+  channels on the same socket — the chat thread's among them — is
+  inferred, not measured: what was measured is the one failing
+  subscription of `docs/NOTES.md`, 2026-09-15, "review fixes, second
+  round", an `in` filter over more ids than Realtime's index accepts.
+- The figures in this ADR come from the local stack; the hosted Realtime
+  version may differ and is worth rechecking at the first deploy.

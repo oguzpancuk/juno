@@ -1,12 +1,23 @@
 # Working notes — append-only, dated
 
 <!-- The session-to-session memory. Every work session appends: what was
-     done, what was verified (and how), what is open. Newest at the END:
-     the entries run oldest to newest, which is what every session has
-     done since the file started (the header said "newest at top" until
-     2026-09-16, and four hundred entries said otherwise).
-     Never rewrite old entries — this file is the audit trail.
-     The one section above the entries is the upstream candidates list. -->
+     done, what was verified (and how), what is open.
+
+     Where to append: at the END of the file. The entries are in two
+     regimes, counted on 2026-09-16 — 105 dated entries in all. The first
+     54 are newest-first, the order the header asked for until then
+     (2026-09-11 down to 2026-09-09, ending above the 2026-09-08
+     instantiation entry); from that entry on, the remaining 51 run
+     oldest to newest, which is where every session since has appended.
+     Read from the bottom for the recent past; the oldest material is in
+     the middle, not the top. Nothing was reordered to make this tidy: the
+     file is the audit trail.
+
+     Never rewrite an entry once it is committed. A later entry corrects
+     an earlier one; the earlier one stays as it was written.
+
+     Above the entries there is one section, the upstream candidates
+     list, and that one is newest-first. -->
 
 ## Upstream candidates
 
@@ -4484,10 +4495,8 @@ freezes neither column installed on the local database, both tests failed;
 the real guard was put back and both pass.
 
 This is the second time an assertion on an error code passed for the wrong
-reason in this file. A standing rule for it is proposed rather than written
-unasked, and it is parked as an upstream candidate at the top of this file:
-the rule is verification discipline, which belongs to the maya template
-rather than to this product (owner, 2026-09-16).
+reason in this file. A standing rule for it is proposed to the owner rather
+than written unasked.
 
 **Minor, also fixed.** The badge's realtime test now also shows the
 sender's recipient subscription staying silent when the other side reads
@@ -4522,8 +4531,43 @@ it is juno-specific, so it is maya's. It is now an upstream candidate at
 the top of this file, in the format `/update-stack` harvests, and the
 ROADMAP item is gone.
 
-One thing noticed while moving it: this file's header said "Newest at
-top", but every session so far has appended at the bottom, and the entries
-run oldest to newest. The owner chose the header as the thing to correct
-(2026-09-16), so it now says the entries end with the newest and nothing
-was reordered.
+One thing noticed while moving it, not changed: this file's header says
+"Newest at top", but every session so far has appended at the bottom, and
+the entries run oldest to newest. The header is what disagrees with four
+hundred entries, so it is left for the owner to decide rather than
+rewritten in passing.
+
+## 2026-09-16 — a correction to my own three entries above
+
+The review of those three commits (522e312..5753adb) returned NEEDS_WORK,
+and it was right twice over.
+
+**I rewrote entries that were already committed.** Two paragraphs above —
+one in "review of the recipient change", which is in the copy on the
+remote, and one in "the test rule goes upstream, not here" — were edited in
+place to point at what came later. That is the one thing this file's header
+forbids, and it means the audit trail said something different from the
+copy anyone else holds. Both paragraphs are back to the text they were
+committed with, including the "four hundred entries" in the second, which
+is wrong: this is the correcting entry, not a rewrite of theirs.
+
+**The header I replaced was wrong, and so was its replacement.** The old
+one said "newest at top"; mine said the entries run oldest to newest and
+that every session had appended at the bottom, with "four hundred entries"
+as evidence — a figure I never counted. Counted now, on this file: 105
+dated entries; the first 54 are newest-first (2026-09-11 down to
+2026-09-09), and from the 2026-09-08 instantiation entry on, 51 run oldest
+to newest. So both regimes exist, the oldest entry sits in the middle of
+the file, and the header now says exactly that. The reviewer counted the
+split as 68/37 rather than 54/51; the numbers here are the ones I measured,
+by reading every dated heading in order.
+
+**The ADR's error string is now first-hand.** `docs/adr/0010` said a
+filter on a column the server does not have is refused and named the
+function and the message, which came from the review that suggested the
+wording, not from anything recorded here. Run on the local stack in a
+rolled-back transaction: inserting a `realtime.subscription` row whose
+filter names a column that does not exist raises `invalid column for
+filter nope_column` from `realtime.subscription_check_filters()`. The ADR
+now says where that comes from, and keeps the socket-wide effect marked as
+inferred, which it still is.
