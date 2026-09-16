@@ -12,6 +12,12 @@
      Never rewrite an entry once it is committed. A later entry corrects
      an earlier one; the earlier one stays as it was written.
 
+     Refer to another entry by its date and title, never as "the entry
+     above" or "below". Five such pointers — four saying "below", one
+     saying "above" — were turned backwards by the 2026-09-16 reorder and
+     had to be named in an entry of their own, because they could not be
+     edited.
+
      Above the entries there is one section, the upstream candidates
      list, and that one is newest-first. -->
 
@@ -4677,3 +4683,17 @@ whole file 46,395 to 46,579. And the tie-break recipe it records,
 `git log -S '<heading>'` taking the earliest commit, matches any heading
 that is a prefix of a longer one; it happened to be safe here because in
 both such pairs the longer heading came second.
+
+## 2026-09-16 — two footnotes to the two entries before this one
+
+- The entry titled "what the reorder broke" is headed "five pointers that
+  said below". Four said "below"; the fifth, in "Fourth photos review",
+  says "the entry above" and points at what is now below it. Its own list
+  has this right — the heading is the part that is too neat. The rule is
+  in the header now, where the conventions live: cite an entry by date and
+  title.
+- The same entry's "46,220 words before and after" counts the entries that
+  already existed, not the one that commit appended (234 words). The whole
+  file went 46,395 to 46,579, which is 125 in the header plus 46,220 plus
+  those 234. Nothing is wrong with the figure; it needed the clause it did
+  not have, and now nobody has to re-derive it.
