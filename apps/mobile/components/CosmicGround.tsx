@@ -272,7 +272,9 @@ function FallingStar({ width, height }: { width: number; height: number }) {
   // with the dimensions among its deps a resize replayed the current
   // fall from its start (review, 2026-09-16).
   const window = useRef({ width, height });
-  window.current = { width, height };
+  useEffect(() => {
+    window.current = { width, height };
+  }, [width, height]);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let fall: Animated.CompositeAnimation | null = null;
