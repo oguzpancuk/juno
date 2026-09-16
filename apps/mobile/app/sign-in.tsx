@@ -17,7 +17,13 @@ import {
 } from '@/lib/auth';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
-import { BackLink, GradientButton, LinkText, OrbitMark } from '@/components/ui';
+import {
+  BackLink,
+  GradientButton,
+  LinkText,
+  OrbitMark,
+  Wordmark,
+} from '@/components/ui';
 import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
 import { color, font, glass, radius, space, type } from '@/theme/tokens';
@@ -110,7 +116,8 @@ export default function SignIn() {
         <BackLink label={t.signIn.back} fallback="/welcome" />
       </View>
       <View style={styles.mark}>
-        <OrbitMark size={72} />
+        <OrbitMark size={88} />
+        <Wordmark size={30} />
       </View>
       <Text style={styles.title}>
         {mode === 'up' ? t.signUp.title : t.signIn.title}
@@ -197,7 +204,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   back: { position: 'absolute', top: 56, left: space.xl },
-  mark: { alignItems: 'center', marginBottom: space.xl },
+  mark: { alignItems: 'center', marginBottom: space.xl, gap: space.xs },
   title: { ...type.heading, color: color.textMuted },
   form: { gap: space.md, marginTop: space.md },
   label: { ...type.bodySmall, color: color.textMuted },

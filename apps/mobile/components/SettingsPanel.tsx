@@ -243,7 +243,9 @@ function Row({
 }) {
   return (
     <Pressable
-      accessibilityRole="button"
+      role="button"
+      // The label alone: the chevron is drawn, not said.
+      aria-label={label}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.row, (pressed || disabled) && styles.dim]}
@@ -262,8 +264,8 @@ const styles = StyleSheet.create({
   backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
   back: { ...type.body, color: color.textMuted },
   dim: { opacity: 0.6 },
-  // A group is a card with its padding on the rows, so a row's press
-  // state and separator run edge to edge inside it.
+  // A group is a card with its padding on the rows, so a row's touch
+  // target runs edge to edge inside it.
   group: { padding: 0, gap: 0 },
   row: {
     flexDirection: 'row',

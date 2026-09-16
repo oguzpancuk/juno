@@ -1,8 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { createContext, useContext, type ReactNode } from 'react';
 import {
-  Image,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  Animated,
+  Easing,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +21,15 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  Ellipse,
+  LinearGradient as SvgLinearGradient,
+  RadialGradient,
+  Stop,
+} from 'react-native-svg';
+import { useReducedMotion } from '@/lib/a11y';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
   color,
@@ -369,23 +386,190 @@ export function BackChevron({
 }
 
 /**
- * The brand mark: the orbit, two spheres on a gradient ring.
- *
- * Source of truth is the owner's icon of 2026-09-11, keyed to transparency
- * as `assets/brand/orbit-mark.png`. NOT `assets/brand/mark.svg`, which is
- * the previous gold-glyph mark and no longer the logo — it and
- * `scripts/brand-assets.py` are stale until the new mark exists as a
- * vector. Drawing this in views is what the first attempt did and it
- * showed.
+ * The brand mark, drawn: a gradient ring, tilted, and two spheres that
+ * travel round it with their light (owner, 2026-09-16: the ring stays,
+ * the planets orbit — not a spin of the whole). The ring is SVG; each
+ * sphere is a view moved by one native loop through a table of points
+ * on the ellipse, so nothing returns to JavaScript once it starts. With
+ * Reduce Motion on, the spheres hold at their first positions. The old
+ * `assets/brand/orbit-mark.png` is the icon's source and stays for the
+ * splash and the store; this is the same picture in motion.
  */
 export function OrbitMark({ size = 96 }: { size?: number }) {
+  const still = useReducedMotion();
+  const [turn] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (still) {
+      turn.setValue(0);
+      return;
+    }
+    const run = Animated.loop(
+      Animated.timing(turn, {
+        toValue: 1,
+        duration: ORBIT_MS,
+        easing: Easing.linear,
+        useNativeDriver: Platform.OS !== 'web',
+      }),
+    );
+    run.start();
+    return () => {
+      run.stop();
+    };
+  }, [still, turn]);
+  const orbit = useMemo(() => orbitTable(size), [size]);
+  const sphere = size * 0.24;
   return (
-    <Image
-      source={require('../assets/brand/orbit-mark.png')}
+    <View
       style={{ width: size, height: size }}
-      resizeMode="contain"
-      accessibilityLabel="Juno"
-    />
+      accessible
+      role="img"
+      aria-label="Juno"
+    >
+      <Svg width={size} height={size}>
+        <Defs>
+          <SvgLinearGradient id="orbit-ring" x1="0" y1="1" x2="1" y2="0">
+            <Stop offset="0" stopColor={gradient[0]} />
+            <Stop offset="0.5" stopColor={gradient[1]} />
+            <Stop offset="1" stopColor={gradient[2]} />
+          </SvgLinearGradient>
+        </Defs>
+        <Ellipse
+          cx={size / 2}
+          cy={size / 2}
+          rx={orbit.a}
+          ry={orbit.b}
+          transform={`rotate(${ORBIT_TILT_DEG} ${size / 2} ${size / 2})`}
+          stroke="url(#orbit-ring)"
+          strokeWidth={Math.max(1.5, size * 0.02)}
+          fill="none"
+        />
+      </Svg>
+      <Sphere turn={turn} table={orbit.warm} size={sphere} tone="warm" />
+      <Sphere turn={turn} table={orbit.cool} size={sphere} tone="cool" />
+    </View>
+  );
+}
+
+/** One lap of the spheres. Slow: this is a mark, not a loader. */
+const ORBIT_MS = 11000;
+/** The ring's tilt, matching the icon. */
+const ORBIT_TILT_DEG = -22;
+/** Points per lap in the interpolation tables; straight between them. */
+const ORBIT_STEPS = 36;
+
+/**
+ * The ellipse's radii for a mark of `size`, and for each sphere the
+ * x and y it takes at each step of a lap — the warm one a half-lap
+ * ahead of the cool one, as on the icon. Offsets from the centre.
+ */
+function orbitTable(size: number) {
+  const a = size * 0.42;
+  const b = size * 0.2;
+  const phi = (ORBIT_TILT_DEG * Math.PI) / 180;
+  const at = (theta: number) => {
+    const x = a * Math.cos(theta);
+    const y = b * Math.sin(theta);
+    return {
+      x: x * Math.cos(phi) - y * Math.sin(phi),
+      y: x * Math.sin(phi) + y * Math.cos(phi),
+    };
+  };
+  const inputRange: number[] = [];
+  const warm = { inputRange, x: [] as number[], y: [] as number[] };
+  const cool = { inputRange, x: [] as number[], y: [] as number[] };
+  for (let i = 0; i <= ORBIT_STEPS; i += 1) {
+    const theta = (i / ORBIT_STEPS) * Math.PI * 2;
+    inputRange.push(i / ORBIT_STEPS);
+    const w = at(theta + Math.PI);
+    const c = at(theta);
+    warm.x.push(w.x);
+    warm.y.push(w.y);
+    cool.x.push(c.x);
+    cool.y.push(c.y);
+  }
+  return { a, b, warm, cool };
+}
+
+function Sphere({
+  turn,
+  table,
+  size,
+  tone,
+}: {
+  turn: Animated.Value;
+  table: { inputRange: number[]; x: number[]; y: number[] };
+  size: number;
+  tone: 'warm' | 'cool';
+}) {
+  const { translateX, translateY } = useMemo(
+    () => ({
+      translateX: turn.interpolate({
+        inputRange: table.inputRange,
+        outputRange: table.x,
+      }),
+      translateY: turn.interpolate({
+        inputRange: table.inputRange,
+        outputRange: table.y,
+      }),
+    }),
+    [turn, table],
+  );
+  const glow = size * 2.6;
+  const [light, mid, dark] =
+    tone === 'warm'
+      ? [color.text, color.warm, color.pink]
+      : [color.text, color.coolLight, color.cool];
+  return (
+    <Animated.View
+      style={[
+        s.sphere,
+        {
+          width: size,
+          height: size,
+          marginLeft: -size / 2,
+          marginTop: -size / 2,
+          transform: [{ translateX }, { translateY }],
+        },
+      ]}
+    >
+      <Glow
+        size={glow}
+        style={{ top: -(glow - size) / 2, left: -(glow - size) / 2 }}
+      />
+      <Svg width={size} height={size}>
+        <Defs>
+          <RadialGradient id={`sphere-${tone}`} cx="35%" cy="30%" r="70%">
+            <Stop offset="0" stopColor={light} />
+            <Stop offset="0.35" stopColor={mid} />
+            <Stop offset="1" stopColor={dark} />
+          </RadialGradient>
+        </Defs>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={`url(#sphere-${tone})`}
+        />
+      </Svg>
+    </Animated.View>
+  );
+}
+
+/** The name, set the way the door sets it: light, wide, unhurried. */
+export function Wordmark({ size = 46 }: { size?: number }) {
+  return (
+    <Text
+      style={[
+        s.wordmark,
+        {
+          fontSize: size,
+          lineHeight: Math.round(size * 1.22),
+          letterSpacing: size * 0.15,
+        },
+      ]}
+    >
+      Juno
+    </Text>
   );
 }
 
@@ -640,6 +824,13 @@ const s = StyleSheet.create({
   },
   badgeGlyph: { fontSize: 19 },
   glow: { position: 'absolute' },
+  // At the centre; the transform carries it round the ring.
+  sphere: { position: 'absolute', left: '50%', top: '50%' },
+  wordmark: {
+    fontFamily: font.light,
+    color: color.text,
+    textAlign: 'center',
+  },
   haloWrap: { alignSelf: 'center' },
   haloRing: {
     borderRadius: radius.pill,

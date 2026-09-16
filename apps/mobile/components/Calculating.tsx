@@ -1,20 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-  Animated,
-  Easing,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CosmicGround } from '@/components/CosmicGround';
 import { OrbitMark } from '@/components/ui';
 import { t } from '@/lib/strings';
 import { color, gradient, radius, space, type } from '@/theme/tokens';
 
-/** One turn of the mark. Slow on purpose: this is a pause, not a spinner. */
-const TURN_MS = 14000;
 /**
  * How long each line of copy stays up. The onboarding screen's minimum
  * hold is the whole sequence, so every line is actually read; with the
@@ -33,27 +24,7 @@ export const STEP_MS = 950;
  * order it is being done.
  */
 export function Calculating() {
-  // State, not a ref: the value is read during render (the interpolation
-  // below), and a ref read there is exactly what the lint rule is for.
-  // The initialiser is lazy, so the Animated.Value is created once.
-  const [spin] = useState(() => new Animated.Value(0));
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(spin, {
-        toValue: 1,
-        duration: TURN_MS,
-        easing: Easing.linear,
-        // react-native-web has no native driver and warns once per app run.
-        useNativeDriver: Platform.OS !== 'web',
-      }),
-    );
-    loop.start();
-    return () => {
-      loop.stop();
-    };
-  }, [spin]);
 
   useEffect(() => {
     // Advances to the last line and stays there. Cycling back to the first
@@ -67,17 +38,10 @@ export function Calculating() {
     };
   }, []);
 
-  const rotate = spin.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   return (
     <View style={styles.screen} testID="calculating">
       <CosmicGround />
-      <Animated.View style={{ transform: [{ rotate }] }}>
-        <OrbitMark size={112} />
-      </Animated.View>
+      <OrbitMark size={112} />
       <Text style={styles.title}>{t.calculating.title}</Text>
       <Text style={styles.step} testID="calculating-step">
         {t.calculating.steps[step]}

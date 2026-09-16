@@ -1547,6 +1547,20 @@ controls that take one gesture instead of a dozen taps.
       _Folded into the work above; listed so the gate's migration count
       is honest._
 
+- [ ] **D13 — Settings as grouped rows; the mark in motion.** The owner
+      disliked the settings' flat buttons; they are three groups of rows
+      now. The brand mark is drawn rather than a PNG: the ring holds
+      still and the two spheres orbit it with their light (owner: "logoyu
+      360 derece döndürmekten bahsetmiyorum"); the wordmark joins it on
+      the sign-in screen; a screen's first falling star comes within a
+      few seconds of arriving.
+      — done when: `screenshots/g-settings.png` shows the settings sheet
+      as rows, and `g-sign-in.png` the mark with its wordmark on the
+      door's second screen (screenshot).
+      _Built; the settings capture waits on a signed-in simulator — the
+      owner had signed out, and a password is not something this
+      session types._
+
 <!-- Assets: the sheet's nebula grounds are photographs, and none are in
      the repo. Whatever D2 and D5 ground themselves on has to be either
      drawn with the gradient primitives (no shader, because the same code

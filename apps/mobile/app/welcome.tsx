@@ -4,12 +4,13 @@ import { CosmicGround } from '@/components/CosmicGround';
 import {
   Glow,
   GradientButton,
+  Wordmark,
   LinkText,
   OrbitMark,
   OutlineButton,
 } from '@/components/ui';
 import { t } from '@/lib/strings';
-import { color, font, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * The door. Everything before this screen is a redirect, so it is the first
@@ -42,7 +43,7 @@ export default function WelcomeScreen() {
           <Glow size={GLOW} style={styles.glow} />
           <OrbitMark size={MARK} />
         </View>
-        <Text style={styles.brand}>{t.appName}</Text>
+        <Wordmark />
         <Text style={styles.tagline}>{t.signIn.tagline}</Text>
       </View>
 
@@ -98,16 +99,6 @@ const styles = StyleSheet.create({
   },
   hero: { alignItems: 'center', marginTop: 96, gap: space.md },
   glow: { top: -(GLOW - MARK) / 2, left: -(GLOW - MARK) / 2 },
-  brand: {
-    ...type.display,
-    color: color.text,
-    fontSize: 46,
-    // Its own line box: the display scale's 38 is smaller than Outfit's
-    // ascent and descent at this size, and Android clips to the box.
-    lineHeight: 56,
-    fontFamily: font.light,
-    letterSpacing: 7,
-  },
   tagline: { ...type.label, color: color.textMuted },
   pitch: {
     ...type.title,
