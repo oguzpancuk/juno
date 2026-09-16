@@ -74,6 +74,12 @@ export const color = {
  */
 export const glass = {
   fill: 'rgba(18,16,31,0.58)',
+  /**
+   * A sheet over a screen: denser than a card, because what is under it
+   * is a page of text and a photo, not the star field — at the card's
+   * alpha the deck read straight through (seen 2026-09-16).
+   */
+  sheet: 'rgba(12,10,22,0.86)',
   fillSoft: 'rgba(23,21,40,0.5)',
   fillHigh: 'rgba(29,27,49,0.62)',
   edge: 'rgba(255,255,255,0.1)',

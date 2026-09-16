@@ -147,7 +147,7 @@ export function Popup({
               a blur (owner, 2026-09-16), and the stars under the sheet's
               own content are its own. */}
           <BlurView
-            intensity={28}
+            intensity={60}
             tint="dark"
             style={styles.fill}
             pointerEvents="none"
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   sheet: {
     maxHeight: '88%',
-    backgroundColor: glass.fill,
+    backgroundColor: glass.sheet,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     borderWidth: 1,
