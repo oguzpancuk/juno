@@ -7,11 +7,17 @@
  * (`supabase/migrations`) — every item names data the app really stores,
  * so a new column holding personal data is a change here too.
  *
- * Not legal advice: the owner reviews this before the app ships, and the
- * two placeholders in "Veri sorumlusu" must be filled in first. Two
- * claims have to be true by then: the hosted Supabase project really is
- * in an EU region, and no analytics or crash reporter has been added
- * without being listed here.
+ * Not legal advice: the owner reviews this before the app ships. The two
+ * placeholders in "Veri sorumlusu" were filled in by the owner on
+ * 2026-09-17 (Oğuz Pançuk, destek@juno-dating.com).
+ *
+ * Two claims have to stay true, and both were checked that day: the
+ * hosted Supabase project really is in an EU region (`jkxuhbuuhsumyjmlskls`,
+ * eu-central-1, Frankfurt), and no analytics or crash reporter has been
+ * added without being listed here (nothing of the kind is in
+ * `apps/mobile/package.json`). A third joins them now that mail is really
+ * sent: every data processor that touches personal data is named under
+ * "Kimlerle paylaşılır", which as of today means Supabase and Resend.
  */
 export interface LegalSection {
   readonly heading: string;
@@ -20,7 +26,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '11 Eylül 2026';
+export const LEGAL_UPDATED = '17 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -34,7 +40,7 @@ export const LEGAL_UPDATED = '11 Eylül 2026';
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-11';
+export const LEGAL_VERSION = '2026-09-17';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -45,17 +51,14 @@ export const legalSections: readonly LegalSection[] = [
   },
   {
     heading: 'Veri sorumlusu',
-    body: [
-      'Veri sorumlusu: <veri sorumlusunun adı>.',
-      'İletişim: <iletişim e-posta adresi>.',
-    ],
+    body: ['Veri sorumlusu: Oğuz Pançuk.', 'İletişim: destek@juno-dating.com.'],
   },
   {
     heading: 'İşlenen veriler',
     body: [
       'Uygulama aşağıdaki verileri saklar.',
       'Hesap',
-      '• E-posta adresin ve parolan. Giriş e-posta ve parola ile yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-posta adresin kayıt sırasında şimdilik doğrulanmıyor.',
+      '• E-posta adresin ve parolan. Giriş e-posta ve parola ile yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-posta adresin kayıt sırasında doğrulanır: adresine altı haneli bir kod gönderilir ve hesap ancak o kod girilince açılır.',
       '• Giriş kayıtları: kimlik altyapısı, her oturum için bağlandığın IP adresini ve kullandığın uygulama/tarayıcı bilgisini tutar. Bunlar güvenlik ve kötüye kullanımı önleme amacıyla saklanır.',
       'Profil',
       '• Görünen adın.',
@@ -88,6 +91,7 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin ve aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
+      '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Bunların dışında hiçbir üçüncü tarafa aktarılmaz, satılmaz veya pazarlama amacıyla paylaşılmaz. Yasal bir talep hâlinde mevzuatın gerektirdiği ölçüde paylaşım yapılabilir.',
     ],
   },
