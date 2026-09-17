@@ -3,8 +3,6 @@ import {
   checkDeployKey,
   checkDeployTarget,
   effectiveValue,
-  mergeEnvFiles,
-  parseEnvFile,
   projectRef,
 } from './deploy-target';
 
@@ -112,12 +110,20 @@ describe('checkDeployKey', () => {
   });
 });
 
-describe('the two refusals a review found untested', () => {
+describe('the refusals a review found untested', () => {
   it('refuses credentials in the address', () => {
     // They would be inlined into a public bundle verbatim.
-    const r = checkDeployTarget('https://user:pass@ref.supabase.co');
-    expect(r.ok).toBe(false);
-    expect(reasonOf(r)).toMatch(/kullanıcı bilgisi/u);
+    // Each half separately: with only the pair, deleting either side of
+    // the `||` left every test green.
+    for (const withCreds of [
+      'https://user:pass@ref.supabase.co',
+      'https://user@ref.supabase.co',
+      'https://:pass@ref.supabase.co',
+    ]) {
+      const r = checkDeployTarget(withCreds);
+      expect(r.ok).toBe(false);
+      expect(reasonOf(r)).toMatch(/kullanıcı bilgisi/u);
+    }
   });
 
   it('refuses a path, which supabase-js would build beneath', () => {
@@ -129,48 +135,6 @@ describe('the two refusals a review found untested', () => {
   it('still accepts the plain address, with or without a trailing slash', () => {
     expect(checkDeployTarget('https://ref.supabase.co').ok).toBe(true);
     expect(checkDeployTarget('https://ref.supabase.co/').ok).toBe(true);
-  });
-});
-
-describe('parseEnvFile', () => {
-  it('strips `export `, because Node does and the export follows Node', () => {
-    // The bypass this parser was rewritten for: a source-able .env.local
-    // line was invisible to the gate and inlined by the build.
-    expect(
-      parseEnvFile('export EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1'),
-    ).toEqual({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1' });
-  });
-
-  it('reads the file this repo writes', () => {
-    expect(
-      parseEnvFile(
-        [
-          '# Hosted proje. Gitignored.',
-          '',
-          'EXPO_PUBLIC_SUPABASE_URL=https://ref.supabase.co',
-          'EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi.abc',
-        ].join('\n'),
-      ),
-    ).toEqual({
-      EXPO_PUBLIC_SUPABASE_URL: 'https://ref.supabase.co',
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOi.abc',
-    });
-  });
-
-  it('keeps a value that contains an equals sign', () => {
-    // Base64 and JWT padding both end in one; splitting on every `=`
-    // would truncate the anon key.
-    expect(parseEnvFile('K=a=b==').K).toBe('a=b==');
-  });
-
-  it('strips one layer of quotes and nothing else', () => {
-    expect(parseEnvFile('K="v"').K).toBe('v');
-    expect(parseEnvFile("K='v'").K).toBe('v');
-    expect(parseEnvFile('K=v"w').K).toBe('v"w');
-  });
-
-  it('ignores blanks, comments and lines with no key', () => {
-    expect(parseEnvFile('\n# yorum\n=degersiz\nK=v\n')).toEqual({ K: 'v' });
   });
 });
 
@@ -254,24 +218,6 @@ describe('projectRef', () => {
   it('is null for anything the target check refuses', () => {
     expect(projectRef('http://127.0.0.1:54321')).toBeNull();
     expect(projectRef(undefined)).toBeNull();
-  });
-});
-
-describe('mergeEnvFiles', () => {
-  it('lets the earlier file win, as Expo does', () => {
-    // `.env.local` is the conventional dev override, and a local URL
-    // written there sailed past a gate that read `.env` alone.
-    expect(
-      mergeEnvFiles(['K=from-local', null, 'K=from-production', 'K=from-env']),
-    ).toEqual({ K: 'from-local' });
-  });
-
-  it('takes keys from later files that earlier ones do not define', () => {
-    expect(mergeEnvFiles(['A=1', 'A=2\nB=2'])).toEqual({ A: '1', B: '2' });
-  });
-
-  it('is empty when no file exists', () => {
-    expect(mergeEnvFiles([null, null])).toEqual({});
   });
 });
 

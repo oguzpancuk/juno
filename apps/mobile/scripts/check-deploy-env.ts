@@ -2,42 +2,39 @@
  * The gate in front of `npm run deploy`. See `lib/deploy-target.ts` for
  * what it refuses and why; this file only resolves the values Expo will
  * use and reports a refusal where the person is looking.
+ *
+ * It resolves them by calling `@expo/env`'s own `parseProjectEnv` — the
+ * function `expo export` calls — rather than reading the files itself.
+ * Four reviews walked past hand-made versions of this step; the file list,
+ * the `export ` prefix, the ignored keys and `${VAR}` expansion are all
+ * Expo's business, and the only way the gate and the build cannot disagree
+ * is for them to run the same code.
  */
 /// <reference types="node" />
-import { readFileSync } from 'node:fs';
+import { parseProjectEnv } from '@expo/env';
 import { join } from 'node:path';
 import {
   checkDeployKey,
   checkDeployTarget,
   effectiveValue,
-  mergeEnvFiles,
   projectRef,
 } from '../lib/deploy-target';
 
 const URL_KEY = 'EXPO_PUBLIC_SUPABASE_URL';
 const ANON_KEY = 'EXPO_PUBLIC_SUPABASE_ANON_KEY';
 
-// The files `@expo/env` loads for a production export, in its order: the
-// first to define a key wins. The gate runs before the export, so it reads
-// the same set rather than an environment nothing has filled in yet.
-const ENV_FILES = [
-  '.env.production.local',
-  '.env.local',
-  '.env.production',
-  '.env',
-];
-
-const root = join(import.meta.dirname, '..');
-const files = mergeEnvFiles(
-  ENV_FILES.map((name) => {
-    try {
-      return readFileSync(join(root, name), 'utf8');
-    } catch {
-      // Absent is the normal case for three of the four.
-      return null;
-    }
-  }),
-);
+// `expo export` forces production before it loads anything, which decides
+// which `.env*` files exist for it. Saying so here rather than inheriting
+// whatever NODE_ENV the shell happens to carry.
+const { env } = parseProjectEnv(join(import.meta.dirname, '..'), {
+  mode: 'production',
+  silent: true,
+});
+// `EnvOutput` allows undefined values; the checks want a plain map and
+// treat a missing key the same way either way.
+const files: Record<string, string> = Object.fromEntries(
+  Object.entries(env).filter(([, value]) => typeof value === 'string'),
+) as Record<string, string>;
 
 const url = effectiveValue(process.env[URL_KEY], files, URL_KEY);
 const target = checkDeployTarget(url);
@@ -45,6 +42,7 @@ const key = checkDeployKey(
   effectiveValue(process.env[ANON_KEY], files, ANON_KEY),
   projectRef(url),
 );
+
 function refuse(reason: string): never {
   console.error(`\ndeploy durduruldu: ${reason}`);
   console.error(
@@ -52,10 +50,10 @@ function refuse(reason: string): never {
       'görüntüleyen herkes okuyabilir. Yerel, eksik ya da yanlış rollü bir\n' +
       'değerle dağıtım, en iyi ihtimalle sadece bu makinede çalışan bir\n' +
       'site demek.\n\n' +
-      `Kontrol et: apps/mobile/${ENV_FILES.join(', ')} dosyaları hosted\n` +
-      'projeyi ve ANON anahtarı göstersin — service_role asla değil. Ve\n' +
-      'deploy komutunu `contracts/init.sh` çalıştırılmış bir kabuktan\n' +
-      'verme: kabuktaki değer dosyadakini ezer.\n',
+      'Kontrol et: apps/mobile altındaki .env* dosyaları hosted projeyi ve\n' +
+      'ANON anahtarı göstersin — service_role asla değil. Ve deploy\n' +
+      'komutunu `contracts/init.sh` çalıştırılmış bir kabuktan verme:\n' +
+      'kabuktaki değer dosyadakini ezer.\n',
   );
   process.exit(1);
 }

@@ -26,12 +26,19 @@
  * shape of legitimate target and one of legitimate key, so naming those is
  * both shorter and tighter than naming everything they are not.
  *
- * This module runs under Node, at deploy time — it reads files and decodes
- * base64 — and nothing in `app/` may import it. It lives beside the app's
- * code so the battery can hold its rules, not because it ships.
+ * This module runs under Node, at deploy time — it decodes base64 — and
+ * nothing in `app/` may import it. It lives beside the app's code so the
+ * battery can hold its rules, not because it ships.
+ *
+ * Reading the `.env*` files is deliberately NOT here. Three attempts at a
+ * parser of our own were walked past by a reviewer, the last because Node
+ * strips a leading `export ` and ours did not; and even after delegating
+ * the parse, `${VAR}` interpolation was still unshared, so a file could
+ * expand to one address for the export and read as another for the gate.
+ * `scripts/check-deploy-env.ts` now calls `@expo/env`'s own
+ * `parseProjectEnv`, which is the function the export calls — parse,
+ * filter and expand, in one place that cannot drift from itself.
  */
-
-import { parseEnv } from 'node:util';
 
 export type Check =
   | { readonly ok: true; readonly detail: string }
@@ -145,52 +152,15 @@ export function checkDeployKey(
 }
 
 /**
- * An `.env` file exactly the way Expo reads one — by calling the same
- * function. `@expo/env` parses with `node:util`'s `parseEnv`
- * (`node_modules/@expo/env/build/parse.js`), so this does too.
- *
- * It used to be a hand-rolled parser, and a review walked past it: Node
- * strips a leading `export ` and the hand-rolled version did not, so
- * `export EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` in `.env.local`
- * was invisible to the gate and inlined by the export — the exact bypass
- * the gate exists to stop, in a spelling that is a natural habit, because
- * it is what makes a file `source`-able and `contracts/init.sh` sources
- * values that way. Every other divergence found (trailing comments, quote
- * styles, multi-line values) failed closed; this one failed open. Sharing
- * the implementation is the only way the two cannot drift again.
- */
-export function parseEnvFile(contents: string): Record<string, string> {
-  return parseEnv(contents) as Record<string, string>;
-}
-
-/**
- * Several files, in Expo's order: `.env.production.local`, `.env.local`,
- * `.env.production`, `.env`, and the first one to define a key wins.
- * Reading only `.env` was a hole — `.env.local` is the conventional
- * override and `.gitignore` expects it, so a local URL written there would
- * have sailed past a gate that looked at `.env` alone.
- *
- * `null` stands for a file that is not there.
- */
-export function mergeEnvFiles(
-  contents: readonly (string | null)[],
-): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const file of contents) {
-    if (file === null) continue;
-    for (const [key, value] of Object.entries(parseEnvFile(file))) {
-      if (!(key in out)) out[key] = value;
-    }
-  }
-  return out;
-}
-
-/**
  * Which value the export will actually use. A key defined in the shell
- * wins over every file — that is `@expo/env`'s rule, which skips a key
+ * wins over every file — that is `loadEnvFiles`' rule, which skips a key
  * that is already defined, **including one defined as empty**. An exported
  * but empty variable therefore beats a correct file, and this returns the
  * empty string so the checks above refuse it rather than reading past it.
+ *
+ * `parseProjectEnv` deliberately does not apply that rule (it returns what
+ * the files say), so this is the one piece of Expo's resolution the gate
+ * still has to perform, and the only one small enough to be sure of.
  */
 export function effectiveValue(
   shell: string | undefined,

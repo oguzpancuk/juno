@@ -5835,3 +5835,53 @@ styles, multi-line values) failed closed: the gate refused something Expo
 would have accepted. Only `export ` failed open. That asymmetry is worth
 remembering when judging a home-made parser: the dangerous direction is
 the one where your version is more permissive than theirs.
+
+## 2026-09-17 — A correction to "four times the gate itself was the defect", and a fifth
+
+That entry says `parseEnvFile` "now calls `node:util`'s `parseEnv`, the
+same function `@expo/env` calls, so the two cannot drift again", under the
+heading **share the implementation rather than imitate it**. The heading
+was right and the sentence was not: `@expo/env` does three things —
+parse, filter ignored keys, and expand `${VAR}` — and only the first was
+shared. A fifth review found the gap and it failed open, which is the
+direction that matters:
+
+```
+.env.local : EXPO_PUBLIC_SUPABASE_URL=https://${REF}.supabase.co
+shell      : REF=evil.com/x#
+gate       : reads "https://${REF}.supabase.co", host ends in
+             .supabase.co, ACCEPTED
+export     : inlines https://evil.com/x#.supabase.co
+```
+
+Claiming parity and having it are different things, and the claim was
+written in the same commit that failed to earn it.
+
+**Fixed by doing what the heading said.** The gate no longer reads or
+parses anything: `scripts/check-deploy-env.ts` calls
+`@expo/env`'s `parseProjectEnv(root, { mode: 'production' })`, which is
+the function `expo export` calls, and `@expo/env` is now a declared
+devDependency rather than something reached through Expo's own tree. The
+file list, the `export ` prefix, the ignored and local-only keys and the
+expansion are all Expo's business. What is left in `lib/deploy-target.ts`
+is the part that is genuinely ours — which address and which key are
+allowed to ship — and one small rule the resolver deliberately does not
+apply, that a shell value beats a file value.
+
+Reproduced before and after, with a temporary `.env.local`: the
+interpolated line is accepted by the old gate and refused by the new one
+(`adreste yol var: https://evil.com/x#.supabase.co`), and with `$REF`
+unset it is refused as `https://.supabase.co`. `parseProjectEnv` also
+honours `EXPO_NO_DOTENV`, which closes a divergence an earlier review had
+noted separately.
+
+The parser tests went with the parser. Keeping tests for a parse this repo
+no longer performs would have been the imitation coming back as
+documentation.
+
+Two smaller corrections to the same entry. It said the `export ` prefix is
+"what makes a file `source`-able and `contracts/init.sh` sources values
+that way" — init.sh `eval`s `supabase status -o env` and exports in
+process; it never sources an env file. And the credentials refusal was
+pinned only by `user:pass@`, so either half of the condition could have
+been deleted with every test still green; all three forms are pinned now.
