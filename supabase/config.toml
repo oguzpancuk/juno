@@ -112,7 +112,7 @@ port = 54324
 # hosted project will send once `[auth.email.smtp]` is filled in; with
 # these unset GoTrue signs its mails "Admin <admin@email.com>", which is
 # not what the code screen tells people to look for.
-admin_email = "hesap@juno.app"
+admin_email = "hesap@juno-dating.com"
 sender_name = "Juno"
 
 [storage]
@@ -275,7 +275,7 @@ otp_expiry = 600
 # port = 587
 # user = "resend"
 # pass = "env(RESEND_API_KEY)"
-# admin_email = "hesap@juno.app"
+# admin_email = "hesap@juno-dating.com"
 # sender_name = "Juno"
 
 # Uncomment to customize email template

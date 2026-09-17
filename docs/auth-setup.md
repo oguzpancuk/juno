@@ -55,18 +55,87 @@ Resend'di.
 ### 1a. Alan adı
 
 Mailin spam'e düşmemesi için gönderen adresin kendi alan adında olmalı
-(`hesap@juno.app` gibi). Alan adın yoksa önce onu al.
+(`hesap@juno-dating.com`). Alan adı Namecheap'ten alındı, 2026-09-17.
 
 ### 1b. Resend
 
 1. [resend.com](https://resend.com) → hesap aç.
 2. **Domains → Add Domain** → alan adını yaz.
-3. Resend'in verdiği DNS kayıtlarını (MX/TXT — SPF ve DKIM) alan adının DNS
-   panosuna ekle. DMARC kaydını da ekle; Gmail 2024'ten beri toplu
-   gönderende arıyor:
-   `_dmarc` TXT → `v=DMARC1; p=none; rua=mailto:hesap@<alanadın>`
-4. Resend'de domain **Verified** olana kadar bekle (genelde dakikalar).
-5. **API Keys → Create API Key** → "Juno auth", yetki _Sending access_.
+3. **DNS kayıtları.** Resend bu adımda sana bir tablo gösterir: birkaç
+   satır, her birinde Type / Name / Value. Bu satırları **Resend'e değil**,
+   alan adını aldığın yerin (Cloudflare, GoDaddy, Namecheap…) DNS sayfasına
+   ekliyorsun. Kopyala-yapıştır işi, üç dört satır.
+
+   Neden gerekiyor: Resend'in sunucusu "juno-dating.com adına mail
+   gönderiyorum" dediğinde Gmail bunu bir yerden doğrulamak zorunda, ve
+   baktığı yer senin alan adının DNS kayıtları. Kayıtlar yoksa mail ya
+   spam'e düşer ya hiç ulaşmaz. Resend'in bu hesapta verdikleri (panodan
+   okundu, 2026-09-17):
+
+   | Bölüm | Type  | Host                | Ne işe yarar                                                          |
+   | ----- | ----- | ------------------- | --------------------------------------------------------------------- |
+   | DKIM  | TXT   | `resend._domainkey` | Açık anahtar; Resend her maili imzalar, alıcı imzayı bununla doğrular |
+   | SPF   | CNAME | `rsend`             | Gönderim altyapısına işaret eder (EU bölgesi)                         |
+   | SPF   | CNAME | `send`              | Aynısı; ikisi "bu alan adı adına göndermeye yetkili" zincirini kurar  |
+   | DMARC | TXT   | `_dmarc`            | SPF/DKIM tutmazsa alıcı ne yapsın; Gmail toplu gönderende arar        |
+
+   **MX kaydı yok:** Resend'in bu akışı gönderim için CNAME kullanıyor. MX
+   yalnızca **Enable Receiving** açılırsa çıkar, ve bu ürün mail almıyor —
+   kapalı kalmalı. Namecheap'in MAIL SETTINGS menüsüne de bu yüzden hiç
+   dokunulmuyor.
+
+   DMARC Resend'de "Optional" diye geçiyor ama ekle: Gmail ve Yahoo Şubat
+   2024'ten beri arıyor. Resend'in verdiği `v=DMARC1; p=none;` yeter;
+   rapor da istersen sonuna `rua=mailto:hesap@juno-dating.com` ekleyebilirsin.
+
+   **Tuzak:** çoğu DNS panosunda _Name_ alanına alan adının tamamı değil
+   yalnızca ön eki yazılır. Resend `send.juno-dating.com` diyorsa panele `send`
+   yazarsın, gerisini panel kendi ekler; tamamını yazarsan
+   `send.juno-dating.com.juno-dating.com` olur ve doğrulama hiçbir zaman geçmez.
+
+   **Namecheap'te, adım adım** (alan adı oradan alındı, 2026-09-17):
+
+   1. namecheap.com → giriş → **Domain List** → alan adının satırında
+      **MANAGE**.
+   2. Üstteki **Advanced DNS** sekmesi. (Kayıtlar burada. "Domain"
+      sekmesindeki NAMESERVERS alanı **Namecheap BasicDNS** yazmalı; başka
+      bir şey yazıyorsa DNS'i o servis yönetiyordur ve kayıtlar oraya
+      girilir.)
+   3. **HOST RECORDS → ADD NEW RECORD**, Resend'in tablosundaki her satır
+      için bir kere. Alanların karşılığı:
+      - _Type_ → Resend'in _Type_'ı (TXT Record / MX Record)
+      - _Host_ → Resend'in _Name_'inin **yalnızca ön eki**. Kök alan adı
+        için `@` yazılır; `send.juno-dating.com` için sadece `send`,
+        `_dmarc.juno-dating.com` için sadece `_dmarc`.
+      - _Value_ → Resend'in _Value_'su, olduğu gibi. Uzun DKIM değerini
+        elle yazma, kopyala.
+      - _TTL_ → Automatic.
+   4. CNAME satırlarında _Value_ alanına Resend'in gösterdiği tam adresi
+      yapıştır (`…forge.rmta.net.` ile biten, sondaki nokta dahil). Bir
+      Host'ta CNAME varsa aynı Host'ta başka kayıt olamaz; `rsend` ve
+      `send` yeni alt alan adları olduğu için bu sorun çıkmaz. Namecheap'in
+      hazır park kayıtlarına (`www` CNAME, `@` URL Redirect) dokunma.
+   5. Her satırın sağındaki yeşil onay işaretiyle kaydet, sonra
+      **SAVE ALL CHANGES**.
+   6. Namecheap "30 dakikaya kadar sürebilir" der; pratikte birkaç dakika.
+
+4. **DMARC kaydını sen ekle.** Resend vermez, ama Gmail ve Yahoo Şubat
+   2024'ten beri toplu gönderende arıyor — yoksa mail doğrudan
+   reddedilebiliyor. SPF/DKIM tutmadığında alıcının ne yapacağını söyler.
+   Aynı DNS sayfasına bir TXT kaydı daha:
+
+   | Type | Name     | Value                                                |
+   | ---- | -------- | ---------------------------------------------------- |
+   | TXT  | `_dmarc` | `v=DMARC1; p=none; rua=mailto:hesap@juno-dating.com` |
+
+   `p=none` başlangıç için doğrusu: "bir şey yapma, sadece bana rapor
+   gönder". Birkaç hafta rapor topladıktan sonra `p=quarantine`'e
+   çıkarılabilir.
+
+5. Resend'de **Verify DNS Records**'a bas ve domain **Verified** olana
+   kadar bekle. DNS değişikliği genelde dakikalar sürer, bazen saatler;
+   Resend'in kontrolünü istediğin kadar tekrarlayabilirsin.
+6. **API Keys → Create API Key** → "Juno auth", yetki _Sending access_.
    Bu anahtar **gizli**; bir daha gösterilmez, hemen Supabase'e yapıştır.
 
 ### 1c. Supabase panosu
@@ -79,7 +148,7 @@ TestFlight maddesi). Sonra:
    - Port: `587`
    - Username: `resend`
    - Password: Resend API anahtarı (**gizli**)
-   - Sender email: `hesap@<alanadın>`
+   - Sender email: `hesap@juno-dating.com`
    - Sender name: `Juno`
 2. **Authentication → Sign In / Providers → Email**
    - _Confirm email_: **açık**
@@ -206,7 +275,7 @@ Apple da sunmak zorundasın. TestFlight'a çıkmadan önce bitmeli.
 Web'de Apple yok, Google tarayıcı yönlendirmesiyle çalışıyor. Yayınlanınca:
 
 **Authentication → URL Configuration → Redirect URLs** listesine web
-sürümünün adresini ekle (örn. `https://juno.app`). Listede olmayan bir
+sürümünün adresini ekle (örn. `https://juno-dating.com`). Listede olmayan bir
 adrese Supabase kimseyi geri göndermez.
 
 Web build'ini alırken `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` de ortamda
