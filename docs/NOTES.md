@@ -5785,3 +5785,53 @@ measurement taken while the owner is editing the thing being measured is a
 snapshot of a moving target, not a fact. The apex looked dead for the same
 family of reason at the end — the records existed, the local resolver was
 negative-caching them, and `curl --resolve` showed a working site.
+
+## 2026-09-17 — On GitHub, and four times the gate itself was the defect
+
+`https://github.com/oguzpancuk/juno` has the history now — the first push
+this repository has ever had. The review that cleared it scanned every
+blob reachable from every ref for JWTs, `re_`, `sk-`, `sbp_`, `AIza`,
+`GOCSPX-`, PEM blocks and `password = "…"`, and found nothing, so the
+whole history went out rather than a curated part of it. CI is
+verify-only; publishing deployed nothing.
+
+**The lesson of the day is about gates, and it cost four rounds.** A gate
+was written to stop `npm run deploy` publishing a bundle that points at
+the local stack. Each round a reviewer broke it, and each break was a
+different shape of the same mistake — writing the gate is not the same
+work as showing it holds:
+
+1. It enumerated private address ranges, and `fe80::`, `fc00::`,
+   `::ffff:127.0.0.1`, `100.64.0.0/10`, a dotless `oguz-macbook`,
+   `supabase.internal` and `127.0.0.1.nip.io` all walked through. Replaced
+   with an allow-list: https, host under `.supabase.co`. There is one
+   shape of legitimate target; naming it is shorter than naming everything
+   it is not.
+2. It read only the shell, while the value lives in `apps/mobile/.env` and
+   `expo export` loads it — so the first honest deploy after the gate was
+   added was refused, on a machine where the file had been right all
+   along. A gate that refuses everything is not strict, it is broken.
+3. It read the anon key's issuer and stopped, so it caught the local demo
+   key and waved through the hosted **service_role** key — which sits
+   beside the anon key in the dashboard, differs in one field, and
+   bypasses every RLS policy the product rests on. `CLAUDE.md` forbids it
+   shipping and this gate was the only thing that could enforce that.
+4. It read `.env` while `@expo/env` reads four files, and then — after
+   that was fixed — its hand-rolled parser ignored a leading `export `,
+   which Node strips. So `export EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1`
+   in `.env.local` stayed invisible to the gate and was inlined by the
+   build. The habit is natural: the prefix is what makes a file
+   `source`-able, which is how `contracts/init.sh` carries values.
+
+What closed the fourth is the shape the other three should have taken from
+the start: **share the implementation rather than imitate it.**
+`parseEnvFile` now calls `node:util`'s `parseEnv`, the same function
+`@expo/env` calls, so the two cannot drift again. And the bypass was
+reproduced before and after — a temporary `.env.local` carrying that exact
+line, watched sailing through and then watched being refused.
+
+Every other parser divergence found on the way (trailing comments, quote
+styles, multi-line values) failed closed: the gate refused something Expo
+would have accepted. Only `export ` failed open. That asymmetry is worth
+remembering when judging a home-made parser: the dangerous direction is
+the one where your version is more permissive than theirs.

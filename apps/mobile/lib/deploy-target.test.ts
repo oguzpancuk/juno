@@ -112,7 +112,35 @@ describe('checkDeployKey', () => {
   });
 });
 
+describe('the two refusals a review found untested', () => {
+  it('refuses credentials in the address', () => {
+    // They would be inlined into a public bundle verbatim.
+    const r = checkDeployTarget('https://user:pass@ref.supabase.co');
+    expect(r.ok).toBe(false);
+    expect(reasonOf(r)).toMatch(/kullanıcı bilgisi/u);
+  });
+
+  it('refuses a path, which supabase-js would build beneath', () => {
+    const r = checkDeployTarget('https://ref.supabase.co/rest');
+    expect(r.ok).toBe(false);
+    expect(reasonOf(r)).toMatch(/yol var/u);
+  });
+
+  it('still accepts the plain address, with or without a trailing slash', () => {
+    expect(checkDeployTarget('https://ref.supabase.co').ok).toBe(true);
+    expect(checkDeployTarget('https://ref.supabase.co/').ok).toBe(true);
+  });
+});
+
 describe('parseEnvFile', () => {
+  it('strips `export `, because Node does and the export follows Node', () => {
+    // The bypass this parser was rewritten for: a source-able .env.local
+    // line was invisible to the gate and inlined by the build.
+    expect(
+      parseEnvFile('export EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1'),
+    ).toEqual({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1' });
+  });
+
   it('reads the file this repo writes', () => {
     expect(
       parseEnvFile(
