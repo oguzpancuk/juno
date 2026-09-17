@@ -5708,3 +5708,35 @@ exists. Not decided here.
 credentials, `Confirm email`, the OTP length and expiry, and the
 confirmation template — all of `docs/auth-setup.md` §1c, all in the
 dashboard. The app's `.env` also still points at the local stack.
+
+## 2026-09-17 — The code arrives in a real inbox
+
+What the owner asked for on 2026-09-16 — "kayıt olma esnasında gerçekten
+kodun mail olarak iletilmesini sağlamamız lazım" — is true in production
+now, and was watched rather than inferred.
+
+The chain, end to end: a sign-up posted to the hosted project's
+`/auth/v1/signup` returned a user with `email_confirmed_at` null and no
+session (the configured behaviour); Supabase handed the mail to Resend
+over SMTP; Resend signed it with the DKIM key whose public half sits in
+`juno-dating.com`'s DNS; Namecheap's forwarding carried
+`destek@juno-dating.com` to the owner's own inbox, where the owner read
+it. Five hops, four of them provisioned in the two days before.
+
+One useful thing fell out of doing it this way. **A 200 from
+`/auth/v1/signup` is itself a test of the SMTP configuration**: GoTrue
+answers 500 "Error sending confirmation email" when it cannot hand the
+mail off, so a 200 means the credentials in the dashboard work. That
+separates "Supabase never sent it" from "it was sent and lost on the
+way" — the first question to ask when a code does not arrive, and
+Resend's own Logs tab answers the second.
+
+The address used was `destek@juno-dating.com`, the contact the privacy
+notice now names, so the run also proved the Namecheap forwarding rule
+that notice depends on. The account it left behind was deleted on the
+owner's say-so through the admin API; one real account remains in the
+project, the owner's own from the simulator walk earlier that day.
+
+Still open, and the last thing between this and a public web launch: the
+notice has to live at a public URL, which is what the web client's
+`/legal` route becomes once it is deployed anywhere.

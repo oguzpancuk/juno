@@ -227,8 +227,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       than a red error — watched in the browser after that sentence was
       written, provoked by opening the code screen twice inside the local
       one-second `max_frequency`, and held by `lib/otp.ts` `refusedSend`.
-      `screenshots/v1-verify-code.png` is the code screen on iOS. Not covered anywhere: real SMTP, which
-      needs the hosted project (`docs/auth-setup.md`)._
+      `screenshots/v1-verify-code.png` is the code screen on iOS. Real SMTP
+      closed on 2026-09-17: a sign-up against the hosted project mailed a
+      code through Resend that arrived in a real inbox (NOTES)._
 - [ ] **Sign in with Apple and Google (Apple).** Alongside e-mail and
       password, through each provider's own SDK; the inert buttons of
       2026-09-11 are gone (ADR-0011). App Store Review Guideline 4.8 means
