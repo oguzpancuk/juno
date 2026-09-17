@@ -54,3 +54,46 @@ export function checkDeployTarget(value: string | undefined): DeployTarget {
   }
   return { ok: true, host: url.hostname };
 }
+
+/**
+ * The `.env` file the way Expo reads it, for the one caller that has to
+ * look before Expo does.
+ *
+ * The gate runs before `expo export`, and it is `expo export` that loads
+ * `apps/mobile/.env` — so a gate that only read the shell saw nothing and
+ * refused every honest deploy, which is how this function came to exist.
+ * Deliberately small: no interpolation, no `export ` prefixes, no multi-line
+ * values. It reads the file this repo actually writes, and anything fancier
+ * belongs to Expo, which is the thing that matters at export time.
+ */
+export function parseEnvFile(contents: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of contents.split(/\r?\n/u)) {
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    const quoted =
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"));
+    if (quoted && value.length >= 2) value = value.slice(1, -1);
+    out[key] = value;
+  }
+  return out;
+}
+
+/**
+ * Which value the export will actually use. A variable already in the
+ * shell wins over the file — that is Expo's order, and it is the order
+ * that makes `contracts/init.sh` dangerous, so the gate must judge the
+ * same value Expo will inline.
+ */
+export function effectiveValue(
+  shell: string | undefined,
+  file: Record<string, string>,
+  key: string,
+): string | undefined {
+  return shell !== undefined && shell !== '' ? shell : file[key];
+}

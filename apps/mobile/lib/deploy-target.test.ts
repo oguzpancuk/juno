@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { checkDeployTarget } from './deploy-target';
+import {
+  checkDeployTarget,
+  effectiveValue,
+  parseEnvFile,
+} from './deploy-target';
 
 const HOSTED = 'https://jkxuhbuuhsumyjmlskls.supabase.co';
 
@@ -56,5 +60,60 @@ describe('checkDeployTarget', () => {
     ]) {
       expect(checkDeployTarget(public_).ok).toBe(true);
     }
+  });
+});
+
+describe('parseEnvFile', () => {
+  it('reads the file this repo writes', () => {
+    expect(
+      parseEnvFile(
+        [
+          '# Hosted proje. Gitignored.',
+          '',
+          'EXPO_PUBLIC_SUPABASE_URL=https://ref.supabase.co',
+          'EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi.abc',
+        ].join('\n'),
+      ),
+    ).toEqual({
+      EXPO_PUBLIC_SUPABASE_URL: 'https://ref.supabase.co',
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOi.abc',
+    });
+  });
+
+  it('keeps a value that contains an equals sign', () => {
+    // Base64 and JWT padding both end in one; splitting on every `=`
+    // would truncate the anon key.
+    expect(parseEnvFile('K=a=b==').K).toBe('a=b==');
+  });
+
+  it('strips one layer of quotes and nothing else', () => {
+    expect(parseEnvFile('K="v"').K).toBe('v');
+    expect(parseEnvFile("K='v'").K).toBe('v');
+    expect(parseEnvFile('K=v"w').K).toBe('v"w');
+  });
+
+  it('ignores blanks, comments and lines with no key', () => {
+    expect(parseEnvFile('\n# yorum\n=degersiz\nK=v\n')).toEqual({ K: 'v' });
+  });
+});
+
+describe('effectiveValue', () => {
+  const file = { K: 'https://from-file.supabase.co' };
+
+  it('lets the shell win, because that is what Expo does', () => {
+    // And it is the whole reason the gate exists: `contracts/init.sh`
+    // exports the local URL into the shell, over a file that is correct.
+    expect(effectiveValue('http://127.0.0.1:54321', file, 'K')).toBe(
+      'http://127.0.0.1:54321',
+    );
+  });
+
+  it('falls back to the file when the shell has nothing', () => {
+    expect(effectiveValue(undefined, file, 'K')).toBe(file.K);
+    expect(effectiveValue('', file, 'K')).toBe(file.K);
+  });
+
+  it('is undefined when neither has it', () => {
+    expect(effectiveValue(undefined, {}, 'K')).toBeUndefined();
   });
 });
