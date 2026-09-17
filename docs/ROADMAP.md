@@ -216,7 +216,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       and subject, which come from config rather than from the template.
       Walked end to end twice against the local stack — in the web client
       and, on a dev build, in the iOS simulator: sign-up → the mail in
-      Mailpit (from "Juno <hesap@juno.app>", subject "Juno doğrulama
+      Mailpit (from "Juno <hesap@juno.app>" — the sender became
+      `hesap@juno-dating.com` on 2026-09-17, when the domain was bought —
+      subject "Juno doğrulama
       kodun") → a wrong code refused with the app's own sentence → the
       mailed code → onboarding, with the resend countdown watched running
       down. A sign-in on an unconfirmed address lands on the same screen

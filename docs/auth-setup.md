@@ -79,14 +79,23 @@ Mailin spam'e düşmemesi için gönderen adresin kendi alan adında olmalı
    | SPF   | CNAME | `send`              | Aynısı; ikisi "bu alan adı adına göndermeye yetkili" zincirini kurar  |
    | DMARC | TXT   | `_dmarc`            | SPF/DKIM tutmazsa alıcı ne yapsın; Gmail toplu gönderende arar        |
 
-   **MX kaydı yok:** Resend'in bu akışı gönderim için CNAME kullanıyor. MX
-   yalnızca **Enable Receiving** açılırsa çıkar, ve bu ürün mail almıyor —
-   kapalı kalmalı. Namecheap'in MAIL SETTINGS menüsüne de bu yüzden hiç
+   **Resend MX kaydı vermiyor:** bu akış gönderim için CNAME kullanıyor.
+   MX yalnızca **Enable Receiving** açılırsa çıkar, ve bu ürün mail almıyor
+   — kapalı kalmalı. Namecheap'in MAIL SETTINGS menüsüne de bu yüzden hiç
    dokunulmuyor.
 
+   Ama panelde MX satırları **göreceksin**: `eforward1…5.registrar-servers.com`
+   ve kökte Namecheap'in kendi SPF'i. Bunlar Namecheap'in e-posta
+   yönlendirme servisinin, Resend'le ilgisi yok — **silme**. Resend'in
+   gönderimi `send.` alt alan adı üzerinden yürüyor, köke dokunmuyor.
+
    DMARC Resend'de "Optional" diye geçiyor ama ekle: Gmail ve Yahoo Şubat
-   2024'ten beri arıyor. Resend'in verdiği `v=DMARC1; p=none;` yeter;
-   rapor da istersen sonuna `rua=mailto:hesap@juno-dating.com` ekleyebilirsin.
+   2024'ten beri arıyor. Resend'in verdiği `v=DMARC1; p=none;` yeter.
+   Rapor da istersen **var olan satırın değerini düzenle**, ikinci bir
+   `_dmarc` satırı açma: aynı isimde iki `v=DMARC1` kaydı, hiç kayıt
+   olmaması demek (RFC 7489) — yani DMARC'ı eklemek için atılan adım onu
+   ortadan kaldırır. Düzenlenmiş hâli:
+   `v=DMARC1; p=none; rua=mailto:hesap@juno-dating.com`
 
    **Tuzak:** çoğu DNS panosunda _Name_ alanına alan adının tamamı değil
    yalnızca ön eki yazılır. Resend `send.juno-dating.com` diyorsa panele `send`
@@ -103,7 +112,10 @@ Mailin spam'e düşmemesi için gönderen adresin kendi alan adında olmalı
       girilir.)
    3. **HOST RECORDS → ADD NEW RECORD**, Resend'in tablosundaki her satır
       için bir kere. Alanların karşılığı:
-      - _Type_ → Resend'in _Type_'ı (TXT Record / MX Record)
+      - _Type_ → Resend'in _Type_'ı (TXT Record / CNAME Record). MX
+        **yok**; `rsend` ve `send` CNAME olarak girilir. MX seçilirse
+        Namecheap bir öncelik sayısı ister, adres MX olarak kaydedilir,
+        SPF zinciri hiç kurulmaz ve Resend'in doğrulaması yeşile dönmez.
       - _Host_ → Resend'in _Name_'inin **yalnızca ön eki**. Kök alan adı
         için `@` yazılır; `send.juno-dating.com` için sadece `send`,
         `_dmarc.juno-dating.com` için sadece `_dmarc`.
@@ -113,24 +125,16 @@ Mailin spam'e düşmemesi için gönderen adresin kendi alan adında olmalı
    4. CNAME satırlarında _Value_ alanına Resend'in gösterdiği tam adresi
       yapıştır (`…forge.rmta.net.` ile biten, sondaki nokta dahil). Bir
       Host'ta CNAME varsa aynı Host'ta başka kayıt olamaz; `rsend` ve
-      `send` yeni alt alan adları olduğu için bu sorun çıkmaz. Namecheap'in
-      hazır park kayıtlarına (`www` CNAME, `@` URL Redirect) dokunma.
+      `send` yeni alt alan adları olduğu için bu sorun çıkmaz. Panelde
+      duran Namecheap kayıtlarına — `www` CNAME'i, `@` URL Redirect'i ve
+      eforward MX'leri — dokunma; hiçbiri Resend'in yoluna girmiyor.
    5. Her satırın sağındaki yeşil onay işaretiyle kaydet, sonra
       **SAVE ALL CHANGES**.
    6. Namecheap "30 dakikaya kadar sürebilir" der; pratikte birkaç dakika.
 
-4. **DMARC kaydını sen ekle.** Resend vermez, ama Gmail ve Yahoo Şubat
-   2024'ten beri toplu gönderende arıyor — yoksa mail doğrudan
-   reddedilebiliyor. SPF/DKIM tutmadığında alıcının ne yapacağını söyler.
-   Aynı DNS sayfasına bir TXT kaydı daha:
-
-   | Type | Name     | Value                                                |
-   | ---- | -------- | ---------------------------------------------------- |
-   | TXT  | `_dmarc` | `v=DMARC1; p=none; rua=mailto:hesap@juno-dating.com` |
-
-   `p=none` başlangıç için doğrusu: "bir şey yapma, sadece bana rapor
+4. `p=none` başlangıç için doğrusu: "bir şey yapma, sadece bana rapor
    gönder". Birkaç hafta rapor topladıktan sonra `p=quarantine`'e
-   çıkarılabilir.
+   çıkarılabilir — ama yine var olan satırı düzenleyerek.
 
 5. Resend'de **Verify DNS Records**'a bas ve domain **Verified** olana
    kadar bekle. DNS değişikliği genelde dakikalar sürer, bazen saatler;
