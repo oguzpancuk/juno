@@ -5,6 +5,22 @@
   "observability": {
     "enabled": true,
   },
+  // The public address. A custom domain is a Workers-side binding, not a
+  // DNS record anyone writes by hand: Cloudflare creates and owns the
+  // record for it, which is why the zone had to move here first — a
+  // Worker cannot take a hostname in a zone Cloudflare does not serve.
+  "routes": [
+    {
+      "pattern": "www.juno-dating.com",
+      "custom_domain": true,
+    },
+    // The bare domain too: it is what people type, and left unbound it
+    // resolves to nothing at all rather than to the site.
+    {
+      "pattern": "juno-dating.com",
+      "custom_domain": true,
+    },
+  ],
   "assets": {
     "directory": "dist",
     // `app.json` asks for `output: "single"`, so every route is one page
