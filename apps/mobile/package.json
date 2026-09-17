@@ -9,7 +9,9 @@
     "android": "expo run:android",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint --no-cache app components lib theme"
+    "lint": "expo lint --no-cache app components lib theme",
+    "deploy": "npx expo export -p web && wrangler deploy",
+    "preview": "npx expo export -p web && wrangler dev"
   },
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",
@@ -47,6 +49,7 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.133.0"
   }
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "juno",
+  "compatibility_date": "2026-09-16",
+  "observability": {
+    "enabled": true,
+  },
+  "assets": {
+    "directory": "dist",
+    // `app.json` asks for `output: "single"`, so every route is one page
+    // and the router does the rest. This is what tells the host to answer
+    // /legal with index.html instead of a 404 — and /legal is the one URL
+    // that has to work, being the public home of the privacy notice.
+    //
+    // A `_redirects` file with the usual `/* /index.html 200` was tried
+    // first and is what every other static host wants; Cloudflare rejects
+    // it as an infinite loop (serving /index.html matches /* again) and
+    // refuses to deploy. This is the setting that replaces it.
+    "not_found_handling": "single-page-application",
+  },
+}
