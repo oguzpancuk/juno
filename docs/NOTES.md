@@ -5885,3 +5885,31 @@ that way" — init.sh `eval`s `supabase status -o env` and exports in
 process; it never sources an env file. And the credentials refusal was
 pinned only by `user:pass@`, so either half of the condition could have
 been deleted with every test still green; all three forms are pinned now.
+
+## 2026-09-17 — Closing the day: one correction and what was left open
+
+The entry above ("A correction to …, and a fifth") shows the interpolated
+`.env.local` line being ACCEPTED by the old gate. That is true of
+`checkDeployTarget` alone and not of the old gate as a whole: `projectRef`
+would have been `${ref}`, and this repo's real anon key is a JWT carrying
+`ref: jkxuhbuuhsumyjmlskls`, so the key check would have refused it. The
+hole is real — an `sb_publishable_` key carries no ref and the target
+allow-list is then the only thing standing — but the reproduction as
+written describes an end-to-end acceptance this project's own key would
+not have produced. Recorded rather than repaired: the fix shipped either
+way, and the fifth round is where this stops.
+
+**What the session leaves open**, all of it in the ROADMAP under "The
+deploy gate has never been tested where it keeps breaking": the wiring in
+`scripts/check-deploy-env.ts` has no test and cannot have one while the
+project root is hard-coded; `@expo/env` is pinned `^2.4.3` where the CLI
+uses `~2.4.3`; and the gate does not set `NODE_ENV=production` before
+parsing.
+
+It is worth naming the shape of the day, because it is the same shape five
+times. Every round the code was read and thought correct, and every round
+what actually found the defect was someone trying to get past it — a
+scratch repo, a temporary `.env.local`, a replayed input. The gate was
+never wrong in a way reading revealed. Writing a guard and showing a guard
+holds are different pieces of work, and only the second one produces
+evidence; a guard with no test is a claim.

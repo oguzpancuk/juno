@@ -424,6 +424,31 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       supabase-js itself declares `npm:@opentelemetry/api@^1.0.0`, and
       that range is still resolved at cold start._
 
+- [ ] **The deploy gate has never been tested where it keeps breaking.**
+      `apps/mobile/scripts/check-deploy-env.ts` is the piece five reviews
+      in one day found a way past — a deny-list walked through, a gate that
+      refused every honest deploy, the hosted service_role key waved
+      through, one env file read where Expo reads four, and a parse shared
+      without the expansion beside it. The pure half
+      (`lib/deploy-target.ts`) is covered; the wiring is not, and it is
+      written so it cannot be: the project root is hard-coded, so no test
+      can point it at a fixture. Delete the `effectiveValue` call, or drop
+      `mode: 'production'`, and the battery stays green while the gate
+      stops catching the `contracts/init.sh` shell it exists for.
+      Two one-line neighbours belong in the same change: `@expo/env` is
+      pinned `^2.4.3` while `@expo/cli` uses `~2.4.3`, so 2.5.0 would let
+      the gate and the export resolve different copies of the resolver they
+      are supposed to share; and the gate does not set
+      `NODE_ENV=production` before parsing, where `exportApp.js` does, so a
+      value interpolating `${NODE_ENV}` expands differently on each side.
+      A `parseProjectEnv` that throws should also speak through `refuse()`
+      rather than an English stack trace.
+      — done when: `resolveDeployEnv(root, shell)` takes the root as a
+      parameter and Vitest drives it against a fixture directory —
+      `.env.local` shadowing `.env`, a shell value beating a correct file,
+      an interpolated value, and `EXPO_NO_DOTENV` — with each assertion
+      naming the refusal, not only that one happened (battery).
+
 - [ ] **Make the Edge Function preflight assert the worker, not the
       status.** `tests/global-setup.ts` accepts any 204, and the reason a
       204 means the function's module was evaluated — each returns its own
