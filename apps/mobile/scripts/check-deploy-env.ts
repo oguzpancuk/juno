@@ -7,12 +7,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  checkDeployKey,
   checkDeployTarget,
   effectiveValue,
   parseEnvFile,
 } from '../lib/deploy-target';
 
-const KEY = 'EXPO_PUBLIC_SUPABASE_URL';
+const URL_KEY = 'EXPO_PUBLIC_SUPABASE_URL';
+const ANON_KEY = 'EXPO_PUBLIC_SUPABASE_ANON_KEY';
 
 // Expo loads this at export time; the gate runs before that, so it reads
 // the same file rather than an environment that has not been filled in yet.
@@ -25,9 +27,15 @@ try {
   // No .env is not an error by itself: the shell may carry the value.
 }
 
-const result = checkDeployTarget(
-  effectiveValue(process.env[KEY], fromFile, KEY),
+// Both values ship in the bundle, and the local pair travels together:
+// the shell that has one usually has the other.
+const target = checkDeployTarget(
+  effectiveValue(process.env[URL_KEY], fromFile, URL_KEY),
 );
+const key = checkDeployKey(
+  effectiveValue(process.env[ANON_KEY], fromFile, ANON_KEY),
+);
+const result = target.ok ? key : target;
 
 if (!result.ok) {
   console.error(`\ndeploy durduruldu: ${result.reason}`);
@@ -42,4 +50,4 @@ if (!result.ok) {
   process.exit(1);
 }
 
-console.log(`deploy hedefi: ${result.host}`);
+console.log(`deploy hedefi: ${target.ok ? target.host : ''}`);

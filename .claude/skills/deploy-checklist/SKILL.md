@@ -18,10 +18,11 @@ A fail stops the deploy — no "deploy anyway" without my explicit say-so.
 5. Release notes exist for the range (offer /release-notes if not).
 
 ## Product steps
-Both targets are ask-tier: each command below runs only on the owner's
-explicit per-instance yes. Project refs (Supabase project, EAS project)
-are recorded in `docs/NOTES.md` by the session that creates them; if they
-are missing, stop and report "no deploy target provisioned".
+All three targets are ask-tier: each command below runs only on the
+owner's explicit per-instance yes. Project refs (Supabase project,
+Cloudflare Worker and its custom domains, EAS project) are recorded in
+`docs/NOTES.md` by the session that creates them; if they are missing,
+stop and report "no deploy target provisioned".
 
 ### Backend (Supabase)
 6. `npx supabase db push --dry-run` — review the migration list, then

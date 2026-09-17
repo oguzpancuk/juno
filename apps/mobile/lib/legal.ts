@@ -27,6 +27,15 @@
  * Putting infrastructure in front of the product is an edit here, in the
  * same change, not afterwards — pati learned this on 2026-09-10 and juno
  * relearned it on 2026-09-17.
+ *
+ * The same rule covers identity providers, and there is one waiting: the
+ * welcome screen draws Apple and Google buttons, but both providers are
+ * disabled on the hosted project (checked 2026-09-17: `external.apple` and
+ * `external.google` are false), so nobody can sign in through them and
+ * "Giriş e-posta ve parola ile yapılır" is true today. The change that
+ * enables either one must name it here in the same commit, under both
+ * "Hesap" and "Kimlerle paylaşılır" — the ROADMAP item for that work says
+ * so in its done-when clause.
  */
 export interface LegalSection {
   readonly heading: string;
@@ -74,7 +83,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Doğum tarihin, doğum saatin ve doğum şehrin. Bu üçü doğum haritanı hesaplamak için zorunludur; doğum tarihi aynı zamanda 18 yaş sınırını denetler.',
       '• Hesaplanan doğum haritan ve güneş, ay, yükselen burçların.',
       '• Cinsiyetin ve kimlerle eşleşmek istediğin.',
-      '• Görmek istediğin yaş aralığı.',
+      '• Keşfet filtrelerin: görmek istediğin yaş aralığı, en az uyum bandı ve görmek istediğin burç elementleri.',
       '• Konumun. Yaklaşık 1 kilometrelik bir ızgaraya yuvarlanarak saklanır: başkalarına gösterilen mesafe bu yuvarlanmış noktadan hesaplanır, tam konumun veritabanına hiç yazılmaz.',
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
@@ -103,7 +112,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',
-      "• Alan adı ve mail yönlendirme sağlayıcısı. Bu metinde yazan iletişim adresine yazdığında mailin, veri işleyen sıfatıyla Namecheap'in yönlendirme servisi üzerinden bize ulaşır.",
+      "• Alan adı ve mail yönlendirme sağlayıcısı. Bu metinde yazan iletişim adresine yazdığında mailin, veri işleyen sıfatıyla Namecheap'in yönlendirme servisi üzerinden bize ulaşır ve okunduğu posta kutusunda saklanır. juno-dating.com alan adının DNS kayıtlarını da Cloudflare tutar.",
       '• Bunların dışında hiçbir üçüncü tarafa aktarılmaz, satılmaz veya pazarlama amacıyla paylaşılmaz. Yasal bir talep hâlinde mevzuatın gerektirdiği ölçüde paylaşım yapılabilir.',
     ],
   },
