@@ -1,33 +1,40 @@
 /**
- * What the web build is allowed to point at.
+ * What the web build is allowed to point at, and with which key.
  *
  * `EXPO_PUBLIC_SUPABASE_URL` and `_ANON_KEY` are inlined into the bundle at
- * export time, so whatever the shell holds when `expo export` runs is what
- * every visitor gets. `contracts/init.sh` exports the local stack's values
- * into the shell it starts; a deploy from that shell publishes a site that
- * talks to `127.0.0.1` with a demo key — perfect on the machine that built
- * it, broken for everyone else, and the battery stays green because
- * nothing in it looks at a deployed bundle.
+ * export time, so whatever is resolved when `expo export` runs is what
+ * every visitor gets, readable by anyone who views source. Two mistakes
+ * are one keystroke away and neither shows up in the battery, because
+ * nothing in it looks at a deployed bundle:
  *
- * `lib/env.ts` cannot refuse those values: local is what it is for during
+ * - `contracts/init.sh` exports the local stack's URL and demo key into
+ *   the shell it starts, so a deploy from that shell publishes a site that
+ *   talks to `127.0.0.1`;
+ * - the service-role key sits directly beside the anon key in the Supabase
+ *   dashboard and differs only in one field, so the wrong row publishes a
+ *   key that bypasses every RLS policy this product relies on. CLAUDE.md:
+ *   "no service-role key ever ships in the app" — this is the only place
+ *   that can enforce it.
+ *
+ * `lib/env.ts` cannot refuse any of it: local is what it is for during
  * development. So the refusal lives here, and only the deploy path asks.
  *
- * An allow-list, not a deny-list. The first version enumerated private
+ * Allow-lists, not deny-lists. The first version enumerated private
  * address ranges and a review walked straight through it — `fe80::`,
- * `fc00::`, `::ffff:127.0.0.1`, `100.64.0.0/10`, a dotless `oguz-macbook`,
- * `supabase.internal`, `127.0.0.1.nip.io`. There is exactly one shape of
- * legitimate target, so naming it is both shorter and tighter than trying
- * to name everything it is not.
+ * `fc00::`, `::ffff:127.0.0.1`, `100.64.0.0/10`, a dotless
+ * `oguz-macbook`, `supabase.internal`, `127.0.0.1.nip.io`. There is one
+ * shape of legitimate target and one of legitimate key, so naming those is
+ * both shorter and tighter than naming everything they are not.
  */
 
-export type DeployTarget =
-  | { readonly ok: true; readonly host: string }
+export type Check =
+  | { readonly ok: true; readonly detail: string }
   | { readonly ok: false; readonly reason: string };
 
 /** Every hosted Supabase project answers on this suffix. */
 const HOSTED_SUFFIX = '.supabase.co';
 
-export function checkDeployTarget(value: string | undefined): DeployTarget {
+export function checkDeployTarget(value: string | undefined): Check {
   if (!value) {
     return { ok: false, reason: 'EXPO_PUBLIC_SUPABASE_URL boş' };
   }
@@ -40,59 +47,103 @@ export function checkDeployTarget(value: string | undefined): DeployTarget {
   if (url.protocol !== 'https:') {
     return { ok: false, reason: `https değil: ${value}` };
   }
+  // A path or credentials in the URL are not a hosted project's address;
+  // supabase-js would build `/rest/v1` beneath the path and 404 everywhere.
+  if (url.username !== '' || url.password !== '') {
+    return { ok: false, reason: `adreste kullanıcı bilgisi var: ${value}` };
+  }
+  if (url.pathname !== '/' && url.pathname !== '') {
+    return { ok: false, reason: `adreste yol var: ${value}` };
+  }
   const host = url.hostname;
   if (!host.endsWith(HOSTED_SUFFIX) || host.length <= HOSTED_SUFFIX.length) {
     return { ok: false, reason: `hosted Supabase adresi değil: ${value}` };
   }
-  return { ok: true, host };
+  return { ok: true, detail: host };
+}
+
+/** The project ref: the label in front of `.supabase.co`, or null. */
+export function projectRef(value: string | undefined): string | null {
+  const target = checkDeployTarget(value);
+  if (!target.ok) return null;
+  return target.detail.slice(0, -HOSTED_SUFFIX.length);
+}
+
+interface KeyClaims {
+  readonly iss?: unknown;
+  readonly role?: unknown;
+  readonly ref?: unknown;
 }
 
 /**
- * The anon key, checked for the one mistake that matters: the local
- * stack's demo key, which every Supabase installation shares and which
- * `contracts/init.sh` exports beside the local URL. It is public and
- * worthless, and a site shipped with it answers 401 to every request.
+ * The key that ships. Three things are checked, each of them a mistake
+ * someone has a plausible path to making: the local stack's demo key
+ * (shared by every Supabase installation, and a site carrying it answers
+ * 401 to everyone), a key for a different project (same symptom, harder to
+ * see), and any key whose role is not `anon` — which is how a service-role
+ * key would reach the public.
  *
- * Only the issuer is read. The key is a JWT whose payload is public by
- * design — it travels in every request the app makes — so reading it here
- * discloses nothing that the bundle does not already publish.
+ * Only public claims are read. An anon key travels in every request the
+ * app makes; its payload is not a secret, and nothing is printed.
  */
-export function checkDeployKey(value: string | undefined): DeployTarget {
+export function checkDeployKey(
+  value: string | undefined,
+  expectedRef: string | null,
+): Check {
   if (!value) {
     return { ok: false, reason: 'EXPO_PUBLIC_SUPABASE_ANON_KEY boş' };
   }
+  // Newer projects issue these instead of JWTs. The two prefixes say which
+  // side of the fence a key is on, and the secret one must never ship.
+  if (value.startsWith('sb_secret_')) {
+    return { ok: false, reason: 'bu gizli (secret) anahtar, anon değil' };
+  }
+  if (value.startsWith('sb_publishable_')) {
+    return { ok: true, detail: 'publishable' };
+  }
   const parts = value.split('.');
   if (parts.length !== 3) {
-    // Newer projects issue `sb_publishable_…` keys, which are not JWTs and
-    // carry no issuer to read. Nothing to object to.
-    return { ok: true, host: 'jwt değil' };
+    return { ok: false, reason: 'anon anahtarı tanınmadı' };
   }
-  let issuer = '';
+  let claims: KeyClaims;
   try {
-    const payload: unknown = JSON.parse(
+    const decoded: unknown = JSON.parse(
       Buffer.from(parts[1] ?? '', 'base64url').toString('utf8'),
     );
-    if (payload && typeof payload === 'object' && 'iss' in payload) {
-      issuer = String((payload as { iss: unknown }).iss);
-    }
+    if (!decoded || typeof decoded !== 'object')
+      throw new Error('not an object');
+    claims = decoded as KeyClaims;
   } catch {
     return { ok: false, reason: 'anon anahtarı okunamadı' };
   }
-  if (issuer === 'supabase-demo') {
+  if (claims.iss === 'supabase-demo') {
     return { ok: false, reason: 'yerel yığının demo anon anahtarı' };
   }
-  return { ok: true, host: issuer || 'bilinmeyen' };
+  if (claims.role !== 'anon') {
+    return {
+      ok: false,
+      reason: `anahtarın rolü "${String(claims.role)}", "anon" olmalı`,
+    };
+  }
+  if (
+    expectedRef !== null &&
+    typeof claims.ref === 'string' &&
+    claims.ref !== expectedRef
+  ) {
+    return {
+      ok: false,
+      reason: `anahtar başka bir projenin: ${claims.ref} ≠ ${expectedRef}`,
+    };
+  }
+  return { ok: true, detail: 'anon' };
 }
 
 /**
- * The `.env` file the way Expo reads it, for the one caller that has to
+ * An `.env` file the way Expo reads one, for the one caller that has to
  * look before Expo does.
  *
- * The gate runs before `expo export`, and it is `expo export` that loads
- * `apps/mobile/.env` — so a gate that only read the shell saw nothing and
- * refused every honest deploy, which is how this function came to exist.
  * Deliberately small: no interpolation, no `export ` prefixes, no
- * multi-line values. It reads the file this repo actually writes, and
+ * multi-line values. It reads the files this repo actually writes, and
  * anything fancier belongs to Expo, which is the thing that matters at
  * export time.
  */
@@ -115,16 +166,38 @@ export function parseEnvFile(contents: string): Record<string, string> {
 }
 
 /**
- * Which value the export will actually use. A variable already in the
- * shell wins over the file — that is Expo's order (`@expo/env` skips a key
- * that is already defined), and it is the order that makes an
- * `init.sh` shell dangerous, so the gate must judge the value Expo will
- * inline rather than the one written down.
+ * Several files, in Expo's order: `.env.production.local`, `.env.local`,
+ * `.env.production`, `.env`, and the first one to define a key wins.
+ * Reading only `.env` was a hole — `.env.local` is the conventional
+ * override and `.gitignore` expects it, so a local URL written there would
+ * have sailed past a gate that looked at `.env` alone.
+ *
+ * `null` stands for a file that is not there.
+ */
+export function mergeEnvFiles(
+  contents: readonly (string | null)[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const file of contents) {
+    if (file === null) continue;
+    for (const [key, value] of Object.entries(parseEnvFile(file))) {
+      if (!(key in out)) out[key] = value;
+    }
+  }
+  return out;
+}
+
+/**
+ * Which value the export will actually use. A key defined in the shell
+ * wins over every file — that is `@expo/env`'s rule, which skips a key
+ * that is already defined, **including one defined as empty**. An exported
+ * but empty variable therefore beats a correct file, and this returns the
+ * empty string so the checks above refuse it rather than reading past it.
  */
 export function effectiveValue(
   shell: string | undefined,
-  file: Record<string, string>,
+  files: Record<string, string>,
   key: string,
 ): string | undefined {
-  return shell !== undefined && shell !== '' ? shell : file[key];
+  return shell !== undefined ? shell : files[key];
 }

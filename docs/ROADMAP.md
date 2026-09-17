@@ -271,10 +271,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       200 on both hostnames. Two open follow-ups, both cheap while there is
       one account: the notice materially changed twice after that account's
       consent was recorded, so a re-consent step is owed; and
-      `consent_version` is a text column a CHECK holds to
-      `^\d{4}-\d{2}-\d{2}$` (`20260909000007_consent.sql`), so two
-      versions on one day — which is what 2026-09-17 has — cannot be told
-      apart. Relaxing that regex belongs with the re-consent work._
+      `consent_version` is a `date` column
+      (`20260909000012_block_name_and_consent.sql` changed it from the
+      original text-with-regex), so two versions on one day — which is what
+      2026-09-17 has — cannot be told apart. Giving it a finer identity is
+      a column type change, and the trigger that refuses a backwards move
+      compares the two values (`20260909000013_birth_instant.sql`), so any
+      suffixed scheme has to redesign that ordering too. Belongs with the
+      re-consent work._
 - [x] **Full Turkish content (owner priority, before chat).** _Built,
       source-verified (`docs/astro-sources.md`), owner signed off on the
       texts on 2026-09-09 (NOTES)._ Professional
