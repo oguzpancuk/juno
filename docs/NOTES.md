@@ -5740,3 +5740,48 @@ project, the owner's own from the simulator walk earlier that day.
 Still open, and the last thing between this and a public web launch: the
 notice has to live at a public URL, which is what the web client's
 `/legal` route becomes once it is deployed anywhere.
+
+## 2026-09-17 — The product has an address
+
+`https://www.juno-dating.com` and `https://juno-dating.com` serve the web
+client, both over HTTPS with certificates that verify, and `/legal` answers
+on both — which is the public home the privacy notice needed and the last
+thing standing between this and a public launch.
+
+**The advice that was wrong, and what it cost.** "Keep DNS at Namecheap"
+was given on the grounds that Cloudflare Pages supports custom domains on
+external DNS. On this account Pages is not a separate product any more —
+`pages project create` deploys a Worker — and a **Worker cannot take a
+hostname in a zone Cloudflare does not serve**. So the zone had to move
+after all. The reasoning was checked one layer too late: the mechanism was
+chosen before its consequence for the domain was looked at.
+
+**Moving a zone that carries working mail, without breaking it.** Every
+record was dumped from Namecheap's authoritative server first, values in
+full, and kept out of the repo as a scratch file. That snapshot earned its
+keep immediately: Cloudflare's import brought nine of the eleven records
+and silently left out `send` and `rsend`, the two CNAMEs that carry
+Resend's SPF chain. Missing, they would not have broken anything visibly —
+mail would simply have started failing SPF and drifting into spam folders.
+They were added by hand, as DNS-only, before activation rather than after.
+
+The rest of the move was uneventful because both nameserver sets served
+identical data throughout: the DKIM record was compared byte for byte
+(218 characters, identical), the five MX priorities checked, and the
+delegation confirmed at the `.com` registry rather than through a resolver
+that was still caching the old answer. Binding the custom domain then
+needed the hand-written `www` CNAME deleted first — Cloudflare owns the
+record for a custom domain and refuses to take a hostname that already has
+one.
+
+**A measurement lesson that cost the owner two wrong reports.** `dig
++short` against an authoritative nameserver, run repeatedly in quick
+succession, intermittently answers with nothing. Twice this was read as "the
+record is gone" and reported as such — once for `_dmarc`, once for `send` —
+and both times the record was there. The same query with `+noall +answer`,
+`+tries=3` and a retry loop is stable. Two rules follow, and they are the
+same rule: a negative DNS result is only a result when it repeats, and a
+measurement taken while the owner is editing the thing being measured is a
+snapshot of a moving target, not a fact. The apex looked dead for the same
+family of reason at the end — the records existed, the local resolver was
+negative-caching them, and `curl --resolve` showed a working site.

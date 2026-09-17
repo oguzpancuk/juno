@@ -274,13 +274,18 @@ Apple da sunmak zorundasın. TestFlight'a çıkmadan önce bitmeli.
 
 ---
 
-## 4. Web istemcisi (isteğe bağlı, sonra)
+## 4. Web istemcisi
 
-Web'de Apple yok, Google tarayıcı yönlendirmesiyle çalışıyor. Yayınlanınca:
+Yayında: **https://www.juno-dating.com** ve **https://juno-dating.com**
+(2026-09-17). Cloudflare Workers'ta statik varlık olarak duruyor; dağıtım
+tek komut, `npm run deploy -w @juno/mobile`.
 
-**Authentication → URL Configuration → Redirect URLs** listesine web
-sürümünün adresini ekle (örn. `https://juno-dating.com`). Listede olmayan bir
-adrese Supabase kimseyi geri göndermez.
+Web'de Apple yok, Google tarayıcı yönlendirmesiyle çalışıyor. Google
+girişini açtığında:
+
+**Authentication → URL Configuration → Redirect URLs** listesine her iki
+adresi de ekle (`https://www.juno-dating.com`, `https://juno-dating.com`).
+Listede olmayan bir adrese Supabase kimseyi geri göndermez.
 
 Web build'ini alırken `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` de ortamda
 olmalı. Tarayıcı akışı o değeri kullanmıyor (client ID Supabase panosunda
