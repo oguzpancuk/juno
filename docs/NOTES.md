@@ -5643,3 +5643,68 @@ repository, by taking the bit off `contracts/init.sh` and putting it back.
 
 The lesson is the one the repo already states and this session kept
 re-learning: a gate that cannot be seen failing is not known to work.
+
+## 2026-09-17 — The hosted backend exists
+
+The owner created the project and approved each outward step separately,
+as the tiers require. Refs, so no future session has to go looking:
+
+- **Supabase project**: `jkxuhbuuhsumyjmlskls`, name `juno`, region
+  `eu-central-1` (Frankfurt), Postgres 17.6, Free plan. API at
+  `https://jkxuhbuuhsumyjmlskls.supabase.co`. The ref is not a secret — it
+  is the subdomain of every request the app makes.
+- **Domain**: `juno-dating.com`, Namecheap, DNS on Namecheap BasicDNS.
+  Resend's four records are live (DKIM TXT, two SPF CNAMEs, DMARC TXT).
+- Free plan pauses a project after seven days with no requests; a TestFlight
+  cohort is the moment to move to Pro.
+
+**One project-creation choice worth recording, because it is the opposite
+of what Supabase's own dialog recommends.** The New Project form offers
+"Automatically expose new tables", and advises turning it off. It stayed
+**on**, because this schema needs it: `likes` and `matches` carry no
+explicit GRANT at all, and `profiles` only two column-scoped UPDATE grants.
+With auto-expose off the app would meet `permission denied` on the hosted
+project and nothing local would have caught it — `supabase/config.toml`
+leaves `auto_expose_new_tables` unset, which is the same default. "Enable
+automatic RLS" stayed off for the same reason in reverse: the migrations
+enable RLS on every table themselves, and an event trigger the local stack
+does not have is drift. The tighter setup — explicit grants in a migration,
+then auto-expose off — is a real improvement and is not done.
+
+**What went out, and what was checked afterwards rather than assumed.**
+`db push` applied all 23 migrations (`migration list` says 23/23 remote,
+none missing). Then the property the whole backend rests on was probed
+from outside, with the anon key, against the hosted API: `profiles`,
+`likes`, `matches`, `messages`, `blocks`, `reports` and both views
+(`discover`, `match_profiles`) all answer **401 / 42501**. The REVOKEs and
+the RLS policies crossed.
+
+`functions deploy` sent `photo` and `delete-account`. They read
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, and
+the platform injects all three — no secrets had to be set by hand, which
+corrects what was said before the deploy.
+
+**The checklist's step 7 could not be performed as written.** It says to
+call each function's `/functions/v1/<name>/health` and expect 200. Neither
+function has a health route; `grep health supabase/functions` returns
+nothing. Reporting that step as passed would have been a result nobody
+observed, so it was replaced with probes that distinguish our code from
+the platform's:
+
+- `OPTIONS /photo` → 204 (the function's CORS branch)
+- no `Authorization` header → 401 `UNAUTHORIZED_NO_AUTH_HEADER` — the
+  gateway's message, not ours: the request never reaches the function
+- `POST /photo` and `GET /delete-account` with a valid apikey → 405
+  `{"error":"method_not_allowed"}` — a string that exists only in our
+  source, so this is our code running on their runtime
+- `GET /photo` with an anon bearer → 404 `{"error":"not_found"}`, which
+  means it got as far as parsing the path
+
+The mismatch is a defect in one of the two: either the functions should
+grow a health route, or the product step should describe what actually
+exists. Not decided here.
+
+**Still missing before anyone can sign up on the hosted project**: SMTP
+credentials, `Confirm email`, the OTP length and expiry, and the
+confirmation template — all of `docs/auth-setup.md` §1c, all in the
+dashboard. The app's `.env` also still points at the local stack.
