@@ -2,7 +2,11 @@
  * Deletes the caller's account: the auth user, and through the schema's
  * cascades the profile, likes, matches, messages and blocks. Reports stay:
  * the caller's id is nulled and the note cleared, so what is left is the
- * reason, the time and the other side's id.
+ * reason, the time and the other side's id. Neither of those two is done
+ * here — the FK's `on delete set null` nulls the id, and that UPDATE fires
+ * `reports_scrub_orphan`, which clears the note (`20260909000002_safety.sql`).
+ * This function must not grow code to repeat them, and the trigger must
+ * not be removed believing this function does the work.
  *
  * The service-role key never leaves this function; the app calls it with
  * the user's own access token and can only ever delete itself. Deno, not

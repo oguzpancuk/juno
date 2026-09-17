@@ -32,6 +32,17 @@ are missing, stop and report "no deploy target provisioned".
 8. Rollback: apply the down-migration; redeploy the previous function
    commit with `git checkout <prev> -- supabase/functions && npx supabase functions deploy`.
 
+### Web (Cloudflare)
+W1. `npm run deploy -w @juno/mobile`. The gate in front of it refuses a
+    bundle pointing at a local or non-https Supabase URL — that URL is
+    inlined at export time, so a deploy from an `init.sh` shell would
+    publish a site only this machine can use.
+W2. Then fetch `/` and `/legal` on both hostnames and expect 200 with a
+    certificate that verifies. `/legal` is the privacy notice's public
+    home; a legal-text change is not shipped until this step has run.
+W3. Rollback: `wrangler rollback` (or redeploy the previous commit's
+    export). The Worker keeps prior versions.
+
 ### App (EAS)
 9. `eas build --platform ios --profile production` (Android: `--platform android`).
 10. `eas submit --platform ios` → TestFlight smoke on a real device: sign

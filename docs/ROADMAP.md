@@ -262,9 +262,12 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       (`screenshots/v1-legal.png`); onboarding carries a checkbox that
       must be ticked, and the profile stores `consent_version` (no
       default, so a profile cannot be created without it) plus a
-      server-stamped `consent_at`. Still open, both outside the code: the
-      two owner placeholders in the notice, and hosting it at a public URL
-      — which the web client's `/legal` route becomes once deployed._
+      server-stamped `consent_at`. Closed on 2026-09-17: the owner gave
+      the two placeholders (Oğuz Pançuk, destek@juno-dating.com) and the
+      notice is public at https://www.juno-dating.com/legal, which answers
+      200 on both hostnames. Open follow-up: the notice materially changed
+      after the one existing consent was recorded, so a re-consent step is
+      owed before there are users to re-ask._
 - [x] **Full Turkish content (owner priority, before chat).** _Built,
       source-verified (`docs/astro-sources.md`), owner signed off on the
       texts on 2026-09-09 (NOTES)._ Professional
@@ -365,8 +368,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       a mutual like producing a match, sending and receiving a message,
       filing a report and blocking. `screenshots/web-sign-in.png` is the
       unauthenticated page; the authenticated screens were driven and read
-      back in-session. Still open for the hosted project: EXPO_PUBLIC_*
-      env for a deployed build and where to host the static output._
+      back in-session. Closed on 2026-09-17: the static output is served
+      by a Cloudflare Worker at `www.juno-dating.com` and `juno-dating.com`,
+      built with the hosted project's EXPO_PUBLIC_* values._
 - [x] **Close the local/CI gap around Edge Functions.** CI was red for
       days because the workflow started a stack without the edge runtime
       and twelve tests reported a bare status mismatch instead of naming

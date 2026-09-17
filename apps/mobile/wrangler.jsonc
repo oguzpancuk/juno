@@ -1,5 +1,7 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  // npm hoists wrangler to the repo root, so the path wrangler writes
+  // here resolves to nothing and editors validate nothing.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "juno",
   "compatibility_date": "2026-09-16",
   "observability": {

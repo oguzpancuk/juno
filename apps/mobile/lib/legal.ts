@@ -15,9 +15,18 @@
  * hosted Supabase project really is in an EU region (`jkxuhbuuhsumyjmlskls`,
  * eu-central-1, Frankfurt), and no analytics or crash reporter has been
  * added without being listed here (nothing of the kind is in
- * `apps/mobile/package.json`). A third joins them now that mail is really
- * sent: every data processor that touches personal data is named under
- * "Kimlerle paylaşılır", which as of today means Supabase and Resend.
+ * `apps/mobile/package.json`).
+ *
+ * A third joins them, and it is the one this file keeps getting wrong:
+ * every data processor that touches personal data is named under
+ * "Kimlerle paylaşılır". The list was Supabase and Resend for half a day,
+ * until the web client went onto Cloudflare and the notice's own page
+ * started being served by a processor it said did not exist. It is now
+ * Supabase, Resend, Cloudflare (the web client only — the iOS app never
+ * goes through it) and Namecheap (mail sent to the contact address).
+ * Putting infrastructure in front of the product is an edit here, in the
+ * same change, not afterwards — pati learned this on 2026-09-10 and juno
+ * relearned it on 2026-09-17.
  */
 export interface LegalSection {
   readonly heading: string;
@@ -65,6 +74,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Doğum tarihin, doğum saatin ve doğum şehrin. Bu üçü doğum haritanı hesaplamak için zorunludur; doğum tarihi aynı zamanda 18 yaş sınırını denetler.',
       '• Hesaplanan doğum haritan ve güneş, ay, yükselen burçların.',
       '• Cinsiyetin ve kimlerle eşleşmek istediğin.',
+      '• Görmek istediğin yaş aralığı.',
       '• Konumun. Yaklaşık 1 kilometrelik bir ızgaraya yuvarlanarak saklanır: başkalarına gösterilen mesafe bu yuvarlanmış noktadan hesaplanır, tam konumun veritabanına hiç yazılmaz.',
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
@@ -92,6 +102,8 @@ export const legalSections: readonly LegalSection[] = [
       '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin ve aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
+      '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',
+      "• Alan adı ve mail yönlendirme sağlayıcısı. Bu metinde yazan iletişim adresine yazdığında mailin, veri işleyen sıfatıyla Namecheap'in yönlendirme servisi üzerinden bize ulaşır.",
       '• Bunların dışında hiçbir üçüncü tarafa aktarılmaz, satılmaz veya pazarlama amacıyla paylaşılmaz. Yasal bir talep hâlinde mevzuatın gerektirdiği ölçüde paylaşım yapılabilir.',
     ],
   },

@@ -80,11 +80,17 @@ commit message that mentions a push flag is written with `git commit -F`.
   is a standing instruction, not an option.
 
 ## Deploy
-Two targets, both ask-tier (never without the owner's per-instance yes):
-- Backend: hosted Supabase project. `npx supabase db push` (migrations),
-  `npx supabase functions deploy` (Edge Functions).
+Three targets, all ask-tier (never without the owner's per-instance yes):
+- Backend: hosted Supabase project `jkxuhbuuhsumyjmlskls` (eu-central-1).
+  `npx supabase db push` (migrations), `npx supabase functions deploy`.
+- Web: Cloudflare Worker serving the Expo web export at
+  `www.juno-dating.com` / `juno-dating.com`. `npm run deploy -w @juno/mobile`
+  — despite the name, this publishes; it is not a local build.
 - App: EAS. `eas build --platform ios --profile production` → `eas submit`
   (TestFlight → App Store); JS-only changes via `eas update`.
 Trigger: /deploy-checklist walks the gates and the product steps in order.
-No hosted project or EAS project exists yet — the first deploy session
-creates them and records refs in `docs/NOTES.md`.
+No EAS project exists yet — the session that creates it records the ref in
+`docs/NOTES.md`, as the Supabase and Cloudflare sessions did.
+Infrastructure that carries personal data is named in the privacy notice
+(`apps/mobile/lib/legal.ts`) in the same change that puts it in the path,
+never afterwards.
