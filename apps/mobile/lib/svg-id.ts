@@ -13,9 +13,12 @@ import { useId } from 'react';
  * should be. Confirmed in the browser on 2026-09-17 by deleting the
  * hidden first copy from the DOM, at which point the ring appeared.
  *
- * `useId` is per component instance, so two marks never collide. React's
- * colons come out of it: they are legal inside an id attribute but not
- * inside the bare `url(#…)` that names it.
+ * `useId` is per component instance, so two marks never collide. The
+ * `replace` is defensive rather than load-bearing: React 18 built its ids
+ * out of colons, which are legal in an id attribute but not in the bare
+ * `url(#…)` that names it, while the pinned React 19 returns `_R_0_` and
+ * has nothing to strip. It stays because the id format is React's to
+ * change and a colon coming back would break every gradient at once.
  *
  * Every `id` under a `<Defs>` in this app goes through here. A literal one
  * works until the day a second instance of its component is on screen,

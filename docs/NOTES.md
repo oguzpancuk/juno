@@ -6012,12 +6012,22 @@ themselves a profile that matches everyone who likes it.
 `private.profiles_guard_demo` forces it false for any caller that is not
 `service_role`.
 
-**Owner decision, recorded.** Demo profiles carry no badge and are not
-distinguishable from members. The risk was put to the owner with the FTC's
-case against Match named, and the answer was "işaretsiz, gerçek gibi"
+**Owner decision, recorded — and a correction to the basis of it.** Demo
+profiles carry no badge. The risk was put to the owner with the FTC's case
+against Match named, and the answer was "işaretsiz, gerçek gibi"
 (2026-09-17). The profiles are synthetic faces rather than photographs of
 people, so no one's likeness is used; the App Store review risk stands and
 is the owner's to carry.
+
+What the decision was offered against was "a member cannot tell them
+apart", and that is not true of what was built. A review caught it: a like
+on a demo matches in the same round trip and a like on a member does not,
+so a single swipe identifies a demo with certainty, and a member who works
+through the launch deck learns that all twenty are demos. No column
+discipline can take that back — the immediacy is the whole feature. Two
+things follow that the owner should weigh rather than discover: at launch
+the deck is twenty demos and nothing else, and every one of those matches
+opens a chat that never answers.
 
 **Two tools the repo did not have.** `gen:types` called a bare `supabase`
 that is not on this machine's PATH, and its `>` truncated the committed

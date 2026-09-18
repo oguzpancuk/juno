@@ -33,6 +33,7 @@ import { bigThree, computeChart, toPublicChart } from '@juno/astro';
 import { resolveBirth, searchCities } from '@juno/geo';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { LEGAL_VERSION } from '../../apps/mobile/lib/legal';
 
 const EnvSchema = z.object({
   SUPABASE_URL: z.string().url(),
@@ -40,15 +41,20 @@ const EnvSchema = z.object({
 });
 
 /**
- * Mirrors `LEGAL_VERSION` in apps/mobile/lib/legal.ts.
+ * The notice's own version, imported rather than copied.
+ *
+ * `legal.ts` holds nothing but strings and has no imports of its own, so
+ * reaching into the app from here costs nothing and closes the gap a
+ * second copy would leave: when the notice moves, a literal here would go
+ * on stamping the old date and nothing would fail.
  *
  * A demo account has not consented to anything — there is nobody there to
- * consent — but the column is NOT NULL because a member's profile must
+ * consent — but the column is NOT NULL, because a member's profile must
  * never exist without a record of which notice they accepted. What it
- * means on these rows is narrower: the version of the notice in force
- * when the account was made.
+ * means on these rows is narrower: the version in force when the account
+ * was made.
  */
-const CONSENT_VERSION = '2026-09-17';
+const CONSENT_VERSION = LEGAL_VERSION;
 
 /** Where the portraits live, relative to this file. */
 const PHOTOS = join(import.meta.dirname, '..', '..', 'assets', 'demo-photos');
@@ -280,7 +286,9 @@ function cityId(name: string): number {
   return hit.id;
 }
 
-const ProfileIds = z.array(z.object({ id: z.string().uuid() }));
+const ProfileRows = z.array(
+  z.object({ id: z.string().uuid(), is_demo: z.boolean() }),
+);
 
 /** Every existing account's id, by e-mail. GoTrue has no lookup by name. */
 async function usersByEmail(
@@ -296,7 +304,13 @@ async function usersByEmail(
     for (const user of data.users) {
       if (user.email) found.set(user.email.toLowerCase(), user.id);
     }
-    if (data.users.length < 1000) return found;
+    // An empty page, not a short one. GoTrue caps `perPage` server-side
+    // and has changed how it does so; a page that comes back short of the
+    // number asked for would end the scan early, the demos already there
+    // would fall out of this map, and the rerun this function exists to
+    // make possible would die on "email address already registered"
+    // halfway through — against production, after some rows were written.
+    if (data.users.length === 0) return found;
   }
 }
 
@@ -320,8 +334,11 @@ async function main(): Promise<void> {
   });
 
   const existing = await usersByEmail(admin);
-  let created = 0;
-  let refreshed = 0;
+  // Counted where the writes happen, not where the accounts are found: an
+  // auth user that exists without a profile row still needs an insert, and
+  // the line this prints is the only record of what a production run did.
+  let inserted = 0;
+  let updated = 0;
 
   for (const demo of DEMOS) {
     const email = `demo+${demo.slug}@juno-dating.com`;
@@ -337,9 +354,6 @@ async function main(): Promise<void> {
       });
       if (error) throw new Error(`createUser ${email}: ${error.message}`);
       id = data.user.id;
-      created += 1;
-    } else {
-      refreshed += 1;
     }
 
     // The photo first: `profiles_check_photos` refuses a row whose path
@@ -371,12 +385,28 @@ async function main(): Promise<void> {
 
     const { data: already, error: read } = await admin
       .from('profiles')
-      .select('id')
+      .select('id, is_demo')
       .eq('id', id);
     if (read) throw new Error(`read profile ${demo.slug}: ${read.message}`);
+    const rows = ProfileRows.parse(already);
     const location = `SRID=4326;POINT(${demo.home[0]} ${demo.home[1]})`;
 
-    if (ProfileIds.parse(already).length > 0) {
+    // A profile that is already there and is not a demo belongs to a
+    // person. Overwriting it would replace their name, their words, their
+    // photograph and where they live, and flag their account so that
+    // everyone who likes them matches — and `profiles_forbid_birth_change`
+    // freezes the chart, so it could not even be put back. All it takes to
+    // get there is someone signing up with one of these addresses, which
+    // is a thing the owner might do to see the flow end to end.
+    if (rows.length > 0 && rows[0]?.is_demo !== true) {
+      throw new Error(
+        `${email} already has a profile that is not a demo; refusing to ` +
+          `overwrite it. Delete that account, or give this demo another ` +
+          `slug, and run again.`,
+      );
+    }
+
+    if (rows.length > 0) {
       // Only what a rerun is allowed to move. Birth data and the chart are
       // frozen by `profiles_forbid_birth_change`, and sending them again
       // unchanged would still be sending them.
@@ -394,6 +424,7 @@ async function main(): Promise<void> {
         .eq('id', id);
       if (error)
         throw new Error(`update profile ${demo.slug}: ${error.message}`);
+      updated += 1;
     } else {
       const { error } = await admin.from('profiles').insert({
         id,
@@ -414,12 +445,13 @@ async function main(): Promise<void> {
       });
       if (error)
         throw new Error(`insert profile ${demo.slug}: ${error.message}`);
+      inserted += 1;
     }
   }
 
   console.log(
     `${DEMOS.length} demo profiles on ${env.SUPABASE_URL}: ` +
-      `${created} created, ${refreshed} refreshed`,
+      `${inserted} inserted, ${updated} updated`,
   );
 }
 

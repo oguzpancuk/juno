@@ -29,14 +29,19 @@ const LikeRows = z.array(
 );
 
 /**
- * The launch demos: twenty accounts a member cannot tell from anyone
- * else, whose only difference is that liking one matches immediately.
+ * The launch demos: twenty accounts that carry no badge and whose only
+ * difference is that liking one matches immediately.
+ *
+ * Not "indistinguishable", which is what an earlier draft of this comment
+ * claimed. The immediacy is itself the tell — a like on a member waits for
+ * them and a like on a demo does not — so one swipe separates the two, and
+ * no column discipline can take that back. What the tests below hold is
+ * narrower and true: the flag reaches no client, and no member can give it
+ * to themselves.
  *
  * What the owner asked for (2026-09-17) was "every demo likes the new
  * member, and a like back matches". The migration builds the second half
- * and lets it produce the first; these are the tests that the visible
- * result is the one asked for, and that the flag behind it is not
- * something a member can give themselves.
+ * and lets it produce the first.
  */
 describe('demo profiles', () => {
   let member: TestUser;

@@ -165,6 +165,15 @@ describe('nothing outside tokens.ts holds a colour', () => {
     ];
     expect(grounds).toEqual([color.bg, color.bg, color.bg]);
 
+    // And there must be exactly one theme-color to check. Expo appends
+    // its own `<meta name="theme-color">` whenever `expo.web.themeColor`
+    // is set, after this file's, and the injected one would win while
+    // being invisible to the assertion above.
+    expect(html.match(/name="theme-color"/g)).toHaveLength(1);
+    expect(
+      JSON.parse(readFileSync(join(MOBILE, 'app.json'), 'utf8')),
+    ).not.toHaveProperty('expo.web.themeColor');
+
     // And the mark itself is the product's one gradient: the ring runs
     // through all three stops in order, and each sphere ends on one of its
     // ends — the warm one below left, the cool one above right.

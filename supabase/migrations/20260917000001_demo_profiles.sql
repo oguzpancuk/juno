@@ -30,9 +30,12 @@ comment on column public.profiles.is_demo is
   '(scripts/seed-demo.ts) with the service role; see '
   'private.likes_demo_reciprocate.';
 
--- Not in `discover`, not in `match_profiles`: the owner asked for demos a
--- member cannot tell apart from anyone else, so the column stays on the
--- table and never reaches a client.
+-- Not in `discover`, not in `match_profiles`: the owner asked for demos
+-- that carry no badge, so the column stays on the table and never reaches
+-- a client. That is not the same as indistinguishable, and the difference
+-- is this migration's own doing: a like on a demo matches in the same
+-- round trip and a like on a member does not, so one swipe tells them
+-- apart. Nothing here hides that, and nothing can.
 
 /**
  * `is_demo` is the server's, not a client's.
@@ -71,6 +74,11 @@ create trigger profiles_guard_demo
   before insert or update on public.profiles
   for each row execute function private.profiles_guard_demo();
 
+-- A `returns trigger` function cannot be called directly, so this grants
+-- nobody anything they had; it is here because every other function in
+-- `private` is revoked this way and one exception invites the next.
+revoke all on function private.profiles_guard_demo() from public, anon, authenticated;
+
 -- ------------------------------------------------------------ reciprocate
 /**
  * A like on a demo profile is answered by that demo, with the same
@@ -80,12 +88,15 @@ create trigger profiles_guard_demo
  * Definer: the row it writes belongs to the demo, and `likes` is
  * insert-own under RLS.
  *
- * Trigger order matters and is alphabetical among AFTER INSERT triggers
- * on this table: `likes_create_match` runs first and finds nothing
- * reciprocal, then this one writes the demo's like, and *that* insert
- * fires `likes_create_match` again — this time with both halves present.
- * Renaming either trigger past the other breaks the match, which is what
- * `supabase/tests/demo.test.ts` is watching.
+ * The order the two AFTER INSERT triggers on this table fire in does not
+ * matter, which is worth saying because it looks as though it should.
+ * Alphabetically `likes_create_match` goes first, finds nothing
+ * reciprocal and returns; this one then writes the demo's like, and that
+ * nested insert fires `likes_create_match` again with both halves
+ * present. The other way round works too: the nested insert is a command
+ * of its own, so its after-row triggers see the outer row already there,
+ * make the match, and the outer `likes_create_match` then no-ops on its
+ * `on conflict (a, b) do nothing`.
  *
  * The recursion stops after one step: the row this writes has a member,
  * not a demo, as its `to_id`.
@@ -119,3 +130,5 @@ $$;
 create trigger likes_demo_reciprocate
   after insert on public.likes
   for each row execute function private.likes_demo_reciprocate();
+
+revoke all on function private.likes_demo_reciprocate() from public, anon, authenticated;

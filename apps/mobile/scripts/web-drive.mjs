@@ -36,7 +36,42 @@ if (!baseUrl || !outDir || !stepsFile) {
   process.exit(1);
 }
 
-const steps = JSON.parse(readFileSync(stepsFile, 'utf8'));
+/**
+ * The steps file is an external boundary like any other, and an unchecked
+ * one fails in the worst way available: `{"fill": "email"}` with no `text`
+ * types the string "undefined" into the field and the run carries on and
+ * photographs the wrong thing.
+ */
+const VERBS = ['goto', 'click', 'tap', 'fill', 'wait', 'expect', 'shot'];
+
+function validate(steps) {
+  if (!Array.isArray(steps)) throw new Error('steps must be an array');
+  steps.forEach((step, at) => {
+    const where = `step ${at + 1}`;
+    if (step === null || typeof step !== 'object')
+      throw new Error(`${where} is not an object`);
+    const verbs = VERBS.filter((verb) => verb in step);
+    if (verbs.length !== 1)
+      throw new Error(
+        `${where} names ${verbs.length === 0 ? 'no' : verbs.length} verbs; ` +
+          `each step takes exactly one of ${VERBS.join(', ')}`,
+      );
+    const [verb] = verbs;
+    if (verb === 'wait') {
+      if (typeof step.wait !== 'number' || !(step.wait >= 0))
+        throw new Error(`${where}: wait takes a number of milliseconds`);
+    } else if (typeof step[verb] !== 'string' || step[verb].length === 0) {
+      throw new Error(`${where}: ${verb} takes a non-empty string`);
+    }
+    if (verb === 'fill' && typeof step.text !== 'string')
+      throw new Error(`${where}: fill also takes a "text" string`);
+    if ('settle' in step && typeof step.settle !== 'number')
+      throw new Error(`${where}: settle takes a number of milliseconds`);
+  });
+  return steps;
+}
+
+const steps = validate(JSON.parse(readFileSync(stepsFile, 'utf8')));
 mkdirSync(outDir, { recursive: true });
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
