@@ -424,7 +424,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       supabase-js itself declares `npm:@opentelemetry/api@^1.0.0`, and
       that range is still resolved at cold start._
 
-- [ ] **L1 — Six things the owner asked for on the way to launch.**
+- [x] **L1 — Six things the owner asked for on the way to launch.**
       One list, given on 2026-09-17: the tab icon on juno-dating.com does
       not show; the date boxes after sign-up are square where the design
       is round; a mobile browser paints white above and below the app;
@@ -442,6 +442,13 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       like on one producing a match (manual, against the local stack),
       and the door and the privacy sheet are seen at phone width on the
       exported web client (screenshot).
+      _Done. Battery green on a clean, committed HEAD with the tree clean
+      before and after, on a database reset from the migrations. The five
+      `screenshots/l1-web-*.png` are one run of the new
+      `scripts/web-drive.mjs` against the local stack at 390 × 844: the
+      door with its new pitch, the notice as a sheet, the onboarding
+      fields the owner asked about, a seeded demo in the deck with its
+      photo and its own chart, and "Eşleştiniz!" one tap after the like._
 
 - [ ] **The deploy gate has never been tested where it keeps breaking.**
       `apps/mobile/scripts/check-deploy-env.ts` is the piece five reviews

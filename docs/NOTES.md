@@ -6044,13 +6044,20 @@ it is what produced `screenshots/l1-web-*.png` — including the one the
 owner asked about, the onboarding fields, driven through a real sign-in
 against the local stack.
 
-**What is not verified, and why.** Docker Desktop stopped between the two
-halves of this session and will not start from a shell — its VM powers
-down and the GUI app needs the owner's own session. The Supabase suite and
-`types-drift` need the local stack, so the battery cannot be green here,
-and the push gate is therefore not passed. Everything that does not need
-Docker is green, and the demo suite and the seeding script were both run
-against the local stack before it went down: five tests passing, twenty
-demo rows with charts and photos confirmed through `psql`. Those are
-yesterday's results on today's code, which is not the same as a run, and
-the entry says so rather than claiming a battery that was not executed.
+**Docker, and what it cost.** Half a day. The pulls that hung at zero
+bytes for twenty-five minutes, the VM that would not boot, the GUI that
+would not start from a shell — the cause under all of it was a disk at 95%
+with 10 GiB free, which Docker answers by stalling rather than erroring.
+The owner cleared 9 GiB, and the last thing in the way was a
+`com.docker.backend` left over from the previous day, which made every
+click on Docker Desktop do nothing. Worth remembering as a shape: when an
+image pull makes no progress at all, look at the disk before the network.
+
+**Verified, in the end.** The battery is green on a clean, committed HEAD,
+tree clean before and after, against a database reset from the migrations.
+The demo flow was then driven end to end through the real web client, at
+phone width, by the new `scripts/web-drive.mjs`: sign in, onboarding with
+a real chart computed from İstanbul 1995-07-14 03:30, the profile screen,
+a seeded demo in the deck with its photograph, its own chart and a 9 km
+distance, and "Eşleştiniz!" one tap after the like. The five
+`screenshots/l1-web-*.png` are that run.
