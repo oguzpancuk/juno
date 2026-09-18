@@ -6214,3 +6214,91 @@ The shape of the day, again, is the one the deploy-gate entry of
 2026-09-17 already named: every guard written that day was a claim until
 someone tried to get past it. This one was written, reviewed five times,
 and never once pointed at a built file.
+
+## 2026-09-18 — Six things on a real phone, and one of them was mine
+
+With the site finally talking to the right backend, the owner walked it on
+their phone and sent five screenshots. Four of the six are fixed here; two
+are deliberately not, and the reason is the point of the entry.
+
+**The chat's segments (fixed).** Swiping from Sohbet to Uyum left the
+underline under Sohbet. The pager reported its position only on
+`onMomentumScrollEnd`, and on the web `pagingEnabled` is CSS scroll-snap,
+which settles with no momentum phase and so fires no such event. The same
+gap meant a right-swipe onto the empty exit page never left the screen.
+The pager now follows `onScroll` — the underline tracks the thumb, which
+reads better than jumping on release — and treats a short quiet spell
+after the last scroll event as settled, keeping `onMomentumScrollEnd` for
+native. `indicatorPage` is the pure half and is tested.
+
+**Venus and Mars (fixed).** Only those two glyphs sat off-centre in their
+badge, and the owner said so before I had a theory. Of the eleven bodies
+in `BODY_GLYPH`, exactly two are emoji codepoints — U+2640 and U+2642 —
+so only those two can be drawn from the emoji font, with its own metrics.
+`SIGN_GLYPH` has carried U+FE0E for this reason since it was written;
+`BODY_GLYPH` never did. The Unicode table answered it without a single
+measurement, which is the cheapest kind of answer there is.
+
+**The tab bar (not really done, and the entry says so).** What shipped is
+the popup's tint and hairline, and a review did the arithmetic: with the
+bar in flow nothing renders behind it, so the blur blurs a flat colour and
+`glass.sheet` over `color.bg` composites to about three levels of
+difference. The owner asked for the sky and the photo carrying on under
+the bar; this is not that, and calling it glass would have been the same
+overclaim as the two band fixes. The first version did try to do it
+properly — `position: 'absolute'`
+— which is what lets content run _under_ a translucent bar — and a review
+showed what that costs here. Three things are built on the bar being in
+flow: `lib/insets.ts` (a tab screen must not add `insets.bottom`, because
+the bar sits below it), the deck's 13pt footer, and the chat composer's
+keyboard lift, which subtracts the bar height. Absolute, the deck's ✕ and
+♥ land under a bar that takes their touches — the app's primary action —
+and the composer goes back under the keyboard, the bug of 2026-09-16. The
+battery could not see any of it; `keyboard-gap.test.ts` asserts the old
+contract and stays green while the app is wrong. Content running under the
+bar needs every tab screen to pad itself by `useBottomTabBarHeight()`
+first; until then only the material changes.
+
+**`viewport-fit=cover` is gone (a retraction).** I added it yesterday to
+stop iOS letterboxing the notch and the home indicator in a white page
+background. The white is gone for a different and better reason — the page
+paints `color.bg` now — so what `cover` still bought was the page sitting
+under the status bar, which switches on `env(safe-area-inset-*)`. The
+owner's screenshots show every screen about one status bar lower than my
+own captures of the same build: the back link, the chat header, the title
+on the matches list, and the profile photo failing to reach the top. That is a suspect, not a
+diagnosis, and the difference matters: two of the four are padded by flat
+constants — the matches list by 64, the profile photo by
+`SCREEN_TOP_PADDING` — that no inset reaches. Which is why `diag.html`
+ships beside it.
+
+**The pager's quiet spell, corrected.** Treating "no scroll events for
+120 ms" as settled has a second reading: the finger is still down and the
+person is holding still to look. The first version acted on both, so a
+right-drag to peek at the way out followed by a pause closed the chat
+under the finger — and on a stale offset, if the pause was the JS thread
+rather than the person. The decision is `pagerSettle` now, which refuses
+to leave the screen while a finger is on the glass and is tested on
+exactly that case; the underline still follows the drag, because being
+briefly wrong there costs an underline rather than a screen. Leaving also requires the pager to be resting on
+the exit page to the pixel rather than merely nearer to it than to
+anything else: `pageAt` rounds, so a release at 0.45 of a width — a flick
+the platform is about to snap back — used to read as settled on the way
+out. Asking for the exact offset also makes the answer independent of when
+it is asked, which is the real close on the rotation hazard that reading
+the width from a ref did not give.
+
+**What is not fixed, and why nothing was changed for it.** The black band
+at the bottom is still there, and the "too far down" cluster is a
+hypothesis until the phone says so. I have now shipped two fixes for that
+band without ever observing it — and the second time, the site the owner
+was looking at was pointing at a machine that did not exist, so neither
+fix was ever on their screen. Guessing a third time would be the same
+mistake with more confidence.
+
+So this deploy carries `public/diag.html`: a page with no product in it
+that prints what the browser reports — the four safe-area insets, drawn as
+strips so they can be seen, `innerHeight`, `visualViewport.height`,
+`clientHeight`, and `100dvh`/`100svh`/`100lvh` side by side. One
+screenshot of it settles both questions. It is unlinked and comes out
+again once it has done its job.

@@ -4,14 +4,28 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <!--
-      `viewport-fit=cover` so the page reaches under the notch and the home
-      indicator. Without it iOS letterboxes those strips in the page's own
-      background, which is the white the owner saw (2026-09-17: "mobil
-      browserda alt ve üst kısımlar beyaz görünüyor").
+      No `viewport-fit=cover`.
+
+      It was added on 2026-09-17 to stop iOS letterboxing the notch and the
+      home indicator in the page's own background, which was white at the
+      time. The background is `color.bg` now, so the letterbox is the same
+      colour as the app and there is nothing left for `cover` to buy.
+
+      It is out rather than merely unnecessary because it is the best
+      available suspect for the cluster the owner reported on 2026-09-18 —
+      the back link and the chat header too far down, the profile photo
+      short of the top, the matches title too low, about one status bar's
+      worth on every screen. `cover` puts the page under the status bar,
+      which switches on `env(safe-area-inset-*)`, and three places read
+      `insets.top`. That does not account for all four: the matches list
+      pads by a flat 64 and the profile photo by `SCREEN_TOP_PADDING`, and
+      no inset reaches either. So this is a suspect, not a diagnosis, and
+      `public/diag.html` ships beside it to settle the question with
+      numbers from the phone rather than another guess.
     -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
     <title>%WEB_TITLE%</title>
     <!--

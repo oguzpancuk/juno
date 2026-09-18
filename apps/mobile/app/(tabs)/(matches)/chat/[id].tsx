@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type GestureResponderEvent,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -22,7 +23,13 @@ import { MatchDetail } from '@/components/MatchDetail';
 import { Popup } from '@/components/Popup';
 import { ProfileView } from '@/components/ProfileView';
 import { BackChevron, BackLink, goBack } from '@/components/ui';
-import { VISIBLE_PAGES, pageAt, pageOffset, type Page } from '@/lib/chat-pages';
+import {
+  VISIBLE_PAGES,
+  indicatorPage,
+  pageOffset,
+  pagerSettle,
+  type Page,
+} from '@/lib/chat-pages';
 import { useKeyboardGap } from '@/lib/keyboard';
 import {
   MAX_MESSAGE_LENGTH,
@@ -67,6 +74,13 @@ const EMPTY: readonly string[] = [];
  * the wrong person. The same key discards an open block confirmation on
  * page 2 when a match arriving over Realtime swaps the id.
  */
+/**
+ * How long the pager has to be still before it counts as settled. Long
+ * enough not to fire between two scroll events of one gesture, short
+ * enough that leaving through the empty page still feels immediate.
+ */
+const PAGER_QUIET_MS = 120;
+
 export default function ChatScreen() {
   const { id, page } = useLocalSearchParams<{ id: string; page?: string }>();
   return (
@@ -169,6 +183,22 @@ function ChatView({
   // pages: an empty one in front of the thread that is the way out
   // (lib/chat-pages.ts), then the thread, then the match detail.
   const pager = useRef<ScrollView>(null);
+  /**
+   * The last offset seen. A release needs one: react-native-web never
+   * calls `onScrollEndDrag` — it routes that prop to an internal handler
+   * and `forwardedProps` drops it — so `onTouchEnd` is the only thing that
+   * knows the finger is up, and it carries no offset of its own. Without
+   * it a slow drag onto the exit page and a lingering release left the
+   * screen sitting on the blank page with nothing left to arm a settle.
+   *
+   * It starts as null, meaning no offset is known yet, and a release with
+   * nothing known settles nothing. The first draft started it at zero —
+   * which is the exit page's offset at every width — so the first plain
+   * tap in the thread settled on the way out and popped the screen back to
+   * the matches list 120 ms later. Touch events bubble, so a tap on a
+   * message bubble or the composer is one (review, 2026-09-18).
+   */
+  const lastX = useRef<number | null>(null);
   const [active, setActive] = useState<Page>(page);
   const [pageHeight, setPageHeight] = useState<number | null>(null);
   const applied = useRef<Page | null>(null);
@@ -176,7 +206,11 @@ function ChatView({
   // once, and a second settle event while the pop is in flight is ignored.
   const leaving = useRef(false);
   const goTo = (target: Page, animated: boolean) => {
-    pager.current?.scrollTo({ x: pageOffset(target, width), y: 0, animated });
+    const x = pageOffset(target, width);
+    // Kept in step with every programmatic move, so a release that lands
+    // before any scroll event reads where the pager actually is.
+    lastX.current = x;
+    pager.current?.scrollTo({ x, y: 0, animated });
     setActive(target);
   };
   // The param is applied once the pager has a size — a scrollTo before
@@ -191,21 +225,103 @@ function ChatView({
   useEffect(() => {
     if (pageHeight === null || applied.current === page) return;
     applied.current = page;
+    lastX.current = pageOffset(page, width);
     pager.current?.scrollTo({
-      x: pageOffset(page, width),
+      x: lastX.current,
       animated: false,
     });
     setActive(page);
   }, [page, pageHeight, width]);
+  /**
+   * The pager stops moving.
+   *
+   * Reached two ways, because one of them does not happen everywhere:
+   * `onMomentumScrollEnd` on a native fling, and a short quiet spell after
+   * the last scroll event otherwise. The web has `pagingEnabled` as CSS
+   * scroll-snap, which settles with no momentum phase and so fires no
+   * momentum end at all — which is why a swipe onto Uyum left the
+   * underline on Sohbet, and why a swipe onto the empty page never left
+   * the screen (owner, 2026-09-18).
+   */
+  const pagerWidth = useRef(width);
+  useEffect(() => {
+    pagerWidth.current = width;
+  }, [width]);
+  // Whether a finger is on the glass. `pagerSettle` refuses to leave the
+  // screen while it is, which is what separates a settle from a pause.
+  const dragging = useRef(false);
+
+  const settleAt = (x: number) => {
+    const { active: next, exit } = pagerSettle({
+      x,
+      width: pagerWidth.current,
+      dragging: dragging.current,
+    });
+    setActive(next);
+    if (!exit || leaving.current) return;
+    leaving.current = true;
+    goBack('/matches');
+  };
+  const quiet = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopWaiting = () => {
+    if (quiet.current !== null) clearTimeout(quiet.current);
+    quiet.current = null;
+  };
+  const waitForQuiet = (x: number) => {
+    stopWaiting();
+    quiet.current = setTimeout(() => {
+      quiet.current = null;
+      settleAt(x);
+    }, PAGER_QUIET_MS);
+  };
+  useEffect(() => stopWaiting, []);
   const onPageSettled = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const settled = pageAt(event.nativeEvent.contentOffset.x, width);
-    if (settled === 'back') {
-      if (leaving.current) return;
-      leaving.current = true;
-      goBack('/matches');
-      return;
-    }
-    setActive(settled);
+    stopWaiting();
+    dragging.current = false;
+    settleAt(event.nativeEvent.contentOffset.x);
+  };
+  const onDragStart = () => {
+    dragging.current = true;
+    stopWaiting();
+  };
+  const onDragEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    dragging.current = false;
+    // The snap happens after the release, so this is the earliest a settle
+    // may be considered — and the quiet spell is what waits for it.
+    waitForQuiet(event.nativeEvent.contentOffset.x);
+  };
+  /**
+   * The web's version of the above: a finger leaving, with no offset of
+   * its own.
+   *
+   * Only when the last one leaves. React Native hands the prop every
+   * ending touch, so a second finger lifting off a two-finger drag used to
+   * open the guard while one was still on the glass — and a `touchcancel`,
+   * which a browser sends when its compositor takes a touch over for
+   * scrolling, latched it open for the rest of the gesture with nothing on
+   * the web able to set it back: `onScrollBeginDrag` never fires there.
+   * That put the peek-and-hold exit back within reach (review,
+   * 2026-09-18), which is the one failure this guard exists for.
+   */
+  const onTouchRelease = (event: GestureResponderEvent) => {
+    if (event.nativeEvent.touches.length > 0) return;
+    dragging.current = false;
+    if (lastX.current !== null) waitForQuiet(lastX.current);
+  };
+  /** A finger that is moving is a finger that is down. */
+  const onTouchMove = () => {
+    dragging.current = true;
+  };
+  const onPageScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { x } = event.nativeEvent.contentOffset;
+    lastX.current = x;
+    // The underline follows the thumb rather than waiting for the release;
+    // being briefly wrong here costs an underline, never a screen.
+    setActive(indicatorPage(x, pagerWidth.current));
+    // Armed while dragging too, because a slow drag can end without an
+    // end-drag event on some renderers; `pagerSettle` is what makes that
+    // harmless — with a finger down it can only move the underline.
+    waitForQuiet(x);
   };
 
   // After every hook: hooks must run in the same order on each render.
@@ -332,6 +448,21 @@ function ChatView({
         contentOffset={{ x: pageOffset(page, width), y: 0 }}
         onLayout={onPagerLayout}
         onMomentumScrollEnd={onPageSettled}
+        onScroll={onPageScroll}
+        onScrollBeginDrag={onDragStart}
+        onScrollEndDrag={onDragEnd}
+        // The web has no drag events of its own on a scroll view; these
+        // are what tell it a finger is down.
+        onTouchStart={onDragStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchRelease}
+        // A browser sends this when its compositor takes the touch over.
+        // It goes through the same release, which ignores it while any
+        // finger is still down.
+        onTouchCancel={onTouchRelease}
+        // Often enough that the underline keeps up with the thumb, and
+        // that the quiet spell below is measured from the real last event.
+        scrollEventThrottle={16}
         // The send button is under this ScrollView too; without this a tap
         // on it with the keyboard up only dismisses the keyboard.
         keyboardShouldPersistTaps="handled"

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      The app does NOT use `viewport-fit=cover` any more, so by default
+      neither does this: measuring a viewport the app does not have would
+      answer the wrong question. `?cover=1` switches it on, so the two can
+      be compared on the same phone.
+    -->
+    <script>
+      // In the head, and before the meta is written: changing a viewport
+      // from a script at the end of the body is not applied in step with
+      // the style recalc that follows, so the page could print the insets
+      // of the configuration it was not measuring — which, for a page
+      // whose only job is to end the guessing, is the one failure it must
+      // not have.
+      document.write(
+        '<meta name="viewport" content="width=device-width, initial-scale=1' +
+          (new URLSearchParams(location.search).get('cover') === '1'
+            ? ', viewport-fit=cover'
+            : '') +
+          '" />',
+      );
+    </script>
+    <title>Juno — ölçüm</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #07060f;
+        color: #f6f3ff;
+        font:
+          15px/1.5 ui-monospace,
+          Menlo,
+          monospace;
+      }
+      body {
+        padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+      }
+      h1 {
+        font-size: 17px;
+        margin: 16px 0 8px;
+        color: #a78bfa;
+      }
+      td {
+        padding: 2px 10px 2px 0;
+        vertical-align: top;
+      }
+      td:first-child {
+        color: #9e97bd;
+        white-space: nowrap;
+      }
+      .safe {
+        position: fixed;
+        left: 0;
+        right: 0;
+        background: #e98fa0;
+        opacity: 0.5;
+      }
+      #top {
+        top: 0;
+        height: env(safe-area-inset-top);
+      }
+      #bot {
+        bottom: 0;
+        height: env(safe-area-inset-bottom);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="safe" id="top"></div>
+    <div class="safe" id="bot"></div>
+    <h1>Juno — ölçüm sayfası</h1>
+    <p id="mode" style="margin: 0 0 8px"></p>
+    <p style="color: #8a84ad; margin: 0 0 12px">
+      Bu sayfanın tek işi tarayıcının bildirdiği sayıları göstermek. Pembe
+      şeritler varsa güvenli alan boşlukları orada.
+    </p>
+    <table id="out"></table>
+    <script>
+      const cover = new URLSearchParams(location.search).get('cover') === '1';
+      document.getElementById('mode').innerHTML = cover
+        ? 'viewport-fit=<b>cover</b> — uygulamanın <i>eski</i> hâli. ' +
+          '<a href="?" style="color:#a78bfa">cover olmadan ölç</a>'
+        : 'viewport-fit <b>yok</b> — uygulamanın şu anki hâli. ' +
+          '<a href="?cover=1" style="color:#a78bfa">cover ile ölç</a>';
+      const px = (v) => Math.round(parseFloat(v) || 0);
+      const probe = document.createElement('div');
+      probe.style.cssText =
+        'position:absolute;visibility:hidden;' +
+        'padding:env(safe-area-inset-top) env(safe-area-inset-right)' +
+        ' env(safe-area-inset-bottom) env(safe-area-inset-left);' +
+        'height:100dvh';
+      document.body.appendChild(probe);
+      const cs = getComputedStyle(probe);
+      const unit = (u) => {
+        const d = document.createElement('div');
+        d.style.cssText = `position:absolute;visibility:hidden;height:100${u}`;
+        document.body.appendChild(d);
+        const h = d.getBoundingClientRect().height;
+        d.remove();
+        return Math.round(h);
+      };
+      const rows = {
+        'safe-area top': px(cs.paddingTop),
+        'safe-area bottom': px(cs.paddingBottom),
+        'safe-area left / right':
+          px(cs.paddingLeft) + ' / ' + px(cs.paddingRight),
+        'window.innerHeight': innerHeight,
+        'visualViewport.height': Math.round(visualViewport?.height ?? -1),
+        'documentElement.clientHeight': document.documentElement.clientHeight,
+        '100dvh': unit('dvh'),
+        '100svh': unit('svh'),
+        '100lvh': unit('lvh'),
+        devicePixelRatio: devicePixelRatio,
+        screen: screen.width + ' x ' + screen.height,
+        userAgent: navigator.userAgent,
+      };
+      document.getElementById('out').innerHTML = Object.entries(rows)
+        .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+        .join('');
+      probe.remove();
+    </script>
+  </body>
+</html>

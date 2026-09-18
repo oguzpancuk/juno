@@ -168,8 +168,15 @@ export const BODY_GLYPH: Readonly<Record<Body, string>> = {
   sun: '☉',
   moon: '☾',
   mercury: '☿',
-  venus: '♀',
-  mars: '♂',
+  // These two carry U+FE0E, the text variation selector, and the rest do
+  // not need it: of the eleven bodies only U+2640 and U+2642 are emoji
+  // codepoints, so only these two can be drawn from the emoji font — with
+  // its own metrics, which is why they alone sat off-centre inside their
+  // badge while the other nine were fine (owner, 2026-09-18: "venüs ve
+  // mars simgeleri daireyi ortalamıyor"). `SIGN_GLYPH` below carries it on
+  // every glyph for the same reason.
+  venus: '♀\uFE0E',
+  mars: '♂\uFE0E',
   jupiter: '♃',
   saturn: '♄',
   uranus: '♅',

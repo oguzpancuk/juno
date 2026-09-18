@@ -1,5 +1,6 @@
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabIcon } from '@/components/TabIcon';
 import { useSession } from '@/lib/session';
@@ -7,7 +8,7 @@ import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
 import { useUnreadTotal } from '@/lib/unread';
 import { badgeText } from '@/lib/unread-count';
-import { color, font, space, type } from '@/theme/tokens';
+import { color, font, glass, space, type } from '@/theme/tokens';
 
 /**
  * The three places the app lives: you, the deck, the people you matched
@@ -85,13 +86,46 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: color.text,
         tabBarInactiveTintColor: color.textFaint,
+        // The popup's tint and hairline (owner, 2026-09-18: "alt tabin de
+        // biraz saydam olmasını istiyorum, bütünlüğü bozmasın").
+        //
+        // Honestly: with the bar in flow this is a hairline change and
+        // very little else. Nothing renders behind an in-flow bar — the
+        // scene is opaque and ends above it, the root stack paints
+        // `color.bg` behind it — so the blur blurs a flat colour and
+        // `glass.sheet` over `color.bg` composites to about three levels
+        // of difference. What the owner asked for is the bar letting the
+        // sky and the photo through, and that needs content to run *under*
+        // it, which is the `position: 'absolute'` version below.
+        //
+        // In flow, deliberately. Taking it out of flow — `position:
+        // 'absolute'`, which is what lets a screen's content run *under* a
+        // translucent bar — removes its height from the layout, and three
+        // things here are built on the bar being in it: `lib/insets.ts`
+        // (a tab screen must not add `insets.bottom`, because the bar
+        // already sits below it), the deck's 13pt footer, and the chat
+        // composer's keyboard lift, which subtracts the bar's height.
+        // Absolute, the deck's ✕ and ♥ land under the bar and it takes
+        // their touches — the app's primary action — and the composer goes
+        // back under the keyboard, the bug of 2026-09-16. Doing it that
+        // way properly means every tab screen padding itself by
+        // `useBottomTabBarHeight()`; until that is done the bar stays
+        // where the rest of the app expects it, and only the material
+        // changes.
         tabBarStyle: {
-          backgroundColor: color.bg,
-          borderTopColor: color.border,
+          backgroundColor: glass.sheet,
+          borderTopColor: glass.edge,
           borderTopWidth: 1,
           height: barHeight,
           paddingBottom: centred ? 0 : bottomInset,
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={40}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
         tabBarLabelStyle: {
           ...type.caption,
           fontSize: 11,
