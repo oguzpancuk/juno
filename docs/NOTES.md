@@ -6167,3 +6167,50 @@ star caught mid-flight.
 diagnosing the sign-up failure were deleted the same session; the owner's
 own account was deleted at their request so they could walk the flow from
 the beginning. What is left on the hosted project is the twenty demos.
+
+## 2026-09-18 — The site was live and pointing at localhost
+
+The owner could not sign up, said so twice, and both times I looked in the
+wrong place. The first look blamed the mail provider; the second, the
+browser cache. What was actually wrong is that **juno-dating.com had been
+serving a bundle built against the local stack since the first deploy of
+the day**: `supabaseUrl:"http://127.0.0.1:54321"` with the demo anon key,
+inlined, for every visitor. Nothing the app did could work.
+
+The cause is one missing flag. `npm run deploy` ran `npx expo export -p
+web` without `--clear`, and Metro's cache still held the transform of
+`lib/env.ts` from an export I had run earlier that day with the local
+stack's values in the environment, for a screenshot run. `EXPO_PUBLIC_*`
+is inlined at transform time, so the cached module carried the local
+address and the export never re-read the environment. Proven rather than
+surmised: the deployed file and my local-stack build had the same md5.
+
+The deploy gate passed, correctly and uselessly. It checks the values Expo
+will resolve, and Metro never asked Expo for them — the whole failure lives
+in the gap between the inputs the gate reads and the artefact that gets
+published. That gap is the thing worth remembering: a gate on the inputs
+of a cached build is a gate on nothing.
+
+So there is a second half now. `lib/deploy-bundle.ts` reads the file that
+is about to go out and asks whether the approved address and key are in
+it, whether any other project's address is, and whether any key in it is
+not an anon key for this project. `scripts/check-deploy-bundle.ts` runs it
+between the export and `wrangler deploy`, and `--clear` is on the export.
+Both real bundles from the day were run through it before any test was
+written: the one that shipped is refused on the first rule, the corrected
+one accepted. The test cases were written after that, from those two
+shapes.
+
+Two smaller corrections to what this session already claimed. The mail
+investigation found something real — GoTrue answers `@example.com` with a
+500 because the domain publishes a null MX and the provider refuses it —
+but that was never the owner's problem, and neither was the resend
+cooldown (a 429, which the app already names correctly). And the black
+band at the bottom of the phone is still unexplained: the fix shipped for
+it was reasoned, never observed, and the site it was observed against was
+talking to a machine that was not there.
+
+The shape of the day, again, is the one the deploy-gate entry of
+2026-09-17 already named: every guard written that day was a claim until
+someone tried to get past it. This one was written, reviewed five times,
+and never once pointed at a built file.
