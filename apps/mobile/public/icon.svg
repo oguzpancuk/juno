@@ -1,0 +1,44 @@
+<!--
+  The web tab icon: the orbit mark, drawn for sixteen pixels.
+
+  Not `assets/icon.png` scaled down. That file is the iOS icon — a lit
+  night sky with a thin ring and two small spheres — and at 16 px it
+  resolves to a dark blob that a browser's dark tab strip swallows whole
+  (owner, 2026-09-17: "sekmede görünen ikon görünmüyor"). This draws the
+  same mark with the proportions a favicon needs: a heavier ring, larger
+  spheres, no glow, and corners that are transparent rather than the
+  white ones the earlier RGB PNG left behind.
+
+  Geometry is `OrbitMark`'s, in units of the 64-unit box: an ellipse
+  0.36 × 0.24 tilted -16°, with the two spheres at its ends. Changing the
+  mark means changing both, and then re-running
+  `python3 apps/mobile/scripts/web-icons.py` to rebuild favicon.ico and
+  apple-touch-icon.png from this file.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#F7A98C"/>
+      <stop offset="0.5" stop-color="#E98FA0"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <radialGradient id="warm" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#FFD3BC"/>
+      <stop offset="1" stop-color="#F7A98C"/>
+    </radialGradient>
+    <radialGradient id="cool" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#E4D8FF"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </radialGradient>
+  </defs>
+  <!-- The ground, with the corners the app icon has and the transparency
+       the app icon cannot have. -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#07060F"/>
+  <ellipse cx="32" cy="32" rx="23.04" ry="15.36"
+           transform="rotate(-16 32 32)"
+           fill="none" stroke="url(#ring)" stroke-width="4.6"/>
+  <!-- The ends of that ellipse, carried through the same rotation: the
+       cool sphere above right, the warm one below left. -->
+  <circle cx="54.15" cy="25.65" r="7.7" fill="url(#cool)"/>
+  <circle cx="9.85" cy="38.35" r="7.7" fill="url(#warm)"/>
+</svg>

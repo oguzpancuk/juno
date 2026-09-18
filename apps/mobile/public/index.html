@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!--
+      `viewport-fit=cover` so the page reaches under the notch and the home
+      indicator. Without it iOS letterboxes those strips in the page's own
+      background, which is the white the owner saw (2026-09-17: "mobil
+      browserda alt ve üst kısımlar beyaz görünüyor").
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+    <title>%WEB_TITLE%</title>
+    <!--
+      What paints the browser's own furniture: Safari's toolbars and
+      Chrome's address bar take this colour, so the app no longer sits in a
+      white frame. Same value as `color.bg` in theme/tokens.ts and as the
+      splash in app.json; all three have to move together.
+    -->
+    <meta name="theme-color" content="#07060F" />
+    <!--
+      The tab icon. Expo generates one from `web.favicon` only when the
+      project has no `public/favicon.ico`; this one is built from
+      `public/icon.svg` by `scripts/web-icons.py`, so the links are written
+      here rather than appended by the CLI. The SVG goes first for the
+      browsers that prefer it — it is the only one that stays sharp on a
+      3× display.
+    -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <style id="juno-ground">
+      /*
+        The night sky, from the first byte. React Native paints it too, but
+        only once the bundle has run, and the canvas outside the app tree —
+        the strip a mobile browser reveals when its toolbars collapse, and
+        everything behind a rubber-band scroll — is never part of that tree.
+        Left to itself it is white, top and bottom.
+
+        `color-scheme` is the other half: it is what tells the engine to
+        paint its own scaffolding — the canvas under the page, scrollbars,
+        the overscroll gutter — dark instead of white.
+      */
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        background-color: #07060f;
+      }
+      body {
+        /* No rubber-banding past the app: there is nothing behind it to
+           reveal, and on iOS the reveal is where the white came back. */
+        overscroll-behavior: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>

@@ -125,9 +125,10 @@ function* sources(dir: string): Generator<string> {
 }
 
 describe('nothing outside tokens.ts holds a colour', () => {
-  // A hex or rgb() literal inside a string. `app.json` is the one
-  // documented exception (Expo reads the splash colour before any
-  // JavaScript runs) and is checked separately below.
+  // A hex or rgb() literal inside a string. Two documented exceptions,
+  // both of them files read before any JavaScript runs — `app.json`, for
+  // the splash and the Android icon, and the web page's own head and tab
+  // icon under `public/`. Each is checked against the token below.
   const literal = /(['"`])#[0-9a-f]{3,8}\1|\brgba?\(/i;
 
   it('app, components and lib are clean', () => {
@@ -143,6 +144,42 @@ describe('nothing outside tokens.ts holds a colour', () => {
       }
     }
     expect(hits).toEqual([]);
+  });
+
+  it('the web page and its tab icon paint the ground the tokens do', () => {
+    // The browser paints its canvas, its toolbars and the icon's ground
+    // before the bundle exists, so these three cannot read `tokens.ts`.
+    // They can be held to it: a `color.bg` that moved without these
+    // moving is exactly the white edge this pair of files was written to
+    // remove (owner, 2026-09-17).
+    const html = readFileSync(join(MOBILE, 'public', 'index.html'), 'utf8');
+    const svg = readFileSync(join(MOBILE, 'public', 'icon.svg'), 'utf8');
+    const hexes = (text: string, pattern: RegExp): string[] =>
+      [...text.matchAll(pattern)].map((m) => (m[1] ?? '').toUpperCase());
+
+    // Three grounds: the theme-color the toolbars take, the page's own
+    // background, and the icon's rounded square.
+    const grounds = [
+      ...hexes(html, /(?:content="|background-color:\s*)(#[0-9a-fA-F]{6})/g),
+      ...hexes(svg, /fill="(#[0-9a-fA-F]{6})"/g),
+    ];
+    expect(grounds).toEqual([color.bg, color.bg, color.bg]);
+
+    // And the mark itself is the product's one gradient: the ring runs
+    // through all three stops in order, and each sphere ends on one of its
+    // ends — the warm one below left, the cool one above right.
+    const defs = (id: string): string => {
+      const block = new RegExp(
+        `<(linear|radial)Gradient id="${id}"[\\s\\S]*?</\\1Gradient>`,
+      ).exec(svg);
+      expect(block, `no gradient "${id}" in icon.svg`).not.toBeNull();
+      return block === null ? '' : block[0];
+    };
+    const stops = (id: string): string[] =>
+      hexes(defs(id), /stop-color="(#[0-9a-fA-F]{6})"/g);
+    expect(stops('ring')).toEqual([...gradient]);
+    expect(stops('warm').at(-1)).toBe(color.warm);
+    expect(stops('cool').at(-1)).toBe(color.cool);
   });
 
   it('app.json paints the ground the tokens do', () => {

@@ -52,11 +52,12 @@ def page(size: int, background: str, mark_size: int, color: str) -> str:
 
 # name -> (canvas px, background, mark px, mark colour)
 # iOS icon must be opaque; adaptive foreground/monochrome keep the mark inside
-# Android's 66% safe zone; splash and favicon sit on their own backgrounds.
+# Android's 66% safe zone; the splash sits on its own background. The web
+# tab icon is not here: it needs its own proportions to survive sixteen
+# pixels, and lives in public/icon.svg with scripts/web-icons.py.
 TARGETS: dict[str, tuple[int, str, int, str]] = {
     "icon.png": (1024, NIGHT_GLOW, 680, "url(#warm)"),
     "splash-icon.png": (1024, "transparent", 900, "url(#warm)"),
-    "favicon.png": (64, NIGHT, 44, "url(#warm)"),
     "android-icon-background.png": (1024, NIGHT_GLOW, 0, "none"),
     "android-icon-foreground.png": (1024, "transparent", 560, "url(#warm)"),
     "android-icon-monochrome.png": (1024, "transparent", 560, "#ffffff"),
