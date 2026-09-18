@@ -5,7 +5,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { z } from 'zod';
@@ -18,10 +17,16 @@ import {
   resendSecondsLeft,
 } from '@/lib/otp';
 import { supabase } from '@/lib/supabase';
-import { BackLink, GradientButton, LinkText, OrbitMark } from '@/components/ui';
+import {
+  BackLink,
+  Field,
+  GradientButton,
+  LinkText,
+  OrbitMark,
+} from '@/components/ui';
 import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
-import { color, font, glass, radius, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * The step between a sign-up and a session.
@@ -182,15 +187,14 @@ export default function Verify() {
       <Text style={styles.subtitle}>{t.verify.subtitle(email)}</Text>
       <View style={styles.form}>
         <Text style={styles.label}>{t.verify.label}</Text>
-        <TextInput
+        <Field
           testID="code"
-          style={styles.input}
+          style={styles.code}
           value={code}
           // Normalised on the way in, so a pasted "123 456" is a code and
           // a seventh digit is not typed over the first six.
           onChangeText={(raw) => setCode(normalizeOtp(raw))}
           placeholder={t.verify.placeholder}
-          placeholderTextColor={color.textFaint}
           keyboardType="number-pad"
           maxLength={OTP_LENGTH}
           // Offers the code straight from the mail on iOS.
@@ -240,18 +244,9 @@ const styles = StyleSheet.create({
   subtitle: { ...type.bodySmall, color: color.textFaint },
   form: { gap: space.md, marginTop: space.md },
   label: { ...type.bodySmall, color: color.textMuted },
-  input: {
-    fontFamily: font.regular,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.edge,
-    borderRadius: radius.md,
-    color: color.text,
-    fontSize: 28,
-    letterSpacing: 8,
-    textAlign: 'center',
-    padding: space.lg,
-  },
+  // Only what the shared `Field` does not give: the code is set large,
+  // spaced out and centred, so six digits read as six digits.
+  code: { fontSize: 28, letterSpacing: 8, textAlign: 'center' },
   hint: { ...type.bodySmall, color: color.textFaint },
   error: { ...type.body, color: color.danger, marginTop: space.md },
   notice: { ...type.body, color: color.textMuted, marginTop: space.md },

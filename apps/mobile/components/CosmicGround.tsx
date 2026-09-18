@@ -16,6 +16,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
+import { useSvgId } from '@/lib/svg-id';
 import { color } from '@/theme/tokens';
 
 /**
@@ -67,6 +68,12 @@ export function CosmicGround({
 }) {
   const { width, height } = useWindowDimensions();
   const still = useReducedMotion();
+  // One ground is behind every screen, and the router keeps more than one
+  // screen mounted, so these three names are the ones most certain to
+  // collide. See lib/svg-id.ts.
+  const planetFill = useSvgId('ground-planet');
+  const rim = useSvgId('ground-rim');
+  const horizonLine = useSvgId('ground-horizon');
 
   const planetR = width * 0.62;
   const planetCx = width * 0.5;
@@ -82,16 +89,16 @@ export function CosmicGround({
     >
       <Svg width={width} height={height}>
         <Defs>
-          <RadialGradient id="ground-planet" cx="62%" cy="78%" r="70%">
+          <RadialGradient id={planetFill.id} cx="62%" cy="78%" r="70%">
             <Stop offset="0" stopColor={color.surfaceHigh} />
             <Stop offset="1" stopColor={color.bg} />
           </RadialGradient>
-          <SvgGradient id="ground-rim" x1="0" y1="1" x2="1" y2="0">
+          <SvgGradient id={rim.id} x1="0" y1="1" x2="1" y2="0">
             <Stop offset="0" stopColor={color.warm} />
             <Stop offset="0.5" stopColor={color.pink} />
             <Stop offset="1" stopColor={color.cool} />
           </SvgGradient>
-          <SvgGradient id="ground-horizon" x1="0" y1="0" x2="1" y2="0">
+          <SvgGradient id={horizonLine.id} x1="0" y1="0" x2="1" y2="0">
             <Stop offset="0" stopColor={color.cool} />
             <Stop offset="0.5" stopColor={color.pink} />
             <Stop offset="1" stopColor={color.warm} />
@@ -103,7 +110,7 @@ export function CosmicGround({
               cx={planetCx}
               cy={planetCy}
               r={planetR}
-              stroke="url(#ground-rim)"
+              stroke={rim.url}
               strokeWidth={28}
               opacity={0.14}
               fill="none"
@@ -112,13 +119,13 @@ export function CosmicGround({
               cx={planetCx}
               cy={planetCy}
               r={planetR}
-              fill="url(#ground-planet)"
+              fill={planetFill.url}
             />
             <Circle
               cx={planetCx}
               cy={planetCy}
               r={planetR}
-              stroke="url(#ground-rim)"
+              stroke={rim.url}
               strokeWidth={1.5}
               opacity={0.85}
               fill="none"
@@ -131,7 +138,7 @@ export function CosmicGround({
               cx={width * 0.5}
               cy={horizonCy}
               r={horizonR}
-              stroke="url(#ground-horizon)"
+              stroke={horizonLine.url}
               strokeWidth={24}
               opacity={0.12}
               fill="none"
@@ -140,7 +147,7 @@ export function CosmicGround({
               cx={width * 0.5}
               cy={horizonCy}
               r={horizonR}
-              stroke="url(#ground-horizon)"
+              stroke={horizonLine.url}
               strokeWidth={1}
               opacity={0.6}
               fill="none"
@@ -217,7 +224,7 @@ function Nebula({
       }),
     [drift],
   );
-  const gradientId = `nebula-${index}`;
+  const gradientId = useSvgId(`nebula-${index}`).id;
   return (
     <Animated.View
       style={[

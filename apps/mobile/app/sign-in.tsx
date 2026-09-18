@@ -1,11 +1,10 @@
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -19,14 +18,16 @@ import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import {
   BackLink,
+  Field,
   GradientButton,
   LinkText,
   OrbitMark,
   Wordmark,
 } from '@/components/ui';
 import { CosmicGround } from '@/components/CosmicGround';
+import { LegalLink } from '@/components/LegalText';
 import { t } from '@/lib/strings';
-import { color, font, glass, radius, space, type } from '@/theme/tokens';
+import { color, space, type } from '@/theme/tokens';
 
 /**
  * One screen for both doors: sign-up and sign-in with an e-mail and a
@@ -144,13 +145,11 @@ export default function SignIn() {
       </Text>
       <View style={styles.form}>
         <Text style={styles.label}>{t.signIn.emailLabel}</Text>
-        <TextInput
+        <Field
           testID="email"
-          style={styles.input}
           value={email}
           onChangeText={setEmail}
           placeholder={t.signIn.emailPlaceholder}
-          placeholderTextColor={color.textFaint}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -159,9 +158,8 @@ export default function SignIn() {
         />
         {emailHint ? <Text style={styles.fieldError}>{emailHint}</Text> : null}
         <Text style={styles.label}>{t.signIn.passwordLabel}</Text>
-        <TextInput
+        <Field
           testID="password"
-          style={styles.input}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -196,9 +194,7 @@ export default function SignIn() {
           onPress={() => void submit()}
         />
         <Text style={styles.consent}>{t.signIn.consent}</Text>
-        <Link href="/legal" style={styles.consentLink}>
-          {t.legal.open}
-        </Link>
+        <LegalLink style={styles.consentLink} />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {/* Not while a request is in flight: its answer would land under
@@ -227,16 +223,6 @@ const styles = StyleSheet.create({
   title: { ...type.heading, color: color.textMuted },
   form: { gap: space.md, marginTop: space.md },
   label: { ...type.bodySmall, color: color.textMuted },
-  input: {
-    fontFamily: font.regular,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.edge,
-    borderRadius: radius.md,
-    color: color.text,
-    fontSize: 17,
-    padding: space.lg,
-  },
   hint: { ...type.bodySmall, color: color.textFaint },
   fieldError: { ...type.bodySmall, color: color.danger },
   consent: { ...type.bodySmall, color: color.textFaint },

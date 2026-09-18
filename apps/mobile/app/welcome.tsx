@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CosmicGround } from '@/components/CosmicGround';
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui';
 import type { Availability, Provider } from '@/lib/oauth';
 import { providerAvailability, signInWithProvider } from '@/lib/providers';
+import { LegalLink } from '@/components/LegalText';
 import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
 
@@ -128,9 +129,10 @@ export default function WelcomeScreen() {
           {t.welcome.haveAccount}
         </LinkText>
         <Text style={styles.consent}>{t.signIn.consent}</Text>
-        <Link href="/legal" style={styles.consentLink}>
-          {t.onboarding.consentLink}
-        </Link>
+        <LegalLink
+          label={t.onboarding.consentLink}
+          style={styles.consentLink}
+        />
       </View>
     </View>
   );

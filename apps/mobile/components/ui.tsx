@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import {
   createContext,
+  forwardRef,
   useContext,
   useEffect,
   useMemo,
@@ -16,8 +17,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   type StyleProp,
+  type TextInputProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -30,6 +33,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
+import { useSvgId } from '@/lib/svg-id';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
   color,
@@ -401,6 +405,7 @@ export function BackChevron({
  * `assets/brand/orbit-mark.png` stays as the icon's source.
  */
 export function OrbitMark({ size = 96 }: { size?: number }) {
+  const ring = useSvgId('orbit-ring');
   const still = useReducedMotion();
   const [turn] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -452,7 +457,7 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
     >
       <Svg width={size} height={size}>
         <Defs>
-          <SvgLinearGradient id="orbit-ring" x1="0" y1="1" x2="1" y2="0">
+          <SvgLinearGradient id={ring.id} x1="0" y1="1" x2="1" y2="0">
             <Stop offset="0" stopColor={gradient[0]} />
             <Stop offset="0.5" stopColor={gradient[1]} />
             <Stop offset="1" stopColor={gradient[2]} />
@@ -465,7 +470,7 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
           rx={a}
           ry={b}
           transform={`rotate(${ORBIT_TILT_DEG} ${size / 2} ${size / 2})`}
-          stroke="url(#orbit-ring)"
+          stroke={ring.url}
           strokeWidth={Math.max(6, size * 0.09)}
           opacity={0.18}
           fill="none"
@@ -476,7 +481,7 @@ export function OrbitMark({ size = 96 }: { size?: number }) {
           rx={a}
           ry={b}
           transform={`rotate(${ORBIT_TILT_DEG} ${size / 2} ${size / 2})`}
-          stroke="url(#orbit-ring)"
+          stroke={ring.url}
           strokeWidth={Math.max(1.5, size * 0.028)}
           fill="none"
         />
@@ -556,6 +561,7 @@ function Sphere({
   tone: 'warm' | 'cool';
   offsetDeg: 0 | 180;
 }) {
+  const paint = useSvgId(`sphere-${tone}`);
   const glow = size * 2.6;
   const [light, mid, dark] =
     tone === 'warm'
@@ -594,7 +600,7 @@ function Sphere({
             />
             <Svg width={size} height={size}>
               <Defs>
-                <RadialGradient id={`sphere-${tone}`} cx="35%" cy="30%" r="70%">
+                <RadialGradient id={paint.id} cx="35%" cy="30%" r="70%">
                   <Stop offset="0" stopColor={light} />
                   <Stop offset="0.35" stopColor={mid} />
                   <Stop offset="1" stopColor={dark} />
@@ -604,7 +610,7 @@ function Sphere({
                 cx={size / 2}
                 cy={size / 2}
                 r={size / 2}
-                fill={`url(#sphere-${tone})`}
+                fill={paint.url}
               />
             </Svg>
           </View>
@@ -772,6 +778,38 @@ export function Halo({
 }
 
 /**
+ * Every text field in the product: the door's two, the code box and the
+ * eight on onboarding.
+ *
+ * It exists because there were three copies of the same style with three
+ * different corners — 10 on onboarding, 16 on sign-in and on the code
+ * screen — and the owner pointed at the squarest of them (2026-09-17:
+ * "kayıt olduktan sonra gelen tarih inboxları köşeli, yuvarlak olmalı …
+ * ayrıca textboxlar da yuvarlak olmalı"). One radius now, `radius.lg`,
+ * the same corner the cards and the sheets carry, so a field reads as
+ * part of the same design rather than as a browser control.
+ *
+ * `style` is merged over the base, for the two fields that need more than
+ * the base gives: the date boxes, which are narrow and centred, and the
+ * code box, which is set large and letter-spaced.
+ */
+export const Field = forwardRef<TextInput, TextInputProps>(function Field(
+  { style, ...props },
+  ref,
+) {
+  return (
+    <TextInput
+      ref={ref}
+      // One placeholder colour for all of them; every caller used to pass
+      // it and one of them would eventually forget.
+      placeholderTextColor={color.textFaint}
+      {...props}
+      style={[s.field, style]}
+    />
+  );
+});
+
+/**
  * A soft light behind something — the mark on the door, later the ring on
  * the match page. A radial gradient in SVG rather than a blurred view: the
  * same code renders on the web, where a native blur has no equivalent, and
@@ -785,6 +823,7 @@ export function Glow({
   size: number;
   style?: StyleProp<ViewStyle>;
 }) {
+  const paint = useSvgId('glow');
   const r = size / 2;
   // The Svg inside a View that carries the hiding: `aria-hidden` on the
   // Svg itself reaches neither VoiceOver nor TalkBack, since the element
@@ -794,13 +833,13 @@ export function Glow({
     <View style={[s.glow, style]} pointerEvents="none" aria-hidden>
       <Svg width={size} height={size}>
         <Defs>
-          <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <RadialGradient id={paint.id} cx="50%" cy="50%" r="50%">
             <Stop offset="0" stopColor={color.warm} stopOpacity={0.42} />
             <Stop offset="0.5" stopColor={color.cool} stopOpacity={0.16} />
             <Stop offset="1" stopColor={color.cool} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Circle cx={r} cy={r} r={r} fill="url(#glow)" />
+        <Circle cx={r} cy={r} r={r} fill={paint.url} />
       </Svg>
     </View>
   );
@@ -827,6 +866,16 @@ const s = StyleSheet.create({
   },
   body: { ...type.body, color: color.text },
   bodySmall: { ...type.bodySmall, color: color.textMuted },
+  field: {
+    fontFamily: font.regular,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    borderRadius: radius.lg,
+    color: color.text,
+    fontSize: 17,
+    padding: space.lg,
+  },
   buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },
   buttonDim: { opacity: 0.6 },
   button: {

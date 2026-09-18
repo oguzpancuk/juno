@@ -1,6 +1,6 @@
 import { isValidCalendarDate, searchCities, type City } from '@juno/geo';
 import { deviceLocation } from '@/lib/location';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -9,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -21,13 +20,14 @@ import {
   type Interest,
 } from '@/lib/profile';
 import { Calculating, STEP_MS } from '@/components/Calculating';
-import { Chip, GradientButton } from '@/components/ui';
+import { Chip, Field, GradientButton } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { CosmicGround } from '@/components/CosmicGround';
+import { LegalLink } from '@/components/LegalText';
 import { t } from '@/lib/strings';
-import { color, font, glass, space } from '@/theme/tokens';
+import { color, font, glass, radius, space } from '@/theme/tokens';
 
 const num = (s: string): number | null =>
   /^\d{1,4}$/.test(s) ? Number(s) : null;
@@ -182,9 +182,8 @@ export default function Onboarding() {
         </Pressable>
 
         <Text style={styles.label}>{t.onboarding.name}</Text>
-        <TextInput
+        <Field
           testID="display-name"
-          style={styles.input}
           value={displayName}
           onChangeText={setDisplayName}
           maxLength={40}
@@ -217,16 +216,14 @@ export default function Onboarding() {
         </View>
 
         <Text style={styles.label}>{t.onboarding.city}</Text>
-        <TextInput
+        <Field
           testID="city"
-          style={styles.input}
           value={city ? `${city.name}, ${city.country}` : cityQuery}
           onChangeText={(text) => {
             setCity(null);
             setCityQuery(text);
           }}
           placeholder={t.onboarding.cityPlaceholder}
-          placeholderTextColor={color.textFaint}
           autoCorrect={false}
         />
         {cityHits.map((hit) => (
@@ -247,7 +244,7 @@ export default function Onboarding() {
 
         <Text style={styles.label}>{t.onboarding.date}</Text>
         <View style={styles.row}>
-          <TextInput
+          <Field
             testID="day"
             style={styles.small}
             value={day}
@@ -255,9 +252,8 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="GG"
-            placeholderTextColor={color.textFaint}
           />
-          <TextInput
+          <Field
             testID="month"
             style={styles.small}
             value={month}
@@ -265,9 +261,8 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="AA"
-            placeholderTextColor={color.textFaint}
           />
-          <TextInput
+          <Field
             testID="year"
             style={styles.small}
             value={year}
@@ -275,13 +270,12 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={4}
             placeholder="YYYY"
-            placeholderTextColor={color.textFaint}
           />
         </View>
 
         <Text style={styles.label}>{t.onboarding.time}</Text>
         <View style={styles.row}>
-          <TextInput
+          <Field
             testID="hour"
             style={styles.small}
             value={hour}
@@ -289,9 +283,8 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="SS"
-            placeholderTextColor={color.textFaint}
           />
-          <TextInput
+          <Field
             testID="minute"
             style={styles.small}
             value={minute}
@@ -299,7 +292,6 @@ export default function Onboarding() {
             keyboardType="number-pad"
             maxLength={2}
             placeholder="DD"
-            placeholderTextColor={color.textFaint}
           />
         </View>
 
@@ -317,9 +309,10 @@ export default function Onboarding() {
           </View>
           <Text style={styles.consentText}>{t.onboarding.consent}</Text>
         </Pressable>
-        <Link href="/legal" style={styles.consentLink}>
-          {t.onboarding.consentLink}
-        </Link>
+        <LegalLink
+          label={t.onboarding.consentLink}
+          style={styles.consentLink}
+        />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <View style={styles.submit}>
           <GradientButton
@@ -386,25 +379,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
   },
-  input: {
-    fontFamily: font.regular,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.edge,
-    color: color.text,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-  },
+  // Only what the shared `Field` does not give: a date box is narrow and
+  // its two or four digits sit in the middle.
   small: {
-    fontFamily: font.regular,
-    backgroundColor: glass.fill,
-    borderWidth: 1,
-    borderColor: glass.edge,
-    color: color.text,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
+    paddingHorizontal: space.md,
     // On the web an `input` carries an intrinsic width of about twenty
     // characters, and a flex item's automatic minimum keeps it there, so
     // three of these wrapped onto three lines where iOS put them side by
@@ -418,7 +396,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  hit: { padding: 12, backgroundColor: color.surfaceHigh, borderRadius: 8 },
+  hit: {
+    padding: space.md,
+    backgroundColor: glass.fillHigh,
+    borderRadius: radius.md,
+  },
   hitText: { fontFamily: font.regular, color: color.text },
   hint: {
     fontFamily: font.regular,

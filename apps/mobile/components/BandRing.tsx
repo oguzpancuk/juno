@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Glow } from '@/components/ui';
+import { useSvgId } from '@/lib/svg-id';
 import { color, gradient } from '@/theme/tokens';
 
 /**
@@ -38,6 +39,8 @@ export function BandRing({
   children?: ReactNode;
   testID?: string;
 }) {
+  // A deck shows several of these at once; see lib/svg-id.ts.
+  const ring = useSvgId('band-ring');
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const filled = (BANDS.indexOf(band) + 1) / BANDS.length;
@@ -58,7 +61,7 @@ export function BandRing({
       ) : null}
       <Svg width={size} height={size}>
         <Defs>
-          <LinearGradient id="band-ring" x1="0" y1="0" x2="1" y2="1">
+          <LinearGradient id={ring.id} x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor={gradient[0]} />
             <Stop offset="0.5" stopColor={gradient[1]} />
             <Stop offset="1" stopColor={gradient[2]} />
@@ -76,7 +79,7 @@ export function BandRing({
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="url(#band-ring)"
+          stroke={ring.url}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${circumference * filled} ${circumference}`}

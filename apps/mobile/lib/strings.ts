@@ -2,7 +2,7 @@
 export const t = {
   appName: 'Juno',
   welcome: {
-    pitch: 'İki haritanın\narasında ne var,\nonu gör.',
+    pitch: 'İki haritanın\narasında\nne var?',
     withApple: 'Apple ile giriş yap',
     withGoogle: 'Google ile giriş yap',
     haveAccount: 'Zaten hesabın var mı? Giriş yap',
