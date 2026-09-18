@@ -8,7 +8,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "gen:types": "supabase gen types typescript --local > tests/database.types.ts"
+    "gen:types": "npx supabase@2.117.0 gen types typescript --local > tests/database.types.ts.new && mv tests/database.types.ts.new tests/database.types.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# `expo export --output-dir dist-local`: a build pointed at the local
+# stack, for driving the web client without touching the deploy output.
+dist-local/
 build/
 .env
 .env.*
@@ -40,3 +43,6 @@ apps/mobile/android/
 
 # The owner's seed portraits: local, licensed by them, never committed.
 supabase/seed-photos/
+
+# `npm run gen:types -w @juno/supabase` writes this first, then renames it.
+supabase/tests/database.types.ts.new
