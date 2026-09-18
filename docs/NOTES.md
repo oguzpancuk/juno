@@ -6302,3 +6302,79 @@ strips so they can be seen, `innerHeight`, `visualViewport.height`,
 `clientHeight`, and `100dvh`/`100svh`/`100lvh` side by side. One
 screenshot of it settles both questions. It is unlinked and comes out
 again once it has done its job.
+
+## 2026-09-18 — The thing that was too far down was a status bar we drew twice
+
+The owner's verdict on the last deploy: "mars ve venüs dışında hiçbir şey
+düzelmemiş". That is the most useful sentence of the day, because it kills
+a hypothesis outright — removing `viewport-fit=cover` moved nothing, so
+the safe area was never the cause. The review had said so and I had
+shipped it anyway, as a suspect, which is the only reason it was cheap to
+be wrong about.
+
+Measuring their screenshot settled it. The matches screen, 390 × 849
+points: "YENİ EŞLEŞMELER" sits 126 points down. The browser's status bar
+is about 54 of those, and `matches.tsx` then added a flat `paddingTop:
+64`. Two status bars, one after the other — and the same literal is in
+`legal.tsx`, `onboarding.tsx` and the starter screen, with `top: 56` on
+the two doors, `Math.max(insets.top, 44)` in the chat header, and
+`SCREEN_TOP_PADDING = 68` under every `Screen`.
+
+Every one of those numbers is a status bar's height. They are right on the
+phone, where the app owns the whole screen and has to keep out from under
+it, and they are that many points of nothing in a browser, which has
+already made the room. So the clearance is asked for now rather than
+assumed: `useTopClearance(own)` is `insets.top + own`, which is the status
+bar plus a gutter on a device and just the gutter in a browser. The web
+moves up by a status bar, which is exactly the complaint; what it does on
+a device is a range, and the range is below rather than summarised here.
+
+`SCREEN_TOP_PADDING` is `SCREEN_TOP_GUTTER` now, and it is 20 rather than
+68, because the part it was always meant to express was the breathing
+room. The status bar was never its business.
+
+**What it moves, and how much of that is really measured.** Driving the
+web client before and after at 390 × 844, the detector — first row with
+more than five pixels above a brightness threshold — gives onboarding 70
+points down to 26 and the sign-in back link about 76 to 34. Only the first
+is trustworthy on its own: −44 is exactly what the code changes (64 → 20).
+The sign-in figure is −42 where the code says −36, and a review found why:
+the first nebula's disc top sits around 22 points and drifts over a 46
+second loop, so a brightness detector trips somewhere inside a moving
+gradient rather than on the text. The method is evidence only where its
+delta matches the arithmetic independently, and saying so is the point —
+this is the third attempt at this complaint and the first one with any
+numbers at all.
+
+**What it does not move, which is worth saying plainly.** The profile
+photo is one of the four things the owner listed, and this change cannot
+touch it: a bleed `Screen` publishes its clearance through `useTopGap` and
+`ProfileView` cancels it with an equal negative margin, so the photo's
+offset is zero whatever the clearance is — 68 before, 20 now. It was never
+the padding. An earlier entry and the comment in `public/index.html` both
+said the photo was padded by `SCREEN_TOP_PADDING`; that was wrong, and the
+photo not reaching the very top is still unexplained.
+
+**And the native arithmetic is a range, not "a few points".** With
+`insets.top` at 59 on a Dynamic Island phone, 47 on a notch and 20 on an
+SE: `Screen` goes 68 → 79 / 67 / 40, the two doors 56 → 79 / 67 / 40, the
+chat header 63 / 51 / 48 → 71 / 59 / 32. Only the notched case is within a
+few points; the SE moves up by nearly thirty and the Island phone's doors
+move down by twenty. Nothing native ships today — there is no EAS project
+— and a gutter under the status bar is defensible everywhere, but "within
+a few points" was a claim the arithmetic does not support and it is gone
+from the sentence above rather than only corrected down here.
+
+The welcome screen was in the first draft of this change and is not in it
+any more. Its hero had a flat 96 like everything else, and converting it
+was scope creep: the owner never listed that screen, and it is the one
+top-level screen with no scroll view, so on a device the extra inset comes
+out of the bottom — where the consent line and the legal link are — with
+no scroll to recover them at a large text size. The measurement that
+justified touching it (130 → 126) was the nebula, not the mark.
+
+The bottom band is still open, and the same screenshot narrowed it: the
+sky stops at about 700 points, the browser's toolbar starts at 777, and
+the 70 points between them are flat. Seventy measured against a web tab
+bar that computes to 53 — close enough to be suggestive, not close enough
+to be the answer. `diag.html` is still how that one ends.

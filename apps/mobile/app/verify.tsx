@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { z } from 'zod';
+import { useTopClearance } from '@/lib/insets';
 import { authErrorText } from '@/lib/errors';
 import {
   OTP_LENGTH,
@@ -23,6 +24,7 @@ import {
   GradientButton,
   LinkText,
   OrbitMark,
+  SCREEN_TOP_GUTTER,
 } from '@/components/ui';
 import { CosmicGround } from '@/components/CosmicGround';
 import { t } from '@/lib/strings';
@@ -58,6 +60,7 @@ import { color, space, type } from '@/theme/tokens';
 const emailParamSchema = z.string().trim().toLowerCase().email();
 
 export default function Verify() {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const params = useLocalSearchParams<{ email?: string; resend?: string }>();
   const parsedEmail = emailParamSchema.safeParse(params.email ?? '');
   const email = parsedEmail.success ? parsedEmail.data : null;
@@ -177,7 +180,7 @@ export default function Verify() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <CosmicGround planet={false} horizon={false} />
-      <View style={styles.back}>
+      <View style={[styles.back, { top: topPadding }]}>
         <BackLink label={t.verify.back} fallback="/welcome" />
       </View>
       <View style={styles.mark}>
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
-  back: { position: 'absolute', top: 56, left: space.xl },
+  back: { position: 'absolute', left: space.xl },
   mark: { alignItems: 'center', marginBottom: space.lg },
   title: { ...type.heading, color: color.textMuted },
   subtitle: { ...type.bodySmall, color: color.textFaint },

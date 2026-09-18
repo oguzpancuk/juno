@@ -1,4 +1,5 @@
 import { isValidCalendarDate, searchCities, type City } from '@juno/geo';
+import { useTopClearance } from '@/lib/insets';
 import { deviceLocation } from '@/lib/location';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -20,7 +21,12 @@ import {
   type Interest,
 } from '@/lib/profile';
 import { Calculating, STEP_MS } from '@/components/Calculating';
-import { Chip, Field, GradientButton } from '@/components/ui';
+import {
+  Chip,
+  Field,
+  GradientButton,
+  SCREEN_TOP_GUTTER,
+} from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -46,6 +52,7 @@ const heldFor = (started: number): Promise<void> =>
   );
 
 export default function Onboarding() {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const session = useSession();
   const [displayName, setDisplayName] = useState('');
   const [gender, setGender] = useState<Gender>('woman');
@@ -162,7 +169,7 @@ export default function Onboarding() {
     >
       <CosmicGround planet={false} horizon={false} />
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: topPadding }]}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>{t.onboarding.title}</Text>
@@ -329,7 +336,7 @@ export default function Onboarding() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
-  content: { padding: 24, paddingTop: 64, gap: 8 },
+  content: { padding: 24, gap: 8 },
   title: { color: color.text, fontSize: 26, fontFamily: font.semibold },
   consentRow: {
     flexDirection: 'row',

@@ -8,7 +8,9 @@ import {
   Text,
   View,
 } from 'react-native';
+import { SCREEN_TOP_GUTTER } from '@/components/ui';
 import { Avatar } from '@/components/Avatar';
+import { useTopClearance } from '@/lib/insets';
 import { useScreenName } from '@/lib/a11y';
 import { fetchMatches, type MatchProfileRow } from '@/lib/matches';
 import { usePhotoSources } from '@/lib/photos';
@@ -54,6 +56,7 @@ function firstPhotos(rows: readonly MatchProfileRow[]): string[] {
 }
 
 export default function Matches() {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   useScreenName(t.tabs.matches);
   const session = useSession();
   const userId =
@@ -99,7 +102,7 @@ export default function Matches() {
       <CosmicGround planet={false} horizon={false} />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: topPadding }]}
         testID="matches-screen"
       >
         {rows === 'loading' ? (
@@ -220,7 +223,7 @@ export default function Matches() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   scroll: { flex: 1 },
-  content: { padding: 24, paddingTop: 64, gap: 12 },
+  content: { padding: 24, gap: 12 },
   muted: { fontFamily: font.regular, color: color.textMuted },
   sectionLabel: { ...type.label, color: color.textFaint },
   // Runs to both screen edges like the photos do, so the faces scroll out

@@ -33,6 +33,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
+import { useTopClearance } from '@/lib/insets';
 import { useSvgId } from '@/lib/svg-id';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
@@ -58,8 +59,14 @@ import {
  */
 export const SCREEN_PADDING = space.xl;
 
-/** The clearance a `Screen` keeps above its first child, for the status bar. */
-export const SCREEN_TOP_PADDING = 68;
+/**
+ * The breathing room a `Screen` keeps above its first child, on top of
+ * whatever the host has already cleared. The status bar's own height is
+ * not in it — `useTopClearance` adds that where there is one — because a
+ * browser has already made that room and adding it again put every title
+ * on every screen a status bar too low (owner, 2026-09-18).
+ */
+export const SCREEN_TOP_GUTTER = 20;
 
 /**
  * How much of the window a full-screen photo takes, on the deck and on the
@@ -80,7 +87,7 @@ export const PHOTO_SCREEN_FRACTION = 0.56;
  * The vertical twin of `SCREEN_PADDING`: the gutter is cancelled with a
  * negative margin by a child that runs edge to edge, and the top gap is
  * cancelled the same way — except that its size differs per host, so it
- * cannot be a constant. `Screen` keeps its 68 on the content container and
+ * cannot be a constant. `Screen` keeps its clearance on the content container and
  * publishes it; a bleed `Popup` gives its own up at the sheet and so
  * publishes 0.
  */
@@ -97,7 +104,7 @@ export function Screen({
 }: {
   children: ReactNode;
   /**
-   * The first child paints to the top edge. It cancels `SCREEN_TOP_PADDING`
+   * The first child paints to the top edge. It cancels the clearance
    * itself through `useTopGap`; the padding stays on the content container
    * so every other branch of the screen — a spinner, an error — keeps its
    * clearance without asking. The top also stops rubber-banding, which is
@@ -107,6 +114,7 @@ export function Screen({
   bleed?: boolean;
   testID?: string;
 }) {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   return (
     <View style={s.screen}>
       {/* The sky under every screen (owner, 2026-09-16); the scroll view
@@ -114,12 +122,12 @@ export function Screen({
       <CosmicGround planet={false} horizon={false} />
       <ScrollView
         style={s.scroll}
-        contentContainerStyle={s.screenContent}
+        contentContainerStyle={[s.screenContent, { paddingTop: topPadding }]}
         bounces={!bleed}
         overScrollMode={bleed ? 'never' : 'auto'}
         testID={testID}
       >
-        <TopGapContext.Provider value={bleed ? SCREEN_TOP_PADDING : 0}>
+        <TopGapContext.Provider value={bleed ? topPadding : 0}>
           {children}
         </TopGapContext.Provider>
       </ScrollView>
@@ -850,7 +858,6 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   screenContent: {
     padding: SCREEN_PADDING,
-    paddingTop: SCREEN_TOP_PADDING,
     // The gutter, not more: the tab bar under this screen already sits
     // between the last card and the home indicator (owner, 2026-09-15:
     // too much space under "Tüm haritanı gör").

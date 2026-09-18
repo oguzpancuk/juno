@@ -8,14 +8,20 @@ import {
   View,
 } from 'react-native';
 import { CosmicGround } from '@/components/CosmicGround';
-import { BackLink, Body, GradientButton, OutlineButton } from '@/components/ui';
+import {
+  BackLink,
+  Body,
+  GradientButton,
+  OutlineButton,
+  SCREEN_TOP_GUTTER,
+} from '@/components/ui';
 import { sendMessage } from '@/lib/chat';
 import { fetchMatch, type MatchProfileRow } from '@/lib/matches';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { chatHref } from '@/lib/routes';
 import { starterOptions } from '@/lib/starter';
 import { RedirectToSignIn, useSession } from '@/lib/session';
-import { useBottomGap } from '@/lib/insets';
+import { useBottomGap, useTopClearance } from '@/lib/insets';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -34,6 +40,7 @@ export default function StarterScreen() {
 }
 
 function StarterView({ id }: { id: string | string[] | undefined }) {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -152,7 +159,9 @@ function StarterView({ id }: { id: string | string[] | undefined }) {
           A long question at a large accessibility text size is taller than
           a small phone, and the send button was laid out below the bottom
           of the display, where nothing can reach it. */}
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: topPadding }]}
+      >
         {/* Pops to the chat this was opened from — its thread or its Uyum
             page; the fallback (a cold open) is the thread the label names. */}
         <BackLink label={t.starter.back} fallback={chatHref(matchId)} />
@@ -227,7 +236,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: {
     padding: space.xl,
-    paddingTop: 64,
     paddingBottom: space.md,
     gap: space.md,
   },

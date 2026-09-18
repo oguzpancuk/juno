@@ -16,7 +16,6 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { Avatar } from '@/components/Avatar';
 import { MatchDetail } from '@/components/MatchDetail';
@@ -30,6 +29,7 @@ import {
   pagerSettle,
   type Page,
 } from '@/lib/chat-pages';
+import { useTopClearance } from '@/lib/insets';
 import { useKeyboardGap } from '@/lib/keyboard';
 import {
   MAX_MESSAGE_LENGTH,
@@ -110,10 +110,6 @@ function ChatView({
   const inFlight = useRef(false);
   const [failed, setFailed] = useState(false);
   const { messages, send, loadOlder } = useThread(matchId, userId);
-  // The header's top clearance only. The composer takes no bottom inset:
-  // the tab bar below this screen already covers the home indicator
-  // (lib/insets.ts), and with the keyboard up the keyboard does.
-  const insets = useSafeAreaInsets();
   // Portrait only (app.json), so the page width does not change under a
   // mounted pager.
   const { width } = useWindowDimensions();
@@ -182,6 +178,7 @@ function ChatView({
   // truth and reports back on `onMomentumScrollEnd`. There are three
   // pages: an empty one in front of the thread that is the way out
   // (lib/chat-pages.ts), then the thread, then the match detail.
+  const topPadding = useTopClearance(space.md);
   const pager = useRef<ScrollView>(null);
   /**
    * The last offset seen. A release needs one: react-native-web never
@@ -378,11 +375,13 @@ function ChatView({
       <View
         style={[
           styles.header,
-          // Floored, not raw: the inset is 0 on the web client and 20
-          // on a device without a notch, either of which would put the
-          // chevron's hit area under the Dynamic Island. 44 leaves this
-          // header in the neighbourhood of `Screen`'s own 68pt.
-          { paddingTop: Math.max(insets.top, 44) + space.xs },
+          // The inset plus a gutter, with no floor under it. The floor
+          // used to be 44, which is a status bar's height — right on a
+          // phone, where the app owns the screen, and 44 points of
+          // nothing in a browser, which has already made that room. It
+          // put this header a status bar too low (owner, 2026-09-18:
+          // "geri butonu ve sümeyye başlığı da çok altta").
+          { paddingTop: topPadding },
         ]}
       >
         {/* One row: the way out, then whose conversation this is (owner,

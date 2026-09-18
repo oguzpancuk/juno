@@ -180,7 +180,7 @@ export function Popup({
           >
             {/* Always, bleed or not. A Modal renders its children in the
                 same React tree, so a sheet opened from inside a bleed
-                `Screen` would otherwise inherit that screen's 68 and a
+                `Screen` would otherwise inherit that screen's clearance and a
                 child would cancel a padding this host never applied. */}
             <TopGapContextProvider value={0}>
               <SheetScrollLock.Provider value={setLocked}>

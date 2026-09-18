@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   // `SCREEN_PADDING` on a scroll view's *content*, as `Screen` and
   // `Popup` both do, so the negative margin grows into the frame rather
   // than out of it, where a scroll view would clip it. And it must
-  // publish its top padding through `useTopGap` — 68 on a bleed `Screen`,
+  // publish its top padding through `useTopGap` — the clearance on a bleed `Screen`,
   // 0 in a bleed `Popup`, which gives its own up at the sheet because
   // there the gap sits above the scroll view and nothing inside can reach
   // it. The carousel must also be the host's first in-flow child, which

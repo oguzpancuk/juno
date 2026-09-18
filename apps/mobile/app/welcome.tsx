@@ -146,6 +146,15 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     justifyContent: 'space-between',
   },
+  // A flat drop, unlike every other screen's clearance.
+  //
+  // It was briefly `useTopClearance(76)` and that was scope creep: the
+  // owner never listed this screen, and a review found the cost. This is
+  // the one top-level screen with no scroll view — a plain `space-between`
+  // View — so on a device the extra inset comes straight out of the
+  // bottom, where the consent line and the legal link are, with no scroll
+  // to recover them at a large text size. Left alone until there is a
+  // reason to touch it.
   hero: { alignItems: 'center', marginTop: 96, gap: space.md },
   glow: { top: -(GLOW - MARK) / 2, left: -(GLOW - MARK) / 2 },
   tagline: { ...type.label, color: color.textMuted },

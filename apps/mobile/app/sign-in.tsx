@@ -14,6 +14,7 @@ import {
   parseCredentials,
   type AuthMode,
 } from '@/lib/auth';
+import { useTopClearance } from '@/lib/insets';
 import { authErrorText } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import {
@@ -22,6 +23,7 @@ import {
   GradientButton,
   LinkText,
   OrbitMark,
+  SCREEN_TOP_GUTTER,
   Wordmark,
 } from '@/components/ui';
 import { CosmicGround } from '@/components/CosmicGround';
@@ -43,6 +45,7 @@ import { color, space, type } from '@/theme/tokens';
  * the person has read the sentence.
  */
 export default function SignIn() {
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const params = useLocalSearchParams<{ mode?: string }>();
   // Read once: welcome pushes a fresh instance per tap, and the flip link
   // below is the only other way the mode changes.
@@ -133,7 +136,7 @@ export default function SignIn() {
       {/* Pops, never pushes: a Link here grew the root stack by two
           screens per round trip, and what an edge swipe revealed after
           signing out was that history. */}
-      <View style={styles.back}>
+      <View style={[styles.back, { top: topPadding }]}>
         <BackLink label={t.signIn.back} fallback="/welcome" />
       </View>
       <View style={styles.mark}>
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
-  back: { position: 'absolute', top: 56, left: space.xl },
+  back: { position: 'absolute', left: space.xl },
   mark: { alignItems: 'center', marginBottom: space.xl, gap: space.xs },
   title: { ...type.heading, color: color.textMuted },
   form: { gap: space.md, marginTop: space.md },

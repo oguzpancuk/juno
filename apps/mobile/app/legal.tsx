@@ -1,8 +1,8 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { useSession } from '@/lib/session';
-import { useBottomGap } from '@/lib/insets';
+import { useBottomGap, useTopClearance } from '@/lib/insets';
 import { t } from '@/lib/strings';
-import { BackLink } from '@/components/ui';
+import { BackLink, SCREEN_TOP_GUTTER } from '@/components/ui';
 import { LegalText } from '@/components/LegalText';
 import { color } from '@/theme/tokens';
 
@@ -15,6 +15,7 @@ import { color } from '@/theme/tokens';
 export default function Legal() {
   // Outside the tabs, so nothing covers the home indicator.
   const bottomGap = useBottomGap(32);
+  const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   // Reachable from sign-in, onboarding and welcome. While the stored
   // session is still being read there is no honest fallback, so no link is
   // shown rather than one that points at the wrong place and then changes.
@@ -22,7 +23,10 @@ export default function Legal() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingBottom: bottomGap }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: topPadding, paddingBottom: bottomGap },
+      ]}
       testID="legal-screen"
     >
       {/* One label for all: the control pops to wherever the reader came
@@ -41,5 +45,5 @@ export default function Legal() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
-  content: { padding: 24, paddingTop: 64, gap: 4, maxWidth: 720 },
+  content: { padding: 24, gap: 4, maxWidth: 720 },
 });
