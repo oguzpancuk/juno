@@ -362,6 +362,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender"]
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
+          is_demo: boolean
           location: unknown
           min_band: string
           photos: string[]
@@ -386,6 +387,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender"]
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
+          is_demo?: boolean
           location: unknown
           min_band?: string
           photos?: string[]
@@ -410,6 +412,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender"]
           id?: string
           interested_in?: Database["public"]["Enums"]["interest"]
+          is_demo?: boolean
           location?: unknown
           min_band?: string
           photos?: string[]
