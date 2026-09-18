@@ -224,7 +224,7 @@ function Nebula({
       }),
     [drift],
   );
-  const gradientId = useSvgId(`nebula-${index}`).id;
+  const paint = useSvgId(`nebula-${index}`);
   return (
     <Animated.View
       style={[
@@ -240,7 +240,7 @@ function Nebula({
     >
       <Svg width={size} height={size}>
         <Defs>
-          <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+          <RadialGradient id={paint.id} cx="50%" cy="50%" r="50%">
             <Stop
               offset="0"
               stopColor={nebula.colour}
@@ -254,12 +254,7 @@ function Nebula({
             <Stop offset="1" stopColor={nebula.colour} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={size / 2}
-          fill={`url(#${gradientId})`}
-        />
+        <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={paint.url} />
       </Svg>
     </Animated.View>
   );

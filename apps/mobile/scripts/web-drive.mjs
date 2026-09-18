@@ -24,7 +24,14 @@
  * has had since 22, so this adds no dependency.
  */
 import { spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -57,6 +64,18 @@ function validate(steps) {
           `each step takes exactly one of ${VERBS.join(', ')}`,
       );
     const [verb] = verbs;
+    // Strict keys. A misspelt `setle` used to be accepted in silence and
+    // the step would take the 1200 ms default, which photographs a screen
+    // mid-transition — the same "carries on and captures the wrong thing"
+    // this validator exists to stop.
+    const extra = Object.keys(step).filter(
+      (key) =>
+        key !== verb &&
+        key !== 'settle' &&
+        !(verb === 'fill' && key === 'text'),
+    );
+    if (extra.length > 0)
+      throw new Error(`${where}: unknown ${extra.join(', ')}`);
     if (verb === 'wait') {
       if (typeof step.wait !== 'number' || !(step.wait >= 0))
         throw new Error(`${where}: wait takes a number of milliseconds`);
@@ -76,6 +95,8 @@ mkdirSync(outDir, { recursive: true });
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
+const profile = mkdtempSync(join(tmpdir(), 'juno-web-drive-'));
+
 const chrome = spawn(
   CHROME,
   [
@@ -83,7 +104,11 @@ const chrome = spawn(
     '--disable-gpu',
     '--hide-scrollbars',
     `--remote-debugging-port=${PORT}`,
-    '--user-data-dir=/tmp/juno-web-drive',
+    // A profile of its own, thrown away after. A fixed directory carries
+    // the last run's session in localStorage, and the run then starts
+    // signed in as whoever it was last time — which is how a run meant to
+    // photograph the door photographed the deck instead (2026-09-18).
+    `--user-data-dir=${profile}`,
     'about:blank',
   ],
   { stdio: 'ignore' },
@@ -236,6 +261,9 @@ try {
       if (!seen) throw new Error(`the page does not read "${step.expect}"`);
       console.log(`  ok    reads "${step.expect}"`);
     } else if (step.shot !== undefined) {
+      // A name, not a path: `../../x` would write outside `outDir`.
+      if (!/^[A-Za-z0-9._-]+$/.test(step.shot))
+        throw new Error(`shot "${step.shot}" is not a plain file name`);
       const { data } = await send('Page.captureScreenshot', { format: 'png' });
       const file = join(outDir, `${step.shot}.png`);
       writeFileSync(file, Buffer.from(data, 'base64'));
@@ -258,6 +286,7 @@ try {
 
 socket.close();
 chrome.kill();
+rmSync(profile, { recursive: true, force: true });
 if (failed) {
   console.error(String(failed));
   process.exit(1);

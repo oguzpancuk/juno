@@ -444,11 +444,15 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       exported web client (screenshot).
       _Done. Battery green on a clean, committed HEAD with the tree clean
       before and after, on a database reset from the migrations. The five
-      `screenshots/l1-web-*.png` are one run of the new
-      `scripts/web-drive.mjs` against the local stack at 390 × 844: the
-      door with its new pitch, the notice as a sheet, the onboarding
-      fields the owner asked about, a seeded demo in the deck with its
-      photo and its own chart, and "Eşleştiniz!" one tap after the like._
+      `screenshots/l1-web-*.png` are one run of `scripts/web-drive.mjs`
+      against the local stack at 390 × 844 — forty-eight seconds, the
+      steps in `scripts/steps/l1-web.json`: the door with its new pitch,
+      the notice as a sheet, the onboarding fields the owner asked about,
+      a seeded demo in the deck with its photo and its own chart, and
+      "Eşleştiniz!" one tap after the like. The deck holds one card at a
+      time, so the "twenty demos" half of the clause is counted rather
+      than photographed: all twenty pass `discover`'s radius, preference
+      and photo conditions for that run's own viewer._
 
 - [ ] **The deploy gate has never been tested where it keeps breaking.**
       `apps/mobile/scripts/check-deploy-env.ts` is the piece five reviews

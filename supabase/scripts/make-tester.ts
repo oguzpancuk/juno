@@ -12,6 +12,7 @@ import { bigThree, computeChart, toPublicChart } from '@juno/astro';
 import { resolveBirth } from '@juno/geo';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { LEGAL_VERSION } from '../../apps/mobile/lib/legal';
 
 const email: string | undefined = process.argv[2];
 const name = process.argv[3] ?? 'Test';
@@ -81,9 +82,9 @@ async function main(): Promise<void> {
     interested_in: 'men',
     location: 'SRID=4326;POINT(29.02 41.03)',
     radius_km: 50,
-    // Mirrors LEGAL_VERSION in apps/mobile/lib/legal.ts; a profile cannot
+    // Imported, not copied; a profile cannot
     // exist without a record of the notice having been accepted.
-    consent_version: '2026-09-09',
+    consent_version: LEGAL_VERSION,
   });
   if (error) throw error;
   console.log(`tester ${testerEmail} (${name}) ready: ${id}`);

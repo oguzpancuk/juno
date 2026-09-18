@@ -346,6 +346,7 @@ async function main(): Promise<void> {
     if (!existsSync(file)) throw new Error(`no portrait at ${file}`);
 
     let id = existing.get(email);
+    const fresh = id === undefined;
     if (id === undefined) {
       const { data, error } = await admin.auth.admin.createUser({
         email,
@@ -355,18 +356,6 @@ async function main(): Promise<void> {
       if (error) throw new Error(`createUser ${email}: ${error.message}`);
       id = data.user.id;
     }
-
-    // The photo first: `profiles_check_photos` refuses a row whose path
-    // names no object, so the upload has to land before the insert.
-    const path = `${id}/1.jpg`;
-    const uploaded = await admin.storage
-      .from('photos')
-      .upload(path, readFileSync(file), {
-        contentType: 'image/jpeg',
-        upsert: true,
-      });
-    if (uploaded.error)
-      throw new Error(`upload ${path}: ${uploaded.error.message}`);
 
     const [year, month, day, hour, minute] = demo.birth;
     const date = `${year}-${pad(month)}-${pad(day)}`;
@@ -391,20 +380,43 @@ async function main(): Promise<void> {
     const rows = ProfileRows.parse(already);
     const location = `SRID=4326;POINT(${demo.home[0]} ${demo.home[1]})`;
 
-    // A profile that is already there and is not a demo belongs to a
-    // person. Overwriting it would replace their name, their words, their
-    // photograph and where they live, and flag their account so that
-    // everyone who likes them matches — and `profiles_forbid_birth_change`
-    // freezes the chart, so it could not even be put back. All it takes to
-    // get there is someone signing up with one of these addresses, which
-    // is a thing the owner might do to see the flow end to end.
-    if (rows.length > 0 && rows[0]?.is_demo !== true) {
+    // An account this run did not create is not ours to write to, whatever
+    // state it is in. If it carries a profile that is not a demo, that
+    // profile belongs to a person: overwriting it would replace their
+    // name, their words, their photograph and where they live, and flag
+    // their account so that everyone who likes them matches — and
+    // `profiles_forbid_birth_change` freezes the chart, so it could not
+    // even be put back. If it carries no profile at all, it is the same
+    // person one screen earlier, having stopped partway through
+    // onboarding, and writing a demo onto it is the same theft. Nothing
+    // creates a profile row for an account on its own, so this branch is
+    // the likelier half of the two.
+    //
+    // It also catches a previous run of this script that died between the
+    // account and the row. That is the cost of the rule, and the message
+    // says how to clear it.
+    if (!fresh && rows[0]?.is_demo !== true) {
       throw new Error(
-        `${email} already has a profile that is not a demo; refusing to ` +
-          `overwrite it. Delete that account, or give this demo another ` +
-          `slug, and run again.`,
+        `${email} is an account this run did not create and does not hold ` +
+          `a demo profile; refusing to write to it. If it is a person's ` +
+          `account, leave it alone and rename this demo's slug (and its ` +
+          `file in assets/demo-photos/). If it is a half-written demo from ` +
+          `an earlier run, delete the auth user and run again.`,
       );
     }
+
+    // The photo before the row, and only once the guard above has passed:
+    // `profiles_check_photos` refuses a row whose path names no object, and
+    // a refused account must not be left holding an uploaded file.
+    const path = `${id}/1.jpg`;
+    const uploaded = await admin.storage
+      .from('photos')
+      .upload(path, readFileSync(file), {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+    if (uploaded.error)
+      throw new Error(`upload ${path}: ${uploaded.error.message}`);
 
     if (rows.length > 0) {
       // Only what a rerun is allowed to move. Birth data and the chart are

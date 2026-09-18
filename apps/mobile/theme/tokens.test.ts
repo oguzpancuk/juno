@@ -170,9 +170,15 @@ describe('nothing outside tokens.ts holds a colour', () => {
     // is set, after this file's, and the injected one would win while
     // being invisible to the assertion above.
     expect(html.match(/name="theme-color"/g)).toHaveLength(1);
+    // Both halves of the config: `app.config.ts` is the effective one and
+    // spreads `app.json`, so a `themeColor` added to either would reach
+    // Expo and the assertion above would not see the second meta.
     expect(
       JSON.parse(readFileSync(join(MOBILE, 'app.json'), 'utf8')),
     ).not.toHaveProperty('expo.web.themeColor');
+    expect(readFileSync(join(MOBILE, 'app.config.ts'), 'utf8')).not.toMatch(
+      /themeColor/,
+    );
 
     // And the mark itself is the product's one gradient: the ring runs
     // through all three stops in order, and each sphere ends on one of its

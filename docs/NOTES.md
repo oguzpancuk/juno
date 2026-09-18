@@ -6056,8 +6056,18 @@ image pull makes no progress at all, look at the disk before the network.
 **Verified, in the end.** The battery is green on a clean, committed HEAD,
 tree clean before and after, against a database reset from the migrations.
 The demo flow was then driven end to end through the real web client, at
-phone width, by the new `scripts/web-drive.mjs`: sign in, onboarding with
-a real chart computed from İstanbul 1995-07-14 03:30, the profile screen,
-a seeded demo in the deck with its photograph, its own chart and a 9 km
-distance, and "Eşleştiniz!" one tap after the like. The five
-`screenshots/l1-web-*.png` are that run.
+phone width, by the new `scripts/web-drive.mjs`: the door, the notice as a
+sheet, a sign-in, onboarding with a real chart computed from İstanbul
+1995-07-14 03:30, a seeded demo in the deck with its photograph and its
+own chart, and "Eşleştiniz!" one tap after the like. The five
+`screenshots/l1-web-*.png` are that run — one run, forty-eight seconds,
+from the steps committed at `apps/mobile/scripts/steps/l1-web.json`.
+
+An earlier version of this paragraph said the same of five files captured
+four hours apart, three of them before the code they were offered as
+evidence for. A review caught it by reading their timestamps. The claim is
+cheap to make and cheap to check, which is exactly why it has to be the
+second one: they were regenerated rather than the sentence softened. The
+driver had to be fixed first — it reused one Chrome profile, so the run
+started signed in as whoever the last run was, and the door it meant to
+photograph was the deck.
