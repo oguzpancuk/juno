@@ -6076,3 +6076,94 @@ photograph was the deck. The next review then found the failed run's own
 commit whose whole point was that the evidence was one run. Failure shots
 go to the temporary profile directory now, where they cannot be committed
 and cannot dirty the tree a battery run needs clean.
+
+## 2026-09-18 — Live, and the two things the first real sign-up found
+
+Everything shipped: `main` pushed, `20260917000001` applied to the hosted
+project, twenty demo profiles seeded there (20 rows, 20 photographs, ten
+and ten), and the web client deployed to juno-dating.com. Confirmed from
+the public address: `favicon.ico`, `icon.svg` and `apple-touch-icon.png`
+all served and linked, `theme-color`, `color-scheme: dark`,
+`background-color`, `overscroll-behavior: none` and `lang="tr"` all in the
+head, the pitch reading "İki haritanın / arasında / ne var?", and the
+privacy notice opening as a sheet.
+
+Then the owner tried to sign up and could not.
+
+**"Bir şeyler ters gitti" is a mail failure wearing a generic sentence.**
+Driving the live sign-up form reproduced it, and calling GoTrue directly
+named it: HTTP 500, `unexpected_failure`, "Error sending confirmation
+email".
+
+What the probes do and do not show is worth being exact about, because the
+first version of this entry got it wrong. Every attempt at an
+`@example.com` address failed and `@example.org` and `@juno-dating.com`
+succeeded, which read as the provider refusing particular recipients — but
+a review checked the MX records and both reserved domains publish a null
+MX (`0 .`, RFC 7505: this domain accepts no mail). The only _real_ domain
+tested succeeded. So the probes show one recipient the provider refuses
+outright and nothing about deliverability in general; the failure the
+owner met is a single observed 500 on a resend to their own address, and
+its cause on Resend's side is still unknown. The owner's account was an
+unconfirmed one created the day before, so every attempt was a resend
+rather than a first send, which is its own candidate.
+
+`authErrorText`'s first fix for it was inert, and that is the part worth
+carrying forward. It added `case 'unexpected_failure'` — but `auth-js`
+turns every 5xx into `AuthRetryableFetchError` before it looks at the
+body, and that class hard-codes `code` to undefined, so the case could
+never run. The tests passed because they hand-built `new AuthError(msg,
+500, 'unexpected_failure')`, a shape the client does not produce. A review
+caught it; pushing the exact production response through the real client
+confirmed it in one command. The guard now reads the status and the
+message, which are what survive the wrapper, and the test stands up a
+server that answers what production answered and signs up against it with
+the real client — so the day the library changes that shape, the test
+fails rather than the screen. Checked both ways: with the guard removed
+the test goes red.
+
+The lesson is the old one in a new place. A test that builds its own input
+tests the shape you imagined; the only way to know what a library hands
+you is to make it hand it to you.
+
+**The white strip came back as a black one.** Yesterday's fix painted
+`html` and `body` with `color.bg`, which stopped the white; what it could
+not do is make the sky reach the bottom of what is visible.
+
+It took three attempts, and the two failed ones are the instructive part.
+
+`100dvh` on `html` and `body` changes nothing: `CosmicGround` is an
+absolutely positioned layer sized in pixels from `useWindowDimensions`, so
+the document's height never reaches it. The band is the ground falling
+short of the visible area, not the document doing so.
+
+Measuring the ground from its own layout fixed that and broke something
+else. `height` is where the horizon curve is placed, and inside the tabs
+the host view is inset above the bar — so the curve climbed by the bar's
+height and, on the match-arrival screen, ran straight through the "Şimdi
+değil" button. `welcome.tsx` tunes `horizonRise` to 0.05 for exactly this
+reason on its own screen; this had undone that everywhere at once. It was
+in the screenshot committed to prove the change was safe, and the commit
+said in writing that the horizon had not moved. A review found it by
+cropping the file and looking.
+
+What works is both at once: the view is inset-zero so it can never be
+smaller than its host, and the drawing inside it is `Math.max(window,
+view)` — so the geometry stays the window-sized one it was designed
+against, and the canvas grows only when the host turns out bigger than the
+window thought.
+
+Whether that clears the band is still the owner's phone to say: the band
+only exists on a real browser with a retracting toolbar, and at a fixed
+390 × 844 every measurement agrees. What is measured is the absence of a
+regression, and this time measured rather than asserted — each of the five
+screenshots differenced against the deployed build. The match screen, the
+deck and onboarding differ by at most 1/255 on a handful of pixels; the
+door and the sheet differ in one patch each, and cropping those shows the
+two animated things in the product, the orbiting spheres and a falling
+star caught mid-flight.
+
+**Housekeeping.** Eleven probe accounts opened against production while
+diagnosing the sign-up failure were deleted the same session; the owner's
+own account was deleted at their request so they could walk the flow from
+the beginning. What is left on the hosted project is the twenty demos.

@@ -24,7 +24,9 @@
  * has had since 22, so this adds no dependency.
  */
 import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -35,7 +37,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const PORT = 9223;
 const [baseUrl, outDir, stepsFile] = process.argv.slice(2);
 
 if (!baseUrl || !outDir || !stepsFile) {
@@ -85,14 +86,14 @@ function validate(steps) {
     if (verb === 'shot' && !/^[A-Za-z0-9._-]+$/.test(step.shot))
       throw new Error(`${where}: shot "${step.shot}" is not a plain name`);
     if (verb === 'wait') {
-      if (typeof step.wait !== 'number' || !(step.wait >= 0))
+      if (!(Number.isFinite(step.wait) && step.wait >= 0))
         throw new Error(`${where}: wait takes a number of milliseconds`);
     } else if (typeof step[verb] !== 'string' || step[verb].length === 0) {
       throw new Error(`${where}: ${verb} takes a non-empty string`);
     }
     if (verb === 'fill' && typeof step.text !== 'string')
       throw new Error(`${where}: fill also takes a "text" string`);
-    if ('settle' in step && typeof step.settle !== 'number')
+    if ('settle' in step && !(Number.isFinite(step.settle) && step.settle >= 0))
       throw new Error(`${where}: settle takes a number of milliseconds`);
   });
   return steps;
@@ -111,7 +112,12 @@ const chrome = spawn(
     '--headless=new',
     '--disable-gpu',
     '--hide-scrollbars',
-    `--remote-debugging-port=${PORT}`,
+    // Port zero: Chrome picks a free one and writes it into the profile.
+    // A fixed port is how a run reaches a browser it did not start — an
+    // orphan from a previous run answers first, and the whole run then
+    // drives that browser, with that run's session in it. Asking the
+    // child where it is listening cannot pick up somebody else's.
+    '--remote-debugging-port=0',
     // A profile of its own, thrown away after. A fixed directory carries
     // the last run's session in localStorage, and the run then starts
     // signed in as whoever it was last time — which is how a run meant to
@@ -123,42 +129,148 @@ const chrome = spawn(
 );
 
 /**
- * Kill the browser and throw the profile away.
- *
- * Every path out of this script runs it, setup included. A run that dies
- * before the first step — Chrome slow to open its port, the socket
- * refusing — used to leave both behind, and the orphan then held port
- * 9223 with the *previous* run's profile: the next run would connect to
- * it and drive a browser signed in as the last run's user, which is the
- * bug the temporary profile exists to stop.
+ * Stop the browser. SIGKILL, not SIGTERM: this is a throwaway headless
+ * browser with nothing to save, and a graceful shutdown spends a second
+ * writing files back into the directory we are about to delete — which is
+ * how the delete below used to fail.
  */
-function shutDown({ keepProfile = false } = {}) {
-  chrome.kill();
-  if (!keepProfile) rmSync(profile, { recursive: true, force: true });
+function killChrome() {
+  if (chrome.exitCode !== null || chrome.signalCode !== null) return false;
+  try {
+    chrome.kill('SIGKILL');
+  } catch {
+    // already gone
+  }
+  return true;
 }
 
-process.on('uncaughtException', (error) => {
-  shutDown();
-  console.error(String(error));
-  process.exit(1);
-});
-process.on('unhandledRejection', (error) => {
-  shutDown();
-  console.error(String(error));
-  process.exit(1);
-});
-
-/** Chrome needs a moment before its debugging port answers. */
-async function debuggerUrl() {
-  for (let attempt = 0; attempt < 60; attempt++) {
+/**
+ * Delete the profile, and never fail the run over it. A directory left
+ * behind is a few megabytes in the temporary folder; an exception here
+ * would replace whatever the run was actually reporting — and on the happy
+ * path it would turn a run whose screenshots were all written into a
+ * non-zero exit.
+ */
+function removeProfile({ tries = 1, quiet = false } = {}) {
+  let last;
+  for (let attempt = 0; attempt < tries; attempt++) {
     try {
-      const list = await fetch(`http://127.0.0.1:${PORT}/json/list`).then((r) =>
-        r.json(),
+      rmSync(profile, { recursive: true, force: true });
+      return true;
+    } catch (error) {
+      // Chrome writes a few files on its way out even under SIGKILL, and
+      // `rmSync` then reports ENOTEMPTY on a directory it has just half
+      // emptied. Trying again is what clears it.
+      last = error;
+    }
+  }
+  if (!quiet)
+    console.error(`  warn  could not remove ${profile}: ${last.message}`);
+  return false;
+}
+
+/**
+ * Every path out of this script ends here: the steps, the setup, and a
+ * Ctrl-C. Waiting for the process to be gone before deleting is the point
+ * — without it the directory survives and the delete throws.
+ */
+async function shutDown({ keepProfile = false } = {}) {
+  if (killChrome()) {
+    // The timeout is cleared when the exit wins. An `AbortController` on
+    // the `once` side does not do it — that is the branch that already
+    // settled — and the un-cleared timer keeps the event loop alive, so a
+    // finished run sits there for the rest of the two seconds.
+    let timer;
+    await Promise.race([
+      once(chrome, 'exit'),
+      new Promise((wake) => {
+        timer = setTimeout(wake, 2000);
+      }),
+    ]);
+    clearTimeout(timer);
+  }
+  if (keepProfile) return;
+  // Three passes, a breath apart: the directory is gone on the first one
+  // most of the time, and on the second whenever it is not. Only the last
+  // one is allowed to complain.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (removeProfile({ quiet: true })) return;
+    await sleep(200);
+  }
+  removeProfile();
+}
+
+/** The synchronous half, for the handlers that cannot await. */
+/**
+ * The synchronous half, for the handlers that cannot await. The pause
+ * between attempts is the point of retrying at all — Chrome is still
+ * closing files — and `Atomics.wait` is the only way to take one without
+ * an event loop turn.
+ */
+function shutDownNow() {
+  killChrome();
+  const clock = new Int32Array(new SharedArrayBuffer(4));
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (removeProfile({ quiet: true })) return;
+    Atomics.wait(clock, 0, 0, 200);
+  }
+  removeProfile();
+}
+
+for (const fatal of ['uncaughtException', 'unhandledRejection']) {
+  process.on(fatal, (error) => {
+    // Reported before anything is cleaned up: a cleanup that went wrong
+    // must not be the only thing printed when the run died of something
+    // else. The error itself rather than `String(error)`, for the stack.
+    console.error(error);
+    shutDownNow();
+    process.exitCode = 1;
+  });
+}
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    // `process.exit`, not `exitCode`: registering a listener suppresses the
+    // default terminate, and the main flow is usually parked on a protocol
+    // reply that will never come now that the browser is being killed. An
+    // unsettled top-level await ends the process with its own code, not
+    // the one set here.
+    shutDownNow();
+    process.exit(130);
+  });
+}
+
+/**
+ * Where the browser this script started is listening. Chrome writes the
+ * port and the websocket path into `DevToolsActivePort` in its own
+ * profile once it is ready, so this asks the child rather than guessing.
+ */
+async function debuggerUrl() {
+  const portFile = join(profile, 'DevToolsActivePort');
+  for (let attempt = 0; attempt < 60; attempt++) {
+    if (chrome.exitCode !== null || chrome.signalCode !== null)
+      throw new Error(
+        `Chrome stopped before it was ready (${chrome.signalCode ?? chrome.exitCode})`,
       );
-      const page = list.find((tab) => tab.type === 'page');
-      if (page) return page.webSocketDebuggerUrl;
-    } catch {
-      // not listening yet
+    // Chrome creates the file and then writes it, so a read can land on an
+    // empty first line. An empty port makes `http://127.0.0.1:/json/list`
+    // parse as port 80 — a browser this script did not start, which is the
+    // whole thing the port-zero launch is avoiding.
+    const port = existsSync(portFile)
+      ? Number(readFileSync(portFile, 'utf8').split('\n')[0])
+      : Number.NaN;
+    if (Number.isInteger(port) && port > 0) {
+      try {
+        const list = await fetch(`http://127.0.0.1:${port}/json/list`, {
+          // undici waits five minutes for headers by default, which would
+          // make the sixty attempts below a five-hour bound rather than a
+          // fifteen-second one.
+          signal: AbortSignal.timeout(1000),
+        }).then((r) => r.json());
+        const page = list.find((tab) => tab.type === 'page');
+        if (page) return page.webSocketDebuggerUrl;
+      } catch {
+        // written, but not serving yet
+      }
     }
     await sleep(250);
   }
@@ -180,6 +292,16 @@ socket.addEventListener('message', (event) => {
   pending.delete(message.id);
   if (message.error) waiting.fail(new Error(JSON.stringify(message.error)));
   else waiting.done(message.result);
+});
+
+// A browser that dies mid-run closes the socket, and every caller parked
+// on a reply would otherwise wait for ever — including the failure-shot
+// capture in the catch below, which is where a dying browser lands.
+socket.addEventListener('close', () => {
+  for (const [, waiting] of pending) {
+    waiting.fail(new Error('the browser closed the connection'));
+  }
+  pending.clear();
 });
 
 const send = (method, params = {}) =>
@@ -325,7 +447,7 @@ try {
 }
 
 socket.close();
-shutDown({ keepProfile: failureShot !== null });
+await shutDown({ keepProfile: failureShot !== null });
 if (failed) {
   console.error(String(failed));
   process.exit(1);

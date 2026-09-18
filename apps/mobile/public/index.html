@@ -69,6 +69,26 @@
       body {
         background-color: #07060f;
       }
+      /*
+        The page matches the area that is actually visible. `height: 100%`
+        sizes it to the viewport reported at load, and a mobile browser
+        that then retracts its toolbar leaves the page short of the
+        screen; `dvh` tracks the visible area as the toolbars come and go.
+
+        This is not what fixes the black band at the bottom that the owner
+        saw on 2026-09-18 — that band is `CosmicGround` falling short, and
+        it is fixed there, in the component. A background on `body`
+        propagates to the canvas and paints the whole canvas whatever the
+        document's height is, so this rule changes nothing about the
+        colour. It is here because a page the size of its window is right
+        on its own terms.
+      */
+      @supports (height: 100dvh) {
+        html,
+        body {
+          height: 100dvh;
+        }
+      }
       body {
         /* No rubber-banding past the app: there is nothing behind it to
            reveal, and on iOS the reveal is where the white came back. */

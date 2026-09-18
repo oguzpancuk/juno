@@ -338,6 +338,11 @@ export const t = {
     accountExists: 'Bu e-postayla zaten bir hesap var. Giriş yapmayı dene.',
     emailNotConfirmed:
       'E-posta adresin henüz doğrulanmamış. Gelen kutunu kontrol et.',
+    // The provider refused to deliver the code. Nothing the person typed
+    // is wrong, so the sentence must not sound as though it were, and the
+    // one thing that sometimes helps — a different address — is named.
+    mailNotSent:
+      'Doğrulama e-postası şu an gönderilemedi. Birazdan tekrar dene; sürerse başka bir adresle dene ya da destek@juno-dating.com adresine yaz.',
     // One sentence for two cases because GoTrue answers both with
     // `otp_expired` and "Token has expired or is invalid": a code that was
     // never issued and a code that ran out are the same 403 (probed

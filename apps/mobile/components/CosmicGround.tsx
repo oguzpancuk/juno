@@ -66,8 +66,36 @@ export function CosmicGround({
   /** How far the curve's top sits above the bottom edge, in widths. */
   horizonRise?: number;
 }) {
-  const { width, height } = useWindowDimensions();
+  const windowBox = useWindowDimensions();
   const still = useReducedMotion();
+  /**
+   * How big to draw the sky: the larger of the window and this view.
+   *
+   * The window alone is a snapshot of `innerHeight`, and on a mobile
+   * browser that retracts its toolbar the visible area grows while this
+   * layer — absolutely positioned, exactly that many pixels tall — does
+   * not, leaving a band at the bottom with no sky in it (owner,
+   * 2026-09-18: "alt kısım simsiyah, arkaplan alta devam etmiyor").
+   *
+   * The view alone is wrong in the other direction, and worse. Inside the
+   * tabs the host is inset above the bar, so the horizon — placed at
+   * `height` — climbed by the bar's height and, on the match-arrival
+   * screen, ran straight through the "Şimdi değil" button. Seen in the
+   * screenshot taken to prove the change was safe (review, 2026-09-18);
+   * `welcome.tsx` tunes `horizonRise` precisely to keep that curve off a
+   * control, and this had undone it everywhere at once.
+   *
+   * So: the geometry stays window-sized, which is what it was designed
+   * against, and the canvas grows only when the host turns out to be
+   * bigger than the window thought. `overflow: hidden` on an inset-zero
+   * view clips the rest, exactly as before.
+   */
+  const [laidOut, setLaidOut] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const width = Math.max(windowBox.width, laidOut?.width ?? 0);
+  const height = Math.max(windowBox.height, laidOut?.height ?? 0);
   // One ground is behind every screen, and the router keeps more than one
   // screen mounted, so these three names are the ones most certain to
   // collide. See lib/svg-id.ts.
@@ -83,9 +111,17 @@ export function CosmicGround({
 
   return (
     <View
-      style={[styles.ground, { width, height }]}
+      style={styles.ground}
       pointerEvents="none"
       aria-hidden
+      onLayout={({ nativeEvent }) => {
+        const { width: w, height: h } = nativeEvent.layout;
+        setLaidOut((was) =>
+          was !== null && was.width === w && was.height === h
+            ? was
+            : { width: w, height: h },
+        );
+      }}
     >
       <Svg width={width} height={height}>
         <Defs>
@@ -393,7 +429,16 @@ function nextPass(width: number, height: number): Pass {
 }
 
 const styles = StyleSheet.create({
-  ground: { position: 'absolute', top: 0, left: 0, overflow: 'hidden' },
+  // Stretched to its host, so it can never be smaller than what it sits
+  // behind; what is drawn inside it is sized separately. See `laidOut`.
+  ground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
   nebula: { position: 'absolute' },
   streak: { position: 'absolute', height: 2 },
   streakFill: { flex: 1, borderRadius: 1 },

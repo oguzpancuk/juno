@@ -7,6 +7,25 @@ import { t } from './strings';
  * the screen (PRD: single-language UI).
  */
 export function authErrorText(error: AuthError): string {
+  // Before the codes, because this one has none. GoTrue answers a mail it
+  // could not send with 500 and `error_code: unexpected_failure`, but
+  // auth-js turns every 5xx into `AuthRetryableFetchError` before it looks
+  // at the body — the class hard-codes `code` to undefined — so the switch
+  // below can never see it and the sign-up screen said "something went
+  // wrong", as though the person had mistyped their address (seen in
+  // production, 2026-09-18). What survives the wrapper is the status and
+  // the message, so those are what this reads. Verified by pushing the
+  // exact production response through the real client, which is what
+  // `errors.test.ts` does rather than hand-building an error shape the
+  // library does not produce.
+  //
+  // `/email/iu` is the only thing separating a mail five-hundred from any
+  // other, and every screen that calls this is a confirmation-mail screen
+  // today; a password-reset screen reusing it would need the sentence
+  // widened.
+  if ((error.status ?? 0) >= 500 && /email/iu.test(error.message)) {
+    return t.errors.mailNotSent;
+  }
   switch (error.code) {
     case 'validation_failed':
     case 'email_address_invalid':
