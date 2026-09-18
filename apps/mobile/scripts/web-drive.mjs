@@ -50,6 +50,8 @@ if (!baseUrl || !outDir || !stepsFile) {
  * photographs the wrong thing.
  */
 const VERBS = ['goto', 'click', 'tap', 'fill', 'wait', 'expect', 'shot'];
+/** The verbs that pause after acting, and so read `settle`. */
+const SETTLES = ['goto', 'click', 'tap', 'fill'];
 
 function validate(steps) {
   if (!Array.isArray(steps)) throw new Error('steps must be an array');
@@ -64,18 +66,24 @@ function validate(steps) {
           `each step takes exactly one of ${VERBS.join(', ')}`,
       );
     const [verb] = verbs;
-    // Strict keys. A misspelt `setle` used to be accepted in silence and
-    // the step would take the 1200 ms default, which photographs a screen
-    // mid-transition — the same "carries on and captures the wrong thing"
+    // Strict keys, and `settle` only on the verbs that read it. A misspelt
+    // `setle`, or a `settle` on a `shot`, used to be accepted in silence
+    // and the step ran with the default — which photographs a screen
+    // mid-transition, the same "carries on and captures the wrong thing"
     // this validator exists to stop.
-    const extra = Object.keys(step).filter(
-      (key) =>
-        key !== verb &&
-        key !== 'settle' &&
-        !(verb === 'fill' && key === 'text'),
-    );
+    const allowed = [verb];
+    if (SETTLES.includes(verb)) allowed.push('settle');
+    if (verb === 'fill') allowed.push('text');
+    const extra = Object.keys(step).filter((key) => !allowed.includes(key));
     if (extra.length > 0)
-      throw new Error(`${where}: unknown ${extra.join(', ')}`);
+      throw new Error(
+        `${where}: ${verb} takes (${allowed.join(', ')}), ` +
+          `not ${extra.join(', ')}`,
+      );
+    // A name, not a path, and checked here rather than forty seconds into
+    // the run.
+    if (verb === 'shot' && !/^[A-Za-z0-9._-]+$/.test(step.shot))
+      throw new Error(`${where}: shot "${step.shot}" is not a plain name`);
     if (verb === 'wait') {
       if (typeof step.wait !== 'number' || !(step.wait >= 0))
         throw new Error(`${where}: wait takes a number of milliseconds`);
@@ -113,6 +121,32 @@ const chrome = spawn(
   ],
   { stdio: 'ignore' },
 );
+
+/**
+ * Kill the browser and throw the profile away.
+ *
+ * Every path out of this script runs it, setup included. A run that dies
+ * before the first step — Chrome slow to open its port, the socket
+ * refusing — used to leave both behind, and the orphan then held port
+ * 9223 with the *previous* run's profile: the next run would connect to
+ * it and drive a browser signed in as the last run's user, which is the
+ * bug the temporary profile exists to stop.
+ */
+function shutDown({ keepProfile = false } = {}) {
+  chrome.kill();
+  if (!keepProfile) rmSync(profile, { recursive: true, force: true });
+}
+
+process.on('uncaughtException', (error) => {
+  shutDown();
+  console.error(String(error));
+  process.exit(1);
+});
+process.on('unhandledRejection', (error) => {
+  shutDown();
+  console.error(String(error));
+  process.exit(1);
+});
 
 /** Chrome needs a moment before its debugging port answers. */
 async function debuggerUrl() {
@@ -238,6 +272,7 @@ await send('Emulation.setDeviceMetricsOverride', {
 });
 
 let failed = null;
+let failureShot = null;
 try {
   for (const step of steps) {
     if (step.goto !== undefined) {
@@ -276,8 +311,13 @@ try {
   failed = error;
   try {
     const { data } = await send('Page.captureScreenshot', { format: 'png' });
-    writeFileSync(join(outDir, 'failure.png'), Buffer.from(data, 'base64'));
-    console.error(`  shot  ${join(outDir, 'failure.png')} (on failure)`);
+    // Not into `outDir`: that is `screenshots/`, which is tracked, and a
+    // failed run must not leave the working tree dirty — the battery's own
+    // precondition is a clean tree before and after. The path is printed
+    // so it can be opened; it goes with the profile directory.
+    failureShot = join(profile, 'failure.png');
+    writeFileSync(failureShot, Buffer.from(data, 'base64'));
+    console.error(`  shot  ${failureShot} (on failure)`);
     console.error(await evaluate('document.body.innerText.slice(0, 700)'));
   } catch {
     // the page is past asking
@@ -285,8 +325,7 @@ try {
 }
 
 socket.close();
-chrome.kill();
-rmSync(profile, { recursive: true, force: true });
+shutDown({ keepProfile: failureShot !== null });
 if (failed) {
   console.error(String(failed));
   process.exit(1);

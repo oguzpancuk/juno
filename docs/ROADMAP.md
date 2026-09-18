@@ -451,8 +451,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       a seeded demo in the deck with its photo and its own chart, and
       "Eşleştiniz!" one tap after the like. The deck holds one card at a
       time, so the "twenty demos" half of the clause is counted rather
-      than photographed: all twenty pass `discover`'s radius, preference
-      and photo conditions for that run's own viewer._
+      than photographed — the query is in `scripts/steps/README.md` beside
+      the run, and answers 20 for that run's own viewer._
 
 - [ ] **The deploy gate has never been tested where it keeps breaking.**
       `apps/mobile/scripts/check-deploy-env.ts` is the piece five reviews

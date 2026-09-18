@@ -80,7 +80,10 @@ describe('SVG paint servers are named per instance', () => {
    */
   const isProse = (line: string): boolean =>
     /^\s*(\/\/|\*)/.test(line) ||
-    (/^\s*\/\*/.test(line) && !line.includes('*/'));
+    // A block comment that opens the line is prose while it stays open,
+    // and also when it closes at the end of the line — a one-line JSDoc.
+    // Only a line that closes one and then carries on is code.
+    (/^\s*\/\*/.test(line) && (!line.includes('*/') || /\*\/\s*$/.test(line)));
 
   const offenders = (bad: (line: string) => boolean): string[] => {
     const hits: string[] = [];
@@ -106,7 +109,11 @@ describe('SVG paint servers are named per instance', () => {
   const referencesLiteral = (line: string): boolean => literalRef.test(line);
 
   it('no paint server is named with anything shared', () => {
-    expect(offenders(definesNamedId)).toEqual([]);
+    expect(
+      offenders(definesNamedId),
+      "a paint server's id must come from useSvgId and be read off the " +
+        'object it returns — `id={paint.id}`, not `id={id}` or a literal',
+    ).toEqual([]);
   });
 
   it('every url(#…) reference is built from one, not typed out', () => {
@@ -122,9 +129,17 @@ describe('SVG paint servers are named per instance', () => {
       '<LinearGradient id={RING}>',
       // A closed block comment does not make the rest of the line prose.
       '/* a note */ <SvgGradient id="ground-rim">',
+      // A destructured id is flagged too. Not the bug, but the message
+      // says what to write instead, and keeping the object is the shape
+      // the rest of the codebase uses.
+      '<LinearGradient id={id} x1="0">',
     ]) {
       expect(definesNamedId(line), line).toBe(true);
     }
+    // A one-line doc comment naming the bug is prose, not an offender.
+    expect(isProse('/** like <LinearGradient id="ring"> */')).toBe(true);
+    expect(isProse('/* a note */ <SvgGradient id="x">')).toBe(false);
+
     for (const line of [
       '<RadialGradient id={paint.id} cx="35%">',
       '<SvgGradient id={horizonLine.id} x1="0">',

@@ -32,3 +32,22 @@ node scripts/web-drive.mjs http://127.0.0.1:8097 ../../screenshots scripts/steps
 
 The account has to be fresh each time: the run walks onboarding, and
 onboarding is not reachable once a profile exists.
+
+The deck shows one card at a time, so the other half of the ROADMAP's
+done-when for L1 — that all twenty demos are in range — is counted rather
+than photographed. Same stack, after the run:
+
+```sh
+docker exec supabase_db_juno psql -U postgres -d postgres -t -c "
+select count(*) from public.profiles p
+ join public.profiles me
+   on me.id = (select id from auth.users where email = 'l1-shots@test.local')
+ where p.is_demo
+   and p.id <> me.id
+   and extensions.st_dwithin(p.location, me.location, me.radius_km * 1000)
+   and cardinality(p.photos) > 0;"
+```
+
+It answers `20`: every demo passes the radius and photo conditions
+`discover` applies, and the preference conditions hold because the demos
+are interested in everyone and the run's viewer is too.

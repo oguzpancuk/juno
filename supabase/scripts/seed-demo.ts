@@ -401,7 +401,9 @@ async function main(): Promise<void> {
           `a demo profile; refusing to write to it. If it is a person's ` +
           `account, leave it alone and rename this demo's slug (and its ` +
           `file in assets/demo-photos/). If it is a half-written demo from ` +
-          `an earlier run, delete the auth user and run again.`,
+          `an earlier run, delete the auth user and the photos/${id}/ ` +
+          `folder — nothing removes storage objects when an account goes — ` +
+          `and run again.`,
       );
     }
 

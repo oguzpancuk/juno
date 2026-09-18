@@ -6070,4 +6070,9 @@ cheap to make and cheap to check, which is exactly why it has to be the
 second one: they were regenerated rather than the sentence softened. The
 driver had to be fixed first — it reused one Chrome profile, so the run
 started signed in as whoever the last run was, and the door it meant to
-photograph was the deck.
+photograph was the deck. The next review then found the failed run's own
+`failure.png` committed into `screenshots/` beside the five, swept in by a
+`git add -A`: a picture of a different deck, filed as evidence, in the
+commit whose whole point was that the evidence was one run. Failure shots
+go to the temporary profile directory now, where they cannot be committed
+and cannot dirty the tree a battery run needs clean.
