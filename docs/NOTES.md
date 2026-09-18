@@ -5913,3 +5913,134 @@ scratch repo, a temporary `.env.local`, a replayed input. The gate was
 never wrong in a way reading revealed. Writing a guard and showing a guard
 holds are different pieces of work, and only the second one produces
 evidence; a guard with no test is a claim.
+
+## 2026-09-17/18 — Six asks before launch, and a mark that was never drawn
+
+The owner gave a list of six and asked for the push and deploy gates at
+the end of it. Five are small and all five are done; the sixth is the
+twenty demo profiles, and the part of it that needed thinking was not the
+profiles.
+
+**The tab icon (1).** `assets/favicon.png` was the iOS icon shrunk: a lit
+night sky with a thin ring, which at sixteen pixels resolves to a dark
+smudge that a dark tab strip swallows whole. The corners were white
+because the PNG had no alpha. Neither is fixable by resizing, so the web
+tab icon is now its own drawing — `apps/mobile/public/icon.svg`, the same
+mark with a heavier ring, larger spheres and no glow — and
+`scripts/web-icons.py` rasterises it to `favicon.ico` (16/32/48, alpha)
+and `apple-touch-icon.png` with headless Chrome, the way `brand-assets.py`
+already renders the native icons. `web.favicon` is gone from `app.json`:
+Expo skips its own generation when the project has `public/favicon.ico`,
+so leaving it would have been a second source of truth for a file it no
+longer produces.
+
+**The page's own head (3).** A mobile browser painted white above and
+below the app because nothing had ever set a background outside the React
+tree: the strip a collapsing toolbar reveals, and the canvas behind an
+overscroll, are not part of it. Expo's default `index.html` is now
+replaced by `apps/mobile/public/index.html` — Expo reads it from the
+public folder in preference to its own — which carries `color-scheme:
+dark`, a `#07060F` ground on `html` and `body`, `overscroll-behavior:
+none`, `viewport-fit=cover` and a `theme-color` the browser's toolbars
+take. `web.lang` is `tr` now too, which costs nothing and is what a screen
+reader needs.
+
+Both files repeat colours that live in `theme/tokens.ts`, which the
+battery forbids everywhere else. They are held to it the way `app.json`
+is: `tokens.test.ts` reads the two files and fails if the three grounds
+are not `color.bg`, or if the mark's ring is not the product's gradient in
+order.
+
+**The fields (2).** Three screens carried three copies of one input style
+with three different corners — 10 on onboarding, 16 on the door, 16 on the
+code screen — and the owner pointed at the squarest. There is one `Field`
+now, in `components/ui.tsx`, at `radius.lg`; the two screens that need
+more than the base give (the narrow date boxes, the letter-spaced code)
+pass only that.
+
+**The sheet (5).** The privacy notice opens as a `Popup` from the three
+doors instead of navigating to `/legal`. Onboarding is the reason it
+matters: eight fields typed in, and reading the notice used to leave the
+screen and come back to an empty one. `/legal` is untouched — it is the
+notice's public address, which the store listing and the notice itself
+both cite, and a sheet has no URL.
+
+**The mark that was never drawn.** Looking at the door in a browser, the
+Juno mark above the wordmark on the sign-up screen was simply not there —
+empty space where it should be. An id inside an `<Svg>` is not scoped to
+that `<Svg>` on the web: it lands in the page's one id namespace,
+`url(#orbit-ring)` resolves to whichever element claimed the name first,
+and a paint server inside a screen the router is holding behind the
+current one paints nothing. Proven by deleting the hidden first copy from
+the DOM, at which point the ring appeared. Four components had a literal
+id — the ground, the mark, its spheres, the band ring — so every second
+instance of each was drawing with a dead reference. They all go through
+`lib/svg-id.ts` now, and `lib/svg-id.test.ts` greps the source for a
+literal `id="` or a typed-out `url(#…)`, because nothing else in the
+battery can see a component that renders nothing.
+
+Not in the owner's list. It was in the same family as the first item and
+one screen away from it, and shipping an icon fix beside an invisible logo
+would have been odd.
+
+**The demos (6).** `is_demo` on `profiles`, twenty rows written by
+`supabase/scripts/seed-demo.ts` with real charts — the birth data is
+invented but goes through `@juno/geo` and `@juno/astro` exactly as a
+member's does, so every score and starter on screen is the engine's own
+arithmetic — and twenty synthetic portraits in `assets/demo-photos/`.
+All in Istanbul (owner's call: the deck filters on the viewer's radius, so
+a demo in another city is a demo nobody sees) and `interested_in`
+'everyone', because the deck applies the other side's preference too.
+
+The owner asked for "every demo likes the new member, and a like back
+matches". What is built is the second half, and it produces the first
+half's effect exactly. Writing twenty likes at sign-up would mean
+computing twenty starter keys on the server, and a starter key is the
+output of a TypeScript engine this database does not run; worse,
+`create_match_on_mutual_like` refuses a pair whose keys disagree, so a
+server-side key that drifted by one aspect would not fail quietly — it
+would make the member's own swipe fail. `private.likes_demo_reciprocate`
+answers at the moment of the like with the key the member's own client
+just computed, so the two agree by construction. Nothing in the product
+shows who has liked you, so there is no screen on which the two designs
+differ.
+
+`is_demo` is the server's: UPDATE was already closed (members hold a
+column-by-column grant) but INSERT was not, and onboarding is an insert
+the member makes for themselves — without a guard anyone could have given
+themselves a profile that matches everyone who likes it.
+`private.profiles_guard_demo` forces it false for any caller that is not
+`service_role`.
+
+**Owner decision, recorded.** Demo profiles carry no badge and are not
+distinguishable from members. The risk was put to the owner with the FTC's
+case against Match named, and the answer was "işaretsiz, gerçek gibi"
+(2026-09-17). The profiles are synthetic faces rather than photographs of
+people, so no one's likeness is used; the App Store review risk stands and
+is the owner's to carry.
+
+**Two tools the repo did not have.** `gen:types` called a bare `supabase`
+that is not on this machine's PATH, and its `>` truncated the committed
+`database.types.ts` before the command failed — running the documented
+command emptied the file. It goes through `npx supabase@2.117.0` now and
+renames a temporary file into place. And
+`apps/mobile/scripts/web-drive.mjs` exists because there was no way to
+write a phone-width PNG of the web client: headless Chrome clamps its
+window to 500 px wide (measured — `--window-size=390,844` reports
+`innerWidth=500`), and the interactive browser pane renders correctly but
+cannot write a file. It drives Chrome over the DevTools protocol, where
+`Emulation.setDeviceMetricsOverride` sets a real 390 × 844 viewport, and
+it is what produced `screenshots/l1-web-*.png` — including the one the
+owner asked about, the onboarding fields, driven through a real sign-in
+against the local stack.
+
+**What is not verified, and why.** Docker Desktop stopped between the two
+halves of this session and will not start from a shell — its VM powers
+down and the GUI app needs the owner's own session. The Supabase suite and
+`types-drift` need the local stack, so the battery cannot be green here,
+and the push gate is therefore not passed. Everything that does not need
+Docker is green, and the demo suite and the seeding script were both run
+against the local stack before it went down: five tests passing, twenty
+demo rows with charts and photos confirmed through `psql`. Those are
+yesterday's results on today's code, which is not the same as a run, and
+the entry says so rather than claiming a battery that was not executed.

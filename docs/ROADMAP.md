@@ -424,6 +424,25 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       supabase-js itself declares `npm:@opentelemetry/api@^1.0.0`, and
       that range is still resolved at cold start._
 
+- [ ] **L1 — Six things the owner asked for on the way to launch.**
+      One list, given on 2026-09-17: the tab icon on juno-dating.com does
+      not show; the date boxes after sign-up are square where the design
+      is round; a mobile browser paints white above and below the app;
+      the pitch loses its "onu"; the privacy notice opens as a sheet
+      rather than a page; and the product launches with twenty demo
+      profiles that match a member back the moment the member likes them
+      (`is_demo`, `private.likes_demo_reciprocate`, and
+      `supabase/scripts/seed-demo.ts`). Two things found on the way are
+      in it: every SVG paint server is now named per instance, because a
+      literal id made the second `OrbitMark` on the stack draw nothing —
+      the sign-up door's mark was missing — and the web page's own head
+      lives in `apps/mobile/public/index.html` instead of Expo's default.
+      — done when: the battery is green on a clean HEAD (battery), the
+      twenty demos are visible in the deck of a signed-in client with a
+      like on one producing a match (manual, against the local stack),
+      and the door and the privacy sheet are seen at phone width on the
+      exported web client (screenshot).
+
 - [ ] **The deploy gate has never been tested where it keeps breaking.**
       `apps/mobile/scripts/check-deploy-env.ts` is the piece five reviews
       in one day found a way past — a deny-list walked through, a gate that
