@@ -6494,3 +6494,54 @@ About block of `docs/project-instructions.md` now lists them one line each
 (the port earlier today had only extracted their titles). One stale line
 found and struck in the ROADMAP: Deferred still named the web app, which
 shipped under ADR-0005. Owner: paste the file into the project again.
+
+## 2026-09-21 — The battery learned to say NOT RUN, and the probe the owner named was the wrong one
+
+Owner's ask: cloud threads have no Docker daemon, so
+`npm run test -w @juno/supabase` cannot run there and took the whole
+battery down with it. Split the battery's `tests` step per workspace and
+give the supabase one a third verdict — NOT RUN — printed beside ok and
+FAIL, never failing the battery, never silent.
+
+- `tests` is now one step per workspace, and the list is read from
+  `npm query .workspace` rather than written out in `verify.sh`, so a
+  workspace added later cannot quietly lose its tests. A list that cannot
+  be read, or that comes back empty, is a FAIL.
+- The mechanics (`fail`, `results`, `log`, `step`, the decision) moved to
+  `.claude/hooks/verify-lib.sh`, which `verify.sh` sources. The reason is
+  the test: `.claude/hooks/verify-lib.test.sh` drives the decision four
+  ways in a hermetic PATH of stubs, and it could not have done that with
+  the mechanics inside a file that runs a battery when you source it. The
+  test is itself a battery step, `battery self-test`.
+- The owner's rule was "NOT RUN only when there is no `docker` binary".
+  That probe does not fire here: a cloud thread has `/usr/bin/docker`
+  (29.3.1) and no `/var/run/docker.sock`, so the literal rule would have
+  left the battery red in exactly the case the ask exists for. The
+  implemented rule is the goal the ask states — "this machine cannot run
+  containers at all" — read as two cases: no binary, or a binary with no
+  daemon answering `docker info`. Everything the owner asked to keep
+  failing still fails: a daemon that answers plus a stack that is down is
+  a FAIL, and `CI` set always runs the suite. Flagged to the owner on the
+  pull request; if they want the literal probe back it is two lines in
+  `supabase_tests_plan`.
+- The cost of the widened rule: on a machine where Docker is installed but
+  the desktop app is not running, the suite now reports NOT RUN instead of
+  FAIL. The safety net is that `main` is protected by CI's `verify`, which
+  starts a real stack and has `CI` set, so nothing merges on a NOT RUN.
+
+### Battery gaps
+
+- `npm run test --workspaces` was one step and `step` prints only the last
+  60 lines of a failing step's log. The supabase failure scrolled the
+  three passing workspaces out of the report entirely, so a thread reading
+  the battery could not tell which suites had run. Fixed here by the
+  per-workspace split; the 60-line tail is unchanged and is still a
+  reporting limit worth remembering when a step covers more than one thing.
+
+### Upstream candidates
+
+- The NOT RUN verdict itself: any repo whose battery has a step needing a
+  daemon the runner may not have wants this, and `verify-lib.sh` plus its
+  test is the whole of it.
+- Splitting a `--workspaces` step per workspace, for the same reason the
+  gap above gives.

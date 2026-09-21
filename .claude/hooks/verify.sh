@@ -16,18 +16,9 @@ if [ ! -d node_modules ]; then
   exit 1
 fi
 
-fail=0; results=()
-log="$(mktemp)"
-step() {
-  local name="$1"; shift
-  if "$@" >"$log" 2>&1; then
-    results+=("ok   $name")
-  else
-    results+=("FAIL $name")
-    fail=1
-    echo "--- $name ---" >&2; tail -n 60 "$log" >&2
-  fi
-}
+# `fail`, `results`, `log`, `step` and the supabase-suite decision.
+# shellcheck source=verify-lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/verify-lib.sh"
 
 # Every tracked shell script must keep its exec bit. Three commits in five
 # were spent putting one back (NOTES 2026-09-16): an editor that writes a
@@ -80,9 +71,43 @@ step "exec bits" exec_bits
 step "typecheck" npm run typecheck --workspaces --if-present
 step "lint"      npm run lint --workspaces --if-present
 step "format"    npx prettier --check .
-step "tests"     npm run test --workspaces --if-present
+
+# One step per workspace, not `npm run test --workspaces`. That was one
+# step, and `step` prints only the last 60 lines of a failing step's log:
+# on 2026-09-21 the supabase suite's failure scrolled three passing
+# workspaces out of the report, so a thread could not tell which suites
+# had actually run. The list is read from npm rather than written out
+# here, so a workspace added later cannot quietly lose its tests; a list
+# that cannot be read, or that comes back empty, is a FAIL.
+workspace_names() {
+  npm query .workspace --json |
+    node -e 'let s = "";
+      process.stdin.on("data", (d) => (s += d)).on("end", () => {
+        for (const w of JSON.parse(s)) process.stdout.write(w.name + "\n");
+      });'
+}
+
+names="$(workspace_names)" || names=""
+if [ -z "$names" ]; then
+  _result FAIL "tests — cannot list the workspaces (npm query .workspace)"
+  fail=1
+else
+  while IFS= read -r ws; do
+    [ -n "$ws" ] || continue
+    case "$ws" in
+      # The one workspace whose suite needs a machine that can run
+      # containers; verify-lib.sh decides whether this one can.
+      @juno/supabase) supabase_tests_step ;;
+      *) step "tests ($ws)" npm run test -w "$ws" --if-present ;;
+    esac
+  done <<<"$names"
+fi
+
+# The battery's own mechanics, driven where they cannot be driven for
+# real: no daemon, no stack, three decisions.
+step "battery self-test" bash .claude/hooks/verify-lib.test.sh
 step "docs"      bash .claude/hooks/docs-figures.sh
 
-rm -f "$log"
+[ -z "$log" ] || rm -f "$log"
 printf '%s\n' "${results[@]}"
 exit $fail
