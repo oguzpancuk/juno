@@ -20,7 +20,7 @@ import type { Gender } from './profile';
  * what the screen says about one.
  *
  * The numbers below are the migration's numbers
- * (20260921000001_premium.sql). Both sides are driven by tests; change
+ * (20260921000002_premium.sql). Both sides are driven by tests; change
  * one and the other has to agree.
  */
 export const FREE_DAILY_LIKES = 20;

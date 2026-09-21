@@ -6704,6 +6704,22 @@ native-only screen needs a look.
 `docs/project-instructions.md` changed in two bullets (manual checks, and
 "deploys are not done from this project") — the owner pastes it again.
 
+## 2026-09-21 — the preview workflow is a recorded exception
+
+maya's rule from today on (`docs/preview-recipes.md` there): a new product
+is hosted where the provider's Git integration makes the per-pull-request
+preview by itself, and a preview workflow of our own is an exception that
+needs its reason written down. This repository is one, by owner decision:
+Cloudflare does offer such an integration (Workers Builds), but the rule
+arrived hours after `preview.yml` was built, hardened (`pull_request_target`,
+no secrets beside a pull request's code) and proven on real pull requests,
+and the gain from moving — no Cloudflare token in GitHub Actions, no
+workflow to maintain — does not yet pay for redoing it. One thing would
+have to be settled first in any case: Workers Builds deploys the production
+branch by default, which the owner's "deploys run locally" rule forbids;
+whether that can be switched off was not verified. Revisit if the hosting
+changes for another reason, or if the workflow starts costing upkeep.
+
 ## 2026-09-21 — premium membership, with nothing behind the counter
 
 The owner's second off-ROADMAP ask of the evening: premium, without a
@@ -6713,7 +6729,10 @@ the shape of it; this entry is what a next session would otherwise have to
 ask about.
 
 **Defaults chosen where the ask forked** (all reversible, all in
-`20260921000001_premium.sql`):
+`20260921000002_premium.sql` — numbered past the sibling thread's
+`20260921000001_profile_details.sql`, because the Supabase CLI keys an
+applied migration by the digits alone and two files sharing them would
+leave the second silently unapplied):
 
 - A free member gets 20 likes per rolling 24 hours. "Sınırsız" needed
   something to be unlimited against and the repo had no cap at all. The

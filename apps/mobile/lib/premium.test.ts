@@ -21,7 +21,7 @@ import {
  */
 describe('the quotas as the app reads them', () => {
   it('holds the numbers the migration enforces', () => {
-    // Change one and the other has to agree: 20260921000001_premium.sql
+    // Change one and the other has to agree: 20260921000002_premium.sql
     // raises on the 21st like of a day and the 6th star of a week.
     expect(FREE_DAILY_LIKES).toBe(20);
     expect(SUPER_LIKES_PER_WEEK).toBe(5);
