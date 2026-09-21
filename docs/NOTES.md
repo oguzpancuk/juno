@@ -6767,21 +6767,41 @@ exempt from). Not decided here; not a bug to fix quietly.
 **What could not be verified here.** The supabase suite — where every
 quota and the whole view live — cannot run in a cloud thread (no Docker
 daemon), so `supabase/tests/premium.test.ts` has only ever been
-typechecked and linted; CI's `verify` is its first real run. The
-screenshots the ROADMAP-style clauses would want are impossible for the
-same reason twice over: the screens need a signed-in session against a
-stack carrying this migration, and `apps/mobile/scripts/web-drive.mjs`
-hardcodes `/Applications/Google Chrome.app/...`, so a cloud thread has no
-browser it will drive even when a stack exists. The premium screen, the
-"seni beğenenler" list and the sort toggle are listed in the pull request
-as the owner's checks.
+typechecked and linted; CI's `verify` is its first real run. The screens
+below are photographed, but a photograph is not that run: nothing
+server-side is exercised in one.
+
+**How the eight screenshots were made.** `screenshots/premium-*.png` were
+driven the way the sibling thread drove its own an hour earlier: the Expo
+web export re-pointed at a small Node server that serves the bundle and
+answers the handful of auth, REST and photo endpoints these screens call,
+from fixed rows whose charts are real `@juno/astro` output. Headless
+Chromium at 390x844, clicked through by a copy of
+`apps/mobile/scripts/web-drive.mjs` with the browser path overridden.
+Deniz buys the membership mid-run, so the free and the premium shot of a
+screen are one session either side of one tap. What this shows is the
+app's own code, its Turkish copy and the state each screen goes into.
+What it does not show is Postgres: no trigger fired, no view answered, no
+RLS policy was consulted — `liked_me`'s locked shape in
+`premium-liked-me-locked.png` is the stand-in returning null columns
+because the real view would, and that the real view does is
+`supabase/tests/premium.test.ts`'s to prove, in CI. The harness was not
+kept, same as the sibling's.
+
+The eight: `premium-deck-free` (the star button between ✕ and ♥, the
+day's like counter, the chip with its badge), `premium-liked-me-locked`,
+`premium-sort-free` (the toggle with Uyum behind the lock),
+`premium-screen`, `premium-active`, `premium-liked-me-list`,
+`premium-sort-on`, `premium-deck-premium` (the star count where the like
+counter was).
 
 ### Upstream candidate
 
 - 2026-09-21 · `apps/mobile/scripts/web-drive.mjs` · The Chrome path is a
   macOS literal, so the one tool this repo has for phone-width screenshots
-  refuses to start anywhere else. A `CHROME` environment override (and the
-  cloud image's `/opt/pw-browsers/chromium` as a fallback) would let a
-  thread take its own screenshots whenever a stack is reachable. Not done
-  here: this thread had no stack either way, so the change would have
-  shipped unverified.
+  refuses to start anywhere else, and both of today's threads worked
+  around it by copying the script and editing that line. A `CHROME`
+  environment override — the current literal as the default, the cloud
+  image's `/opt/pw-browsers/chromium` as a fallback — would end the
+  copying. Not done here: it is a second problem, and this branch is a
+  feature.
