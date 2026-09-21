@@ -6649,3 +6649,9 @@ NOT verified yet, and cannot be from this pull request: a
 first real run is the first pull request opened AFTER this one merges.
 Unknowns that run will settle: whether the account has a workers.dev
 subdomain enabled, and the exact URL (the `<account>` part).
+
+## 2026-09-21 — the preview workflow, first real run
+
+Opened only to give `preview.yml` its first run: a `pull_request_target`
+workflow cannot run from the pull request that adds it. What the run showed
+is recorded in this entry before the pull request merges.
