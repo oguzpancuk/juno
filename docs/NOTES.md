@@ -6460,3 +6460,22 @@ Correction to the entry above: welcome is not "the one top-level screen
 with no scroll view" — the two doors have none either. What sets it apart
 is that its drop is in flow; theirs goes to an absolutely positioned back
 link. The comment in `welcome.tsx` now says that.
+
+**Review, same day: the typing guard did not do what the entry above says.**
+With `html` no longer `visible`, `body { overflow: hidden }` is a scroll
+container of its own and simply takes the 240 points over from the
+viewport — `body.scrollTop` could reach 240 while `html.scrollHeight` read
+714, which is the only number the simulator check had looked at. The rule
+is `hidden` then `clip` now, and a `clip` body is not a scroll container.
+Measured in Chrome on the rebuilt export: idle, `scrollTo(0, 500)` lands at
+240; with a field focused, `scrollY` 0 and `body.scrollTop` 0. The class is
+also no longer decided by event targets alone — signing in unmounts a
+focused field, and not every engine fires `focusout` for that — but by
+`document.activeElement` on every focus change and every touch: removed
+while focused with no `focusout`, the class stayed on; the next
+`pointerdown` cleared it.
+
+The privacy sheet over the door, in the simulator: the sheet and its scrim
+end at the page's edge, being a fixed layer, and the strip under them shows
+the door's sky undimmed. It reads as the toolbar's own ground, with no
+line. Left as it is.

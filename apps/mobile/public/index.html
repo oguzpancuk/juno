@@ -89,11 +89,18 @@
         viewport, which is what `lib/keyboard.ts` measures to lift the
         chat composer. Nothing is lost by it: the keyboard covers the strip
         the overhang exists to fill. The class is set by the script below.
-        Checked in the simulator: with the class on, `scrollHeight` is the
-        window's again.
+
+        `clip` here too, and it matters more than it looks: with `html` no
+        longer `visible`, a `hidden` body is a scroll container of its own
+        and simply takes the 240 points over from the viewport
+        (`body.scrollTop` could reach 240 — review, 2026-09-21). A `clip`
+        body is not one, so there is nothing left that can scroll; it is
+        the both-`clip` row of the table in docs/NOTES.md, which is cut at
+        the page's edge exactly as the old page was.
       */
       html.typing body {
         overflow: hidden;
+        overflow: clip;
       }
       /* These styles make the root element full-height */
       #root {
@@ -152,20 +159,31 @@
       // Sets `html.typing` while a text field is focused; see the rule of
       // that name above. Plain DOM, before the bundle, so it holds from
       // the first field a person can reach.
+      //
+      // It reads `document.activeElement` on every focus change — a tick
+      // later when focus is leaving — rather than trusting the event's
+      // target: a field that is unmounted
+      // while focused — signing in does exactly that — need not fire
+      // `focusout` in every engine, and a class decided by targets alone
+      // would then stay on and bring the band back.
       (function () {
         var root = document.documentElement;
-        function isField(target) {
-          return (
-            target instanceof Element &&
-            target.matches('input, textarea, [contenteditable="true"]')
+        function sync() {
+          var active = document.activeElement;
+          root.classList.toggle(
+            'typing',
+            active instanceof Element &&
+              active.matches('input, textarea, [contenteditable="true"]'),
           );
         }
-        addEventListener('focusin', function (event) {
-          if (isField(event.target)) root.classList.add('typing');
-        });
-        addEventListener('focusout', function (event) {
-          if (isField(event.target)) root.classList.remove('typing');
-        });
+        function later() {
+          setTimeout(sync, 0);
+        }
+        addEventListener('focusin', sync);
+        addEventListener('focusout', later);
+        // The unmounted-while-focused case fires neither; the next touch
+        // anywhere puts it right.
+        addEventListener('pointerdown', later);
       })();
     </script>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->

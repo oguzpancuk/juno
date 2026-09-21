@@ -77,11 +77,12 @@ type NebulaSpec = (typeof NEBULAE)[number];
  * (owner, 2026-09-18: "alt tabin de biraz saydam olmasını istiyorum").
  *
  * 240 covers the bar (53) and the tallest strip measured (147 on the
- * owner's phone, 98 in the iOS 26 simulator) with room to spare; past
- * what the browser shows it costs nothing, because `overflow: clip` on
- * the document means none of it can be scrolled to. `public/index.html`
- * is the other half of this: `overflow: hidden` there cuts the overhang
- * off at the page's edge, `clip` does not.
+ * owner's phone, 98 in the iOS 26 simulator) with room to spare. It does
+ * make the document that much taller than its window: no wheel or touch
+ * can scroll it, but a script could (`window.scrollTo`), and nothing in
+ * the app does. `public/index.html` is the other half of this: `overflow:
+ * hidden` there cuts the overhang off at the page's edge, `clip` on
+ * `html` alone does not.
  *
  * Web only. On a phone the app owns the screen to its last point and
  * there is no strip to fill; whether the overhang would show through the
