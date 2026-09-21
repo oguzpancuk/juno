@@ -6684,3 +6684,22 @@ wrong-role key now blocks a merge too. Accepted cost: a Cloudflare outage
 blocks merges. Reverting is one API call and needs no pull request.
 The merge gate itself went on the same day, after the port landed: pull
 request required, branches up to date, direct pushes off for admins too.
+
+## 2026-09-21 — port of maya 596facf: deploys are local, not CI
+
+Owner decision the same day as the Projects port: deploy commands run on
+the owner's machine, from a local Claude Code session through
+`/deploy-checklist`; a thread never deploys. `deploy.yml` — added that
+morning, never configured — is removed, and the three targets' commands
+stop being "the path until `deploy.yml` is filled": they are the path. No
+`production` environment or Actions deploy secret was ever created here.
+The Cloudflare token in Actions is the PREVIEW's, not a deploy credential
+in the owner's sense — but it could deploy, which is why `preview.yml`
+runs from `main` and keeps it away from a pull request's code.
+Phone builds: maya's rule is now a TestFlight build on request only,
+made by Xcode Cloud, never triggered by a thread. This repo's release path
+still builds with EAS and no EAS project exists yet; which of the two makes
+the on-request build here is open, and nothing depends on it until a
+native-only screen needs a look.
+`docs/project-instructions.md` changed in two bullets (manual checks, and
+"deploys are not done from this project") — the owner pastes it again.
