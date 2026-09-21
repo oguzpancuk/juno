@@ -32,12 +32,12 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 | Purpose | Command |
 |---|---|
 | install | `npm ci` |
-| test | `npm run test --workspaces --if-present` (Vitest) |
+| test | `npm run test --workspaces --if-present` (Vitest); the `supabase` workspace needs the local stack up, the other three do not |
 | typecheck | `npm run typecheck --workspaces --if-present` (`tsc --noEmit`) |
 | lint | `npm run lint --workspaces --if-present` (ESLint) + `npx prettier --check .` |
 | dev | `bash contracts/init.sh` (local Supabase + Expo on 8082 with local keys); or `npm run start -w apps/mobile` with `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` set (see `apps/mobile/.env.example`) |
 | local backend | `npx supabase start` / `npx supabase db reset` (needs Docker) |
-| full battery | `bash .claude/hooks/verify.sh` (needs `python3` for the docs step) |
+| full battery | `bash .claude/hooks/verify.sh` (needs `python3` for the docs step). Tests are one step per workspace. Where containers are impossible — no `docker`, or a `docker` with no daemon, which is every cloud thread — a thread reports `tests (@juno/supabase)` as **NOT RUN**, printed in the summary beside ok and FAIL, and the battery still exits 0; CI's `verify` job is the run. With a daemon answering, a stack that is down is a FAIL, and with `CI` set to anything but `false` or `0` the suite always runs. |
 
 ## Standards
 - Strict typing where the language offers it; schema validation at every
@@ -66,6 +66,21 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
   (`git status --porcelain` empty before and after), and put the result in
   the pull request body. A step this machine cannot run goes in the body
   as "not run here — CI's `<job>` is the run", never as passing.
+- The battery says that itself for the one step it can apply to. Tests are
+  one step per workspace, and `tests (@juno/supabase)` needs a local
+  Supabase stack, which needs containers. Where containers are impossible
+  — no `docker` binary, or a `docker` binary with no daemon behind it,
+  which is what a cloud thread has — the step reports `NOT RUN`,
+  printed in the summary beside ok and FAIL with the reason, and the
+  battery still exits 0. That line goes into the pull request body as it
+  stands: it is this repo's "not run here", and CI's `verify` job is the
+  run. Nothing else changes — with a daemon answering, a stack that is
+  down means `npx supabase start` and the step is a FAIL; with `CI` set to
+  anything but `false` or `0` the suite always runs, so a missing stack in
+  CI is a defect in the run. The decision is `supabase_tests_plan` in
+  `.claude/hooks/verify-lib.sh`, driven six ways by
+  `.claude/hooks/verify-lib.test.sh` — the battery's own
+  `battery self-test` step. Change one and the other has to agree.
 - If the item's done-when clause names a screenshot or manual check, run the
   `evaluator-qa` agent on it and put its verdict in the pull request body.
   NEEDS_WORK means not done: fix, run it again, open the pull request only

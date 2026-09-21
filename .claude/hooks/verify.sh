@@ -4,7 +4,13 @@
 # even after a failure and report them together; anything that cannot be
 # verified is a FAIL, never a silent skip.
 set -uo pipefail
-cd "$(dirname "$0")/../.."
+
+# Where this file lives, resolved BEFORE the `cd`: after it the cwd is the
+# repo root, so a relative `$0`/`$BASH_SOURCE` would resolve against the
+# wrong directory and `cd .claude/hooks && bash verify.sh` would source
+# nothing and report every step as a missing command.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$here/../.."
 
 # Preconditions — a missing skeleton or missing deps is a FAIL.
 if [ ! -f package.json ]; then
@@ -16,18 +22,9 @@ if [ ! -d node_modules ]; then
   exit 1
 fi
 
-fail=0; results=()
-log="$(mktemp)"
-step() {
-  local name="$1"; shift
-  if "$@" >"$log" 2>&1; then
-    results+=("ok   $name")
-  else
-    results+=("FAIL $name")
-    fail=1
-    echo "--- $name ---" >&2; tail -n 60 "$log" >&2
-  fi
-}
+# `fail`, `results`, `log`, `step` and the supabase-suite decision.
+# shellcheck source=verify-lib.sh
+source "$here/verify-lib.sh"
 
 # Every tracked shell script must keep its exec bit. Three commits in five
 # were spent putting one back (NOTES 2026-09-16): an editor that writes a
@@ -80,9 +77,14 @@ step "exec bits" exec_bits
 step "typecheck" npm run typecheck --workspaces --if-present
 step "lint"      npm run lint --workspaces --if-present
 step "format"    npx prettier --check .
-step "tests"     npm run test --workspaces --if-present
+
+tests_steps
+
+# The battery's own mechanics, driven where they cannot be driven for
+# real: no daemon, no stack, six decisions.
+step "battery self-test" bash "$here/verify-lib.test.sh"
 step "docs"      bash .claude/hooks/docs-figures.sh
 
-rm -f "$log"
+[ -z "$log" ] || rm -f "$log"
 printf '%s\n' "${results[@]}"
 exit $fail

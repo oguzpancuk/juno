@@ -6494,3 +6494,132 @@ About block of `docs/project-instructions.md` now lists them one line each
 (the port earlier today had only extracted their titles). One stale line
 found and struck in the ROADMAP: Deferred still named the web app, which
 shipped under ADR-0005. Owner: paste the file into the project again.
+
+## 2026-09-21 — The battery learned to say NOT RUN, and the probe the owner named was the wrong one
+
+Owner's ask: cloud threads have no Docker daemon, so
+`npm run test -w @juno/supabase` cannot run there and took the whole
+battery down with it. Split the battery's `tests` step per workspace and
+give the supabase one a third verdict — NOT RUN — printed beside ok and
+FAIL, never failing the battery, never silent.
+
+- `tests` is now one step per workspace, and the list is read from
+  `npm query .workspace` rather than written out in `verify.sh`, so a
+  workspace added later cannot quietly lose its tests. A list that cannot
+  be read, or that comes back empty, is a FAIL.
+- The mechanics (`fail`, `results`, `log`, `step`, the decision) moved to
+  `.claude/hooks/verify-lib.sh`, which `verify.sh` sources. The reason is
+  the test: `.claude/hooks/verify-lib.test.sh` drives the decision four
+  ways in a hermetic PATH of stubs, and it could not have done that with
+  the mechanics inside a file that runs a battery when you source it. The
+  test is itself a battery step, `battery self-test`.
+- The owner's rule was "NOT RUN only when there is no `docker` binary".
+  That probe does not fire here: a cloud thread has `/usr/bin/docker`
+  (29.3.1) and no `/var/run/docker.sock`, so the literal rule would have
+  left the battery red in exactly the case the ask exists for. The
+  implemented rule is the goal the ask states — "this machine cannot run
+  containers at all" — read as two cases: no binary, or a binary with no
+  daemon answering `docker info`. Everything the owner asked to keep
+  failing still fails: a daemon that answers plus a stack that is down is
+  a FAIL, and `CI` set always runs the suite. Flagged to the owner on the
+  pull request; if they want the literal probe back it is two lines in
+  `supabase_tests_plan`.
+- The cost of the widened rule: on a machine where Docker is installed but
+  the desktop app is not running, the suite now reports NOT RUN instead of
+  FAIL. The safety net is that `main` is protected by CI's `verify`, which
+  starts a real stack and has `CI` set, so nothing merges on a NOT RUN.
+
+### Battery gaps
+
+- `npm run test --workspaces` was one step and `step` prints only the last
+  60 lines of a failing step's log. The supabase failure scrolled the
+  three passing workspaces out of the report entirely, so a thread reading
+  the battery could not tell which suites had run. Fixed here by the
+  per-workspace split; the 60-line tail is unchanged and is still a
+  reporting limit worth remembering when a step covers more than one thing.
+
+### Upstream candidates
+
+- The NOT RUN verdict itself: any repo whose battery has a step needing a
+  daemon the runner may not have wants this, and `verify-lib.sh` plus its
+  test is the whole of it.
+- Splitting a `--workspaces` step per workspace, for the same reason the
+  gap above gives.
+
+## 2026-09-21 — Review of the NOT RUN change: five findings, and two of them were mine to have caught
+
+`/code-review --comment` on pull request #3 posted five, all correct, all
+fixed in the same branch. Two were regressions the battery could not see
+itself, which is the part worth remembering.
+
+- `source "$(dirname "${BASH_SOURCE[0]}")/verify-lib.sh"` sat _below_
+  `cd "$(dirname "$0")/../.."`. From the repo root it worked; from
+  `.claude/hooks` it resolved against the repo root and sourced nothing,
+  and every step then reported "command not found". The battery ran green
+  in CI and from the root the whole time. Fix: resolve `here` to an
+  absolute path at the top of the file, before the `cd`, and use it for
+  both the source and the self-test step.
+- `[ -n "${CI:-}" ]` counted `CI=false` and `CI=0` as CI. Those are the
+  idiom for turning CI behaviour _off_ — Expo and CRA build scripts, some
+  sandbox images — so a thread carrying one would have been forced to run
+  the suite it cannot run, which is the exact failure the change exists to
+  remove. Truthiness now matches explicitly.
+- `while IFS= read -r ws … <<<"$names"` drove the per-workspace loop with
+  a here-string, and `step` redirected only stdout and stderr. A step that
+  reads stdin ate the rest of the list. Demonstrated on a stand-in: four
+  workspaces in, one `tests (…)` line out, `fail` untouched, exit 0 — a
+  short but entirely green summary with no line missing to notice. Two
+  fixes, both kept: the list is read into an array before any step runs,
+  and `step` now closes stdin (`</dev/null`), without which the array fix
+  leaves such a step blocking on the terminal instead.
+- `supabase_tests_step` treated anything that was not `run` as NOT RUN,
+  so a plan it could not parse would have exited the battery green having
+  never run the suite. Now `not-run:*` is matched explicitly and anything
+  else is a FAIL.
+- The self-test's `verdict()` used `\|` and `\?`, GNU BRE extensions that
+  BSD sed reads as literal characters. On macOS — the platform this repo
+  is iOS-first for — every verdict assertion would have gone red and taken
+  the battery with it. Rewritten in plain bash against the fixed seven-column
+  layout `_result` produces; nothing in `.claude/hooks/` uses `sed` now.
+
+### Battery gaps
+
+- The battery cannot catch the first and third of these: it only ever runs
+  itself one way, from the repo root, with a stdin nothing reads. A gate
+  that is the only caller of its own code has no second opinion — the
+  review was the second opinion, and the self-test now carries the two
+  cases that can be expressed as code (`CI=false`, an unparseable plan).
+
+## 2026-09-21 — Two more from the review summary: BSD mktemp, and logic the split had left untestable
+
+The five inline findings were the review's body; its summary carried two
+more things, both taken.
+
+- `step` called bare `mktemp`, which `main` already did — BSD mktemp, the
+  one macOS ships, refuses to run without a template, so the substitution
+  would come back empty and every `>"$log"` after it would be an ambiguous
+  redirect. The `sed` fix alone would have been half a macOS fix. Both
+  that call and the self-test's `mktemp -d` now pass
+  `"${TMPDIR:-/tmp}/…XXXXXX"`, which GNU accepts too. Neither can be
+  proven here; no BSD userland in a thread.
+- `workspace_names`, the per-workspace loop and the new "cannot list the
+  workspaces" FAIL branch had no test, because they sat in `verify.sh`'s
+  main body where nothing can drive them. Moved into `verify-lib.sh` as
+  `tests_steps` and covered: an empty list is a FAIL (seen red with the
+  guard deleted), and a three-name list produces a line per workspace with
+  only `@juno/supabase` routed to the decision.
+
+One trap worth remembering, hit while writing that test: bash scopes
+dynamically, so a `workspace_names` override that reads `$names` resolves
+to `tests_steps`'s own `local names` — empty at the moment it is being
+assigned. The override looked like it worked (the empty-list case passed)
+because the collision produced exactly the empty list that case expects.
+A stub named for its own function is the fix; a test that passes for the
+wrong reason is the thing CLAUDE.md's red-before-green rule exists to
+catch, and it did.
+
+### Battery gaps
+
+- Anything living in `verify.sh`'s main body is untestable by
+  construction: the file runs a battery when you source it. New gate logic
+  belongs in `verify-lib.sh`, where the self-test can drive it.
