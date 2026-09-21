@@ -149,12 +149,13 @@ const styles = StyleSheet.create({
   // A flat drop, unlike every other screen's clearance.
   //
   // It was briefly `useTopClearance(76)` and that was scope creep: the
-  // owner never listed this screen, and a review found the cost. This is
-  // the one top-level screen with no scroll view — a plain `space-between`
-  // View — so on a device the extra inset comes straight out of the
-  // bottom, where the consent line and the legal link are, with no scroll
-  // to recover them at a large text size. Left alone until there is a
-  // reason to touch it.
+  // owner never listed this screen, and a review found the cost. The
+  // drop is in flow in a plain `space-between` View with no scroll — the
+  // doors have no scroll either, but their clearance goes to an absolutely
+  // positioned back link and takes no room — so on a device the extra
+  // inset comes straight out of the bottom, where the consent line and the
+  // legal link are, with nothing to recover them at a large text size.
+  // Left alone until there is a reason to touch it.
   hero: { alignItems: 'center', marginTop: 96, gap: space.md },
   glow: { top: -(GLOW - MARK) / 2, left: -(GLOW - MARK) / 2 },
   tagline: { ...type.label, color: color.textMuted },

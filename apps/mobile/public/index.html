@@ -49,8 +49,50 @@
       body {
         height: 100%;
       }
-      /* These styles disable body scrolling if you are using <ScrollView> */
+      /*
+        These styles disable page scrolling; every scroll in this app is a
+        <ScrollView> of its own.
+
+        Expo's template does it with `body { overflow: hidden }`. This does
+        it on `html`, with `clip` where the browser has it, and leaves
+        `body` visible — and both halves matter to iOS Safari, which keeps
+        a strip under the page for its floating toolbar and shows there
+        whatever the document paints past its own bottom edge. `hidden`
+        cuts that off at the edge and leaves the strip a flat colour.
+        `clip` forbids scrolling just the same but is not a scroll
+        container, and Safari shows the overhang. On `body` it does not
+        work: `body` then clips its own descendants at the page's edge
+        before the viewport ever sees them (`scrollHeight` stays at the
+        window's height), so `body` has to let them through.
+
+        Tried in the iOS 26.5 simulator on 2026-09-21, one property at a
+        time: `hidden` anywhere cut the sky with a ruled line, so did
+        `position: fixed`, so did `clip` on both; a scrollable document
+        showed it but scrolled; `clip` on `html` alone showed it and did
+        not move. `CosmicGround` overhangs its host (OVERHANG) to have
+        something to show there.
+
+        `hidden` first, so a browser without `clip` keeps what it had.
+      */
+      html {
+        overflow: hidden;
+        overflow: clip;
+      }
       body {
+        overflow: visible;
+      }
+      /*
+        While a text field has the focus, the old shape. The overhang makes
+        the document 240 points taller than its window (`scrollHeight`),
+        and a taller document is one iOS may scroll to bring a focused
+        field above the keyboard — where today it can only pan the visual
+        viewport, which is what `lib/keyboard.ts` measures to lift the
+        chat composer. Nothing is lost by it: the keyboard covers the strip
+        the overhang exists to fill. The class is set by the script below.
+        Checked in the simulator: with the class on, `scrollHeight` is the
+        window's again.
+      */
+      html.typing body {
         overflow: hidden;
       }
       /* These styles make the root element full-height */
@@ -86,12 +128,10 @@
         screen; `dvh` tracks the visible area as the toolbars come and go.
 
         This is not what fixes the black band at the bottom that the owner
-        saw on 2026-09-18 — that band is `CosmicGround` falling short, and
-        it is fixed there, in the component. A background on `body`
-        propagates to the canvas and paints the whole canvas whatever the
-        document's height is, so this rule changes nothing about the
-        colour. It is here because a page the size of its window is right
-        on its own terms.
+        saw on 2026-09-18. That band is the strip iOS Safari keeps under
+        the page for its toolbar, which no height of ours reaches; see
+        `overflow: clip` above and OVERHANG in `CosmicGround`. It is here
+        because a page the size of its window is right on its own terms.
       */
       @supports (height: 100dvh) {
         html,
@@ -108,6 +148,26 @@
   </head>
 
   <body>
+    <script>
+      // Sets `html.typing` while a text field is focused; see the rule of
+      // that name above. Plain DOM, before the bundle, so it holds from
+      // the first field a person can reach.
+      (function () {
+        var root = document.documentElement;
+        function isField(target) {
+          return (
+            target instanceof Element &&
+            target.matches('input, textarea, [contenteditable="true"]')
+          );
+        }
+        addEventListener('focusin', function (event) {
+          if (isField(event.target)) root.classList.add('typing');
+        });
+        addEventListener('focusout', function (event) {
+          if (isField(event.target)) root.classList.remove('typing');
+        });
+      })();
+    </script>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->

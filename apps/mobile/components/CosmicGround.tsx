@@ -54,10 +54,46 @@ const NEBULAE = [
 ] as const;
 type NebulaSpec = (typeof NEBULAE)[number];
 
+/**
+ * How far the sky runs on past the bottom of its host, on the web.
+ *
+ * A mobile browser does not give a page its whole screen. Measured on the
+ * owner's phone (2026-09-21, `public/diag.html`): an 874-point screen, a
+ * 665-point page, and below the page a strip the browser keeps for its
+ * floating toolbar. What shows in that strip is whatever the document
+ * paints past its own bottom edge, and failing that a flat colour — so a
+ * sky that ends exactly where the page ends is cut off with a ruled line,
+ * and everything under it is black (owner, 2026-09-18: "arkaplan altta
+ * kesiliyor, aşağısı simsiyah").
+ *
+ * So the layer overhangs. The geometry does not: the horizon and the
+ * clouds are still placed against the window, because that is what they
+ * were designed against and `welcome.tsx` tunes the curve to keep it off a
+ * control. Only the canvas is longer, and the part of each cloud that used
+ * to be clipped at the edge is what fills it.
+ *
+ * Inside the tabs the overhang runs under the tab bar first, which is
+ * translucent, so the bar lets the sky through without leaving the layout
+ * (owner, 2026-09-18: "alt tabin de biraz saydam olmasını istiyorum").
+ *
+ * 240 covers the bar (53) and the tallest strip measured (147 on the
+ * owner's phone, 98 in the iOS 26 simulator) with room to spare; past
+ * what the browser shows it costs nothing, because `overflow: clip` on
+ * the document means none of it can be scrolled to. `public/index.html`
+ * is the other half of this: `overflow: hidden` there cuts the overhang
+ * off at the page's edge, `clip` does not.
+ *
+ * Web only. On a phone the app owns the screen to its last point and
+ * there is no strip to fill; whether the overhang would show through the
+ * native tab bar has not been tried on a device, so it is not claimed.
+ */
+const OVERHANG = Platform.OS === 'web' ? 240 : 0;
+
 export function CosmicGround({
   planet = true,
   horizon = true,
   horizonRise = 0.16,
+  star = true,
 }: {
   /** The limb over the top edge; off where the top belongs to a mark. */
   planet?: boolean;
@@ -65,6 +101,11 @@ export function CosmicGround({
   horizon?: boolean;
   /** How far the curve's top sits above the bottom edge, in widths. */
   horizonRise?: number;
+  /**
+   * The falling star; off where only a sliver of this sky is ever seen —
+   * behind the tab bar — and a streak would be a line crossing the bar.
+   */
+  star?: boolean;
 }) {
   const windowBox = useWindowDimensions();
   const still = useReducedMotion();
@@ -74,8 +115,9 @@ export function CosmicGround({
    * The window alone is a snapshot of `innerHeight`, and on a mobile
    * browser that retracts its toolbar the visible area grows while this
    * layer — absolutely positioned, exactly that many pixels tall — does
-   * not, leaving a band at the bottom with no sky in it (owner,
-   * 2026-09-18: "alt kısım simsiyah, arkaplan alta devam etmiyor").
+   * not, leaving a band at the bottom with no sky in it. (This was first
+   * taken for the band the owner reported on 2026-09-18. It was not: that
+   * one is outside the page altogether — see OVERHANG.)
    *
    * The view alone is wrong in the other direction, and worse. Inside the
    * tabs the host is inset above the bar, so the horizon — placed at
@@ -95,7 +137,10 @@ export function CosmicGround({
     height: number;
   } | null>(null);
   const width = Math.max(windowBox.width, laidOut?.width ?? 0);
-  const height = Math.max(windowBox.height, laidOut?.height ?? 0);
+  // The host's height, not this layer's: `laidOut` measures the layer,
+  // which overhangs its host by OVERHANG. Left in, every horizon would
+  // climb by that much — the same mistake as measuring the view alone.
+  const height = Math.max(windowBox.height, (laidOut?.height ?? 0) - OVERHANG);
   // One ground is behind every screen, and the router keeps more than one
   // screen mounted, so these three names are the ones most certain to
   // collide. See lib/svg-id.ts.
@@ -123,7 +168,7 @@ export function CosmicGround({
         );
       }}
     >
-      <Svg width={width} height={height}>
+      <Svg width={width} height={height + OVERHANG}>
         <Defs>
           <RadialGradient id={planetFill.id} cx="62%" cy="78%" r="70%">
             <Stop offset="0" stopColor={color.surfaceHigh} />
@@ -201,7 +246,7 @@ export function CosmicGround({
           still={still}
         />
       ))}
-      {still ? null : <FallingStar width={width} height={height} />}
+      {still || !star ? null : <FallingStar width={width} height={height} />}
     </View>
   );
 }
@@ -436,7 +481,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: -OVERHANG,
     overflow: 'hidden',
   },
   nebula: { position: 'absolute' },

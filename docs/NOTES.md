@@ -6378,3 +6378,85 @@ sky stops at about 700 points, the browser's toolbar starts at 777, and
 the 70 points between them are flat. Seventy measured against a web tab
 bar that computes to 53 — close enough to be suggestive, not close enough
 to be the answer. `diag.html` is still how that one ends.
+
+## 2026-09-21 — The black band was the browser's, and `hidden` was what kept it black
+
+The owner measured their phone with `juno-dating.com/diag` and that ended
+two days of guessing. iOS 27 Safari on a 402 × 874 screen: `innerHeight`
+665 (714 with `viewport-fit=cover`), every safe-area inset 0, `100lvh` 754. The page gets 665 of 874 points. The rest is the status bar above
+and, below, a strip Safari keeps for its floating toolbar. The iPhone 17
+Pro simulator (iOS 26.5) reports 714 without `cover` and draws the same
+chrome, and the band reproduced there on the first load of the live site:
+the door's horizon cut by a ruled line at the page's bottom edge, flat
+`color.bg` under it. So the guess recorded above — a 70-point band against
+a 53-point tab bar — was measuring the wrong thing. The band is not ours.
+It is outside the page.
+
+What Safari shows in that strip is whatever the document paints past its
+own bottom edge, if the document lets it. One test page, one property at a
+time, in the simulator:
+
+| document                                                      | strip                                                           |
+| ------------------------------------------------------------- | --------------------------------------------------------------- |
+| `body { overflow: hidden }` (Expo's template, ours until now) | cut, flat colour                                                |
+| the same, sky `position: fixed` past the bottom               | cut                                                             |
+| scrollable document                                           | sky shows — and the page scrolls                                |
+| `overflow: clip` on `html` and `body`                         | cut: `body` clips its own descendants, `scrollHeight` stays 714 |
+| `overflow: clip` on `html`, `body` visible                    | sky shows, page does not move, `scrollHeight` 954               |
+
+The last row is the change: `public/index.html` moves the no-scroll rule
+to `html` as `clip` (after `hidden`, for a browser without it) and frees
+`body`; `CosmicGround` overhangs its host by 240 points on the web
+(OVERHANG) so there is something past the edge to show. The geometry is
+still the window's — `laidOut` now measures a layer that is 240 taller than
+its host, so the overhang is taken back off before the horizon is placed.
+
+Inside the tabs that is not enough, because the library clips its scenes
+above the bar (`BottomTabView`'s `styles.screens`, `overflow: 'hidden'`,
+not an option). So `(tabs)/_layout.tsx` puts one more sky behind the whole
+navigator, web only, without the falling star. Scenes are opaque and cover
+it; it is seen from the bar's top edge down. That is also the owner's
+other request of 2026-09-18 — the translucent bar — without taking the bar
+out of flow: the glass now has a sky behind it instead of a flat colour.
+
+A taller document is one iOS might scroll to bring a focused field above
+the keyboard, and `lib/keyboard.ts` lifts the chat composer by the visual
+viewport alone. Rather than find out on the owner's phone, a text field
+with the focus puts the old shape back (`html.typing body { overflow:
+hidden }`, set by a few lines of script in `index.html`): `scrollHeight`
+reads 714 again in the simulator with a field focused. The keyboard covers
+the strip anyway. Not observed: the composer itself with the software
+keyboard up — the seed account has no match to open a chat with and the
+simulator would not raise its keyboard. The configuration it runs in while
+typing is the one that is live today.
+
+Seen in the simulator's Safari, on a build against the local stack:
+the door's horizon continuing under the toolbar to the bottom of the
+screen (`screenshots/web-safari-strip-before-after.png`, live site on the
+left); the deck and the matches list signed in as a seed account, sky
+through the bar and on into the strip with no line
+(`web-safari-strip-door-and-deck.png`); the matches title 27 points under
+the page's top edge, which is the first look at the top-clearance change
+in the browser it was made for. In desktop Chrome the document's
+`scrollHeight` is 954 and `window.scrollTo` does move it — no wheel or
+touch can, which is what `hidden` always meant too, but it is a thing a
+script could now do and could not before.
+
+**The photo and the top of the screen.** The same test with the sky
+starting 150 points above the page: nothing shows above the page's top
+edge. The status-bar strip is Safari's and a page in a tab cannot paint
+it; it takes the page's background colour and that is all. In the
+simulator the deck photo starts exactly at the page's top edge. So "fotoğraf
+en yukarıyı kaplamıyor" is the status bar, and in a browser tab it stays.
+It goes away in two places: the native app, and a home-screen web app
+(`apple-mobile-web-app-capable` with a translucent status bar), which is
+not built and is the owner's call.
+
+`viewport-fit=cover` stays out. On the owner's phone it would give the
+page 49 more points; in the simulator it gives none, and with the overhang
+the strip is filled either way.
+
+Correction to the entry above: welcome is not "the one top-level screen
+with no scroll view" — the two doors have none either. What sets it apart
+is that its drop is in flow; theirs goes to an absolutely positioned back
+link. The comment in `welcome.tsx` now says that.
