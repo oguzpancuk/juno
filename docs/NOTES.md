@@ -6785,8 +6785,11 @@ What it does not show is Postgres: no trigger fired, no view answered, no
 RLS policy was consulted — `liked_me`'s locked shape in
 `premium-liked-me-locked.png` is the stand-in returning null columns
 because the real view would, and that the real view does is
-`supabase/tests/premium.test.ts`'s to prove, in CI. The harness was not
-kept, same as the sibling's.
+`supabase/tests/premium.test.ts`'s to prove, in CI. Nor is it iOS: the
+review found two `Popup`s presented at once, which a native runtime
+refuses and a browser draws happily as two stacked overlays, so
+`premium-sort-free.png` was taken of a screen that was broken on a
+phone. The harness was not kept, same as the sibling's.
 
 The eight: `premium-deck-free` (the star button between ✕ and ♥, the
 day's like counter, the chip with its badge), `premium-liked-me-locked`,
