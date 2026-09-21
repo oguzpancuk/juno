@@ -6704,6 +6704,22 @@ native-only screen needs a look.
 `docs/project-instructions.md` changed in two bullets (manual checks, and
 "deploys are not done from this project") — the owner pastes it again.
 
+## 2026-09-21 — the preview workflow is a recorded exception
+
+maya's rule from today on (`docs/preview-recipes.md` there): a new product
+is hosted where the provider's Git integration makes the per-pull-request
+preview by itself, and a preview workflow of our own is an exception that
+needs its reason written down. This repository is one, by owner decision:
+Cloudflare does offer such an integration (Workers Builds), but the rule
+arrived hours after `preview.yml` was built, hardened (`pull_request_target`,
+no secrets beside a pull request's code) and proven on real pull requests,
+and the gain from moving — no Cloudflare token in GitHub Actions, no
+workflow to maintain — does not yet pay for redoing it. One thing would
+have to be settled first in any case: Workers Builds deploys the production
+branch by default, which the owner's "deploys run locally" rule forbids;
+whether that can be switched off was not verified. Revisit if the hosting
+changes for another reason, or if the workflow starts costing upkeep.
+
 ## 2026-09-21 — four optional profile fields, and how they were photographed
 
 Owner ask, off the ROADMAP: height, interests (multi-select), university
