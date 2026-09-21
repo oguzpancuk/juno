@@ -6649,3 +6649,24 @@ NOT verified yet, and cannot be from this pull request: a
 first real run is the first pull request opened AFTER this one merges.
 Unknowns that run will settle: whether the account has a workers.dev
 subdomain enabled, and the exact URL (the `<account>` part).
+
+## 2026-09-21 — the preview workflow, first real run
+
+Opened only to give `preview.yml` its first run: a `pull_request_target`
+workflow cannot run from the pull request that adds it. What the run showed
+is recorded in this entry before the pull request merges.
+
+What it showed. `build` passed at once: the export and both deploy gates,
+against the production values held as repository variables. `upload`
+uploaded a version and FAILED, by design, because wrangler printed no
+preview URL: `preview_urls: true` had merged into `wrangler.jsonc` but is a
+non-versioned setting, and Cloudflare only applies those on a deployment.
+The owner ran `npx wrangler triggers deploy` from `main` — no code, no
+traffic change, the two custom domains re-asserted — and the re-run went
+green. The account's subdomain is `oguzpancuk`, so a preview is
+`https://pr-<number>-juno.oguzpancuk.workers.dev`; CLAUDE.md now says so.
+Checked from outside the job as well: `/` and `/legal` answer on
+`pr-5-…`, the served bundle names the production project ref and neither a
+local URL nor `service_role`, and both production hostnames still answer.
+One harmless warning in the upload job: wrangler cannot find
+`expo/tsconfig.base` there, because that job installs nothing on purpose.
