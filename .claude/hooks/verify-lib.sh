@@ -21,7 +21,11 @@ step() {
   local name="$1"
   shift
   [ -n "$log" ] || log="$(mktemp)"
-  if "$@" >"$log" 2>&1; then
+  # stdin closed, not just stdout and stderr redirected. A step that reads
+  # stdin would otherwise consume whatever the battery was started with —
+  # it ate the workspace list when that list drove a `while read` loop —
+  # or block forever on a terminal. No step needs stdin.
+  if "$@" >"$log" 2>&1 </dev/null; then
     _result ok "$name"
   else
     _result FAIL "$name"
@@ -50,11 +54,17 @@ docker_daemon_reachable() {
 supabase_tests_plan() {
   # CI is where the stack is started (`.github/workflows/ci.yml`), so the
   # suite always runs there and a missing stack is a defect in the run,
-  # never a fact about the machine.
-  if [ -n "${CI:-}" ]; then
-    echo run
-    return 0
-  fi
+  # never a fact about the machine. `-n` is the wrong question: `CI=false`
+  # and `CI=0` are the idiom for turning CI behaviour OFF (Expo and CRA
+  # build scripts, some sandbox images export it verbatim), and a thread
+  # carrying one of them would be forced to run a suite it cannot run.
+  case "${CI:-}" in
+    '' | false | 0) ;;
+    *)
+      echo run
+      return 0
+      ;;
+  esac
   # A machine with no docker binary cannot run a container at all.
   if ! command -v docker >/dev/null 2>&1; then
     echo "not-run:no docker on this machine"
@@ -80,10 +90,18 @@ supabase_tests_plan() {
 supabase_tests_step() {
   local name="tests (@juno/supabase)" plan
   plan="$(supabase_tests_plan)"
-  if [ "$plan" = run ]; then
-    step "$name" npm run test -w @juno/supabase --if-present
-    return 0
-  fi
-  _result "NOT RUN" "$name — CI's \`verify\` is the run (${plan#not-run:})"
+  case "$plan" in
+    run) step "$name" npm run test -w @juno/supabase --if-present ;;
+    not-run:*)
+      _result "NOT RUN" "$name — CI's \`verify\` is the run (${plan#not-run:})"
+      ;;
+    # The contract is `run` or `not-run:<why>`, and nothing else may fall
+    # through to NOT RUN: that would exit the battery green having never
+    # run the suite and never said it could have.
+    *)
+      _result FAIL "$name — unparseable plan [$plan]"
+      fail=1
+      ;;
+  esac
   return 0
 }

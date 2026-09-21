@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Drives the battery's supabase-suite decision, without a Docker daemon
+# Drives the battery's supabase-suite decision six ways, without a Docker daemon
 # and without a Supabase stack. Only the decision is under test; running
 # the suite itself is CI's job.
 #
@@ -87,10 +87,26 @@ run_case() { # run_case <dir> <CI value, or empty for unset>
   in_sandbox "$1" "$2" drive 2>"$tmp/stderr"
 }
 
+# No `sed` here. The obvious one-liner wants alternation and an optional
+# group, which are GNU BRE extensions (`\|`, `\?`); BSD sed, the one macOS
+# ships and the platform this repo is iOS-first for, reads them as literal
+# `|` and `?`, matches nothing, and turns every verdict assertion below
+# red. `_result` pads the verdict to seven characters and then a space,
+# so the columns are fixed and plain bash can read them.
 verdict() { # verdict <output> <step name> — the verdict word for one line
-  local escaped
-  escaped="$(printf '%s' "$2" | sed 's/[][\/$*.^]/\\&/g')"
-  printf '%s\n' "$1" | sed -n "s/^\(ok\|FAIL\|NOT RUN\)  *$escaped\( .*\)\?$/\1/p"
+  local line word rest
+  while IFS= read -r line; do
+    word="${line:0:7}"
+    rest="${line:8}"
+    case "$rest" in
+      "$2" | "$2 "*)
+        while [ "${word% }" != "$word" ]; do word="${word% }"; done
+        printf '%s\n' "$word"
+        return 0
+        ;;
+    esac
+  done <<<"$1"
+  return 0
 }
 
 started() { # started <dir> — did anything call the stub npm?
@@ -152,6 +168,29 @@ code=$?
 check "CI without docker: battery exit code" 1 "$code"
 check "CI without docker: supabase verdict" "FAIL" "$(verdict "$out" 'tests (@juno/supabase)')"
 check "CI without docker: the suite really ran" "yes" "$(started "$tmp/ci")"
+
+# 5. `CI=false`, the idiom for turning CI behaviour off, with no docker.
+#    This must read as "not CI", or a thread carrying it is forced to run
+#    a suite it cannot run — the very failure this whole change removes.
+sandbox "$tmp/cifalse" none
+check "CI=false: plan" "not-run" "$(plan_word "$(in_sandbox "$tmp/cifalse" false supabase_tests_plan)")"
+out="$(run_case "$tmp/cifalse" false)"
+code=$?
+check "CI=false: battery exit code" 0 "$code"
+check "CI=false: supabase verdict" "NOT RUN" "$(verdict "$out" 'tests (@juno/supabase)')"
+check "CI=false: the suite never started" "no" "$(started "$tmp/cifalse")"
+
+# 6. A plan the step cannot parse is a FAIL, never a quiet NOT RUN. The
+#    override lives in this command substitution's subshell only.
+sandbox "$tmp/bogus" none
+out="$(
+  supabase_tests_plan() { echo "something else"; }
+  run_case "$tmp/bogus" ""
+)"
+code=$?
+check "unparseable plan: battery exit code" 1 "$code"
+check "unparseable plan: supabase verdict" "FAIL" "$(verdict "$out" 'tests (@juno/supabase)')"
+check "unparseable plan: the suite never started" "no" "$(started "$tmp/bogus")"
 
 if [ "$failures" -eq 0 ]; then
   echo "battery self-test: all cases ok"

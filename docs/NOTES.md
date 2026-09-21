@@ -6545,3 +6545,47 @@ FAIL, never failing the battery, never silent.
   test is the whole of it.
 - Splitting a `--workspaces` step per workspace, for the same reason the
   gap above gives.
+
+## 2026-09-21 — Review of the NOT RUN change: five findings, and two of them were mine to have caught
+
+`/code-review --comment` on pull request #3 posted five, all correct, all
+fixed in the same branch. Two were regressions the battery could not see
+itself, which is the part worth remembering.
+
+- `source "$(dirname "${BASH_SOURCE[0]}")/verify-lib.sh"` sat _below_
+  `cd "$(dirname "$0")/../.."`. From the repo root it worked; from
+  `.claude/hooks` it resolved against the repo root and sourced nothing,
+  and every step then reported "command not found". The battery ran green
+  in CI and from the root the whole time. Fix: resolve `here` to an
+  absolute path at the top of the file, before the `cd`, and use it for
+  both the source and the self-test step.
+- `[ -n "${CI:-}" ]` counted `CI=false` and `CI=0` as CI. Those are the
+  idiom for turning CI behaviour _off_ — Expo and CRA build scripts, some
+  sandbox images — so a thread carrying one would have been forced to run
+  the suite it cannot run, which is the exact failure the change exists to
+  remove. Truthiness now matches explicitly.
+- `while IFS= read -r ws … <<<"$names"` drove the per-workspace loop with
+  a here-string, and `step` redirected only stdout and stderr. A step that
+  reads stdin ate the rest of the list. Demonstrated on a stand-in: four
+  workspaces in, one `tests (…)` line out, `fail` untouched, exit 0 — a
+  short but entirely green summary with no line missing to notice. Two
+  fixes, both kept: the list is read into an array before any step runs,
+  and `step` now closes stdin (`</dev/null`), without which the array fix
+  leaves such a step blocking on the terminal instead.
+- `supabase_tests_step` treated anything that was not `run` as NOT RUN,
+  so a plan it could not parse would have exited the battery green having
+  never run the suite. Now `not-run:*` is matched explicitly and anything
+  else is a FAIL.
+- The self-test's `verdict()` used `\|` and `\?`, GNU BRE extensions that
+  BSD sed reads as literal characters. On macOS — the platform this repo
+  is iOS-first for — every verdict assertion would have gone red and taken
+  the battery with it. Rewritten in plain bash against the fixed seven-column
+  layout `_result` produces; nothing in `.claude/hooks/` uses `sed` now.
+
+### Battery gaps
+
+- The battery cannot catch the first and third of these: it only ever runs
+  itself one way, from the repo root, with a stdin nothing reads. A gate
+  that is the only caller of its own code has no second opinion — the
+  review was the second opinion, and the self-test now carries the two
+  cases that can be expressed as code (`CI=false`, an unparseable plan).

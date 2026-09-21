@@ -4,7 +4,13 @@
 # even after a failure and report them together; anything that cannot be
 # verified is a FAIL, never a silent skip.
 set -uo pipefail
-cd "$(dirname "$0")/../.."
+
+# Where this file lives, resolved BEFORE the `cd`: after it the cwd is the
+# repo root, so a relative `$0`/`$BASH_SOURCE` would resolve against the
+# wrong directory and `cd .claude/hooks && bash verify.sh` would source
+# nothing and report every step as a missing command.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$here/../.."
 
 # Preconditions — a missing skeleton or missing deps is a FAIL.
 if [ ! -f package.json ]; then
@@ -18,7 +24,7 @@ fi
 
 # `fail`, `results`, `log`, `step` and the supabase-suite decision.
 # shellcheck source=verify-lib.sh
-source "$(dirname "${BASH_SOURCE[0]}")/verify-lib.sh"
+source "$here/verify-lib.sh"
 
 # Every tracked shell script must keep its exec bit. Three commits in five
 # were spent putting one back (NOTES 2026-09-16): an editor that writes a
@@ -87,25 +93,36 @@ workspace_names() {
       });'
 }
 
+# Read the whole list into an array BEFORE any step runs. `step`
+# redirects only stdout and stderr, so a step reading stdin inside a
+# `while read … <<<` loop would swallow the rest of the list: the loop
+# would end early, the remaining workspaces would get no line at all, and
+# the battery would print a short but entirely green summary — the silent
+# skip this file's header rule forbids, and an invisible one.
 names="$(workspace_names)" || names=""
-if [ -z "$names" ]; then
+workspaces=()
+while IFS= read -r ws; do
+  [ -n "$ws" ] || continue
+  workspaces+=("$ws")
+done <<<"$names"
+
+if [ "${#workspaces[@]}" -eq 0 ]; then
   _result FAIL "tests — cannot list the workspaces (npm query .workspace)"
   fail=1
 else
-  while IFS= read -r ws; do
-    [ -n "$ws" ] || continue
+  for ws in "${workspaces[@]}"; do
     case "$ws" in
       # The one workspace whose suite needs a machine that can run
       # containers; verify-lib.sh decides whether this one can.
       @juno/supabase) supabase_tests_step ;;
       *) step "tests ($ws)" npm run test -w "$ws" --if-present ;;
     esac
-  done <<<"$names"
+  done
 fi
 
 # The battery's own mechanics, driven where they cannot be driven for
-# real: no daemon, no stack, three decisions.
-step "battery self-test" bash .claude/hooks/verify-lib.test.sh
+# real: no daemon, no stack, six decisions.
+step "battery self-test" bash "$here/verify-lib.test.sh"
 step "docs"      bash .claude/hooks/docs-figures.sh
 
 [ -z "$log" ] || rm -f "$log"
