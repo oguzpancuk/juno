@@ -6623,3 +6623,29 @@ catch, and it did.
 - Anything living in `verify.sh`'s main body is untestable by
   construction: the file runs a battery when you source it. New gate logic
   belongs in `verify-lib.sh`, where the self-test can drive it.
+
+## 2026-09-21 — pull request previews: a Worker version per pull request
+
+Owner decisions: the web target is the preview (it is the same Expo app),
+and it talks to the PRODUCTION Supabase project — no second project. What
+that costs is written into CLAUDE.md, Preview: real data behind RLS, and a
+pull request's migrations and Edge Function changes are not applied, so a
+change that needs them cannot be previewed.
+Mechanism: `wrangler versions upload --preview-alias pr-<number>` — a
+version, never a deployment; nothing to tear down when the pull request
+closes. `preview_urls` had to be turned on in `wrangler.jsonc`: with only
+custom-domain routes it defaults to off.
+Security shape, and why: a Cloudflare token that can upload a version can
+also deploy production; there is no narrower permission. So the workflow
+is `pull_request_target` (read from `main`, a branch cannot rewrite it) and
+split in two jobs — `build` runs the pull request's code with no secrets,
+`upload` holds the token and runs nothing from the branch (main's
+`wrangler.jsonc`, the built files as an artifact, a pinned wrangler). The
+Supabase URL and anon key are repository VARIABLES, not secrets: they ship
+in every bundle. They were read from `apps/mobile/.env` and checked before
+being stored — hosted URL, JWT role `anon`, same project ref.
+NOT verified yet, and cannot be from this pull request: a
+`pull_request_target` workflow only runs once it exists on `main`, so the
+first real run is the first pull request opened AFTER this one merges.
+Unknowns that run will settle: whether the account has a workers.dev
+subdomain enabled, and the exact URL (the `<account>` part).

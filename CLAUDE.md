@@ -107,10 +107,20 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 ## Preview
 Every pull request gets a preview URL and its body carries it. A pull
 request without its preview link is not ready for the owner.
-[STACK: TODO — no per-pull-request preview exists yet. The web target is
-the Expo export served by a Cloudflare Worker, so a Worker preview URL per
-pull request is the candidate; a native-only screen would name an EAS
-Update channel instead. Until filled: no pull request is ready.]
+Provider: a Cloudflare Worker VERSION per pull request
+(`.github/workflows/preview.yml`): the Expo web export, uploaded with the
+alias `pr-<number>` — never deployed, so production traffic is untouched.
+URL: `https://pr-<number>-juno.<account>.workers.dev`; the `preview`
+check's summary prints it, and it is true once that check is green.
+What a preview is NOT: it talks to the PRODUCTION Supabase project (owner
+decision) — real data behind RLS, so try it with a test account and never
+bulk-write; a pull request's MIGRATIONS and Edge Function changes are not
+applied, so a change that needs them cannot be tried here at all — say so
+in the pull request. Google sign-in has no button (no client ids). A
+native-only screen names an EAS Update channel instead; none exists yet,
+so such a clause is the owner's check on a device build.
+The workflow runs from `main` (`pull_request_target`): a pull request
+cannot change how its own preview is built or what the token is used for.
 
 ## Deploy
 maya's rule: deploys run in CI on the release tag (`deploy.yml`, after the
