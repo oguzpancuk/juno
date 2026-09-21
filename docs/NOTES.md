@@ -6703,3 +6703,45 @@ the on-request build here is open, and nothing depends on it until a
 native-only screen needs a look.
 `docs/project-instructions.md` changed in two bullets (manual checks, and
 "deploys are not done from this project") — the owner pastes it again.
+
+## 2026-09-21 — four optional profile fields, and how they were photographed
+
+Owner ask, off the ROADMAP: height, interests (multi-select), university
+and occupation, UI left to the thread. Height is a drag over 120–230 cm
+with one chip that clears it, like the radius and the age in the discovery
+sheet; the interest list is 36 fixed Turkish tags in
+`apps/mobile/lib/profile-details.ts` with a cap of eight, not free text;
+university and occupation are one line each, 60 characters. All four are
+optional, all four ride in the same `Kaydet` update as the photo order and
+the bio, and the deck's card carries the height and the occupation on the
+line that already held the distance, so the card does not grow.
+
+Uniqueness inside `interests` is checked by `private.is_set(text[])`,
+because a CHECK constraint may not hold a subquery and `unnest` needs one.
+A CHECK runs with the writer's privileges, so the function is granted to
+`authenticated` and `service_role`, the way the chart-shape helpers are
+(`20260910000005_chart_shape_numeric.sql`).
+
+### Battery gaps
+
+`bash .claude/hooks/verify.sh` was green here with
+`tests (@juno/supabase)` NOT RUN, as a cloud thread always is — which
+means the migration itself, the new CHECKs, the grants and the two
+rebuilt views were not executed anywhere before the pull request. The
+same goes for `database.types.ts`, which was hand-edited to what
+`supabase gen types` should print: `types-drift.test.ts` is the check,
+and it only runs where the stack does. CI's `verify` is the first run of
+all of it.
+
+### Upstream candidates
+
+A screenshot of a signed-in screen needs a local Supabase stack, which a
+cloud thread cannot have. The six `screenshots/profile-fields-*.png` were
+driven against a stand-in: the web export re-pointed at a small Node
+server that serves the bundle and answers the handful of REST, auth and
+photo endpoints these screens call with fixed rows. It is real app code
+at a real 390x844 viewport, and it is NOT the app talking to Postgres —
+nothing behind those rows was exercised, RLS least of all. The harness
+was not kept; if this turns out to be the way threads look at screens,
+`scripts/web-drive.mjs` wants a documented stand-in mode rather than a
+throwaway one.
