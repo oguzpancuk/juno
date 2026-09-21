@@ -6,6 +6,7 @@ import {
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { GENDERS } from './profile';
+import { ProfileDetailColumns } from './profile-details';
 import { parseRows, warnDropped } from './rows';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 
@@ -29,6 +30,7 @@ export const MatchProfileRowSchema = z.object({
   unread_count: z.number().int(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  ...ProfileDetailColumns,
 });
 
 export type MatchProfileRow = z.infer<typeof MatchProfileRowSchema>;

@@ -9,6 +9,12 @@ import {
   type PhotoSource,
 } from './photo-alignment';
 import { env } from './env';
+import {
+  cleanDetail,
+  isHeight,
+  normalizeInterests,
+  type InterestTag,
+} from './profile-details';
 import { supabase } from './supabase';
 
 /** Mirrors the trigger on `profiles.photos`. */
@@ -270,7 +276,8 @@ export async function removePhoto(
 export const MAX_BIO_LENGTH = 300;
 
 /**
- * What "Kaydet" persists: the photo order and the bio, in ONE update.
+ * What "Kaydet" persists: the photo order, the bio and the four optional
+ * profile fields, in ONE update.
  *
  * The order is the whole list written back as a permutation of the set
  * the row already holds. `profiles_check_photos` (latest definition in
@@ -280,17 +287,47 @@ export const MAX_BIO_LENGTH = 300;
  * removing are not part of this call on purpose: a path can only be
  * listed once its object exists, so those write at once (`addPhoto`,
  * `removePhoto`) and this call carries whatever order they left.
+ *
+ * Height, interests, university and occupation ride along in the same
+ * statement: they are a draft like the order and the text, and one
+ * failed write is one message to the person rather than four.
  */
 export async function saveProfileEdits(
   userId: string,
-  edits: { readonly photos: readonly string[]; readonly bio: string },
+  edits: {
+    readonly photos: readonly string[];
+    readonly bio: string;
+    readonly details: ProfileDraft;
+  },
 ): Promise<boolean> {
   const bio = edits.bio.trim();
   if (bio.length > MAX_BIO_LENGTH) return false;
   if (edits.photos.length > MAX_PHOTOS) return false;
+  // The inputs cap their own length and the picker cannot leave its ends,
+  // so a draft that fails here did not come from them. Refusing it is the
+  // same answer the column's CHECK would give, one round trip earlier.
+  const university = cleanDetail(edits.details.university);
+  const occupation = cleanDetail(edits.details.occupation);
+  if (university === undefined || occupation === undefined) return false;
+  if (!isHeight(edits.details.heightCm)) return false;
   const { error } = await supabase
     .from('profiles')
-    .update({ photos: [...edits.photos], bio: bio.length > 0 ? bio : null })
+    .update({
+      photos: [...edits.photos],
+      bio: bio.length > 0 ? bio : null,
+      height_cm: edits.details.heightCm,
+      interests: [...normalizeInterests([...edits.details.interests])],
+      university,
+      occupation,
+    })
     .eq('id', userId);
   return !error;
+}
+
+/** The four fields as the edit mode holds them: text as typed, until save. */
+export interface ProfileDraft {
+  readonly heightCm: number | null;
+  readonly interests: readonly InterestTag[];
+  readonly university: string;
+  readonly occupation: string;
 }

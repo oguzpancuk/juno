@@ -20,11 +20,31 @@ import { Popup } from '@/components/Popup';
 import {
   Body,
   Card,
+  Chip,
+  Field,
   GradientButton,
   SCREEN_PADDING,
+  SectionLabel,
   useTopGap,
 } from '@/components/ui';
-import { MAX_BIO_LENGTH, MAX_PHOTOS, type PhotoSource } from '@/lib/photos';
+import {
+  MAX_BIO_LENGTH,
+  MAX_PHOTOS,
+  type PhotoSource,
+  type ProfileDraft,
+} from '@/lib/photos';
+import {
+  HEIGHT_STOPS,
+  INTEREST_TAGS,
+  MAX_DETAIL_LENGTH,
+  MAX_INTERESTS,
+  heightStop,
+  stopHeight,
+  toggleInterest,
+  type InterestTag,
+  type ProfileDetails,
+} from '@/lib/profile-details';
+import { Track } from '@/components/Track';
 import { t } from '@/lib/strings';
 import { color, radius, space, type } from '@/theme/tokens';
 
@@ -40,6 +60,9 @@ export interface ProfileEdit {
   /** The draft, owned by the screen; persisted by "Kaydet", not here. */
   readonly bio: string;
   readonly onBioChange: (text: string) => void;
+  /** The four optional fields as typed; persisted by "Kaydet", not here. */
+  readonly details: ProfileDraft;
+  readonly onDetailsChange: (next: ProfileDraft) => void;
   readonly onMove: (index: number, direction: 'left' | 'right') => void;
   readonly onRemove: (index: number) => void;
   readonly onAdd: () => void;
@@ -70,6 +93,7 @@ export function ProfileView({
   sources,
   three,
   bio,
+  details,
   reading,
   chart,
   photoHeight,
@@ -87,6 +111,8 @@ export function ProfileView({
   sources: readonly (PhotoSource | null)[];
   three: BigThree;
   bio: string | null;
+  /** Height, interests, university, occupation — any of them unanswered. */
+  details: ProfileDetails;
   reading: NatalReading;
   chart: PublicChart;
   /**
@@ -147,6 +173,12 @@ export function ProfileView({
         </Card>
       ) : null}
 
+      {edit?.active ? (
+        <DetailsEditor edit={edit} />
+      ) : (
+        <DetailsCard details={details} own={own} />
+      )}
+
       {reading.placements.slice(0, PROFILE_PRIMARY_COUNT).map((placement) => (
         <PlacementCard
           key={placement.placement}
@@ -170,6 +202,211 @@ export function ProfileView({
         <ChartDetail reading={reading} chart={chart} own={own} />
       </Popup>
     </>
+  );
+}
+
+/**
+ * The four optional fields as another person reads them: the facts that
+ * were answered on one row, the interest tags as tags underneath. A field
+ * nobody filled in is simply absent — a profile does not owe a reader a
+ * row of blanks.
+ *
+ * The owner, with none of them answered, gets the empty card instead, for
+ * the same reason the bio has one: it is where the fields will be, and it
+ * is the only thing on the page that says they exist.
+ */
+function DetailsCard({
+  details,
+  own,
+}: {
+  details: ProfileDetails;
+  own: boolean;
+}) {
+  const facts: readonly { key: string; label: string; value: string }[] = [
+    ...(details.height_cm === null
+      ? []
+      : [
+          {
+            key: 'height',
+            label: t.profile.height,
+            value: t.profile.heightValue(details.height_cm),
+          },
+        ]),
+    ...(details.occupation === null
+      ? []
+      : [
+          {
+            key: 'occupation',
+            label: t.profile.occupation,
+            value: details.occupation,
+          },
+        ]),
+    ...(details.university === null
+      ? []
+      : [
+          {
+            key: 'university',
+            label: t.profile.university,
+            value: details.university,
+          },
+        ]),
+  ];
+  if (facts.length === 0 && details.interests.length === 0) {
+    return own ? (
+      <Card testID="details-card">
+        <Body muted>{t.profile.detailsEmpty}</Body>
+      </Card>
+    ) : null;
+  }
+  return (
+    <Card testID="details-card">
+      {facts.length > 0 ? (
+        <View style={styles.facts}>
+          {facts.map((fact) => (
+            <View
+              key={fact.key}
+              style={styles.fact}
+              testID={`fact-${fact.key}`}
+            >
+              <Text style={styles.factLabel}>{fact.label}</Text>
+              <Text style={styles.factValue}>{fact.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {details.interests.length > 0 ? (
+        <View style={styles.tags} testID="interest-tags">
+          {details.interests.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
+/**
+ * The same four in the edit mode: a drag for the height with one chip
+ * that clears it, a line each for the university and the occupation, and
+ * the tag list as chips.
+ *
+ * The height is a drag rather than a number pad, like the radius and the
+ * age in the discovery sheet (owner, 2026-09-15: "daha kolay seçilmeli"),
+ * and it starts at the middle of the range rather than at 120 cm, so the
+ * first touch does not read as a claim the person did not make.
+ */
+const HEIGHT_DEFAULT = 170;
+
+function DetailsEditor({ edit }: { edit: ProfileEdit }) {
+  const draft = edit.details;
+  const set = (patch: Partial<ProfileDraft>) =>
+    edit.onDetailsChange({ ...draft, ...patch });
+  // What a drag in progress shows above the track; null when no finger is
+  // down, and the draft is then what the label reads.
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? draft.heightCm ?? HEIGHT_DEFAULT;
+  const full = draft.interests.length >= MAX_INTERESTS;
+
+  return (
+    <Card testID="details-editor">
+      <SectionLabel>{t.profile.details}</SectionLabel>
+
+      <View style={styles.detailRow}>
+        <Text style={styles.factLabel}>{t.profile.height}</Text>
+        <Text style={styles.factValue} testID="height-value">
+          {draft.heightCm === null && drag === null
+            ? t.profile.heightAny
+            : t.profile.heightValue(shown)}
+        </Text>
+      </View>
+      <Track
+        testID="height"
+        count={HEIGHT_STOPS}
+        values={[heightStop(shown)]}
+        disabled={edit.busy}
+        labels={[t.profile.height]}
+        describe={(stop) => t.profile.heightValue(stopHeight(stop))}
+        onChange={(values) => setDrag(stopHeight(values[0]))}
+        onCommit={(values) => {
+          setDrag(null);
+          set({ heightCm: stopHeight(values[0]) });
+        }}
+        onCancel={() => {
+          // A tap that went nowhere still answers the field, because the
+          // track was showing a default nobody had chosen yet.
+          setDrag(null);
+          if (draft.heightCm === null) set({ heightCm: shown });
+        }}
+      />
+      <Chip
+        testID="height-any"
+        label={t.profile.heightAny}
+        selected={draft.heightCm === null}
+        disabled={edit.busy}
+        style={styles.clearChip}
+        onPress={() => set({ heightCm: null })}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.occupation}
+      </Text>
+      <Field
+        testID="occupation"
+        value={draft.occupation}
+        onChangeText={(text) => set({ occupation: text })}
+        placeholder={t.profile.occupationPlaceholder}
+        maxLength={MAX_DETAIL_LENGTH}
+        editable={!edit.busy}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.university}
+      </Text>
+      <Field
+        testID="university"
+        value={draft.university}
+        onChangeText={(text) => set({ university: text })}
+        placeholder={t.profile.universityPlaceholder}
+        maxLength={MAX_DETAIL_LENGTH}
+        editable={!edit.busy}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.interests}
+      </Text>
+      <View style={styles.tags} testID="interest-picker">
+        {INTEREST_TAGS.map((tag) => {
+          const on = draft.interests.includes(tag);
+          return (
+            <Chip
+              key={tag}
+              testID={`interest-${tag}`}
+              label={t.profile.interestNames[tag]}
+              selected={on}
+              // At the cap the unpicked ones stop answering, which is what
+              // the hint under them says. The picked ones still do, so the
+              // list is never stuck.
+              disabled={edit.busy || (full && !on)}
+              onPress={() =>
+                set({
+                  interests: toggleInterest(
+                    draft.interests,
+                    tag,
+                  ) as readonly InterestTag[],
+                })
+              }
+            />
+          );
+        })}
+      </View>
+      <Text style={styles.hint}>
+        {full
+          ? t.profile.interestsFull(MAX_INTERESTS)
+          : t.profile.interestsHint(MAX_INTERESTS)}
+      </Text>
+    </Card>
   );
 }
 
@@ -500,6 +737,32 @@ const styles = StyleSheet.create({
   addText: { ...type.caption, color: color.textMuted, textAlign: 'center' },
   dim: { opacity: 0.6 },
   hint: { ...type.caption, color: color.textFaint },
+  // The answered facts on one wrapping row: a label over its value, the
+  // way the match page sets a number under its word.
+  facts: { flexDirection: 'row', flexWrap: 'wrap', gap: space.lg },
+  fact: { gap: 2 },
+  factLabel: { ...type.label, color: color.textFaint },
+  factValue: { ...type.body, color: color.text },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  // A tag, not a chip: nothing here takes a touch, so it must not look
+  // like the chips one row up in the edit mode.
+  tag: {
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.surfaceSoft,
+    paddingVertical: space.xs,
+    paddingHorizontal: space.md,
+  },
+  tagText: { ...type.bodySmall, color: color.text },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  detailSpacer: { marginTop: space.lg },
+  // Alone on its row, so it does not stretch across the card.
+  clearChip: { alignSelf: 'flex-start', marginTop: space.sm },
   bioInput: {
     ...type.body,
     color: color.text,

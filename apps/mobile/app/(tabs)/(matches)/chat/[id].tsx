@@ -671,6 +671,7 @@ function ChatView({
             sources={sources}
             three={row.big_three}
             bio={row.bio}
+            details={row}
             reading={theirReading}
             chart={row.chart}
             fullChartLabel={t.person.fullChart}

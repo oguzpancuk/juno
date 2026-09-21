@@ -18,6 +18,7 @@ import {
   fetchCandidates,
   swipe,
   type Candidate,
+  type DiscoverRow,
   type DiscoverState,
   type SwipeResult,
 } from '@/lib/discover';
@@ -51,6 +52,26 @@ const CLAIM_DISTANCE = 8;
 /** How far away someone is, as the card and the person sheet write it. */
 function distanceLine(km: number): string {
   return km === 0 ? t.discover.under1km : `${km} km`;
+}
+
+/**
+ * The line under the name on the deck's card: the distance, then whatever
+ * of the height and the occupation was answered.
+ *
+ * On the line that was already there rather than on one of its own: the
+ * card has to fit one screen with nothing to scroll into (owner,
+ * 2026-09-14), and two of the four new fields are short enough to ride
+ * along. The interests and the university are on the profile sheet a tap
+ * away, which is the whole card in full.
+ */
+function cardLine(row: DiscoverRow): string {
+  return [
+    distanceLine(row.distance_km),
+    row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
+    row.occupation,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' · ');
 }
 /** The filters chip, the same size as the profile's settings chip. */
 const CORNER_CHIP = 36;
@@ -410,7 +431,7 @@ export default function Discover() {
             accessibilityLabel={t.discover.openPerson(
               current.row.display_name,
               current.row.age,
-              distanceLine(current.row.distance_km),
+              cardLine(current.row),
             )}
             testID="open-person"
           >
@@ -433,9 +454,12 @@ export default function Discover() {
               </Text>
               <Text
                 style={styles.distance}
+                // One line whatever it carries: the card may not grow.
+                numberOfLines={1}
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
+                testID="card-line"
               >
-                {distanceLine(current.row.distance_km)}
+                {cardLine(current.row)}
               </Text>
             </LinearGradient>
             {/* The verdict as it forms, for sighted eyes only: the round
@@ -597,6 +621,7 @@ export default function Discover() {
             sources={sources}
             three={current.row.big_three}
             bio={current.row.bio}
+            details={current.row}
             reading={theirReading}
             chart={current.row.chart}
             fullChartLabel={t.person.fullChart}

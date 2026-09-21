@@ -36,6 +36,7 @@ import {
   saveProfileEdits,
   usePhotoSources,
 } from '@/lib/photos';
+import type { ProfileDraft } from '@/lib/photos';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -43,6 +44,14 @@ import { color, font, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
+
+/** The four optional fields before the row arrives: all unanswered. */
+const NO_DETAILS: ProfileDraft = {
+  heightCm: null,
+  interests: [],
+  university: '',
+  occupation: '',
+};
 
 /**
  * Your own page, laid out exactly as another person's is (`ProfileView`),
@@ -68,6 +77,9 @@ export default function Profile() {
   const [photos, setPhotos] = useState<readonly string[]>(EMPTY);
   const sources = usePhotoSources(photos);
   const [bio, setBio] = useState('');
+  // Height, interests, university and occupation, as typed. Like the bio,
+  // a draft until "Kaydet" — and, like it, what the page shows afterwards.
+  const [details, setDetails] = useState<ProfileDraft>(NO_DETAILS);
   const [editing, setEditing] = useState(false);
   // Settings is a popup over the profile, not a page (owner, 2026-09-15).
   const [showSettings, setShowSettings] = useState(false);
@@ -107,6 +119,12 @@ export default function Profile() {
       if (next.status === 'ready') {
         setPhotos(next.profile.photos);
         setBio(next.profile.bio ?? '');
+        setDetails({
+          heightCm: next.profile.height_cm,
+          interests: next.profile.interests,
+          university: next.profile.university ?? '',
+          occupation: next.profile.occupation ?? '',
+        });
       }
     });
     return () => {
@@ -171,7 +189,7 @@ export default function Profile() {
     working.current = true;
     setSaving(true);
     setError(null);
-    void saveProfileEdits(userId, { photos, bio }).then((ok) => {
+    void saveProfileEdits(userId, { photos, bio, details }).then((ok) => {
       working.current = false;
       setSaving(false);
       if (!ok) {
@@ -180,6 +198,11 @@ export default function Profile() {
         return;
       }
       setBio(bio.trim());
+      setDetails((draft) => ({
+        ...draft,
+        university: draft.university.trim(),
+        occupation: draft.occupation.trim(),
+      }));
       setEditing(false);
     });
   };
@@ -278,6 +301,12 @@ export default function Profile() {
           sources={sources}
           three={state.profile.big_three}
           bio={bio.length > 0 ? bio : null}
+          details={{
+            height_cm: details.heightCm,
+            interests: details.interests,
+            university: details.university.trim() || null,
+            occupation: details.occupation.trim() || null,
+          }}
           reading={reading}
           chart={state.profile.chart}
           photoHeight={Math.round(windowHeight * PHOTO_SCREEN_FRACTION)}
@@ -287,6 +316,8 @@ export default function Profile() {
             active: editing,
             bio,
             onBioChange: setBio,
+            details,
+            onDetailsChange: setDetails,
             onMove: move,
             onRemove: remove,
             onAdd: add,
