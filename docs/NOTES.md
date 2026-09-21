@@ -23,53 +23,10 @@
 
 ## Upstream candidates
 
-<!-- Improvements made HERE to template-origin files (.claude/, contracts/,
-     CLAUDE.md) that maya should inherit. /update-stack harvests this list.
+<!-- Improvements made HERE to template-origin files (CLAUDE.md, verify.sh,
+     ci.yml, project-instructions.md) that maya should inherit.
+     /update-stack harvests this list.
      Format: date · file · one-line what/why. Remove entries once upstreamed. -->
-
-- 2026-09-16 · maya `.claude/hooks/verify.sh` · An `exec bits` step: fail
-  the battery if any tracked `*.sh` is not mode 100755. Three commits in
-  five here went to restoring one, and the cause is generic to every
-  product an agent edits — writing a temporary file and renaming it over
-  the original drops the mode, and no content diff shows it. Applied here
-  on the same footing as the docs gate; parked for `/update-stack`.
-
-- 2026-09-16 · maya, an RN/Expo skill · On macOS, `pod install` under a
-  Homebrew Ruby crashes with `Unicode Normalization not appropriate for
-ASCII-8BIT` when the shell has no UTF-8 locale — which an agent's shell
-  does not have. `LANG=en_US.UTF-8` before `expo run:ios` fixes it.
-  CocoaPods prints the remedy as a warning and then fails with an
-  unrelated-looking Ruby backtrace, so the warning is easy to scroll past.
-  Cost two failed builds here (NOTES 2026-09-16, "The door, rebuilt").
-
-- 2026-09-16 · maya, an RN/Expo skill · React's `react-hooks/purity` rule
-  fails the lint on `Date.now()` in a render body but allows it in a
-  `useState` lazy initialiser, and a second rule refuses a mount effect
-  that calls `setState` synchronously. A clock a screen needs from its
-  first frame therefore belongs in `useState(() => Date.now())` with an
-  interval updating it — not in an effect, and not in the render body.
-
-- 2026-09-16 · `CLAUDE.md` (Standards) · A test that expects a refusal
-  should use input only the rule under test can refuse, and assert the
-  refusal's message as well as its code. Twice in this repo a test asserting
-  an error code passed for the wrong reason: an update was refused by a
-  different rule of the same trigger, so the rule the test named could have
-  been deleted with the test still green (NOTES 2026-09-16, "review of the
-  recipient change"; measured by installing a guard without it). Nothing
-  here is juno-specific — it is verification discipline, which is maya's
-  (owner, 2026-09-16: "bu test kuralını mayaya önermek daha doğru değil
-  mi"). Parked, not applied: `CLAUDE.md` is template-origin and this is
-  `/update-stack`'s to carry with the owner's approval.
-
-- 2026-09-11 · `contracts/init.sh` · Metro is started with `CI=1`, which
-  disables file watching. Any screen edited after `init.sh` runs never
-  reaches the bundle, and the symptom is silent: the section simply does
-  not render, with no error in Metro, in the app, or in the battery. It
-  cost most of an hour tonight before the cause was found. The comment in
-  the script explains why `--clear` is there but not what `CI=1` gives up.
-  Either drop `CI=1` and keep `--clear`, or say in the echoed output that
-  the server does not watch. Parked, not applied: no owner decision, and
-  `contracts/` is template-origin.
 
 - 2026-09-10 · `.claude/hooks/verify.sh` + `.claude/hooks/docs-figures.sh` ·
   A docs-consistency step, applied here on the owner's say-so and awaiting
@@ -83,6 +40,15 @@ ASCII-8BIT` when the shell has no UTF-8 locale — which an agent's shell
   block's location is the only product-specific line, so the template can
   carry it with that as a variable. It found three surviving copies on its
   first run, after six human-style review rounds had passed the same files.
+  (2026-09-21, /update-stack run 6: stays here — maya adopts it when a
+  second product carries measured figures in its docs.)
+
+## Battery gaps
+
+<!-- Every time evaluator-qa or production finds something the battery
+     passed: date · done-when clause · what the battery missed · the test
+     added. This is how the battery learns. /update-stack harvests the
+     classes of miss so other products' batteries can close them too. -->
 
 ## 2026-09-08 — instantiated from maya 22e7efe
 
@@ -6479,3 +6445,42 @@ The privacy sheet over the door, in the simulator: the sheet and its scrim
 end at the page's edge, being a fixed layer, and the strip under them shows
 the door's sky undimmed. It reads as the toolbar's own ground, with no
 line. Left as it is.
+
+## 2026-09-21 — ported to maya's Projects layout (maya d58cc34)
+
+`/update-stack` run 6, from a local maya session; landed as one pull
+request. maya was rebuilt around claude.ai/code projects on 2026-09-18:
+enforcement moves from hooks on this machine to GitHub (`main` protected,
+pull request required, the `verify` check required), review runs as a
+thread on the pull request, deploys run in CI on the release tag.
+
+- Removed with the template: push/review gates and `review-mark`, the
+  format hook (its one local change was a comment), `code-reviewer`,
+  `/parallel-tracks`, `loop.md`, `settings.json`, `.mcp.json.example`, the
+  template-born files under `contracts/`. `contracts/init.sh` is this
+  repo's own and stays. `docs-figures.sh` is this repo's own and stays.
+- Added: `deploy.yml` — UNCONFIGURED, fails on purpose. The three deploy
+  targets still run from the owner's machine; moving them into the
+  workflow needs Actions secrets and an owner decision on EAS vs. Xcode
+  Cloud for the iOS archive (maya's template assumes Xcode Cloud; this
+  repo builds with EAS). `docs/project-instructions.md` — source of the
+  project's instructions field; its About block was extracted from the
+  ROADMAP by this port (open items by title), not written by /mvp-scope —
+  re-run /mvp-scope to replace it.
+- The merge gate is NOT on yet: `main` is unprotected and work has been
+  pushed to it directly. This port lands first because the gate's checks
+  arrive with it; protecting `main` is the owner's next step (private
+  repo — needs a GitHub plan that allows it).
+- Upstream candidates, dispositions: the exec-bits step was adopted by maya
+  (`d58cc34`) and leaves the list. Not adopted, with reasons — the
+  refusal-test rule: a test that passes for the wrong reason cannot be seen
+  red first, so maya's red-before-green rule (now in CLAUDE.md) already
+  refuses the class; `pod install` under a non-UTF-8 locale and the React
+  clock pattern: stack knowledge, recorded in the 2026-09-16 entries, not
+  template material; `init.sh` starting Metro with `CI=1`: maya no longer
+  ships `contracts/`, so the fix is this repo's — STILL OPEN here: either
+  drop `CI=1` or say in the echoed output that the server does not watch.
+  The docs-figures gate stays parked above.
+- Open, owner-side: protect `main`; create the project's cloud environment
+  (`npm ci` + the Supabase CLI the battery needs); paste
+  `docs/project-instructions.md`; choose a per-pull-request preview.
