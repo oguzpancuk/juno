@@ -111,7 +111,9 @@ Provider: a Cloudflare Worker VERSION per pull request
 (`.github/workflows/preview.yml`): the Expo web export, uploaded with the
 alias `pr-<number>` — never deployed, so production traffic is untouched.
 URL: `https://pr-<number>-juno.oguzpancuk.workers.dev` — put it in the pull
-request body; it is true once the `preview` check is green.
+request body; it is true once the `preview` check is green. Both of its
+jobs, `build` and `upload`, are REQUIRED checks: a pull request whose
+preview is red or still running cannot merge.
 What a preview is NOT: it talks to the PRODUCTION Supabase project (owner
 decision) — real data behind RLS, so try it with a test account and never
 bulk-write; a pull request's MIGRATIONS and Edge Function changes are not

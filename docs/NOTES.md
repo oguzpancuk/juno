@@ -6670,3 +6670,17 @@ Checked from outside the job as well: `/` and `/legal` answer on
 local URL nor `service_role`, and both production hostnames still answer.
 One harmless warning in the upload job: wrangler cannot find
 `expo/tsconfig.base` there, because that job installs nothing on purpose.
+
+## 2026-09-21 — the preview is a required check
+
+Owner decision, recorded here because it is a GitHub setting and not a
+file: `main` now requires `verify`, `build` and `upload` — both jobs of
+`preview.yml`, since a job skipped because the one it `needs` failed counts
+as passing, and `upload` alone would have let a broken export merge.
+Required does not mean "built on request": a preview is built for every
+pull request either way; it means a red or unfinished preview blocks the
+merge. `build` runs the deploy gates, so a wrong Supabase target or a
+wrong-role key now blocks a merge too. Accepted cost: a Cloudflare outage
+blocks merges. Reverting is one API call and needs no pull request.
+The merge gate itself went on the same day, after the port landed: pull
+request required, branches up to date, direct pushes off for admins too.
