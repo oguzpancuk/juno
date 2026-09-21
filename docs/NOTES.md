@@ -6806,3 +6806,48 @@ contract is a gesture gets reviewed by reading the gesture, not by
 looking at a screenshot of it. Worth saying in `CLAUDE.md`'s UI
 verification bullet, which currently offers only a screenshot clause or a
 manual check for anything the app draws.
+
+## 2026-09-21 — `LEGAL_VERSION` does not re-consent anyone, and the tap that answered nothing
+
+Two corrections to what pull request #9 claimed, both found by its second
+review round.
+
+**The consent version is inert for existing members.** `LEGAL_VERSION` has
+one consumer in the app: the `insert` in `createProfile`
+(`apps/mobile/lib/profile.ts`). Nothing reads `consent_version` back and
+nothing compares it to `LEGAL_VERSION`, so moving it changes what new
+accounts record and nothing else — every existing member keeps the version
+they signed up under, is never asked again, and sees the corrected notice
+only if they open the legal screen. `legal.ts` says this in its own comment
+on the constant ("nothing re-asks consent yet"); the pull request body
+contradicted it and told the owner the bump would put a consent step in
+front of everyone. It was corrected in the body before merge.
+
+The bump itself stays: a profile created from now on should record the text
+it actually agreed to. The gap it does not close — existing consents
+pointing at a notice that did not describe the four new fields — is the
+ROADMAP's "KVKK consent and privacy policy" item, which is still unstarted.
+**A re-consent step does not exist.** Whoever takes that item builds it: a
+comparison of the stored `consent_version` against `LEGAL_VERSION` on
+launch, and a screen that records the new one. Until then, changing the
+notice text reaches everyone, and changing the version reaches nobody.
+
+**The tap case was not fixed by the fix that claimed it.** Committing the
+drag on cancel (`if (drag !== null)`) closes only the drag that wanders and
+comes back. A tap on the stop the thumb already occupies reports no
+`onChange` at all — `TrackGesture.place` returns early when the stop has
+not moved — so `drag` is null and the guard does nothing. With the height
+unanswered the thumb sits on 170, which made 170 the one height a tap could
+not record, twice over. The cancel now takes `shown`, the value the track
+is displaying, which is the drag's last stop when there was one.
+
+### Battery gaps
+
+The same gap as the entry before this one, one round later and sharper: the
+first fix was wrong, its replacement was wrong in a second way, and both
+passed the full battery and were visible in no screenshot. Three rounds of
+reading a gesture by hand is what a component test over `Track`'s callbacks
+would have replaced. The mobile workspace has no renderer — `vitest` and
+pure modules only — so adding one is a dependency decision for the owner,
+not a thread's. Named here so the KVKK item or the next slider does not
+rediscover it.

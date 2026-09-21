@@ -340,16 +340,22 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
         onCancel={() => {
           // A gesture that ends on the stop it began from reports a
           // cancel, not a commit — so with the thumb parked on the
-          // unanswered default, tapping it where it already sits was the
-          // one gesture in the range that answered nothing, and 170 cm
-          // the one height this control could not record.
+          // unanswered default, tapping it where it already sits is the
+          // one gesture in the range that would answer nothing, and
+          // 170 cm the one height this control could not record.
           //
-          // What the drag showed is what it meant, so it is taken. The
-          // test is `drag`, which is set only by `onChange`: a touch the
-          // track read as the page's scroll never moved the thumb, and
-          // never reaches here at all — `Track`'s `finish` returns before
-          // it, because no drag was ever begun.
-          if (drag !== null) set({ heightCm: drag });
+          // So the cancel answers the field with what the track is
+          // showing, rather than with the drag alone: a tap on the
+          // occupied stop reports no `onChange` either — `place` returns
+          // early when the stop has not moved — so `drag` is still null
+          // here and it is `shown` that holds the value.
+          //
+          // Safe because a scroll never arrives: `Track`'s `finish`
+          // returns before `onCancel` when no drag was begun, and a
+          // touch the track read as the page's scroll begins none. When
+          // a height is already stored and the tap lands on it, this
+          // rewrites the same value.
+          set({ heightCm: shown });
           setDrag(null);
         }}
       />
