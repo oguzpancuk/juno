@@ -141,6 +141,18 @@ begin
   if not found or liker.is_demo then
     return new;
   end if;
+  -- Counting alone is not a limit: parallel inserts each read a snapshot
+  -- from before the others committed and walk straight past it — ten
+  -- overlapping requests on a spent day stored ten more likes (review,
+  -- round 2). The lock is keyed on the liker, so it serialises one
+  -- member's own likes and touches nobody else's, the shape
+  -- `private.photos_folder_limit` already uses for the photo cap. It is
+  -- taken below the demo return on purpose: a demo's answering like is
+  -- the product's own and counts against nothing, so a popular demo does
+  -- not become the one row every liker queues behind.
+  perform pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(new.from_id::text, 0)
+  );
   if new.is_super then
     if not liker.is_premium then
       -- The messages below are the app's discriminator: PostgREST gives

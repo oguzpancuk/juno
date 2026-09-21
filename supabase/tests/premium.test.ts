@@ -43,6 +43,7 @@ let eve: TestUser; // free member, untouched by the quota tests
 let ada: TestUser; // likes mia and nil
 let zoe: TestUser; // premium; super likes mia and nil
 let lil: TestUser; // free; one of the people she likes blocks her
+let pia: TestUser; // free; spends her last likes all at once
 
 const users: TestUser[] = [];
 
@@ -150,11 +151,13 @@ beforeAll(async () => {
   ada = await user('ada');
   zoe = await user('zoe');
   lil = await user('lil');
+  pia = await user('pia');
   for (const [who, name] of [
     [mia, 'Mia'],
     [nil, 'Nil'],
     [eve, 'Eve'],
     [lil, 'Lil'],
+    [pia, 'Pia'],
   ] as const) {
     await insertProfileRow(
       who.client,
@@ -271,6 +274,35 @@ describe('the daily like quota', () => {
     const over = await like(lil.client, lil.id, targetId(FREE_DAILY_LIKES));
     expect(over.error?.code).toBe(CHECK_VIOLATION);
     expect(over.error?.message).toContain('daily like quota spent');
+  }, 60_000);
+
+  it('holds when the last likes are spent all at once', async () => {
+    // Counting alone is not a limit: without the advisory lock every
+    // overlapping insert reads the same `spent` from before the others
+    // committed, and they all pass. One like short of the cap, five at
+    // once, and exactly one of them may land.
+    const AT_ONCE = 5;
+    for (let index = 0; index < FREE_DAILY_LIKES - 1; index++) {
+      const spent = await like(pia.client, pia.id, targetId(index));
+      expect(spent.error, `like ${index + 1}`).toBeNull();
+    }
+    const together = await Promise.all(
+      Array.from({ length: AT_ONCE }, (_, n) =>
+        like(pia.client, pia.id, targetId(FREE_DAILY_LIKES - 1 + n)),
+      ),
+    );
+    const stored = together.filter((one) => one.error === null);
+    const refused = together.filter(
+      (one) => one.error?.code === CHECK_VIOLATION,
+    );
+    expect(stored).toHaveLength(1);
+    expect(refused).toHaveLength(AT_ONCE - 1);
+
+    const mine = await pia.client
+      .from('likes')
+      .select('to_id', { count: 'exact', head: true })
+      .eq('from_id', pia.id);
+    expect(mine.count).toBe(FREE_DAILY_LIKES);
   }, 60_000);
 });
 

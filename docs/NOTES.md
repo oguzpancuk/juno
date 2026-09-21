@@ -6812,6 +6812,17 @@ membership, so it degrades to the upsell rather than to an error. Left
 as it is — a definer read for the counter would be a new entry point for
 a number that is only ever advisory.
 
+Round 2 found the other half of the same sentence: a definer count is
+still only a count, and PostgREST will happily run ten inserts at once,
+each reading a `spent` from before the others committed. Nineteen spent
+and ten parallel requests stored twenty-nine likes. The fix is the one
+this repo already uses for the photo cap — `pg_advisory_xact_lock` keyed
+on the liker — taken below the demo return, so a demo's answering like
+never becomes the row every member queues behind. The suite now fires
+the last few likes with `Promise.all` and expects exactly one to land;
+a sequential loop passes either way, which is why the first pass missed
+it.
+
 The other five were the app's: a membership bought from inside a sheet
 left that sheet showing its free state (twice, on "seni beğenenler" and
 on the filters), the filters sheet raised the membership as a second
