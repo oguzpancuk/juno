@@ -6761,3 +6761,48 @@ nothing behind those rows was exercised, RLS least of all. The harness
 was not kept; if this turns out to be the way threads look at screens,
 `scripts/web-drive.mjs` wants a documented stand-in mode rather than a
 throwaway one.
+
+## 2026-09-21 — what the profile fields' review caught, and what it says about the battery
+
+The review on pull request #9 found seven things in a change the full
+battery had passed twice. Two of them would have shipped as bugs, and
+both are the same kind: a gesture the tests cannot make.
+
+The height drag commits on `onCommit` and drops on `onCancel`, and
+`Track.finish()` reports a cancel when the gesture ends on the stop it
+began from. An earlier fix in the same pull request made the cancel throw
+the value away, on the reading that a page scroll starting on the slider
+arrives there. It does not — `finish()` opens with `if (!d) return;`, so a
+touch the track never read as a drag never reaches either callback. The
+result was that **170 cm, the stop the thumb opens on, was the one height
+the control could not record**: tapping it produced a cancel, and the
+cancel discarded it. The fix is to commit whatever stop the gesture
+produced.
+
+The second: this is the first `Track` outside a `Popup`. `Track` calls
+`useSheetScrollLock()` to stop the sheet's native scroll view stealing a
+drag with a little vertical drift, and the context's default outside a
+sheet is a no-op. `Screen` provides it now, which meant moving the context
+out of `Popup.tsx` into `apps/mobile/lib/scroll-lock.ts` — `ui.tsx`
+importing the popup would be a cycle.
+
+### Battery gaps
+
+Neither of the two is reachable by anything in the battery, and neither
+is reachable by the stand-in screenshot harness either: a native scroll
+view stealing a JS gesture has no web equivalent, and a tap that lands on
+the stop already under the thumb photographs identically whether it saved
+or not. What found them was a reader who followed the gesture through
+`TrackGesture` by hand. A component test over `Track`'s callbacks —
+"a gesture that ends where it started still answers the field" — is the
+thing that would have caught the first; CLAUDE.md keeps component tests
+out of the battery "until a feature needs them", and a slider that
+answers a field may be the feature that does.
+
+### Upstream candidates
+
+The lesson generalises past this repository: a control whose whole
+contract is a gesture gets reviewed by reading the gesture, not by
+looking at a screenshot of it. Worth saying in `CLAUDE.md`'s UI
+verification bullet, which currently offers only a screenshot clause or a
+manual check for anything the app draws.
