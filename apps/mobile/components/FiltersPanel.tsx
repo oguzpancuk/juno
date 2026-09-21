@@ -213,52 +213,11 @@ export function FiltersPanel({ onPremium }: { onPremium?: () => void }) {
 
   return (
     <View testID="filters-screen">
-      <View style={[styles.labelRow, styles.first]}>
-        <Text style={styles.label}>{t.settings.radius}</Text>
-        <Text style={styles.value} testID="radius-value">
-          {ready && km !== null ? `${shownKm} km` : ''}
-        </Text>
-      </View>
-      <Track
-        testID="radius"
-        count={RADIUS_OPTIONS.length}
-        values={[radiusStop]}
-        ticks
-        // Until the stored radius arrives there is nothing true to show.
-        disabled={!ready}
-        labels={[t.settings.radius]}
-        describe={(stop) => `${RADIUS_OPTIONS[stop] ?? ''} km`}
-        onChange={(values) => setRadiusDrag(values[0])}
-        onCommit={(values) => setRadius(values[0])}
-        onCancel={() => setRadiusDrag(null)}
-      />
-      <Text style={styles.hint}>{t.settings.radiusHint}</Text>
-
-      <View style={styles.labelRow}>
-        <Text style={styles.label}>{t.filters.age}</Text>
-        <Text style={styles.value} testID="age-value">
-          {ready
-            ? `${ageStops[0] + AGE_FLOOR} – ${ageStops[1] + AGE_FLOOR}`
-            : ''}
-        </Text>
-      </View>
-      <Track
-        testID="age"
-        count={AGE_STOPS}
-        values={ageStops}
-        disabled={!ready}
-        labels={[t.filters.ageMin, t.filters.ageMax]}
-        describe={(stop) => String(stop + AGE_FLOOR)}
-        onChange={(values) => setAgeDrag([values[0], values[1] ?? values[0]])}
-        onCommit={(values) => {
-          const [min, max] = agesOf(values);
-          setAge(min, max);
-        }}
-        onCancel={() => setAgeDrag(null)}
-      />
-      <Text style={styles.hint}>{t.filters.ageHint}</Text>
-
-      <Text style={[styles.label, styles.section]}>{t.filters.sort}</Text>
+      {/* First in the sheet: the order the cards arrive in changes the
+          whole deck, where the rows below only narrow it. It also has to
+          be readable without a scroll, being the membership's shop
+          window. */}
+      <Text style={[styles.label, styles.first]}>{t.filters.sort}</Text>
       {/* Two segments, the same control as the bands below. A free member
           may press "Uyum": what it opens is the membership, not an error
           — and it is the one place in the app where the order is
@@ -306,6 +265,51 @@ export function FiltersPanel({ onPremium }: { onPremium?: () => void }) {
       <Text style={styles.hint}>
         {premium ? t.filters.sortHintPremium : t.filters.sortHint}
       </Text>
+
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{t.settings.radius}</Text>
+        <Text style={styles.value} testID="radius-value">
+          {ready && km !== null ? `${shownKm} km` : ''}
+        </Text>
+      </View>
+      <Track
+        testID="radius"
+        count={RADIUS_OPTIONS.length}
+        values={[radiusStop]}
+        ticks
+        // Until the stored radius arrives there is nothing true to show.
+        disabled={!ready}
+        labels={[t.settings.radius]}
+        describe={(stop) => `${RADIUS_OPTIONS[stop] ?? ''} km`}
+        onChange={(values) => setRadiusDrag(values[0])}
+        onCommit={(values) => setRadius(values[0])}
+        onCancel={() => setRadiusDrag(null)}
+      />
+      <Text style={styles.hint}>{t.settings.radiusHint}</Text>
+
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{t.filters.age}</Text>
+        <Text style={styles.value} testID="age-value">
+          {ready
+            ? `${ageStops[0] + AGE_FLOOR} – ${ageStops[1] + AGE_FLOOR}`
+            : ''}
+        </Text>
+      </View>
+      <Track
+        testID="age"
+        count={AGE_STOPS}
+        values={ageStops}
+        disabled={!ready}
+        labels={[t.filters.ageMin, t.filters.ageMax]}
+        describe={(stop) => String(stop + AGE_FLOOR)}
+        onChange={(values) => setAgeDrag([values[0], values[1] ?? values[0]])}
+        onCommit={(values) => {
+          const [min, max] = agesOf(values);
+          setAge(min, max);
+        }}
+        onCancel={() => setAgeDrag(null)}
+      />
+      <Text style={styles.hint}>{t.filters.ageHint}</Text>
 
       <Text style={[styles.label, styles.section]}>{t.filters.minBand}</Text>
       {/* One row of four (owner, 2026-09-15). The chips wrapped, because
