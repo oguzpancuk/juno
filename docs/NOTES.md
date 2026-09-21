@@ -6484,3 +6484,13 @@ thread on the pull request, deploys run in CI on the release tag.
 - Open, owner-side: protect `main`; create the project's cloud environment
   (`npm ci` + the Supabase CLI the battery needs); paste
   `docs/project-instructions.md`; choose a per-pull-request preview.
+
+## 2026-09-21 — /mvp-scope: the About block, written
+
+Run from a local maya session with the owner. No scope was cut: the
+ROADMAP was already in skeleton / v1 / Deferred shape and its fourteen open
+items already carried done-when clauses with a verification name. The
+About block of `docs/project-instructions.md` now lists them one line each
+(the port earlier today had only extracted their titles). One stale line
+found and struck in the ROADMAP: Deferred still named the web app, which
+shipped under ADR-0005. Owner: paste the file into the project again.
