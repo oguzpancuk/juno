@@ -160,14 +160,22 @@ export function admirerOf(row: LikedMeFields): Admirer | null {
 }
 
 /**
- * Whole days between a like and now. The list says "Bugün", "Dün" or "N
- * gün önce": it is a list of people, not a feed, and an hour count would
- * invite refreshing it.
+ * Calendar days between a like and now, on the device's own clock. The
+ * list says "Bugün", "Dün" or "N gün önce": it is a list of people, not a
+ * feed, and an hour count would invite refreshing it.
+ *
+ * Calendar days, not 24-hour buckets, because those are calendar words: a
+ * like at 23:30 read at 08:00 is "Dün" to the person reading it, and
+ * dividing the gap by a day would call it "Bugün". Midnight to midnight
+ * and rounded, so a daylight-saving jump of an hour either way does not
+ * move a day.
  */
 export function daysSince(likedAt: string, now: Date = new Date()): number {
-  const then = new Date(likedAt).getTime();
-  if (Number.isNaN(then)) return 0;
-  return Math.max(0, Math.floor((now.getTime() - then) / 86_400_000));
+  const then = new Date(likedAt);
+  if (Number.isNaN(then.getTime())) return 0;
+  const midnight = (day: Date) =>
+    new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
+  return Math.max(0, Math.round((midnight(now) - midnight(then)) / 86_400_000));
 }
 
 /** Super likes first, then newest first. Pure, so the order is tested. */

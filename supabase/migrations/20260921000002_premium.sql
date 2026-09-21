@@ -104,16 +104,19 @@ create index likes_from_id_created_at_idx on public.likes (from_id, created_at);
  * `apps/mobile/lib/premium.test.ts`. Change one and the other has to
  * agree.
  *
- * Invoker, not definer: every row it reads — the liker's own profile, the
- * liker's own likes — is a row the liker may already read, and a definer
- * function here would be one more security-definer entry point to revoke
- * (ROADMAP: "Revoke EXECUTE on the older security-definer triggers").
- * A service-role insert reads them the same way, with RLS out of the
- * picture, which is what a seeding script needs.
+ * Definer, like `create_match_on_mutual_like`, and for the same kind of
+ * reason: a counter that runs as the member counts what the member may
+ * read, and `likes: read own open` (20260909000002_safety.sql) hides
+ * every like sent to somebody who has since blocked the liker. As an
+ * invoker function this counted 17 where 20 had been spent, so the cap
+ * was 20 plus however many people had blocked you — the one thing the
+ * header above says it is. EXECUTE stays revoked from everybody below;
+ * nothing but the trigger calls it.
  */
 create or replace function private.likes_enforce_quota()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 declare

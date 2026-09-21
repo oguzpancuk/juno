@@ -42,6 +42,7 @@ let nil: TestUser; // premium member
 let eve: TestUser; // free member, untouched by the quota tests
 let ada: TestUser; // likes mia and nil
 let zoe: TestUser; // premium; super likes mia and nil
+let lil: TestUser; // free; one of the people she likes blocks her
 
 const users: TestUser[] = [];
 
@@ -148,10 +149,12 @@ beforeAll(async () => {
   eve = await user('eve');
   ada = await user('ada');
   zoe = await user('zoe');
+  lil = await user('lil');
   for (const [who, name] of [
     [mia, 'Mia'],
     [nil, 'Nil'],
     [eve, 'Eve'],
+    [lil, 'Lil'],
   ] as const) {
     await insertProfileRow(
       who.client,
@@ -242,6 +245,33 @@ describe('the daily like quota', () => {
     const age = Date.now() - new Date(stored.created_at).getTime();
     expect(age).toBeLessThan(5 * 60_000);
   });
+
+  it('counts a like the liker can no longer read', async () => {
+    // `likes: read own open` (20260909000002_safety.sql) hides a like
+    // sent to somebody who has since blocked the liker. The quota must
+    // not be counted through that policy, or the cap is the cap plus
+    // however many people have blocked you.
+    for (let index = 0; index < FREE_DAILY_LIKES; index++) {
+      const spent = await like(lil.client, lil.id, targetId(index));
+      expect(spent.error, `like ${index + 1}`).toBeNull();
+    }
+    const blocked = await admin
+      .from('blocks')
+      .insert({ blocker_id: targetId(0), blocked_id: lil.id });
+    expect(blocked.error).toBeNull();
+    // The policy really does hide one of them: nineteen readable, twenty
+    // spent. Without this line the test would pass on a policy change
+    // rather than on the counting.
+    const mine = await lil.client
+      .from('likes')
+      .select('to_id', { count: 'exact', head: true })
+      .eq('from_id', lil.id);
+    expect(mine.count).toBe(FREE_DAILY_LIKES - 1);
+
+    const over = await like(lil.client, lil.id, targetId(FREE_DAILY_LIKES));
+    expect(over.error?.code).toBe(CHECK_VIOLATION);
+    expect(over.error?.message).toContain('daily like quota spent');
+  }, 60_000);
 });
 
 describe('super likes', () => {

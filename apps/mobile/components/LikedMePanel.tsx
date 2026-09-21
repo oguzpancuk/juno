@@ -48,6 +48,13 @@ export function LikedMePanel({
 }) {
   const [state, setState] = useState<LikedMeState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
+  // `me` is what the host read when the deck loaded, and buying the
+  // membership from the panel at the bottom of this sheet does not change
+  // it — nothing remounts us. Without this the rows refetch, come back
+  // with the people in them, and are drawn as locked bars under a panel
+  // that says the membership is active.
+  const [bought, setBought] = useState(false);
+  const premium = me.is_premium || bought;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A ref, not the rendered flag: two taps in one frame both read `false`.
@@ -151,7 +158,7 @@ export function LikedMePanel({
     );
   }
 
-  if (!me.is_premium) {
+  if (!premium) {
     return (
       <View style={styles.panel} testID="liked-me-locked">
         <Text style={styles.lockedTitle}>
@@ -163,7 +170,16 @@ export function LikedMePanel({
             <LockedRow key={`${row.liked_at}-${index}`} row={row} />
           ))}
         </Card>
-        <PremiumPanel onBought={() => setAttempt((n) => n + 1)} />
+        <PremiumPanel
+          onBought={() => {
+            // Back to the spinner while the view is asked again: the rows
+            // in hand are the locked shape, and drawing them as people
+            // would draw nobody.
+            setState({ status: 'loading' });
+            setBought(true);
+            setAttempt((n) => n + 1);
+          }}
+        />
       </View>
     );
   }

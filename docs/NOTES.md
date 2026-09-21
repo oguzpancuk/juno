@@ -6795,6 +6795,29 @@ day's like counter, the chip with its badge), `premium-liked-me-locked`,
 `premium-sort-on`, `premium-deck-premium` (the star count where the like
 counter was).
 
+**The review round, same day.** Six findings, one of them the quota's
+own: `private.likes_enforce_quota` was written SECURITY INVOKER on the
+argument that it only reads rows the liker may already read. It does —
+but `likes: read own open` hides a like sent to somebody who has since
+blocked the liker, so the counter counted 17 where 20 had been spent and
+the cap was 20 plus however many people had blocked you. It is definer
+now, with EXECUTE revoked as before, and `supabase/tests/premium.test.ts`
+has the case: twenty likes, one target blocks, the twenty-first still
+refused. The app's own counter still reads through that policy and can
+therefore promise a like the database will refuse; the refusal opens the
+membership, so it degrades to the upsell rather than to an error. Left
+as it is — a definer read for the counter would be a new entry point for
+a number that is only ever advisory.
+
+The other five were the app's: a membership bought from inside a sheet
+left that sheet showing its free state (twice, on "seni beğenenler" and
+on the filters), the filters sheet raised the membership as a second
+native `Modal` over itself, the ♥ chip was drawn before the profile its
+sheet needs was in, and "Bugün"/"Dün" divided by 86 400 000 rather than
+comparing calendar dates — so a like at 23:30 read at 08:00 said
+"Bugün". The filters sheet now opens the membership inside itself, the
+way the list already did.
+
 ### Upstream candidate
 
 - 2026-09-21 · `apps/mobile/scripts/web-drive.mjs` · The Chrome path is a

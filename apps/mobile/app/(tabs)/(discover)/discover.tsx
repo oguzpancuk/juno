@@ -93,16 +93,16 @@ const BAR_GAP_EXTRA = 5;
 type Sheet = 'detail' | 'person';
 /**
  * Why the membership sheet is open: a quota the server refused, or the
- * star pressed without the membership. `sort` is the filters sheet's,
- * passed through the same way.
+ * star pressed without the membership. The filters sheet's own locked
+ * order is not here — it opens the membership inside itself, because two
+ * `Popup`s are two native `Modal`s and iOS presents one at a time.
  */
-type Upsell = 'daily' | 'super-spent' | 'super-premium' | 'sort';
+type Upsell = 'daily' | 'super-spent' | 'super-premium';
 
 /** What the sheet says above the membership panel. */
 function upsellLine(why: Upsell): string {
   if (why === 'daily') return t.premium.lockedLikes;
   if (why === 'super-spent') return t.premium.lockedSuperSpent;
-  if (why === 'sort') return t.premium.lockedSort;
   return t.premium.lockedSuper;
 }
 /**
@@ -755,49 +755,55 @@ export default function Discover() {
         title={t.filters.title}
         testID="filters-popup"
       >
-        <FiltersPanel onPremium={() => setUpsell('sort')} />
+        <FiltersPanel />
       </Popup>
-      {/* The other corner: who is waiting for an answer. Like the filters
-          chip it is present in every state — an empty deck is exactly
-          when this list is worth opening. */}
-      <Pressable
-        testID="open-liked-me"
-        accessibilityRole="button"
-        accessibilityLabel={
-          admirers > 0 ? t.likedMe.openCount(admirers) : t.likedMe.open
-        }
-        hitSlop={12}
-        onPress={() => setShowLiked(true)}
-        style={({ pressed }) => [
-          styles.likedButton,
-          { top: cornerTop },
-          pressed && styles.dim,
-        ]}
-      >
-        <Text style={styles.likedGlyph}>♥</Text>
-        {admirers > 0 ? (
-          <View style={styles.likedBadge} testID="liked-me-badge">
-            <Text style={styles.likedBadgeText} maxFontSizeMultiplier={1}>
-              {admirers > 99 ? '99+' : admirers}
-            </Text>
-          </View>
-        ) : null}
-      </Pressable>
+      {/* The other corner: who is waiting for an answer. Drawn once the
+          profile is in and in every state after that — an empty deck is
+          exactly when this list is worth opening — and not before, because
+          the sheet it opens needs that profile to score anybody. A chip
+          that is there while it cannot answer is a chip that does nothing
+          when pressed, or pops its sheet open by itself a second later
+          (review, 2026-09-21). */}
       {me ? (
-        <Popup
-          visible={showLiked}
-          onClose={() => {
-            setShowLiked(false);
-            setAttempt((n) => n + 1);
-          }}
-          title={t.likedMe.title}
-          testID="liked-me-popup"
-        >
-          <LikedMePanel
-            me={me}
-            onAnswered={() => setAdmirers((n) => Math.max(0, n - 1))}
-          />
-        </Popup>
+        <>
+          <Pressable
+            testID="open-liked-me"
+            accessibilityRole="button"
+            accessibilityLabel={
+              admirers > 0 ? t.likedMe.openCount(admirers) : t.likedMe.open
+            }
+            hitSlop={12}
+            onPress={() => setShowLiked(true)}
+            style={({ pressed }) => [
+              styles.likedButton,
+              { top: cornerTop },
+              pressed && styles.dim,
+            ]}
+          >
+            <Text style={styles.likedGlyph}>♥</Text>
+            {admirers > 0 ? (
+              <View style={styles.likedBadge} testID="liked-me-badge">
+                <Text style={styles.likedBadgeText} maxFontSizeMultiplier={1}>
+                  {admirers > 99 ? '99+' : admirers}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+          <Popup
+            visible={showLiked}
+            onClose={() => {
+              setShowLiked(false);
+              setAttempt((n) => n + 1);
+            }}
+            title={t.likedMe.title}
+            testID="liked-me-popup"
+          >
+            <LikedMePanel
+              me={me}
+              onAnswered={() => setAdmirers((n) => Math.max(0, n - 1))}
+            />
+          </Popup>
+        </>
       ) : null}
       {/* The membership, opened by whatever it was needed for. Closing it
           reloads the deck: a membership bought in here changes the order

@@ -171,13 +171,19 @@ describe('who liked you', () => {
     ]);
   });
 
-  it('counts whole days back, and nothing forward', () => {
-    const now = new Date('2026-09-21T12:00:00.000Z');
-    expect(daysSince('2026-09-21T09:00:00.000Z', now)).toBe(0);
-    expect(daysSince('2026-09-20T09:00:00.000Z', now)).toBe(1);
-    expect(daysSince('2026-09-14T09:00:00.000Z', now)).toBe(7);
+  it('counts calendar days back, and nothing forward', () => {
+    // Local times on purpose: the words are the reader's calendar, so the
+    // test must read the same in any timezone the runner is set to.
+    const at = (day: number, hour: number) => new Date(2026, 8, day, hour);
+    const now = at(21, 8);
+    expect(daysSince(at(21, 2).toISOString(), now)).toBe(0);
+    // Last night at 23:30 is "Dün", though it is under nine hours ago.
+    expect(daysSince(at(20, 23).toISOString(), now)).toBe(1);
+    // Yesterday morning is "Dün" too, though it is 23 hours ago.
+    expect(daysSince(at(20, 9).toISOString(), now)).toBe(1);
+    expect(daysSince(at(14, 9).toISOString(), now)).toBe(7);
     // A clock behind the server's must not read as "-1 gün önce".
-    expect(daysSince('2026-09-21T18:00:00.000Z', now)).toBe(0);
+    expect(daysSince(at(22, 1).toISOString(), now)).toBe(0);
     expect(daysSince('not a time', now)).toBe(0);
   });
 });
