@@ -110,8 +110,8 @@ request without its preview link is not ready for the owner.
 Provider: a Cloudflare Worker VERSION per pull request
 (`.github/workflows/preview.yml`): the Expo web export, uploaded with the
 alias `pr-<number>` — never deployed, so production traffic is untouched.
-URL: `https://pr-<number>-juno.<account>.workers.dev`; the `preview`
-check's summary prints it, and it is true once that check is green.
+URL: `https://pr-<number>-juno.oguzpancuk.workers.dev` — put it in the pull
+request body; it is true once the `preview` check is green.
 What a preview is NOT: it talks to the PRODUCTION Supabase project (owner
 decision) — real data behind RLS, so try it with a test account and never
 bulk-write; a pull request's MIGRATIONS and Edge Function changes are not
