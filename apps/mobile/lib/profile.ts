@@ -15,6 +15,7 @@ import {
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { LEGAL_VERSION } from './legal';
+import { SORT_ORDERS } from './premium-rules';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 
 /** The four elements a Sun sign can have, as the filter offers them. */
@@ -49,6 +50,14 @@ export const OwnProfileSchema = z.object({
   sun_elements: z.array(z.enum(ELEMENTS)).nullable(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  /**
+   * Premium membership and what it orders the deck by. Both are the
+   * member's own to set while there is no payment step (owner,
+   * 2026-09-21); the quotas the flag lifts are the database's.
+   */
+  is_premium: z.boolean(),
+  premium_since: z.string().nullable(),
+  sort_by: z.enum(SORT_ORDERS),
 });
 
 export type OwnProfile = z.infer<typeof OwnProfileSchema>;
@@ -63,7 +72,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos',
+      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos, is_premium, premium_since, sort_by',
     )
     .eq('id', userId)
     // Bounded for the same reason as `fetchMatch`: several screens show

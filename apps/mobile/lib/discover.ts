@@ -14,6 +14,7 @@ import {
 } from '@juno/astro';
 import { z } from 'zod';
 import { GENDERS } from './profile';
+import { orderCandidates, quotaRefusal, type SortBy } from './premium';
 import { parseRows, warnDropped } from './rows';
 import type { SunElement } from './profile';
 import { supabase } from './supabase';
@@ -47,7 +48,10 @@ export type DiscoverState =
 
 /**
  * Fetch candidates and score them on device against the caller's chart.
- * Sorted by score, then distance — the view itself orders by distance.
+ *
+ * The order is the member's: nearest first, or — the premium choice —
+ * best match first (`orderCandidates`). Until 2026-09-21 every deck was
+ * ordered by score, which left the membership nothing to offer.
  *
  * Two of the filters cannot run in `discover`: the band comes from a score
  * computed here from two charts, and the element from a chart the view
@@ -56,7 +60,11 @@ export type DiscoverState =
  */
 export async function fetchCandidates(
   myChart: PublicChart,
-  filters: DiscoverFilters = { minBand: 'quiet', sunElements: null },
+  filters: DiscoverFilters = {
+    minBand: 'quiet',
+    sunElements: null,
+    sortBy: 'distance',
+  },
 ): Promise<DiscoverState> {
   const { data, error } = await supabase.from('discover').select('*');
   if (error) return { status: 'error' };
@@ -87,27 +95,44 @@ export async function fetchCandidates(
       // would mean nobody.
       if (wanted === null || wanted.length === 0) return true;
       return wanted.includes(elementOf(row.big_three.sun));
-    })
-    .sort(
-      (a, b) =>
-        b.match.score - a.match.score || a.row.distance_km - b.row.distance_km,
-    );
-  return { status: 'ready', candidates };
+    });
+  return {
+    status: 'ready',
+    candidates: orderCandidates(candidates, filters.sortBy),
+  };
 }
 
 export type SwipeResult =
   | { readonly ok: true; readonly matchId: string | null }
-  | { readonly ok: false; readonly reason: 'no-aspect' | 'gone' | 'db' };
+  | {
+      readonly ok: false;
+      readonly reason:
+        | 'no-aspect'
+        | 'gone'
+        | 'db'
+        // What the quotas refused: a free day's likes are spent, this
+        // week's super likes are spent, or a super like was tried without
+        // the membership. `private.likes_enforce_quota` decides; the app
+        // only reads which.
+        | 'daily'
+        | 'super-spent'
+        | 'super-premium';
+    };
 
 /**
  * Record a like or pass. The starter key is oriented by uuid order (a < b),
  * the same orientation the other side will compute, so the trigger's
  * equality check passes.
+ *
+ * A super like is a like with the star on it: same key, same match the
+ * moment it is answered, and the person it is sent to sees the star on
+ * their "seni beğenenler" list.
  */
 export async function swipe(
   me: { readonly id: string; readonly chart: PublicChart },
   them: { readonly id: string; readonly chart: PublicChart },
   kind: 'like' | 'pass',
+  isSuper = false,
 ): Promise<SwipeResult> {
   let starter_key: string | null = null;
   if (kind === 'like') {
@@ -118,7 +143,19 @@ export async function swipe(
   }
   const { error } = await supabase
     .from('likes')
-    .insert({ from_id: me.id, to_id: them.id, kind, starter_key });
+    // `created_at` is not sent: the trigger stamps it, because a client
+    // that chose it could date its likes out of every quota window.
+    .insert({
+      from_id: me.id,
+      to_id: them.id,
+      kind,
+      starter_key,
+      is_super: isSuper && kind === 'like',
+    });
+  // Before the generic paths: a spent quota is a sentence the person can
+  // act on, not "bir şeyler ters gitti".
+  const refusal = quotaRefusal(error);
+  if (refusal) return { ok: false, reason: refusal };
   // 23505: already swiped (lost response); treat as done.
   // 42501: they blocked us while the card was on screen. 23503 on the
   // to_id foreign key: they deleted their account. Either way this person
@@ -189,4 +226,6 @@ export interface DiscoverFilters {
   readonly minBand: Band;
   /** null means every element. */
   readonly sunElements: readonly SunElement[] | null;
+  /** Nearest first, or best match first — the premium choice. */
+  readonly sortBy: SortBy;
 }

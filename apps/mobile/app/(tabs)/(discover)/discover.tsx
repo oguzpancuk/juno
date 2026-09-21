@@ -27,7 +27,9 @@ import { PairReading } from '@/components/PairReading';
 import { BandRing } from '@/components/BandRing';
 import { CosmicGround } from '@/components/CosmicGround';
 import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
+import { LikedMePanel } from '@/components/LikedMePanel';
 import { Popup } from '@/components/Popup';
+import { PremiumPanel } from '@/components/PremiumPanel';
 import { SlidersIcon } from '@/components/SlidersIcon';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
@@ -35,12 +37,19 @@ import { useScreenName } from '@/lib/a11y';
 import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
+import {
+  fetchAllowance,
+  fetchLikedMeCount,
+  NO_ALLOWANCE,
+  SUPER_LIKES_PER_WEEK,
+  type Allowance,
+} from '@/lib/premium';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { decideSwipe, SWIPE_THRESHOLD } from '@/lib/swipe';
-import { color, gradient, radius, space, type } from '@/theme/tokens';
+import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
  * Horizontal travel before the card owns the touch. Under it a finger is
@@ -66,6 +75,8 @@ const MAX_DECK_SCALE = 1.35;
 
 /** ✕ and ♥ — the verdict, the largest targets on the screen. */
 const ROUND_SIZE = 88;
+/** ★ — the premium move, between them and deliberately smaller. */
+const SUPER_SIZE = 56;
 /** The least each of the three gaps under the chips may shrink to. */
 const SPACING_FLOOR = space.sm;
 /**
@@ -80,6 +91,20 @@ const BAR_GAP_EXTRA = 5;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
+/**
+ * Why the membership sheet is open: a quota the server refused, or the
+ * star pressed without the membership. `sort` is the filters sheet's,
+ * passed through the same way.
+ */
+type Upsell = 'daily' | 'super-spent' | 'super-premium' | 'sort';
+
+/** What the sheet says above the membership panel. */
+function upsellLine(why: Upsell): string {
+  if (why === 'daily') return t.premium.lockedLikes;
+  if (why === 'super-spent') return t.premium.lockedSuperSpent;
+  if (why === 'sort') return t.premium.lockedSort;
+  return t.premium.lockedSuper;
+}
 /**
  * How much of a vertical drag the card follows: enough to feel held, not
  * so much that a wobble looks like an answer.
@@ -110,6 +135,15 @@ export default function Discover() {
   // 2026-09-15). Closing it reloads the deck: nothing else would, because
   // the screen never lost focus.
   const [showFilters, setShowFilters] = useState(false);
+  // Premium, as the deck meets it: what is left of the quotas, how many
+  // people are waiting on the "seni beğenenler" list, and the two sheets
+  // those open. `upsell` is what the membership is being offered for —
+  // a spent quota or a star a free member pressed — and it is what the
+  // sheet says above the panel.
+  const [allowance, setAllowance] = useState<Allowance>(NO_ALLOWANCE);
+  const [admirers, setAdmirers] = useState(0);
+  const [showLiked, setShowLiked] = useState(false);
+  const [upsell, setUpsell] = useState<Upsell | null>(null);
   const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -127,15 +161,30 @@ export default function Discover() {
       filterWritesAnswered()
         .then(() => fetchOwnProfile(userId))
         .then(async (profile) => {
+          const nothing = {
+            me: null,
+            allowance: NO_ALLOWANCE,
+            admirers: 0,
+          };
           if (profile.status === 'missing')
-            return { status: 'missing' as const, me: null };
+            return { status: 'missing' as const, ...nothing };
           if (profile.status !== 'ready')
-            return { status: 'error' as const, me: null };
-          const next = await fetchCandidates(profile.profile.chart, {
-            minBand: profile.profile.min_band,
-            sunElements: profile.profile.sun_elements,
-          });
-          return { ...next, me: profile.profile };
+            return { status: 'error' as const, ...nothing };
+          const [next, left, waiting] = await Promise.all([
+            fetchCandidates(profile.profile.chart, {
+              minBand: profile.profile.min_band,
+              sunElements: profile.profile.sun_elements,
+              sortBy: profile.profile.sort_by,
+            }),
+            fetchAllowance(profile.profile.id, profile.profile.is_premium),
+            fetchLikedMeCount(),
+          ]);
+          return {
+            ...next,
+            me: profile.profile,
+            allowance: left,
+            admirers: waiting,
+          };
         })
         .then((result) => {
           if (cancelled) return;
@@ -144,6 +193,8 @@ export default function Discover() {
             return;
           }
           setMe(result.me);
+          setAllowance(result.allowance);
+          setAdmirers(result.admirers);
           setState(result.status === 'error' ? { status: 'error' } : result);
         })
         .catch(() => {
@@ -162,14 +213,28 @@ export default function Discover() {
    * because the gesture responder below closes over it.
    */
   const act = useCallback(
-    async (candidate: Candidate, kind: 'like' | 'pass'): Promise<boolean> => {
+    async (
+      candidate: Candidate,
+      kind: 'like' | 'pass',
+      isSuper = false,
+    ): Promise<boolean> => {
       if (!me || busy) return false;
+      // Asked here rather than sent and refused: the counter is this
+      // device's and can be stale, but when it says zero the server has
+      // just said so too, and a round trip to be told again is one the
+      // person waits through. A swipe reaches this the same way the ♥
+      // does, which is why the guard is not on the button.
+      if (kind === 'like' && !isSuper && allowance.likesLeft === 0) {
+        setUpsell('daily');
+        return false;
+      }
       setBusy(true);
       setError(null);
       const result = await swipe(
         { id: me.id, chart: me.chart },
         { id: candidate.row.id, chart: candidate.row.chart },
         kind,
+        isSuper,
       ).catch(
         // A thrown network failure is the same as a refused write, and
         // must not leave `busy` set for the rest of the session.
@@ -194,6 +259,20 @@ export default function Discover() {
           drop();
           return true;
         }
+        // A spent quota is not an error: the card stays where it is and
+        // the membership sheet opens saying which one ran out. The
+        // counter goes to zero with it — the server has just told us
+        // what this device's count could only estimate.
+        if (result.reason !== 'no-aspect' && result.reason !== 'db') {
+          if (result.reason === 'daily') {
+            setAllowance((left) => ({ ...left, likesLeft: 0 }));
+          }
+          if (result.reason === 'super-spent') {
+            setAllowance((left) => ({ ...left, superLeft: 0 }));
+          }
+          setUpsell(result.reason);
+          return false;
+        }
         setError(
           result.reason === 'no-aspect'
             ? t.discover.noAspect
@@ -201,12 +280,22 @@ export default function Discover() {
         );
         return false;
       }
+      // What the like cost. Counted here rather than re-read: the deck
+      // reloads on focus anyway, and a round trip per swipe to learn a
+      // number we already know is one the person waits for.
+      if (kind === 'like') {
+        setAllowance((left) => ({
+          likesLeft:
+            left.likesLeft === null ? null : Math.max(0, left.likesLeft - 1),
+          superLeft: isSuper ? Math.max(0, left.superLeft - 1) : left.superLeft,
+        }));
+      }
       drop();
       if (result.matchId && firstSightOf(result.matchId))
         router.navigate(matchArrivedHref(result.matchId), INTO_MATCHES);
       return true;
     },
-    [me, busy],
+    [me, busy, allowance.likesLeft],
   );
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
@@ -531,6 +620,14 @@ export default function Discover() {
         // has drifted under the finger turns a press into a swipe.
         <View style={styles.footer}>
           {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* What is left, for whoever has a limit: a free member's day
+              of likes, a premium member's week of stars. Silent for a
+              premium member who has all five. */}
+          {allowanceLine(allowance) ? (
+            <Text style={styles.allowance} testID="allowance">
+              {allowanceLine(allowance)}
+            </Text>
+          ) : null}
           <View style={styles.actions}>
             <Pressable
               testID="pass"
@@ -544,6 +641,33 @@ export default function Discover() {
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
               >
                 ✕
+              </Text>
+            </Pressable>
+            {/* The star sits between the two verdicts and is smaller than
+                either: it is the rarer thing, not the louder one. A free
+                member may press it — the sheet it opens is the offer. */}
+            <Pressable
+              testID="super-like"
+              accessibilityLabel={t.discover.superLike}
+              style={[styles.roundSuper, (busy || flying) && styles.buttonBusy]}
+              disabled={busy || flying}
+              onPress={() => {
+                if (!me?.is_premium) {
+                  setUpsell('super-premium');
+                  return;
+                }
+                if (allowance.superLeft === 0) {
+                  setUpsell('super-spent');
+                  return;
+                }
+                void act(current, 'like', true);
+              }}
+            >
+              <Text
+                style={styles.roundGlyphSuper}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                ★
               </Text>
             </Pressable>
             <Pressable
@@ -631,10 +755,90 @@ export default function Discover() {
         title={t.filters.title}
         testID="filters-popup"
       >
-        <FiltersPanel />
+        <FiltersPanel onPremium={() => setUpsell('sort')} />
+      </Popup>
+      {/* The other corner: who is waiting for an answer. Like the filters
+          chip it is present in every state — an empty deck is exactly
+          when this list is worth opening. */}
+      <Pressable
+        testID="open-liked-me"
+        accessibilityRole="button"
+        accessibilityLabel={
+          admirers > 0 ? t.likedMe.openCount(admirers) : t.likedMe.open
+        }
+        hitSlop={12}
+        onPress={() => setShowLiked(true)}
+        style={({ pressed }) => [
+          styles.likedButton,
+          { top: cornerTop },
+          pressed && styles.dim,
+        ]}
+      >
+        <Text style={styles.likedGlyph}>♥</Text>
+        {admirers > 0 ? (
+          <View style={styles.likedBadge} testID="liked-me-badge">
+            <Text style={styles.likedBadgeText} maxFontSizeMultiplier={1}>
+              {admirers > 99 ? '99+' : admirers}
+            </Text>
+          </View>
+        ) : null}
+      </Pressable>
+      {me ? (
+        <Popup
+          visible={showLiked}
+          onClose={() => {
+            setShowLiked(false);
+            setAttempt((n) => n + 1);
+          }}
+          title={t.likedMe.title}
+          testID="liked-me-popup"
+        >
+          <LikedMePanel
+            me={me}
+            onAnswered={() => setAdmirers((n) => Math.max(0, n - 1))}
+          />
+        </Popup>
+      ) : null}
+      {/* The membership, opened by whatever it was needed for. Closing it
+          reloads the deck: a membership bought in here changes the order
+          the cards come in, and puts the counter away. */}
+      <Popup
+        visible={upsell !== null}
+        onClose={() => {
+          setUpsell(null);
+          setAttempt((n) => n + 1);
+        }}
+        title={t.premium.title}
+        testID="premium-popup"
+      >
+        <View style={styles.upsell}>
+          {upsell ? (
+            <Text style={styles.upsellLine} testID="upsell-line">
+              {upsellLine(upsell)}
+            </Text>
+          ) : null}
+          <PremiumPanel />
+        </View>
       </Popup>
     </View>
   );
+}
+
+/**
+ * The line under the deck, or none. A free member is counting likes; a
+ * premium member is only told about the stars, and only once some are
+ * gone — a full week of them is not news.
+ */
+function allowanceLine(allowance: Allowance): string | null {
+  if (allowance.likesLeft !== null) {
+    return allowance.likesLeft === 0
+      ? t.discover.likesGone
+      : t.discover.likesLeft(allowance.likesLeft);
+  }
+  if (allowance.superLeft < SUPER_LIKES_PER_WEEK) {
+    return t.discover.superLeft(allowance.superLeft);
+  }
+  return null;
 }
 
 /**
@@ -895,8 +1099,63 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   roundFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Smaller than ✕ and ♥ and centred between them: the star is the rare
+  // move, offered without competing with the verdict.
+  roundSuper: {
+    width: SUPER_SIZE,
+    height: SUPER_SIZE,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.warm,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
   roundGlyph: { fontSize: 32, color: color.textMuted },
   roundGlyphOn: { fontSize: 35, color: color.onBright },
+  roundGlyphSuper: { fontSize: 24, color: color.warm },
+  // Above the three buttons, in the footer's even spacing.
+  allowance: {
+    ...type.bodySmall,
+    color: color.textFaint,
+    textAlign: 'center',
+  },
+  // The filters chip's twin, in the other corner.
+  likedButton: {
+    position: 'absolute',
+    left: SCREEN_PADDING,
+    width: CORNER_CHIP,
+    height: CORNER_CHIP,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likedGlyph: { fontSize: 18, color: color.warm },
+  // The matches tab's badge, in the same colours, on the chip's corner.
+  likedBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: radius.pill,
+    paddingHorizontal: 5,
+    backgroundColor: color.cool,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likedBadgeText: {
+    ...type.caption,
+    fontSize: 11,
+    color: color.onBright,
+    fontFamily: font.semibold,
+  },
+  upsell: { gap: space.lg },
+  upsellLine: { ...type.body, color: color.text },
   buttonBusy: { opacity: 0.5 },
   muted: { ...type.body, color: color.textMuted, textAlign: 'center' },
 });

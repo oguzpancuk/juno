@@ -6703,3 +6703,66 @@ the on-request build here is open, and nothing depends on it until a
 native-only screen needs a look.
 `docs/project-instructions.md` changed in two bullets (manual checks, and
 "deploys are not done from this project") — the owner pastes it again.
+
+## 2026-09-21 — premium membership, with nothing behind the counter
+
+The owner's second off-ROADMAP ask of the evening: premium, without a
+payment step, giving unlimited likes, five super likes a week, the list of
+people who liked you, and the deck ordered by compatibility. ADR-0012 has
+the shape of it; this entry is what a next session would otherwise have to
+ask about.
+
+**Defaults chosen where the ask forked** (all reversible, all in
+`20260921000001_premium.sql`):
+
+- A free member gets 20 likes per rolling 24 hours. "Sınırsız" needed
+  something to be unlimited against and the repo had no cap at all. The
+  window rolls rather than resetting at a local midnight — the database
+  would need a timezone per member to do otherwise, and the sentence
+  "hakların gün içinde tek tek geri gelir" is the truer one.
+- Super likes are 5 per rolling 7 days, premium only. A super like is
+  `likes.is_super`, not a third `like_kind` value, so every existing
+  `kind = 'like'` condition still means what it says.
+- Free decks are ordered by distance now. Until today every deck was
+  ordered by compatibility, so "uyuma göre sıralama" had nothing to sell;
+  the order is `profiles.sort_by`, honoured on the device, because the
+  score is @juno/astro's and the database cannot rank by it.
+- `liked_me` gives a free member one row per waiting like carrying the
+  star and the day, with every identifying column null — the join that
+  fetches the person is only made for a premium member. So the lock is
+  the answer's shape, not a blur drawn over data the device already holds.
+
+**Open for the owner: the demos do not appear on "seni beğenenler".**
+`private.likes_demo_reciprocate` (2026-09-17) answers a member's like
+rather than pre-liking them, and its comment says why: twenty starter keys
+cannot be computed server-side. Its other comment — "Nothing in the
+product shows who has liked you, so there is no screen on which the two
+designs differ" — stopped being true today. A new member's list is empty
+until a real person likes them, which reads oddly against "gerçek biri
+kayıt olduğunda hepsi o kullanıcıyı beğensin". Showing the demos there
+means either pre-writing their likes (needs the keys) or a second branch
+in the view with different filter semantics (the demos would have to keep
+the radius, gender and age conditions that a real liker is deliberately
+exempt from). Not decided here; not a bug to fix quietly.
+
+**What could not be verified here.** The supabase suite — where every
+quota and the whole view live — cannot run in a cloud thread (no Docker
+daemon), so `supabase/tests/premium.test.ts` has only ever been
+typechecked and linted; CI's `verify` is its first real run. The
+screenshots the ROADMAP-style clauses would want are impossible for the
+same reason twice over: the screens need a signed-in session against a
+stack carrying this migration, and `apps/mobile/scripts/web-drive.mjs`
+hardcodes `/Applications/Google Chrome.app/...`, so a cloud thread has no
+browser it will drive even when a stack exists. The premium screen, the
+"seni beğenenler" list and the sort toggle are listed in the pull request
+as the owner's checks.
+
+### Upstream candidate
+
+- 2026-09-21 · `apps/mobile/scripts/web-drive.mjs` · The Chrome path is a
+  macOS literal, so the one tool this repo has for phone-width screenshots
+  refuses to start anywhere else. A `CHROME` environment override (and the
+  cloud image's `/opt/pw-browsers/chromium` as a fallback) would let a
+  thread take its own screenshots whenever a stack is reachable. Not done
+  here: this thread had no stack either way, so the change would have
+  shipped unverified.

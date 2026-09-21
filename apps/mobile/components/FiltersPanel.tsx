@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Track, type TrackValues } from '@/components/Track';
 import { Chip, LinkText } from '@/components/ui';
+import { SORT_ORDERS, type SortBy } from '@/lib/premium-rules';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -28,7 +29,7 @@ const AGE_STOPS = AGE_CEILING - AGE_FLOOR + 1;
  * written as it is made, so the host only has to reload the deck when the
  * sheet closes.
  */
-export function FiltersPanel() {
+export function FiltersPanel({ onPremium }: { onPremium?: () => void }) {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -38,6 +39,10 @@ export function FiltersPanel() {
   const [ageMax, setAgeMax] = useState(AGE_CEILING);
   const [band, setBand] = useState<Band>('quiet');
   const [elements, setElements] = useState<readonly SunElement[] | null>(null);
+  // The deck's order, and whether this member may choose it. Distance is
+  // what a free deck comes in; compatibility is the membership's.
+  const [sortBy, setSort] = useState<SortBy>('distance');
+  const [premium, setPremium] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What a drag in progress shows, above its track and on it. Null when no
   // finger is down; the saved state above is what the database was told.
@@ -74,6 +79,8 @@ export function FiltersPanel() {
         setAgeMax(Math.min(state.profile.age_max, AGE_CEILING));
         setBand(state.profile.min_band);
         setElements(state.profile.sun_elements);
+        setSort(state.profile.sort_by);
+        setPremium(state.profile.is_premium);
         setLoad('ready');
       });
     return () => {
@@ -250,6 +257,55 @@ export function FiltersPanel() {
         onCancel={() => setAgeDrag(null)}
       />
       <Text style={styles.hint}>{t.filters.ageHint}</Text>
+
+      <Text style={[styles.label, styles.section]}>{t.filters.sort}</Text>
+      {/* Two segments, the same control as the bands below. A free member
+          may press "Uyum": what it opens is the membership, not an error
+          — and it is the one place in the app where the order is
+          explained at all. */}
+      <View
+        style={[styles.segments, !ready && styles.off]}
+        accessibilityRole="radiogroup"
+      >
+        {SORT_ORDERS.map((option) => {
+          const on = ready && sortBy === option;
+          const locked = option === 'compatibility' && !premium;
+          return (
+            <Pressable
+              key={option}
+              testID={`sort-${option}`}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              disabled={!ready}
+              style={[styles.segment, on && styles.segmentOn]}
+              onPress={() => {
+                if (locked) {
+                  onPremium?.();
+                  return;
+                }
+                if (on) return;
+                const was = sortBy;
+                setSort(option);
+                void save({ sort_by: option }, () => setSort(was));
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={[styles.segmentText, on && styles.chipTextOn]}
+              >
+                {option === 'compatibility'
+                  ? `${t.filters.sortCompatibility}${locked ? ' ✦' : ''}`
+                  : t.filters.sortDistance}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={styles.hint}>
+        {premium ? t.filters.sortHintPremium : t.filters.sortHint}
+      </Text>
 
       <Text style={[styles.label, styles.section]}>{t.filters.minBand}</Text>
       {/* One row of four (owner, 2026-09-15). The chips wrapped, because
