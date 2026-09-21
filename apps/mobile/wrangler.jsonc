@@ -7,6 +7,12 @@
   "observability": {
     "enabled": true,
   },
+  // Pull request previews (.github/workflows/preview.yml) upload a VERSION
+  // with an alias and try it on its workers.dev URL. With custom-domain
+  // routes and nothing else, workers.dev — and preview URLs with it —
+  // default to off. This turns on the preview URLs only; production still
+  // answers on the two custom domains below and nowhere else.
+  "preview_urls": true,
   // The public address. A custom domain is a Workers-side binding, not a
   // DNS record anyone writes by hand: Cloudflare creates and owns the
   // record for it, which is why the zone had to move here first — a
