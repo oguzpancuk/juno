@@ -37,6 +37,7 @@ import {
   usePhotoSources,
 } from '@/lib/photos';
 import type { ProfileDraft } from '@/lib/photos';
+import { cleanDetail } from '@/lib/profile-details';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -198,10 +199,14 @@ export default function Profile() {
         return;
       }
       setBio(bio.trim());
+      // The same cleaning the row was written with, not just a trim:
+      // `cleanDetail` also collapses inner runs of whitespace, and a page
+      // that kept the untrimmed draft would show a value the row does not
+      // hold until the next read — and re-send it on the next Kaydet.
       setDetails((draft) => ({
         ...draft,
-        university: draft.university.trim(),
-        occupation: draft.occupation.trim(),
+        university: cleanDetail(draft.university) ?? '',
+        occupation: cleanDetail(draft.occupation) ?? '',
       }));
       setEditing(false);
     });

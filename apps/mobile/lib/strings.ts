@@ -243,7 +243,8 @@ export const t = {
       `En fazla ${max} tane seçebilirsin. Profilinde görünür.`,
     interestsFull: (max: number) =>
       `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
-    detailsEmpty: 'Boy, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
+    detailsEmpty:
+      'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
     interestNames: {
       music: 'Müzik',
       live_music: 'Canlı müzik',

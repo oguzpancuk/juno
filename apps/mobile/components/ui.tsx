@@ -34,6 +34,7 @@ import Svg, {
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
 import { useTopClearance } from '@/lib/insets';
+import { ScrollLock } from '@/lib/scroll-lock';
 import { useSvgId } from '@/lib/svg-id';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
@@ -115,6 +116,11 @@ export function Screen({
   testID?: string;
 }) {
   const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
+  // A slider on a page needs the same hold the sheet's gives it: the
+  // profile's height track was the first one outside a `Popup`, and
+  // without this the page's own scroll takes any drag with a few points
+  // of vertical drift and the thumb stops under the finger.
+  const [locked, setLocked] = useState(false);
   return (
     <View style={s.screen}>
       {/* The sky under every screen (owner, 2026-09-16); the scroll view
@@ -125,11 +131,14 @@ export function Screen({
         contentContainerStyle={[s.screenContent, { paddingTop: topPadding }]}
         bounces={!bleed}
         overScrollMode={bleed ? 'never' : 'auto'}
+        scrollEnabled={!locked}
         testID={testID}
       >
-        <TopGapContext.Provider value={bleed ? topPadding : 0}>
-          {children}
-        </TopGapContext.Provider>
+        <ScrollLock.Provider value={setLocked}>
+          <TopGapContext.Provider value={bleed ? topPadding : 0}>
+            {children}
+          </TopGapContext.Provider>
+        </ScrollLock.Provider>
       </ScrollView>
     </View>
   );

@@ -1,6 +1,6 @@
 import type { BigThree, NatalReading, PublicChart } from '@juno/astro';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
   Image,
   Pressable,
@@ -61,7 +61,12 @@ export interface ProfileEdit {
   readonly onBioChange: (text: string) => void;
   /** The four optional fields as typed; persisted by "Kaydet", not here. */
   readonly details: ProfileDraft;
-  readonly onDetailsChange: (next: ProfileDraft) => void;
+  /**
+   * An updater, not a value: two chips pressed in one batch both read the
+   * draft this render closed over, and the second write would drop the
+   * first.
+   */
+  readonly onDetailsChange: Dispatch<SetStateAction<ProfileDraft>>;
   readonly onMove: (index: number, direction: 'left' | 'right') => void;
   readonly onRemove: (index: number) => void;
   readonly onAdd: () => void;
@@ -301,7 +306,7 @@ const HEIGHT_DEFAULT = 170;
 function DetailsEditor({ edit }: { edit: ProfileEdit }) {
   const draft = edit.details;
   const set = (patch: Partial<ProfileDraft>) =>
-    edit.onDetailsChange({ ...draft, ...patch });
+    edit.onDetailsChange((prev) => ({ ...prev, ...patch }));
   // What a drag in progress shows above the track; null when no finger is
   // down, and the draft is then what the label reads.
   const [drag, setDrag] = useState<number | null>(null);
@@ -332,11 +337,21 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
           setDrag(null);
           set({ heightCm: stopHeight(values[0]) });
         }}
-        // Nothing is answered by a gesture the track gave up on: a touch
-        // that heads up or down is the page's scroll, and it arrives here.
-        // Setting the height on it would put 170 cm on a profile whose
-        // owner only scrolled past the slider.
-        onCancel={() => setDrag(null)}
+        onCancel={() => {
+          // A gesture that ends on the stop it began from reports a
+          // cancel, not a commit — so with the thumb parked on the
+          // unanswered default, tapping it where it already sits was the
+          // one gesture in the range that answered nothing, and 170 cm
+          // the one height this control could not record.
+          //
+          // What the drag showed is what it meant, so it is taken. The
+          // test is `drag`, which is set only by `onChange`: a touch the
+          // track read as the page's scroll never moved the thumb, and
+          // never reaches here at all — `Track`'s `finish` returns before
+          // it, because no drag was ever begun.
+          if (drag !== null) set({ heightCm: drag });
+          setDrag(null);
+        }}
       />
       <Chip
         testID="height-any"
@@ -733,7 +748,10 @@ const styles = StyleSheet.create({
   // The answered facts on one wrapping row: a label over its value, the
   // way the match page sets a number under its word.
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: space.lg },
-  fact: { gap: 2 },
+  // `flexShrink` is 0 by default in React Native, so without this a value
+  // near the column's 60 characters keeps its single-line width and runs
+  // out past the card, which has no `overflow: 'hidden'` to stop it.
+  fact: { gap: 2, flexShrink: 1 },
   factLabel: { ...type.label, color: color.textFaint },
   factValue: { ...type.body, color: color.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
