@@ -13,25 +13,46 @@
 - Product: star-chart dating app — birth place, date and time in; natal
   chart, astrological compatibility on the swipe screen and in profiles,
   and a chart-based conversation starter for matched pairs. Mobile-first
-  (iOS first), Turkish UI.
-- Areas: `apps/mobile` (Expo Router app, also the web target) ·
-  `packages/astro` (pure-TS chart + compatibility engine) · `packages/geo`
-  (offline cities, local time → UTC) · `supabase/` (migrations, RLS, Edge
-  Functions).
-- Walking skeleton: S0–S7 all done (environment → chart engine → backend
-  with RLS → sign-in and chart screen → discover → match + starter).
-- v1, still open in `docs/ROADMAP.md` (14 of 77 items): Sign in with Apple
-  and Google · KVKK consent + privacy policy · Metrics · the deploy gate
-  tested where it breaks · the Edge Function preflight asserting the worker
-  · TestFlight · dead-style gate · revoke EXECUTE on older security-definer
-  triggers · design frames D6, D7, D8, D13 · accessibility props · RLS runs
-  isolated on one local stack.
-- Deferred: Android · push notifications · LLM-generated texts · photo
-  pre-moderation · travel mode · transits/daily horoscope · payments ·
-  English UI · media in chat. (Reasons: `docs/ROADMAP.md`, Deferred.)
-
-<!-- 2026-09-21: extracted from the ROADMAP by /update-stack, not written by
-     /mvp-scope. Re-run /mvp-scope to replace it; then paste again. -->
+  (iOS first), Turkish UI; the same Expo app also ships as a web client.
+- Areas: `apps/mobile` (Expo Router app and its web target) ·
+  `packages/astro` (pure-TS chart and compatibility engine) ·
+  `packages/geo` (offline cities, local time → UTC) · `supabase/`
+  (migrations, RLS, Edge Functions).
+- Walking skeleton (S0–S7): done — environment and battery, chart engine,
+  birth place → UTC, backend with RLS, sign-in and chart screen, discover
+  with compatibility, match and conversation starter.
+- v1, open (the rest of v1 is done; `docs/ROADMAP.md` has every clause in
+  full):
+  - Sign in with Apple and Google — manual check: sign-in on a real device
+    reaches the same profile flow. Built; waits on credentials.
+  - KVKK consent and privacy policy — test: a profile insert without
+    `consent_at` is refused by a CHECK; manual check: the notice URL
+    answers 200.
+  - Metrics — manual check: the SQL views return the PRD's success-signal
+    numbers on seed data; a forced crash shows up in crash reporting.
+  - The deploy gate, tested where it breaks — test: Vitest drives
+    `resolveDeployEnv(root, shell)` against a fixture directory.
+  - Edge Function preflight asserts the worker — test: a fixture answering
+    204 without its own `access-control-allow-methods` fails the suite.
+  - Dead-style gate — test: the scan runs in the battery, green.
+  - Revoke EXECUTE on the older security-definer triggers — test: a
+    migration revokes it from every role; battery green.
+  - Accessibility props in the spelling every target reads — test: an
+    ESLint rule refuses the `accessibility*` spellings that have a twin.
+  - Two RLS runs on one local stack must not see each other — test: two
+    concurrent `npm run test -w supabase` runs both pass.
+  - Design frames D6 (starter, chat), D7 (onboarding, welcome, filters,
+    profile), D8 (screens the sheet never drew) — screenshot, each.
+  - D13 settings as grouped rows — screenshot for the mark on the door,
+    manual check for the rows on a signed-in client.
+  - TestFlight — manual check: /deploy-checklist passes and an external
+    tester installs the build. Ask me first.
+- Deferred: Android (until the iOS cohort gives feedback) · push
+  notifications (retention, not proof of concept) · LLM-written texts
+  (templates are testable; revisit if users call them generic) · photo
+  pre-moderation (reports-only by my decision) · travel mode · transits and
+  daily horoscope · payments (nothing to gate yet) · English UI · media in
+  chat (cost and moderation surface).
 
 ## Work
 

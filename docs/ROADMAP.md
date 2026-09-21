@@ -1716,4 +1716,6 @@ accept them back` failed with a user the other run had created; each
   one file so the cost later is translation, not refactoring.
 - **Media in chat, voice, video** — text proves the starter works; media
   adds Storage cost and moderation surface.
-- **Web app** — no user in the PRD uses a browser.
+- ~~**Web app** — no user in the PRD uses a browser.~~ Shipped instead:
+  see "Web client (ADR-0005)" under v1. Struck 2026-09-21 by /mvp-scope;
+  the line is kept so the reversal is visible.
