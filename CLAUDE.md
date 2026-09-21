@@ -119,20 +119,19 @@ decision) — real data behind RLS, so try it with a test account and never
 bulk-write; a pull request's MIGRATIONS and Edge Function changes are not
 applied, so a change that needs them cannot be tried here at all — say so
 in the pull request. Google sign-in has no button (no client ids). A
-native-only screen names an EAS Update channel instead; none exists yet,
-so such a clause is the owner's check on a device build.
+native-only screen has no URL: the pull request says what to try, and the
+owner checks it on a TestFlight build he asks for himself (maya's rule:
+Xcode Cloud, on request — not set up here yet; until then, a device
+build). A thread never triggers a build.
 The workflow runs from `main` (`pull_request_target`): a pull request
 cannot change how its own preview is built or what the token is used for.
 
 ## Deploy
-maya's rule: deploys run in CI on the release tag (`deploy.yml`, after the
-owner approves the `production` environment); a thread never pushes a
-release tag or deploys. [STACK: TODO — `deploy.yml` is unconfigured and
-fails on purpose: moving the three targets below into it needs Actions
-secrets only the owner can create (Supabase access token, Cloudflare API
-token, Expo token) and an owner decision on EAS vs. Xcode Cloud for the
-iOS archive. Until then the commands below remain the deploy path, run by
-the owner.]
+Deploys are the owner's, run from a LOCAL Claude Code session through
+/deploy-checklist: the commands below run on the owner's machine, with
+credentials that live only there — in no cloud environment and no Actions
+secret. The release tag is pushed after a verified deploy. A thread never
+deploys and never pushes a release tag.
 Three targets, all ask-tier (never without the owner's per-instance yes):
 - Backend: hosted Supabase project `jkxuhbuuhsumyjmlskls` (eu-central-1).
   `npx supabase db push` (migrations), `npx supabase functions deploy`.
