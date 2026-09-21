@@ -6589,3 +6589,37 @@ itself, which is the part worth remembering.
   that is the only caller of its own code has no second opinion — the
   review was the second opinion, and the self-test now carries the two
   cases that can be expressed as code (`CI=false`, an unparseable plan).
+
+## 2026-09-21 — Two more from the review summary: BSD mktemp, and logic the split had left untestable
+
+The five inline findings were the review's body; its summary carried two
+more things, both taken.
+
+- `step` called bare `mktemp`, which `main` already did — BSD mktemp, the
+  one macOS ships, refuses to run without a template, so the substitution
+  would come back empty and every `>"$log"` after it would be an ambiguous
+  redirect. The `sed` fix alone would have been half a macOS fix. Both
+  that call and the self-test's `mktemp -d` now pass
+  `"${TMPDIR:-/tmp}/…XXXXXX"`, which GNU accepts too. Neither can be
+  proven here; no BSD userland in a thread.
+- `workspace_names`, the per-workspace loop and the new "cannot list the
+  workspaces" FAIL branch had no test, because they sat in `verify.sh`'s
+  main body where nothing can drive them. Moved into `verify-lib.sh` as
+  `tests_steps` and covered: an empty list is a FAIL (seen red with the
+  guard deleted), and a three-name list produces a line per workspace with
+  only `@juno/supabase` routed to the decision.
+
+One trap worth remembering, hit while writing that test: bash scopes
+dynamically, so a `workspace_names` override that reads `$names` resolves
+to `tests_steps`'s own `local names` — empty at the moment it is being
+assigned. The override looked like it worked (the empty-list case passed)
+because the collision produced exactly the empty list that case expects.
+A stub named for its own function is the fix; a test that passes for the
+wrong reason is the thing CLAUDE.md's red-before-green rule exists to
+catch, and it did.
+
+### Battery gaps
+
+- Anything living in `verify.sh`'s main body is untestable by
+  construction: the file runs a battery when you source it. New gate logic
+  belongs in `verify-lib.sh`, where the self-test can drive it.

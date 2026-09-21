@@ -78,47 +78,7 @@ step "typecheck" npm run typecheck --workspaces --if-present
 step "lint"      npm run lint --workspaces --if-present
 step "format"    npx prettier --check .
 
-# One step per workspace, not `npm run test --workspaces`. That was one
-# step, and `step` prints only the last 60 lines of a failing step's log:
-# on 2026-09-21 the supabase suite's failure scrolled three passing
-# workspaces out of the report, so a thread could not tell which suites
-# had actually run. The list is read from npm rather than written out
-# here, so a workspace added later cannot quietly lose its tests; a list
-# that cannot be read, or that comes back empty, is a FAIL.
-workspace_names() {
-  npm query .workspace --json |
-    node -e 'let s = "";
-      process.stdin.on("data", (d) => (s += d)).on("end", () => {
-        for (const w of JSON.parse(s)) process.stdout.write(w.name + "\n");
-      });'
-}
-
-# Read the whole list into an array BEFORE any step runs. `step`
-# redirects only stdout and stderr, so a step reading stdin inside a
-# `while read … <<<` loop would swallow the rest of the list: the loop
-# would end early, the remaining workspaces would get no line at all, and
-# the battery would print a short but entirely green summary — the silent
-# skip this file's header rule forbids, and an invisible one.
-names="$(workspace_names)" || names=""
-workspaces=()
-while IFS= read -r ws; do
-  [ -n "$ws" ] || continue
-  workspaces+=("$ws")
-done <<<"$names"
-
-if [ "${#workspaces[@]}" -eq 0 ]; then
-  _result FAIL "tests — cannot list the workspaces (npm query .workspace)"
-  fail=1
-else
-  for ws in "${workspaces[@]}"; do
-    case "$ws" in
-      # The one workspace whose suite needs a machine that can run
-      # containers; verify-lib.sh decides whether this one can.
-      @juno/supabase) supabase_tests_step ;;
-      *) step "tests ($ws)" npm run test -w "$ws" --if-present ;;
-    esac
-  done
-fi
+tests_steps
 
 # The battery's own mechanics, driven where they cannot be driven for
 # real: no daemon, no stack, six decisions.

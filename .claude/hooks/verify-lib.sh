@@ -20,7 +20,10 @@ _result() { results+=("$(printf '%-7s %s' "$1" "$2")"); }
 step() {
   local name="$1"
   shift
-  [ -n "$log" ] || log="$(mktemp)"
+  # A template, not a bare `mktemp`: BSD mktemp — the one macOS ships —
+  # refuses to run without one, and the substitution would then be empty
+  # and every redirection below ambiguous. GNU accepts the template too.
+  [ -n "$log" ] || log="$(mktemp "${TMPDIR:-/tmp}/juno-verify.XXXXXX")"
   # stdin closed, not just stdout and stderr redirected. A step that reads
   # stdin would otherwise consume whatever the battery was started with —
   # it ate the workspace list when that list drove a `while read` loop —
@@ -104,4 +107,56 @@ supabase_tests_step() {
       ;;
   esac
   return 0
+}
+
+# The workspaces whose `test` script the battery runs, one name per line.
+# Read from npm rather than written out, so a workspace added later cannot
+# quietly lose its tests.
+workspace_names() {
+  npm query .workspace --json |
+    node -e 'let s = "";
+      process.stdin.on("data", (d) => (s += d)).on("end", () => {
+        for (const w of JSON.parse(s)) process.stdout.write(w.name + "\n");
+      });'
+}
+
+# One step per workspace, not `npm run test --workspaces`. That was one
+# step, and `step` prints only the last 60 lines of a failing step's log:
+# on 2026-09-21 the supabase suite's failure scrolled three passing
+# workspaces out of the report, so a thread could not tell which suites
+# had actually run.
+#
+# The whole list is read into an array BEFORE any step runs. Driving the
+# loop from a here-string would leave the list on stdin, and a step that
+# reads stdin would swallow the rest of it: the loop would end early, the
+# remaining workspaces would get no line at all, and the battery would
+# print a short but entirely green summary — the silent skip this file's
+# header rule forbids, and an invisible one. `step` closes stdin as well,
+# which is the half of that fix this loop cannot do for it.
+tests_steps() {
+  local names ws
+  local -a workspaces=()
+  names="$(workspace_names)" || names=""
+  while IFS= read -r ws; do
+    [ -n "$ws" ] || continue
+    workspaces+=("$ws")
+  done <<<"$names"
+
+  # A list that cannot be read, or that comes back empty, is a FAIL: no
+  # list means no test step at all, and a battery that runs no tests must
+  # not say so in silence.
+  if [ "${#workspaces[@]}" -eq 0 ]; then
+    _result FAIL "tests — cannot list the workspaces (npm query .workspace)"
+    fail=1
+    return 0
+  fi
+
+  for ws in "${workspaces[@]}"; do
+    case "$ws" in
+      # The one workspace whose suite needs a machine that can run
+      # containers; supabase_tests_step decides whether this one can.
+      @juno/supabase) supabase_tests_step ;;
+      *) step "tests ($ws)" npm run test -w "$ws" --if-present ;;
+    esac
+  done
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Drives the battery's supabase-suite decision six ways, without a Docker daemon
+# Drives the battery's supabase-suite decision six ways and its per-workspace
+# test steps two more, without a Docker daemon
 # and without a Supabase stack. Only the decision is under test; running
 # the suite itself is CI's job.
 #
@@ -15,7 +16,9 @@ cd "$(dirname "$0")"
 # shellcheck source=verify-lib.sh
 source ./verify-lib.sh
 
-tmp="$(mktemp -d)"
+# A template, for the same reason `step` uses one: BSD mktemp refuses a
+# bare `-d`.
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/juno-self-test.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT
 
 failures=0
@@ -191,6 +194,50 @@ code=$?
 check "unparseable plan: battery exit code" 1 "$code"
 check "unparseable plan: supabase verdict" "FAIL" "$(verdict "$out" 'tests (@juno/supabase)')"
 check "unparseable plan: the suite never started" "no" "$(started "$tmp/bogus")"
+
+# 7. The workspace list, and the branch that guards the battery's own
+#    completeness. `workspace_names` is overridden per case, inside a
+#    command substitution's subshell, so npm is never consulted.
+list_case() { # list_case <dir> <names, one per line>
+  # `_list_case_names`, not `names`: bash scopes dynamically, and
+  # `tests_steps` has its own `local names` that the override would
+  # otherwise resolve to — empty at the moment it is being assigned.
+  local dir="$1" _list_case_names="$2"
+  (
+    workspace_names() { printf '%s' "$_list_case_names"; }
+    in_sandbox "$dir" "" tests_steps_drive
+  ) 2>"$tmp/stderr"
+}
+
+tests_steps_drive() {
+  fail=0
+  results=()
+  log=""
+  tests_steps
+  printf '%s\n' "${results[@]}"
+  exit $fail
+}
+
+# An empty list means no test step ran at all, which must be a FAIL and
+# not a silently short summary.
+sandbox "$tmp/nolist" none
+out="$(list_case "$tmp/nolist" "")"
+code=$?
+check "empty workspace list: battery exit code" 1 "$code"
+check "empty workspace list: verdict" "FAIL" "$(verdict "$out" 'tests — cannot list the workspaces (npm query .workspace)')"
+check "empty workspace list: nothing was run" "no" "$(started "$tmp/nolist")"
+
+# Every workspace gets its own line, and only @juno/supabase is routed to
+# the decision — here on a machine with no docker, so it reads NOT RUN
+# while its neighbours run.
+sandbox "$tmp/list" none
+out="$(list_case "$tmp/list" $'@juno/mobile\n@juno/astro\n@juno/supabase\n')"
+code=$?
+check "workspace list: a line per workspace" 3 "$(printf '%s\n' "$out" | grep -c 'tests (')"
+check "workspace list: mobile ran" "FAIL" "$(verdict "$out" 'tests (@juno/mobile)')"
+check "workspace list: astro ran" "FAIL" "$(verdict "$out" 'tests (@juno/astro)')"
+check "workspace list: supabase took the decision" "NOT RUN" "$(verdict "$out" 'tests (@juno/supabase)')"
+check "workspace list: battery exit code" 1 "$code"
 
 if [ "$failures" -eq 0 ]; then
   echo "battery self-test: all cases ok"
