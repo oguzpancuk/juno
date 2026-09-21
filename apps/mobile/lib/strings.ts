@@ -240,7 +240,7 @@ export const t = {
     occupationPlaceholder: 'Ne iş yapıyorsun?',
     interests: 'İlgi alanların',
     interestsHint: (max: number) =>
-      `En fazla ${max} tane seçebilirsin. Profilinde ve kartında görünür.`,
+      `En fazla ${max} tane seçebilirsin. Profilinde görünür.`,
     interestsFull: (max: number) =>
       `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
     detailsEmpty: 'Boy, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',

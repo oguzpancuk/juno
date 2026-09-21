@@ -41,7 +41,6 @@ import {
   heightStop,
   stopHeight,
   toggleInterest,
-  type InterestTag,
   type ProfileDetails,
 } from '@/lib/profile-details';
 import { Track } from '@/components/Track';
@@ -333,12 +332,11 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
           setDrag(null);
           set({ heightCm: stopHeight(values[0]) });
         }}
-        onCancel={() => {
-          // A tap that went nowhere still answers the field, because the
-          // track was showing a default nobody had chosen yet.
-          setDrag(null);
-          if (draft.heightCm === null) set({ heightCm: shown });
-        }}
+        // Nothing is answered by a gesture the track gave up on: a touch
+        // that heads up or down is the page's scroll, and it arrives here.
+        // Setting the height on it would put 170 cm on a profile whose
+        // owner only scrolled past the slider.
+        onCancel={() => setDrag(null)}
       />
       <Chip
         testID="height-any"
@@ -390,12 +388,7 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
               // list is never stuck.
               disabled={edit.busy || (full && !on)}
               onPress={() =>
-                set({
-                  interests: toggleInterest(
-                    draft.interests,
-                    tag,
-                  ) as readonly InterestTag[],
-                })
+                set({ interests: toggleInterest(draft.interests, tag) })
               }
             />
           );
