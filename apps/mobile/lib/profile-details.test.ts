@@ -125,39 +125,48 @@ describe('interest search', () => {
 });
 
 describe('short school name', () => {
-  it('drops the kind of school and keeps the name', () => {
-    expect(shortSchool('Boğaziçi Üniversitesi')).toBe('Boğaziçi');
+  it('abbreviates the kind of school and keeps the name', () => {
+    expect(shortSchool('Boğaziçi Üniversitesi')).toBe('Boğaziçi Ü.');
     expect(shortSchool('Orta Doğu Teknik Üniversitesi')).toBe(
-      'Orta Doğu Teknik',
+      'Orta Doğu Teknik Ü.',
     );
-    expect(shortSchool('Robert Koleji')).toBe('Robert');
+    expect(shortSchool('Robert Koleji')).toBe('Robert K.');
   });
 
   it('matches the term whatever its case or diacritics', () => {
-    expect(shortSchool('Koç UNIVERSITESI')).toBe('Koç');
-    expect(shortSchool('Sabancı universite')).toBe('Sabancı');
-    expect(shortSchool('Boston College')).toBe('Boston');
+    expect(shortSchool('Koç UNIVERSITESI')).toBe('Koç Ü.');
+    expect(shortSchool('Sabancı universite')).toBe('Sabancı Ü.');
+    expect(shortSchool('Boston College')).toBe('Boston C.');
+    expect(shortSchool('İstanbul Bilgi Uni')).toBe('İstanbul Bilgi U.');
+  });
+
+  it('keeps the language the term was written in', () => {
+    // The Turkish word shortens to "Ü.", the English one to "U.", so a
+    // name does not change language halfway through.
+    expect(shortSchool('Hacettepe Üniversitesi')).toBe('Hacettepe Ü.');
+    expect(shortSchool('Cambridge University')).toBe('Cambridge U.');
   });
 
   it('does not eat a word that holds a term inside it', () => {
     // Whole words only. These two carry a term as a substring, which is
-    // what separates the rule from a `replace(/üniversite|.../gi, '')`:
-    // that version turns the first into "liler Vakfı Lisesi".
+    // what separates the rule from a `replace(/üniversite|.../gi, ...)`:
+    // that version turns the first into "K.liler Vakfı Lisesi".
     expect(shortSchool('Kolejliler Vakfı Lisesi')).toBe(
       'Kolejliler Vakfı Lisesi',
     );
     expect(shortSchool('Üniversiteliler Derneği')).toBe(
       'Üniversiteliler Derneği',
     );
-    expect(shortSchool('Üsküdar Üniversitesi')).toBe('Üsküdar');
+    expect(shortSchool('Üsküdar Üniversitesi')).toBe('Üsküdar Ü.');
     expect(shortSchool('İTÜ')).toBe('İTÜ');
   });
 
-  it('drops an English connector left stranded at either end', () => {
-    expect(shortSchool('University of Cambridge')).toBe('Cambridge');
+  it('abbreviates each term where it stands', () => {
+    expect(shortSchool('University of Cambridge')).toBe('U. of Cambridge');
+    expect(shortSchool('University College London')).toBe('U. C. London');
   });
 
-  it('gives the original back rather than nothing', () => {
+  it('gives the original back rather than a bare initial', () => {
     expect(shortSchool('Üniversite')).toBe('Üniversite');
     expect(shortSchool('')).toBe('');
   });

@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
-import { Marquee } from '@/components/Marquee';
 import {
   ChartDetail,
   PROFILE_PRIMARY_COUNT,
@@ -234,27 +233,35 @@ function DetailsCard({
   details: ProfileDetails;
   own: boolean;
 }) {
-  const facts: readonly { key: string; label: string; value: string | null }[] =
-    [
-      {
-        key: 'height',
-        label: t.profile.height,
-        value:
-          details.height_cm === null
-            ? null
-            : t.profile.heightValue(details.height_cm),
-      },
-      {
-        key: 'occupation',
-        label: t.profile.occupation,
-        value: details.occupation,
-      },
-      {
-        key: 'university',
-        label: t.profile.universityColumn,
-        value: details.university,
-      },
-    ];
+  const facts: readonly {
+    key: string;
+    label: string;
+    value: string | null;
+    /** False for a column whose width is its content's; see `styles.fact`. */
+    share: boolean;
+  }[] = [
+    {
+      key: 'height',
+      label: t.profile.height,
+      value:
+        details.height_cm === null
+          ? null
+          : t.profile.heightValue(details.height_cm),
+      share: false,
+    },
+    {
+      key: 'occupation',
+      label: t.profile.occupation,
+      value: details.occupation,
+      share: true,
+    },
+    {
+      key: 'university',
+      label: t.profile.universityColumn,
+      value: details.university,
+      share: true,
+    },
+  ];
   const anyFact = facts.some((fact) => fact.value !== null);
   if (!anyFact && details.interests.length === 0) {
     return own ? (
@@ -271,16 +278,18 @@ function DetailsCard({
             {facts.map((fact) => (
               <View
                 key={fact.key}
-                style={styles.fact}
+                style={[styles.fact, fact.share ? styles.factShare : null]}
                 testID={`fact-${fact.key}`}
               >
                 <Text style={styles.factLabel}>{fact.label}</Text>
                 {/* Never onto a second line (owner, 2026-09-23: "meslek
-                    ve okul asla alt satira tasmasin"). A column is a
-                    third of the card, so an occupation or a school that
-                    does not fit it travels instead of wrapping. */}
-                <Marquee
+                    ve okul asla alt satira tasmasin"). Now that the two
+                    text columns have the whole card but the height's own
+                    width, most values fit; one that still does not ends
+                    in an ellipsis rather than wrapping. */}
+                <Text
                   style={styles.factValue}
+                  numberOfLines={1}
                   // The dash is a drawing, not a word: VoiceOver would
                   // read it out ("Boy, tire") where an unanswered field
                   // used to be absent from the tree altogether.
@@ -291,7 +300,7 @@ function DetailsCard({
                   }
                 >
                   {fact.value ?? t.profile.detailMissing}
-                </Marquee>
+                </Text>
               </View>
             ))}
           </View>
@@ -857,12 +866,17 @@ const styles = StyleSheet.create({
   // The answered facts on one wrapping row: a label over its value, the
   // way the match page sets a number under its word.
   facts: { flexDirection: 'row', gap: space.md },
-  // Three equal columns across the card (owner, 2026-09-23). `flexBasis`
-  // 0 rather than the content's width, so a long occupation cannot take
-  // room from the other two; `minWidth` 0 lets a value wrap inside its
-  // column instead of running out past the card, which has no
-  // `overflow: 'hidden'` to stop it.
-  fact: { flex: 1, flexBasis: 0, minWidth: 0, gap: 2 },
+  // A column takes the width of its content unless it is told to share
+  // (owner, 2026-09-23: "boy hep belli bir alan kaplayacak. kalan 2 alani
+  // da kalan alana esit bolusturelim"). Height is the one that does not:
+  // "168 cm" is as wide as it will ever be, and measuring it rather than
+  // fixing a width in points keeps it right at every text size.
+  fact: { flexGrow: 0, flexShrink: 0, gap: 2 },
+  // The other two split what is left, equally whatever is in them:
+  // `flexBasis` 0 so a long occupation cannot take room from the school,
+  // `minWidth` 0 so a value clips inside its column instead of running
+  // out past the card, which has no `overflow: 'hidden'` to stop it.
+  factShare: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
   factLabel: { ...type.label, color: color.textFaint },
   factValue: { ...type.body, color: color.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

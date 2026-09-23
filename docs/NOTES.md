@@ -6958,3 +6958,54 @@ control left, recorded under "Battery gaps" on 2026-09-21. What is covered is th
 `shortSchool` has six cases in `profile-details.test.ts`, written red.
 The moving half was checked by driving the web target and photographing
 it at rest and mid-travel, which is a look, not a verification.
+
+## 2026-09-23 — the height column takes its own width; the school kind becomes an initial
+
+Owner's third device round on the profile fields, two points: "profil
+alanlarında 3 eşit parçaya bölmeye gerek yok — boy hep belli bir alan
+kaplayacak, kalan 2 alanı da kalan alana eşit bölüştürelim, böylece kayma
+efektine de gerek kalmaz", and "keşfette üniversitesi, uni, college,
+university gibi alanları atmak yerine kısaltma yazalım: yani Boğaziçi
+Üniversitesi değil Boğaziçi Ü.".
+
+**The columns.** Height is content-sized (`flexGrow: 0, flexShrink: 0`)
+and the other two share what is left (`flex: 1, flexBasis: 0,
+minWidth: 0`). Measured rather than given a width in points: "165 cm" is
+as wide as a height will ever be, and a hard width would be wrong at the
+first text size the owner does not use — which is the class of bug review
+round 4 found on the `Üniversite` label. On a 390 pt screen it gives the
+two text columns about 119 pt each where three equal ones gave 95.
+
+**The marquee is gone**, `components/Marquee.tsx` with it. It was the
+answer to a value that did not fit a third of the card; with the height
+column out of the split most values fit, and the owner's own reading is
+that the travel is no longer needed. The never-wrap rule from his
+previous round still holds: `numberOfLines={1}`, so a value that still
+does not fit ends in an ellipsis rather than going to a second line. The
+measurement trick the marquee was built on is written up in the entry
+above, since it is the part worth keeping.
+
+**`shortSchool` abbreviates rather than drops.** The map is
+üniversitesi/üniversite → "Ü.", university/uni → "U.", koleji/kolej →
+"K.", college → "C.", keyed on the same folded `searchKey` as before, so
+casing and both Turkish i's still match and "Üsküdar" is still not
+mistaken for a term inside it. Each term is shortened where it stands
+rather than moved or dropped, so "University of Cambridge" reads "U. of
+Cambridge" and the stranded-connector rule the previous round needed is
+gone with the dropping. A name that is nothing but its kind
+("Üniversite") still comes back whole: a bare "Ü." would lose the only
+thing it said. Deck-only and display-only, as before.
+
+This also answers a review note from the previous round, that
+"University College London" shortened to "London": it now reads
+"U. C. London".
+
+### Battery gaps
+
+Same gap as the entry above, one item smaller: the column widths are
+layout, and the repo still has no renderer to write a component test
+with. `shortSchool` is the pure half and has seven cases in
+`profile-details.test.ts`, seen red before the change — five of the six
+blocks went red on the rewrite, and the sixth is the one the change does
+not touch. The widths were checked by driving the web target and
+photographing it, which is a look, not a verification.

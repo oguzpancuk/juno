@@ -70,9 +70,10 @@ function cardLine(row: DiscoverRow): string {
     distanceLine(row.distance_km),
     row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
     row.occupation,
-    // Short here and nowhere else: this line clips, and "Üniversitesi"
-    // is the half of a school name that says nothing about which one it
-    // is. The profile sheet a tap away still gives it in full.
+    // Shortened here and nowhere else: this line clips, and
+    // "Üniversitesi" is the half of a school name that says nothing about
+    // which one it is, so it stands as "Ü.". The profile sheet a tap away
+    // still gives the name in full.
     row.university === null ? null : shortSchool(row.university),
   ]
     .filter((part): part is string => part !== null)
