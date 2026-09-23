@@ -10,9 +10,21 @@ import {
   isHeight,
   isInterestTag,
   normalizeInterests,
+  searchInterests,
   stopHeight,
   toggleInterest,
 } from './profile-details';
+
+/** Stand-in for `strings.ts`: the search reads the Turkish word, not the key. */
+const NAMES: Partial<Record<string, string>> = {
+  music: 'Müzik',
+  live_music: 'Canlı müzik',
+  cinema: 'Sinema',
+  cats: 'Kediler',
+  cycling: 'Bisiklet',
+  street_food: 'Sokak lezzetleri',
+};
+const name = (tag: string) => NAMES[tag] ?? tag;
 
 describe('interest tags', () => {
   it('has no duplicate keys', () => {
@@ -79,6 +91,35 @@ describe('cleanDetail', () => {
       MAX_DETAIL_LENGTH,
     );
     expect(cleanDetail('a'.repeat(MAX_DETAIL_LENGTH + 1))).toBeUndefined();
+  });
+});
+
+describe('interest search', () => {
+  it('gives the whole list for an empty query', () => {
+    expect(searchInterests('', name)).toEqual(INTEREST_TAGS);
+    expect(searchInterests('   ', name)).toEqual(INTEREST_TAGS);
+  });
+
+  it('matches anywhere in the Turkish word, not only its start', () => {
+    expect(searchInterests('müzik', name)).toEqual(['music', 'live_music']);
+  });
+
+  it('folds Turkish case and diacritics, both ways', () => {
+    // "I" and "İ", "i" and "ı" all fold together: typing the ascii
+    // keyboard's letters must still find "Müzik" and "Bisiklet".
+    expect(searchInterests('MUZIK', name)).toContain('music');
+    expect(searchInterests('bisiklet', name)).toEqual(['cycling']);
+    expect(searchInterests('BİSİKLET', name)).toEqual(['cycling']);
+  });
+
+  it('keeps the canonical order and can match nothing', () => {
+    // "Müzik" and "Canlı müzik" both carry an i; the list comes back in
+    // the module's order, not in the order the matches were found.
+    expect(searchInterests('i', name).slice(0, 2)).toEqual([
+      'music',
+      'live_music',
+    ]);
+    expect(searchInterests('kripto', name)).toEqual([]);
   });
 });
 

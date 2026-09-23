@@ -35,17 +35,17 @@ import {
 } from '@/lib/photos';
 import {
   HEIGHT_STOPS,
-  INTEREST_TAGS,
   MAX_DETAIL_LENGTH,
   MAX_INTERESTS,
   heightStop,
+  searchInterests,
   stopHeight,
   toggleInterest,
   type ProfileDetails,
 } from '@/lib/profile-details';
 import { Track } from '@/components/Track';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * What the owner's page needs while the pill reads "Kaydet". Its presence
@@ -330,6 +330,9 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
   const [drag, setDrag] = useState<number | null>(null);
   const shown = drag ?? draft.heightCm ?? HEIGHT_DEFAULT;
   const full = draft.interests.length >= MAX_INTERESTS;
+  const [picking, setPicking] = useState(false);
+  const [query, setQuery] = useState('');
+  const found = searchInterests(query, (tag) => t.profile.interestNames[tag]);
 
   return (
     <Card testID="details-editor">
@@ -389,11 +392,19 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
       <Text style={[styles.factLabel, styles.detailSpacer]}>
         {t.profile.occupation}
       </Text>
+      {/* No placeholder, by the owner's word (2026-09-23: "kendimiz
+          çizmeyelim, placeholder textleri kaldıralım") — on iOS with the
+          new architecture a placeholder is drawn with a gap between every
+          letter, at random (facebook/react-native#42589), and the label
+          above each field already says what it is. The label is a
+          sibling, not a programmatic one, so a screen reader would be
+          left with an unnamed box; `accessibilityLabel` is what the
+          placeholder used to give it. */}
       <Field
         testID="occupation"
         value={draft.occupation}
         onChangeText={(text) => set({ occupation: text })}
-        placeholder={t.profile.occupationPlaceholder}
+        accessibilityLabel={t.profile.occupation}
         maxLength={MAX_DETAIL_LENGTH}
         editable={!edit.busy}
       />
@@ -405,7 +416,7 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
         testID="university"
         value={draft.university}
         onChangeText={(text) => set({ university: text })}
-        placeholder={t.profile.universityPlaceholder}
+        accessibilityLabel={t.profile.university}
         maxLength={MAX_DETAIL_LENGTH}
         editable={!edit.busy}
       />
@@ -413,31 +424,100 @@ function DetailsEditor({ edit }: { edit: ProfileEdit }) {
       <Text style={[styles.factLabel, styles.detailSpacer]}>
         {t.profile.interests}
       </Text>
-      <View style={styles.tags} testID="interest-picker">
-        {INTEREST_TAGS.map((tag) => {
-          const on = draft.interests.includes(tag);
-          return (
-            <Chip
-              key={tag}
-              testID={`interest-${tag}`}
-              label={t.profile.interestNames[tag]}
-              selected={on}
-              // At the cap the unpicked ones stop answering, which is what
-              // the hint under them says. The picked ones still do, so the
-              // list is never stuck.
-              disabled={edit.busy || (full && !on)}
-              onPress={() =>
-                set({ interests: toggleInterest(draft.interests, tag) })
-              }
-            />
-          );
-        })}
-      </View>
-      <Text style={styles.hint}>
-        {full
-          ? t.profile.interestsFull(MAX_INTERESTS)
-          : t.profile.interestsHint(MAX_INTERESTS)}
-      </Text>
+      {/* What is picked, and nothing else (owner, 2026-09-23: "boşken
+          hiçbir şey gözükmesin ama tıklanınca bir popup açılsın, orada
+          hepsi gözüksün"). The thirty-six chips that used to stand here
+          were most of the edit page. The box itself stays when nothing is
+          picked — drawn like the two fields above it, and empty — because
+          it is the only way to open the picker.
+
+          The tags inside are the read-only ones the profile draws, not
+          chips: the whole box is one target, and a chip inside it would
+          promise a tap of its own that removes it. */}
+      <Pressable
+        testID="interest-open"
+        accessibilityRole="button"
+        accessibilityLabel={t.profile.interestsChoose}
+        accessibilityValue={{
+          text:
+            draft.interests.length === 0
+              ? t.profile.interestsNone
+              : draft.interests
+                  .map((tag) => t.profile.interestNames[tag])
+                  .join(', '),
+        }}
+        accessibilityState={{ disabled: edit.busy }}
+        disabled={edit.busy}
+        onPress={() => setPicking(true)}
+        style={({ pressed }) => [
+          styles.interestBox,
+          (pressed || edit.busy) && styles.dim,
+        ]}
+      >
+        <View style={styles.tags}>
+          {draft.interests.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
+            </View>
+          ))}
+        </View>
+      </Pressable>
+
+      {/* The list and the search both live in the sheet. `contentKey` is
+          the query, so a new search is read from its first result rather
+          than from wherever the last one was left scrolled. */}
+      <Popup
+        visible={picking}
+        onClose={() => {
+          setPicking(false);
+          setQuery('');
+        }}
+        title={t.profile.interests}
+        contentKey={query}
+        testID="interest-picker"
+      >
+        <View style={styles.searchField}>
+          <Text style={styles.factLabel}>{t.profile.interestSearch}</Text>
+          <Field
+            testID="interest-search"
+            value={query}
+            onChangeText={setQuery}
+            accessibilityLabel={t.profile.interestSearch}
+            autoCorrect={false}
+            autoCapitalize="none"
+            editable={!edit.busy}
+          />
+        </View>
+        <Text style={styles.hint}>
+          {full
+            ? t.profile.interestsFull(MAX_INTERESTS)
+            : t.profile.interestsHint(MAX_INTERESTS)}
+        </Text>
+        {found.length === 0 ? (
+          <Body muted>{t.profile.interestSearchEmpty}</Body>
+        ) : (
+          <View style={styles.tags} testID="interest-options">
+            {found.map((tag) => {
+              const on = draft.interests.includes(tag);
+              return (
+                <Chip
+                  key={tag}
+                  testID={`interest-${tag}`}
+                  label={t.profile.interestNames[tag]}
+                  selected={on}
+                  // At the cap the unpicked ones stop answering, which is
+                  // what the hint above them says. The picked ones still
+                  // do, so the list is never stuck.
+                  disabled={edit.busy || (full && !on)}
+                  onPress={() =>
+                    set({ interests: toggleInterest(draft.interests, tag) })
+                  }
+                />
+              );
+            })}
+          </View>
+        )}
+      </Popup>
     </Card>
   );
 }
@@ -798,6 +878,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   detailSpacer: { marginTop: space.lg },
+  // Drawn like the two fields above it, so the three answers on this card
+  // read as three inputs. `minHeight` is about one field's height: with
+  // nothing picked the box has no content at all, and without a floor it
+  // would collapse to a line nobody would aim a thumb at.
+  interestBox: {
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    borderRadius: radius.lg,
+    padding: space.lg,
+    minHeight: 55,
+    justifyContent: 'center',
+  },
+  // The sheet's own gap is `space.md`, which would set the label adrift
+  // from the box it names.
+  searchField: { gap: space.xs },
   // Alone on its row, so it does not stretch across the card.
   clearChip: { alignSelf: 'flex-start', marginTop: space.sm },
   bioInput: {

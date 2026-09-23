@@ -244,14 +244,23 @@ export const t = {
      * it himself ("okul da gozukmeli", 2026-09-23).
      */
     universityColumn: 'Okul',
-    universityPlaceholder: 'Okuduğun üniversite',
     occupation: 'Meslek',
-    occupationPlaceholder: 'Ne iş yapıyorsun?',
     interests: 'İlgi alanların',
     interestsHint: (max: number) =>
       `En fazla ${max} tane seçebilirsin. Profilinde görünür.`,
     interestsFull: (max: number) =>
       `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
+    /**
+     * The picker's own strings. The tags are not on the edit page any
+     * more (owner, 2026-09-23: "boşken hiçbir şey gözükmesin ama
+     * tıklanınca bir popup açılsın, orada hepsi gözüksün; arama da
+     * popuptan yapılsın") — the box there opens this sheet, and these
+     * name it for a screen reader, which has no border to go by.
+     */
+    interestsChoose: 'İlgi alanlarını seç',
+    interestsNone: 'Hiçbiri seçilmedi',
+    interestSearch: 'Ara',
+    interestSearchEmpty: 'Bu aramayla eşleşen ilgi alanı yok.',
     detailsEmpty:
       'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
     /**

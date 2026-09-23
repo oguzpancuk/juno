@@ -10,6 +10,7 @@
  * `supabase/migrations/20260921000001_profile_details.sql`; change one
  * and the other has to agree.
  */
+import { searchKey } from '@juno/geo';
 import { z } from 'zod';
 
 /**
@@ -114,6 +115,31 @@ export function toggleInterest(
   }
   if (current.length >= MAX_INTERESTS) return current;
   return normalizeInterests([...current, tag]);
+}
+
+/**
+ * The tags a query matches, in the canonical order; an empty query
+ * matches all of them, which is what the picker opens on.
+ *
+ * Matched on the Turkish word rather than the key: the key is English and
+ * never reaches the screen, so `cats` must be found by "kedi". The word
+ * is passed in because it lives in `strings.ts` with the rest of the UI,
+ * which this module — pure, and shared with the row boundary — does not
+ * import.
+ *
+ * Folded with the city search's own `searchKey`, so "muzik" finds "Müzik"
+ * and "BİSİKLET" finds "Bisiklet". Turkish needs that in both directions
+ * and `toLowerCase` alone does not give it: it maps "I" to "i", never to
+ * "ı". Substring rather than prefix, because "müzik" should also reach
+ * "Canlı müzik".
+ */
+export function searchInterests(
+  query: string,
+  name: (tag: InterestTag) => string,
+): readonly InterestTag[] {
+  const key = searchKey(query);
+  if (key.length === 0) return INTEREST_TAGS;
+  return INTEREST_TAGS.filter((tag) => searchKey(name(tag)).includes(key));
 }
 
 /**
