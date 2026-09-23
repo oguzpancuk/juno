@@ -810,6 +810,21 @@ export function Halo({
  * the base gives: the date boxes, which are narrow and centred, and the
  * code box, which is set large and letter-spaced.
  */
+/**
+ * Known bug in the placeholder, not in this file: on iOS under the New
+ * Architecture the platform sometimes lays a placeholder out with a gap
+ * between every letter, which then runs off the right edge. It is
+ * facebook/react-native#42589, open, closed upstream as "cannot
+ * reproduce" because it strikes at random. The owner hit it on the
+ * university field on 2026-09-23 while the occupation field one line
+ * above — this same component, a shorter string — drew normally; typed
+ * text is unaffected, only the placeholder. Nothing here causes it and
+ * no style switches it off (letterSpacing is not applied to an iOS
+ * placeholder at all, react-native#19002), so the only cure is to stop
+ * using the platform's placeholder and draw one here. That touches every
+ * field in the app, including onboarding and sign-in, so it is the
+ * owner's call and not taken yet.
+ */
 export const Field = forwardRef<TextInput, TextInputProps>(function Field(
   { style, ...props },
   ref,
@@ -890,16 +905,6 @@ const s = StyleSheet.create({
     borderRadius: radius.lg,
     color: color.text,
     fontSize: 17,
-    // Spelled out rather than left to the default (owner, 2026-09-23: on
-    // iOS the university placeholder drew a gap between every letter and
-    // ran off the right edge, while the occupation field one line above
-    // it — the same component, a shorter string — drew normally). The
-    // cause was not found in this repository: both fields are this same
-    // `Field` with no style of their own, and neither string holds a
-    // separator character. So this is a guard, not a diagnosis; it costs
-    // nothing, since 0 is what the default already is everywhere the bug
-    // does not appear.
-    letterSpacing: 0,
     padding: space.lg,
   },
   buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },
