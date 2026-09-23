@@ -86,9 +86,24 @@ The free deck now comes in distance order. Until this release every deck
 was ordered by compatibility, so this is a visible change for a free
 member, and it is what leaves the membership something to offer.
 
-Demo profiles never appear on `liked_me`: a demo likes a member only in
-answer to that member's own like (ADR-less, `20260917000001_demo_profiles.sql`),
-which is a match in the same round trip. Read against the owner's "hepsi o
-kullanıcıyı beğensin", a new member's list is therefore empty until a real
-person likes them. Whether the demos should be shown there as waiting
-likes is the owner's call and is recorded in `docs/NOTES.md`.
+Demo profiles appear on `liked_me` as waiting likes (owner, 2026-09-23:
+"gorunsun"). A demo has no row in `likes` to be found by — it answers a
+like rather than sending one (`20260917000001_demo_profiles.sql`), which
+is a match in the same round trip — so the view carries it on the other
+half of an OR, on the one condition that the demo would appear in this
+member's deck. Read against the owner's "hepsi o kullanıcıyı beğensin",
+that is the sentence this screen can finally show; pressing ♥ on a demo
+here matches at once, exactly as swiping right on the deck does. The
+asymmetry worth naming is that a real liker reaches the list whatever the
+member's filters say, because they chose this member, while a demo has
+chosen nobody and so has to obey them.
+
+That half is one condition rather than a second branch under a UNION, and
+the reason is not style. PostgreSQL records a view column's origin
+(`resorigtbl` in the stored rewrite rule) only for a plain SELECT, and
+zeroes it for every column of a set operation; that origin is what
+`supabase gen types` reads to see `liked_me.id` as `profiles.id`. A UNION
+would have quietly dropped this view from twelve foreign-key lists in
+`tests/database.types.ts` and taken PostgREST's embedding with it. Both
+shapes were checked on a throwaway PostgreSQL 16 cluster before the view
+was written.

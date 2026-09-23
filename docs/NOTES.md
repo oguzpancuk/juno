@@ -6752,6 +6752,8 @@ leave the second silently unapplied):
   the answer's shape, not a blur drawn over data the device already holds.
 
 **Open for the owner: the demos do not appear on "seni beğenenler".**
+(Answered on 2026-09-23 — "gorunsun". The entry at the end of this file
+says how they were put there.)
 `private.likes_demo_reciprocate` (2026-09-17) answers a member's like
 rather than pre-liking them, and its comment says why: twenty starter keys
 cannot be computed server-side. Its other comment — "Nothing in the
@@ -6759,7 +6761,7 @@ product shows who has liked you, so there is no screen on which the two
 designs differ" — stopped being true today. A new member's list is empty
 until a real person likes them, which reads oddly against "gerçek biri
 kayıt olduğunda hepsi o kullanıcıyı beğensin". Showing the demos there
-means either pre-writing their likes (needs the keys) or a second branch
+means either pre-writing their likes (needs the keys) or a second shape
 in the view with different filter semantics (the demos would have to keep
 the radius, gender and age conditions that a real liker is deliberately
 exempt from). Not decided here; not a bug to fix quietly.
@@ -6873,3 +6875,64 @@ being required when this merges. Owner-side, after the merge: delete the
 `CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
 Cloudflare token. The exception entry above is void with the rule it
 excepted.
+
+## 2026-09-23 — "gorunsun": the demos on the list, and the UNION that would have cost the types
+
+The owner answered the open question from the premium entry above: the
+demo profiles should appear on "seni beğenenler". So `liked_me` now has a
+second kind of row.
+
+**Why it cannot be a like row.** `private.likes_demo_reciprocate`
+(2026-09-17) answers a member's like instead of pre-liking them, because
+pre-writing twenty likes needs twenty starter keys and a starter key is
+`@juno/astro`'s output, which the database does not run — worse,
+`create_match_on_mutual_like` refuses a pair whose keys disagree, so a
+server-computed key that drifted by one aspect would break the member's
+own swipe. Nothing about that changed today. The view therefore carries a
+demo on a condition rather than on a row: the demo appears if it would
+appear in this member's deck, which is `exists (select 1 from
+public.discover d where d.id = liker.id)`. That reads the deck's own
+filters — radius, both directions of `interested_in`, both age ranges, a
+photograph, blocks, reports, "not already swiped" — instead of repeating
+them here, and it is deliberately stricter than the real-liker half: a
+person who chose you reaches the list whatever your filters say; a demo
+has chosen nobody.
+
+**The part that nearly went wrong.** The obvious shape is `union all`,
+and I wrote it that way first. Before running the battery I went looking
+for what it would do to `tests/database.types.ts`, which `types-drift`
+compares byte for byte and which cannot be regenerated in a cloud thread
+(`supabase gen types --local` needs Docker). PostgreSQL stores a view's
+rewrite rule with a `resorigtbl`/`resorigcol` on each target entry, which
+is where a column came from; `supabase gen types` reads it to see
+`liked_me.id` as `profiles.id`, and that is what puts `liked_me` in the
+twelve foreign-key lists in the generated file. Checked on a throwaway
+PostgreSQL 16 cluster, both shapes side by side: a plain SELECT keeps the
+origin, and the top-level target list of a set operation has
+`:resorigtbl 0` on every column. A `union all` would have dropped this
+view out of those twelve lists and taken PostgREST's embedding with it,
+and the first sign of it would have been a byte-diff failure in CI with a
+file I cannot regenerate here. So the view stayed one SELECT with an OR:
+a left join to `likes`, `coalesce(l.is_super, false)` for the star and
+`coalesce(l.created_at, greatest(me.created_at, liker.created_at))` for
+the day. Same cluster, with stand-in tables: a free member gets the demo
+masked, a premium one gets the name, a demo without a photograph never
+appears, and answering either kind takes the row out.
+
+**What is verified and what is not.** `supabase/tests/premium.test.ts`
+has three more cases (a demo in the deck appears without a star, is named
+once the member is premium, and matches and leaves on the answer; a demo
+out of radius never appears), and like the rest of that file they cannot
+run here — no Docker daemon, so CI's `verify` is their first real run.
+The screenshots in the pull request are of the same build as before: this
+change is server-side, and the panel renders a demo exactly as it renders
+a person.
+
+### Battery gaps
+
+- `bash .claude/hooks/verify.sh` is green in a cloud thread with the
+  whole supabase suite reported NOT RUN, so a view that parses only in
+  CI, or a generated-types drift, is invisible here. The Postgres 16
+  binaries in the image are the workaround — a bare cluster with
+  stand-in tables answered both questions above in a couple of minutes,
+  without PostGIS and without Supabase.

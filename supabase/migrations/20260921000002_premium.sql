@@ -210,11 +210,40 @@ revoke all on function private.likes_enforce_quota() from public, anon, authenti
  * granting themselves the flag, which costs a tap and is the point of
  * this release.)
  *
- * Who is left out: anyone this member has already swiped — a pass ends
- * it, and a like has already made the match — anyone blocked on either
- * side, and anyone without a photograph, exactly as `discover` has it.
- * A demo profile never appears: a demo likes a member only in answer to
- * that member's own like, which is a match in the same round trip.
+ * Two kinds of row, which is what the OR in the WHERE clause is:
+ *
+ *   a person who liked this member and has not been answered — anyone
+ *   already swiped is out, because a pass ends it and a like has already
+ *   made the match; so is anyone blocked on either side, and anyone
+ *   without a photograph, exactly as `discover` has it;
+ *
+ *   a demo profile that would appear in this member's deck. A demo has no
+ *   like row to point at: it answers a like rather than sending one
+ *   (20260917000001_demo_profiles.sql — twenty starter keys cannot be
+ *   computed server-side, so the likes cannot be written ahead of time).
+ *   The owner's sentence was "gerçek biri kayıt olduğunda hepsi o
+ *   kullanıcıyı beğensin", and while nothing showed who had liked you,
+ *   answering the like was the whole of it. Now that there is a screen,
+ *   the demos belong on it (owner, 2026-09-23: "gorunsun"). Pressing ♥ on
+ *   one matches in the same round trip, exactly as swiping right on the
+ *   deck does; pressing ✕ writes a pass and takes it out of both.
+ *
+ * The demo side reads `discover` rather than repeating its conditions:
+ * radius, both directions of `interested_in`, both age ranges, a
+ * photograph, blocks, reports and "not already swiped" are that view's,
+ * and a demo has no business claiming to have liked somebody who would
+ * never see it. That is the one asymmetry worth naming: a real liker
+ * reaches this list whatever the member's filters say, because they chose
+ * this member; a demo has chosen nobody.
+ *
+ * One SELECT with an OR rather than two branches under a UNION, and this
+ * is load-bearing: PostgreSQL records the origin of a view's column
+ * (`resorigtbl` in the stored rewrite rule) only for a plain SELECT, and
+ * zeroes it for every column of a set operation. That origin is what
+ * `supabase gen types` reads to see `liked_me.id` as `profiles.id`, so a
+ * UNION here would silently drop this view from twelve foreign-key lists
+ * in `tests/database.types.ts` and take PostgREST's embedding with it.
+ * Checked on a throwaway PostgreSQL 16 cluster, both shapes, 2026-09-23.
  */
 create view public.liked_me
 with (security_invoker = false)
@@ -229,29 +258,45 @@ select
   p.bio,
   p.photos,
   -- Free or premium, both of these are shown: "someone super liked you
-  -- two days ago" is the whole argument for the membership.
-  l.is_super,
-  l.created_at as liked_at
-from public.likes l
+  -- two days ago" is the whole argument for the membership. A demo never
+  -- stars — the star is scarce on purpose, and a member who has never
+  -- been liked by a person should not be told otherwise.
+  coalesce(l.is_super, false) as is_super,
+  -- A demo has no like row, so no moment one was written. The later of
+  -- the two profiles is when the pair could first have existed, which is
+  -- the truest answer available and keeps "Bugün" true for a member who
+  -- signed up today.
+  coalesce(l.created_at, greatest(me.created_at, liker.created_at))
+    as liked_at
+from public.profiles liker
 join public.profiles me on me.id = (select auth.uid())
--- The liker, for the conditions below: joined for everyone.
-join public.profiles liker on liker.id = l.from_id
--- The same row again, for the columns — and only for a member who has
--- paid the tap. A free member's join finds nothing, so every column
--- above that comes from `p` is null in the answer. The masking is a join
--- rather than a CASE on each column so that `liked_me.id` stays a plain
+-- The like, when there is one. At most one row: the pair is the primary
+-- key of `likes`.
+left join public.likes l
+  on l.from_id = liker.id and l.to_id = me.id and l.kind = 'like'
+-- The same profile again, for the columns — and only for a member who has
+-- paid the tap. A free member's join finds nothing, so every column above
+-- that comes from `p` is null in the answer. The masking is a join rather
+-- than a CASE on each column so that `liked_me.id` stays a plain
 -- reference to `profiles.id`, which is what keeps the generated types
 -- (tests/database.types.ts) the shape `discover` and `match_profiles`
 -- already have.
 left join public.profiles p on p.id = liker.id and me.is_premium
-where l.to_id = me.id
-  and l.kind = 'like'
-  and not exists (
-    select 1 from public.likes mine
-     where mine.from_id = me.id and mine.to_id = liker.id
+where (
+    l.from_id is not null
+    and not exists (
+      select 1 from public.likes mine
+       where mine.from_id = me.id and mine.to_id = liker.id
+    )
+    and not private.is_blocked(liker.id)
+    and cardinality(liker.photos) > 0
   )
-  and not private.is_blocked(liker.id)
-  and cardinality(liker.photos) > 0;
+  or (
+    liker.is_demo
+    and exists (
+      select 1 from public.discover d where d.id = liker.id
+    )
+  );
 
 revoke all on public.liked_me from anon;
 grant select on public.liked_me to authenticated;

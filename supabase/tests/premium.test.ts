@@ -1,11 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
+  ANKARA,
   ISTANBUL,
   ISTANBUL_NEARBY,
+  NOWHERE,
   STARTER,
   insertProfileRow,
   profileRow,
+  uploadPhotos,
 } from './fixtures';
 import {
   adminClient,
@@ -481,5 +484,101 @@ describe('liked_me', () => {
   it('is closed to anon', async () => {
     const { error } = await anonClient().from('liked_me').select('*');
     expect(error).not.toBeNull();
+  });
+});
+
+/**
+ * The demo accounts on the same list (owner, 2026-09-23: "gorunsun").
+ *
+ * A demo has no row in `likes` to be found by — it answers a like rather
+ * than sending one (20260917000001_demo_profiles.sql) — so the view
+ * carries it on the other half of its OR, on exactly the condition that
+ * it would appear in this member's deck.
+ *
+ * Its own people are in the middle of the Atlantic, far from every other
+ * fixture in this file: a demo near Istanbul would be a waiting like for
+ * mia, nil and eve too, and the counts above would depend on which
+ * describe ran first.
+ */
+describe('liked_me and the demo accounts', () => {
+  let kay: TestUser; // a member with nobody real waiting
+  let near: TestUser; // a demo inside kay's radius
+  let far: TestUser; // a demo she would never be shown
+
+  async function demoProfile(
+    who: TestUser,
+    name: string,
+    lonLat: readonly [number, number],
+  ) {
+    // Written the way the seeding script writes it: as the service role,
+    // with the flag set.
+    await uploadPhotos(who.client, [`${who.id}/1.png`]);
+    const { error } = await admin.from('profiles').insert({
+      ...profileRow({
+        id: who.id,
+        display_name: name,
+        gender: 'man',
+        interested_in: 'everyone',
+        lonLat,
+      }),
+      is_demo: true,
+    });
+    if (error) throw new Error(`insert demo ${name}: ${error.message}`);
+  }
+
+  beforeAll(async () => {
+    kay = await user('kay');
+    near = await user('demo-near');
+    far = await user('demo-far');
+    await insertProfileRow(
+      kay.client,
+      profileRow({
+        id: kay.id,
+        display_name: 'Kay',
+        gender: 'woman',
+        interested_in: 'everyone',
+        lonLat: NOWHERE,
+      }),
+    );
+    await demoProfile(near, 'Deniz', NOWHERE);
+    await demoProfile(far, 'Uzak', ANKARA);
+  }, 60_000);
+
+  it('carries a demo the member would meet, and leaves the far one out', async () => {
+    const { data, error } = await kay.client.from('liked_me').select('*');
+    expect(error).toBeNull();
+    const rows = LikedMeRows.parse(data);
+    expect(rows).toHaveLength(1);
+    // Free, so the same masking as any other row: the count and the day
+    // are the whole of it.
+    expect(rows[0]?.id).toBeNull();
+    expect(rows[0]?.display_name).toBeNull();
+    expect(rows[0]?.liked_at.length).toBeGreaterThan(0);
+    // A demo never stars.
+    expect(rows[0]?.is_super).toBe(false);
+  });
+
+  it('names it once she is premium', async () => {
+    await setPremium(kay, true);
+    const { data } = await kay.client.from('liked_me').select('*');
+    const rows = LikedMeRows.parse(data);
+    expect(rows.map((row) => row.display_name)).toEqual(['Deniz']);
+    expect(rows[0]?.chart).not.toBeNull();
+    expect(rows[0]?.photos?.length).toBeGreaterThan(0);
+    expect(rows[0]?.is_super).toBe(false);
+  });
+
+  it('matches on the answer and drops it from the list', async () => {
+    const answered = await like(kay.client, kay.id, near.id);
+    expect(answered.error).toBeNull();
+    const { data } = await kay.client.from('liked_me').select('*');
+    expect(LikedMeRows.parse(data)).toHaveLength(0);
+    const { data: matched } = await kay.client
+      .from('match_profiles')
+      .select('id')
+      .eq('id', near.id);
+    expect(z.array(z.object({ id: z.string() })).parse(matched)).toHaveLength(
+      1,
+    );
   });
 });
