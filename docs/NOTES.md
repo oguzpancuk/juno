@@ -7158,3 +7158,31 @@ sentence to call.
   something `vitest` does. Either a component test (a first for this
   repository) or the QA drive being written down as part of the deck's
   done-when clause.
+
+## 2026-09-23 — Fourth QA round: the stamp needed a place on the screen, not a better offset
+
+One finding, and it was the same one twice. Starting the SÜPER stamp a
+threshold lower put it exactly where ✕ and ♥'s stamps sit at the moment
+it fills in — QA measured that and photographed it — and then it carried
+on up with the card: past about 235 points of travel it was off the top
+again at full opacity, which is nine of the sixty-nine gestures in its
+sweep, and round 3's own canonical star was 272 points.
+
+An offset has a "further up" to fail at; a place on the screen does not.
+The stamp now undoes the card's lift exactly, so it stands still while
+the card climbs out from under it, as far as one screen height — beyond
+that is the fly-out, a screen and a half, which is meant to take the
+stamp away with the card. The two side stamps still ride the card,
+because sideways the card travels past them rather than over them.
+
+Also from the sweep, one character: a finger going up at exactly 45°
+satisfied neither arm of the claim rule and the card sat still under it.
+The upward arm takes `>=` now.
+
+**What that sweep is worth.** It compared the card's transform at the
+instant before release against the row the backend received, for 69
+gestures: 67 drawn exactly as `deckOffset` says, no gesture sending a
+verdict that contradicted a visible stamp, in either direction. That is
+the evidence the battery cannot produce, and it is the third round in a
+row where the finding was visible only to something driving real touch
+sequences against a built bundle.

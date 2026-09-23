@@ -408,13 +408,6 @@ export default function Discover() {
   // below it: the pass stamp shares the right-hand corner.
   const cornerTop = Math.max(insets.top, space.xl);
   const stampTop = cornerTop + CORNER_CHIP + space.md;
-  // The star's stamp rides the card, and the card's star gesture is a
-  // climb: at the travel that fills the stamp in, one drawn beside the
-  // other two would be off the top of the screen — QA measured it
-  // reporting an opacity of 1 with nothing visible (2026-09-23). It
-  // starts exactly that travel lower, so it arrives where the other two
-  // sit at the moment it is fully there.
-  const superStampTop = stampTop + height * SUPER_THRESHOLD;
   const [pan] = useState(() => new Animated.ValueXY());
   // 1 while the finger is making the star's gesture, 0 otherwise, set by
   // the same predicate that decides it. The SÜPER stamp is drawn through
@@ -479,6 +472,20 @@ export default function Discover() {
       extrapolate: 'clamp',
     }),
   );
+  // The star's stamp is held still on the screen while the card climbs
+  // out from under it, by exactly undoing the card's own lift. The two
+  // side stamps ride the card because the card goes sideways past them;
+  // this one would ride it off the top — first at the travel that fills
+  // it in, and, when that was answered by starting it lower, again a
+  // hundred points further up (QA, 2026-09-23, twice). A place on the
+  // screen has no "further up" left to fail at. The lift is undone only
+  // as far as one screen height, so the fly-out at the end — a screen
+  // and a half — takes the stamp away with the card.
+  const superStampLift = pan.y.interpolate({
+    inputRange: [-height, 0],
+    outputRange: [height, 0],
+    extrapolate: 'clamp',
+  });
 
   const currentId = current?.row.id;
   // From the middle, whatever the last card's gesture left behind.
@@ -669,7 +676,11 @@ export default function Discover() {
               style={[
                 styles.stamp,
                 styles.stampSuper,
-                { top: superStampTop, opacity: superOpacity },
+                {
+                  top: stampTop,
+                  opacity: superOpacity,
+                  transform: [{ translateY: superStampLift }],
+                },
               ]}
               accessible={false}
               aria-hidden
@@ -1007,7 +1018,9 @@ function createDeckResponder({
     // nothing at all.
     onMoveShouldSetPanResponder: (_, g) =>
       (Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy)) ||
-      (-g.dy > CLAIM_DISTANCE && Math.abs(g.dy) > Math.abs(g.dx)),
+      // `>=` on this one: a finger going up at exactly 45° satisfied
+      // neither arm and the card sat still under it (QA, 2026-09-23).
+      (-g.dy > CLAIM_DISTANCE && Math.abs(g.dy) >= Math.abs(g.dx)),
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
       upward.setValue(0);
