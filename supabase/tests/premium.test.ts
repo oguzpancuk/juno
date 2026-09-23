@@ -465,11 +465,27 @@ describe('liked_me', () => {
     for (const row of rows) {
       expect(row.chart).not.toBeNull();
       expect(row.photos?.length).toBeGreaterThan(0);
-      // The card the list opens needs it, and these two are in the same
-      // place, so it is a real number rather than merely present.
-      expect(row.distance_km).toBe(0);
     }
     expect(rows.find((row) => row.display_name === 'Zoe')?.is_super).toBe(true);
+
+    // The distance is the one thing on this row the deck's own card
+    // needs and the rest of the person does not explain, so it is held
+    // to `discover`'s answer for the same people rather than to a number
+    // written here: tapping a row opens a card, and the two must agree.
+    const { data: deck } = await nil.client
+      .from('discover')
+      .select('id, distance_km');
+    const seen = new Map(
+      z
+        .array(z.object({ id: z.string(), distance_km: z.number() }))
+        .parse(deck)
+        .map((row) => [row.id, row.distance_km]),
+    );
+    const shared = rows.filter((row) => row.id !== null && seen.has(row.id));
+    expect(shared).toHaveLength(2);
+    for (const row of shared) {
+      expect(row.distance_km).toBe(seen.get(row.id ?? ''));
+    }
   });
 
   it('drops somebody once they have been answered', async () => {
