@@ -6803,6 +6803,14 @@ counter was). All nine were re-driven on 2026-09-23 after the QA pass,
 so they show the code as it stands rather than as it was before the
 review rounds.
 
+(Both parentheses about counters describe the screens as they were that
+afternoon. The owner had the counters taken out a few hours later — see
+the entry on his four changes — so the shots in the pull request no
+longer show either, and `premium-deck-free` and `premium-deck-premium`
+now differ only in what the membership buys. QA flagged the stale
+sentence on 2026-09-23; it is left standing with this note rather than
+rewritten, because the entry is the record of that afternoon.)
+
 **The QA pass (2026-09-23), PASS with one defect.** `evaluator-qa` built
 its own stand-in rather than trusting this one, re-rendered every screen
 and compared: the free filters sheet came out byte-identical to the
@@ -7019,9 +7027,11 @@ card, and the card is claimed after eight points.
 dismissed.** "Whichever travel is larger wins" was too weak a rule for an
 arc that is plainly a dismissal — and because the upward half answered
 first, it also skipped the change-of-mind veto that protects a like and a
-pass. The star now wants twice the sideways travel (`UP_DOMINANCE`);
-everything below that falls through to the sideways rules, veto included.
-QA's own case, dragged 150 left and 200 up, is a pass now.
+pass. The star now wants twice the sideways travel (`UP_DOMINANCE`); below that
+line the gesture falls through to the sideways rules with their veto,
+and above it the star answers on its own — which is right, because above
+it the card has visibly flown up under the finger. QA's own case,
+dragged 150 left and 200 up, is a pass now.
 
 Four cases, each red first against the shipped rule, each named after the
 gesture QA performed. The lesson for the next gesture: a rule with two
@@ -7046,3 +7056,47 @@ the band tapped, and the photograph tapped.
 
 - `.gitignore` / `.prettierignore` for `apps/mobile/dist-*`, per the gap
   above.
+
+## 2026-09-23 — The second QA pass: the card was drawn by one rule and decided by another
+
+NEEDS_WORK again, and the finding was mine to have seen: tightening
+`decideUp` to 2:1 left the deck's own move handler at 1:1, and nothing
+tied the two together.
+
+Between the two lines the app drew a star and sent a pass. QA's gesture:
+272 points up with 140 of left drift, mid-drag the card at
+`translate(-23, -181)` with the SÜPER stamp at full opacity — and on
+release, `kind: "pass"`. The person is dismissed for good; there is no
+undo anywhere in this app, and a pass row takes them out of `discover`
+for ever. The mirror case, the same drag with rightward drift, spent a
+plain like where the star was shown. At the commit before the fix the
+same gesture starred them, so this band was made by the fix.
+
+`isUpwardGesture(dx, dy)` is exported from `lib/swipe.ts` now and is the
+only place the 2:1 rule is written. The move handler draws with it, the
+SÜPER stamp is multiplied by an `Animated.Value` the handler sets from
+it, and `decideUp` asks it first. The claim rule stays looser than all
+of them on purpose: a finger between the two lines still holds the card
+and is drawn sideways, which is what its release sends, where a claim as
+strict as the star would leave it holding nothing.
+
+Three cases, red first (the predicate did not exist): the two sides of
+QA's band by name, and a sweep of the whole quadrant asserting that
+nothing `decideSwipe` stars is a gesture the card was not drawn for.
+That sweep is the real guard — the pair can only drift apart again by
+someone deleting it.
+
+**The lesson worth carrying.** A gesture has two readers: the one that
+decides and the one that draws. A change to one is a change to both, and
+only a test that asks them the same question will say so. The first QA
+round caught the rule being wrong; this one caught the rule being right
+and the picture being wrong, which is the more expensive of the two,
+because the picture is the only thing the person can act on.
+
+### Battery gaps
+
+- Nothing in the battery drives a gesture. Both of these findings needed
+  a real touch sequence through CDP against a built bundle — `swipe.ts`'s
+  unit tests cover the rule, and nothing covers the card. The sweep
+  above is the cheapest substitute: it pins the drawing predicate to the
+  deciding one without rendering anything.

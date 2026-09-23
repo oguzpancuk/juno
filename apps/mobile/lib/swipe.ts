@@ -54,6 +54,23 @@ export const VETO_VELOCITY = 0.15;
 
 export type SwipeDecision = 'like' | 'pass' | 'super' | null;
 
+/**
+ * Whether a gesture is going upwards — the star's one predicate, and the
+ * only place the 2:1 rule is written.
+ *
+ * Exported because the deck draws with it as well as deciding with it.
+ * When the two disagreed, a card 272 points up and 140 left was drawn as
+ * a star, SÜPER stamp at full opacity, and sent a pass: the person was
+ * dismissed for good, and there is no undo anywhere in the app (QA,
+ * 2026-09-23). One predicate, read by the drawing and by the decision,
+ * is what keeps the card from lying about what it is about to do.
+ */
+export function isUpwardGesture(dx: number, dy: number): boolean {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+  // `-dy`, not its size: a card that travelled down fails this outright.
+  return -dy > Math.abs(dx) * UP_DOMINANCE;
+}
+
 export function decideSwipe({
   dx,
   vx,
@@ -114,12 +131,11 @@ function decideUp({
   readonly vy: number;
   readonly height: number;
 }): SwipeDecision {
-  if (!Number.isFinite(dy) || !(height > 0)) return null;
-  // Upward, and clearly so. `-dy` rather than its size: a card that
-  // travelled *down* fails this line, whatever it was doing at the
-  // moment it was let go, which is the hole the flick arm below used to
-  // leave open.
-  if (-dy <= Math.abs(dx) * UP_DOMINANCE) return null;
+  if (!(height > 0)) return null;
+  // The same predicate the card was drawn with, and it is what closes
+  // the flick arm's old hole: a card that travelled *down* is not an
+  // upward gesture, whatever it was doing at the moment it was let go.
+  if (!isUpwardGesture(dx, dy)) return null;
   const velocity = Number.isFinite(vy) ? vy : 0;
   // Let go while coming back down: a change of mind, as sideways.
   if (velocity > VETO_VELOCITY) return null;

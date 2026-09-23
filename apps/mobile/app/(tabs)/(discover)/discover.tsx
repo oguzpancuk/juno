@@ -48,7 +48,12 @@ import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { decideSwipe, SUPER_THRESHOLD, SWIPE_THRESHOLD } from '@/lib/swipe';
+import {
+  decideSwipe,
+  isUpwardGesture,
+  SUPER_THRESHOLD,
+  SWIPE_THRESHOLD,
+} from '@/lib/swipe';
 import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
@@ -408,13 +413,20 @@ export default function Discover() {
   const cornerTop = Math.max(insets.top, space.xl);
   const stampTop = cornerTop + CORNER_CHIP + space.md;
   const [pan] = useState(() => new Animated.ValueXY());
+  // 1 while the finger is making the star's gesture, 0 otherwise, set by
+  // the same predicate that decides it. The SÜPER stamp is drawn through
+  // this, so it cannot appear on a gesture that will send something else
+  // — which it did, at full opacity, on a drag that passed (QA,
+  // 2026-09-23).
+  const [upward] = useState(() => new Animated.Value(0));
   const settle = useCallback(() => {
+    upward.setValue(0);
     Animated.spring(pan, {
       toValue: { x: 0, y: 0 },
       friction: 7,
       useNativeDriver: NATIVE_DRIVER,
     }).start();
-  }, [pan]);
+  }, [pan, upward]);
   // Memoised on exactly what the handlers close over: a new responder
   // starts with an empty gesture state, so one made on every render would
   // snap the card back to the middle when the photo arrived mid-drag. Not
@@ -424,6 +436,7 @@ export default function Discover() {
     () =>
       createDeckResponder({
         pan,
+        upward,
         width,
         height,
         current,
@@ -432,7 +445,7 @@ export default function Discover() {
         settle,
         setFlying,
       }),
-    [act, busy, current, flying, height, pan, settle, width],
+    [act, busy, current, flying, height, pan, settle, upward, width],
   );
   const threshold = width * SWIPE_THRESHOLD;
   const tilt = pan.x.interpolate({
@@ -440,7 +453,9 @@ export default function Discover() {
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
     extrapolate: 'clamp',
   });
-  // Each stamp is fully there exactly where a release would count.
+  // Each stamp is fully there exactly where a release would count — the
+  // star's through `upward`, so it never forms on a gesture the release
+  // will answer some other way.
   const likeOpacity = pan.x.interpolate({
     inputRange: [0, threshold],
     outputRange: [0, 1],
@@ -451,12 +466,16 @@ export default function Discover() {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
-  // The star's own, on the other axis and upwards only.
-  const superOpacity = pan.y.interpolate({
-    inputRange: [-height * SUPER_THRESHOLD, 0],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+  // The star's own, on the other axis and upwards only — and nothing at
+  // all unless the gesture is the star's, which is what `upward` carries.
+  const superOpacity = Animated.multiply(
+    upward,
+    pan.y.interpolate({
+      inputRange: [-height * SUPER_THRESHOLD, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    }),
+  );
 
   const currentId = current?.row.id;
   // From the middle, whatever the last card's gesture left behind.
@@ -937,6 +956,7 @@ function bringToFront(
  */
 function createDeckResponder({
   pan,
+  upward,
   width,
   height,
   current,
@@ -946,6 +966,8 @@ function createDeckResponder({
   setFlying,
 }: {
   pan: Animated.ValueXY;
+  /** 1 while the gesture is the star's; see the stamp above. */
+  upward: Animated.Value;
   width: number;
   height: number;
   current: Candidate | undefined;
@@ -975,12 +997,17 @@ function createDeckResponder({
     // Upwards is the star, and it claims the same way on the other axis
     // (owner, 2026-09-23). Downwards is still nobody's: nothing is bound
     // to it, and it stays unclaimed so the card does not follow a finger
-    // that means nothing by it.
+    // that means nothing by it. Claiming is deliberately looser than
+    // `isUpwardGesture`: a finger between the two lines holds the card
+    // and is drawn sideways, which is what its release will send. A
+    // claim as strict as the star would leave that finger holding
+    // nothing at all.
     onMoveShouldSetPanResponder: (_, g) =>
       (Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy)) ||
       (-g.dy > CLAIM_DISTANCE && Math.abs(g.dy) > Math.abs(g.dx)),
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
+      upward.setValue(0);
     },
     // Refuses the JS-side request. The ancestor scroll view that used to
     // take the touch back on a steep diagonal is gone with the card's
@@ -993,7 +1020,11 @@ function createDeckResponder({
       // Whichever axis the finger means, the card follows it fully and
       // only leans on the other: a sideways drag lifts a quarter of its
       // vertical wobble, an upward one slides a quarter of its sway.
-      const up = g.dy < 0 && Math.abs(g.dy) > Math.abs(g.dx);
+      // `isUpwardGesture` and not a rule of its own: the card is drawn
+      // by exactly what will decide it, so what the person watches
+      // forming is what the release sends.
+      const up = isUpwardGesture(g.dx, g.dy);
+      upward.setValue(up ? 1 : 0);
       pan.setValue({
         x: up ? g.dx * DY_FOLLOW : g.dx,
         y: up ? g.dy : g.dy * DY_FOLLOW,

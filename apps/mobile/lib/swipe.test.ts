@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   decideSwipe,
+  isUpwardGesture,
   FLICK_VELOCITY,
   SUPER_FLOOR,
   SUPER_THRESHOLD,
@@ -173,5 +174,44 @@ describe('decideSwipe, upwards', () => {
     // height cannot make an upward gesture out of them.
     expect(decideSwipe({ dx: past, vx: 0, width })).toBe('like');
     expect(decideSwipe({ dx: 0, vx: 0, dy: upPast, vy: 0, width })).toBeNull();
+  });
+});
+
+describe('isUpwardGesture', () => {
+  // The deck draws the card with this and decides it with `decideSwipe`,
+  // and the two disagreeing is a bug the person pays for: QA found a
+  // card drawn as a star, SÜPER stamp at full, that sent a pass and
+  // dismissed the person for good (2026-09-23).
+  it('is exactly the gesture that can star somebody', () => {
+    // 272 up with 140 of left drift: outside the star, so the card must
+    // be drawn sideways — and it is a pass, which is what it sends.
+    expect(isUpwardGesture(-140, -272)).toBe(false);
+    expect(
+      decideSwipe({ dx: -140, vx: 0, dy: -272, vy: 0, width, height }),
+    ).toBe('pass');
+    // The same 272 up with 100 of drift is inside it.
+    expect(isUpwardGesture(-100, -272)).toBe(true);
+    expect(
+      decideSwipe({ dx: -100, vx: 0, dy: -272, vy: 0, width, height }),
+    ).toBe('super');
+  });
+
+  it('never leaves a star the card was not drawn for', () => {
+    // A sweep of the quadrant: anything `decideSwipe` stars, this has to
+    // have been true for, or the card lied about what it was doing.
+    for (let dx = -300; dx <= 300; dx += 20) {
+      for (let dy = -400; dy <= 200; dy += 20) {
+        for (const vy of [0, -(FLICK_VELOCITY + 0.2)]) {
+          const decision = decideSwipe({ dx, vx: 0, dy, vy, width, height });
+          if (decision === 'super')
+            expect(isUpwardGesture(dx, dy), `${dx},${dy},${vy}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('is false for a gesture that has not moved, or is not a number', () => {
+    expect(isUpwardGesture(0, 0)).toBe(false);
+    expect(isUpwardGesture(Number.NaN, -300)).toBe(false);
   });
 });
