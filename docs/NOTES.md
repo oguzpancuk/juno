@@ -7193,6 +7193,10 @@ touching it:
   for İzmit at 39 km or İstanbul for Bursa at 92. Outside it the line is
   empty, exactly as it looked before.
 
+**Both of those bullets were wrong the same day.** Review found it and
+the entry "what 30 km does not buy" below corrects them; the rule now is
+nearest unless a neighbour is five times its size.
+
 Haversine rather than subtracting the coordinates, because longitudes
 wrap; `distanceKm` is exported for the test that proves it.
 
@@ -7208,3 +7212,53 @@ app.
 ### Upstream candidates
 
 None this round.
+
+## 2026-09-23 — what 30 km does not buy
+
+Review on #9 stood at real coordinates from the bundled list and the
+city rule above answered with the wrong city eight times: Gebze got
+"Sancaktepe" (an İstanbul district 22 km off), Tarsus got "Mersin",
+Mardin got "Kızıltepe", Burdur got "İsparta", Yalova got "Gebze" across
+the gulf. In every one of them the nearest record was the city itself.
+Sweeping the whole list the same way, 92 Turkish entries were answered
+by something 20 km or more away.
+
+**The radius was never the thing keeping cities apart, and the comment
+saying it was is what made this hard to see.** "30 km stops short of the
+next city along" is true of İstanbul and Bursa at 92 km; it is simply
+false of Türkiye at the scale where people actually live, where Mersin
+is 25 km from Tarsus and İsparta 24 km from Burdur. A comment that
+promises a class of bug is impossible stops the next reader looking for
+it.
+
+What separates the two cases is not distance but size. A district is
+smaller than its city by an order of magnitude — İstanbul is 283 times
+Eminönü, 30 times Üsküdar — while two cities that merely sit near each
+other are within a factor of two: Sancaktepe is 1.7 times Gebze, Mersin
+1.5 times Tarsus, İsparta 1.8 times Burdur. So `cityAt` now takes the
+record a point stands nearest to, unless one in reach is at least five
+times its population, and then the largest such. Five is the empty space
+between those two populations of pairs; the nearest real case to it is a
+town beside a metropolis (Gemlik and Bursa, 27 times), and naming the
+metropolis there is what a person would say anyway. Both wrong answers
+the review named are tests now, red before the change: `expected
+'Sancaktepe' to be 'Gebze'`.
+
+**A second rule came out of the sweep, which the review did not ask
+for.** The ratio on its own hands a Hong Kong address to Shenzhen (7.8
+times, 27 km) and Johor Bahru to Singapore, and 33 entries crossed a
+border that way. A neighbour now has to be in the same country to
+outrank the nearest record. Chula Vista still answers "San Diego", which
+is the same country and right.
+
+### Battery gaps
+
+None new: the sweep that found this is not in the battery, because it
+would be a test over all 6594 rows asserting a judgement, not a fact.
+The eight named cases are tests instead.
+
+### Upstream candidates
+
+A comment that says what a constant guarantees should be read as a
+claim to check, not as documentation. This one survived nine review
+rounds, and the code it described was wrong for every dense country.

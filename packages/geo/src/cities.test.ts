@@ -194,13 +194,35 @@ describe('cityAt', () => {
 
   it('answers with the city rather than the district it is in', () => {
     // The bundled list holds districts as well as cities, and a district
-    // centre is the nearer point: Eminönü is 1.2 km from Sultanahmet and
-    // the İstanbul entry is 2.5 km. Someone there is in İstanbul, so the
-    // answer is the most populous city in reach, not the closest one.
+    // centre is the nearer point: Eminönü (55 548) is 1.2 km from
+    // Sultanahmet and the İstanbul entry (15.7 M, 283 times over) is
+    // 2.5 km. Someone there is in İstanbul, so a neighbour that far
+    // outweighs the nearest record takes it.
     expect(cityAt(41.0082, 28.9784)?.name).not.toBe('Eminönü');
-    // The same from the other shore, where Kadıköy and Üsküdar are the
-    // near entries.
+    // The same from the other shore, where Üsküdar (524 452, 30 times
+    // under İstanbul) is the near entry.
     expect(cityAt(40.99, 29.03)?.name).toBe('İstanbul');
+  });
+
+  it('keeps a city its own name when a neighbour is merely bigger', () => {
+    // Gebze's own coordinates. Sancaktepe, an İstanbul district 22 km
+    // away, is 489 848 against Gebze's 281 436 — bigger, but nowhere
+    // near enough to speak for it.
+    expect(cityAt(40.8028, 29.4307)?.name).toBe('Gebze');
+    // Tarsus, with Mersin (537 842 against 350 732) 25 km down the road.
+    expect(cityAt(36.9177, 34.8928)?.name).toBe('Tarsus');
+    // Yalova, across the gulf from Gebze, and Burdur with İsparta 24 km
+    // off: both were answered by the neighbour before the ratio.
+    expect(cityAt(40.655, 29.2769)?.name).toBe('Yalova');
+    expect(cityAt(37.7203, 30.2908)?.name).toBe('Burdur');
+  });
+
+  it('never answers with a city in another country', () => {
+    // Shenzhen is 17.5 M against Kowloon's 2.2 M and 27 km away, so the
+    // ratio alone would hand a Hong Kong address to mainland China.
+    expect(cityAt(22.3167, 114.1833)?.name).toBe('Kowloon');
+    // Singapore over Johor Bahru is the same shape across the strait.
+    expect(cityAt(1.4655, 103.7578)?.name).toBe('Johor Bahru');
   });
 
   it('does not reach past its radius for a bigger neighbour', () => {
