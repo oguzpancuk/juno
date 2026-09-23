@@ -6868,3 +6868,50 @@ being required when this merges. Owner-side, after the merge: delete the
 `CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
 Cloudflare token. The exception entry above is void with the rule it
 excepted.
+
+## 2026-09-23 — the interest picker moves into a popup; placeholders go
+
+Both from the owner's device test of PR #9. The edit page drew all
+thirty-six interest chips inline, which was most of its height; he asked
+for nothing when nothing is picked, a popup with all of them behind a tap,
+and the search inside that popup. The box stays when empty — drawn like
+the two fields above it — because it is the only way to open the sheet,
+and the tags inside it are the read-only ones the profile draws, not
+chips: the whole box is one target, and a chip inside would promise a tap
+of its own.
+
+The search matches the Turkish word, not the key: `cats` has to be found
+by "kedi". `searchInterests` in `lib/profile-details.ts` takes the word as
+a function, so the pure module stays out of `strings.ts`, and folds with
+`@juno/geo`'s `searchKey` — the city search's own fold — because Turkish
+needs "I"/"İ"/"ı"/"i" to agree in both directions and `toLowerCase` maps
+"I" to "i", never to "ı". Substring, not prefix, so "müzik" also reaches
+"Canlı müzik".
+
+The occupation and university placeholders are gone ("kendimiz çizmeyelim,
+placeholder textleri kaldıralım"). Each field carries an
+`accessibilityLabel` in their place: the `<Text>` label above a field is a
+sibling, not a programmatic label, so removing the placeholder without one
+would leave a screen reader an unnamed box. Onboarding's date boxes keep
+theirs — there the placeholder ("GG", "AA", "YYYY") _is_ the label, and
+removing it leaves empty squares. Removing the placeholder also steps
+around facebook/react-native#42589, the iOS letter-spacing bug he hit,
+without the wrapper View that drawing our own would have needed.
+
+### Upstream candidates
+
+`apps/mobile/scripts/web-drive.mjs` hard-codes macOS's Chrome path and
+runs without `--no-sandbox`, so every cloud thread copies it to scratch
+and patches those two lines before it can shoot anything; each copy also
+re-adds a `scroll` verb, which has to scroll the app's own scroller and
+never `window` (scrolling the window offsets the whole app and
+photographs a half-blank screen). Three lines — `process.env.CHROME ??`,
+the flag, and the verb — would make the repo's own script work in both
+places. Left out of this PR because it is not the feature.
+
+The stand-in backend a cloud thread needs for a signed-in screenshot is
+rebuilt from scratch every time, from the recipe in memory. It is about a
+hundred and fifty lines and it is thrown away with the container. If the
+owner wants cloud screenshots to stay cheap, it belongs in
+`apps/mobile/scripts/` beside the driver, clearly marked as what it is: a
+look at the UI, with no RLS, no constraints and no triggers behind it.
