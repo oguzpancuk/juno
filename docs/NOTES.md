@@ -7125,3 +7125,35 @@ repo can see. Checked by driving the web target and photographing it.
 ### Upstream candidates
 
 None this round.
+
+## 2026-09-23 — the deck's card draws the same rows as the profile
+
+Owner, after seeing the glyph rows on his own profile: "kesfette de
+alanlar profil goruntusundeki gibi olsun". So the deck card's one-line
+"11 km · 184 cm · Şef yardımcısı · Boğaziçi Ü." is now the distance on
+its own line with the same three glyph rows under it.
+
+The rows moved out of `ProfileView` into `components/FactRows.tsx` for
+it. Two surfaces that are supposed to be the same card cannot each keep
+their own copy of the block — that is what produced the one-liner and the
+columns drifting apart in the first place.
+
+The card's height is unchanged, which is the constraint that made it a
+one-liner in 2026-09-14 ("the card has to fit one screen with nothing to
+scroll into"): its scrim is painted over the photo rather than laid out
+above it, so extra lines climb the picture instead of pushing the chips
+and the buttons down. `FactRows` takes the deck's `maxFontSizeMultiplier`
+so Dynamic Type cannot climb past the name either.
+
+`cardLine` is `cardSpoken` now: its only caller left is the card button's
+`accessibilityLabel`, so it speaks the school's full name rather than the
+abbreviation, the same rule the profile rows follow.
+
+### Battery gaps
+
+Same as the entries above: which surface draws what is wiring, checked by
+driving the web target and photographing the deck.
+
+### Upstream candidates
+
+None this round.

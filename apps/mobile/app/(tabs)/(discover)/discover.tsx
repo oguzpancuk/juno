@@ -27,6 +27,7 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
 import { BandRing } from '@/components/BandRing';
 import { CosmicGround } from '@/components/CosmicGround';
+import { FactRows } from '@/components/FactRows';
 import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
 import { Popup } from '@/components/Popup';
 import { SlidersIcon } from '@/components/SlidersIcon';
@@ -37,7 +38,6 @@ import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
-import { shortSchool } from '@/lib/profile-details';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -56,25 +56,22 @@ function distanceLine(km: number): string {
 }
 
 /**
- * The line under the name on the deck's card: the distance, then whatever
- * of the height, the occupation and the university was answered.
+ * The card as VoiceOver hears it, since the name, the distance and the
+ * facts are all drawn on the photo and the button's own label would
+ * otherwise hide them (review, 2026-09-15).
  *
- * On the line that was already there rather than on one of its own: the
- * card has to fit one screen with nothing to scroll into (owner,
- * 2026-09-14). It is one line and it clips, so the order is what a reader
- * wants first — where they are, then who they are. The interests are on
- * the profile sheet a tap away, which is the whole card in full.
+ * One string where the card now draws several lines: speech has no
+ * layout, and a reader wants where they are before who they are. The
+ * school is spoken in full — `shortSchool` buys width on a line, and
+ * "Ü." is heard as a letter and a period. The interests are on the
+ * profile sheet a tap away, which is the whole card in full.
  */
-function cardLine(row: DiscoverRow): string {
+function cardSpoken(row: DiscoverRow): string {
   return [
     distanceLine(row.distance_km),
     row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
     row.occupation,
-    // Shortened here and nowhere else: this line clips, and
-    // "Üniversitesi" is the half of a school name that says nothing about
-    // which one it is, so it stands as "Ü.". The profile sheet a tap away
-    // still gives the name in full.
-    row.university === null ? null : shortSchool(row.university),
+    row.university,
   ]
     .filter((part): part is string => part !== null)
     .join(' · ');
@@ -437,7 +434,7 @@ export default function Discover() {
             accessibilityLabel={t.discover.openPerson(
               current.row.display_name,
               current.row.age,
-              cardLine(current.row),
+              cardSpoken(current.row),
             )}
             testID="open-person"
           >
@@ -465,8 +462,19 @@ export default function Discover() {
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
                 testID="card-line"
               >
-                {cardLine(current.row)}
+                {distanceLine(current.row.distance_km)}
               </Text>
+              {/* The same rows as the profile sheet draws under a name
+                  (owner, 2026-09-23: "kesfette de alanlar profil
+                  goruntusundeki gibi olsun"), from the same component, so
+                  the card and the sheet a tap away cannot drift. The
+                  scrim is painted over the photo rather than laid out
+                  above it, so three lines here cost the card no height —
+                  they sit further up the picture. */}
+              <FactRows
+                details={current.row}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              />
             </LinearGradient>
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
