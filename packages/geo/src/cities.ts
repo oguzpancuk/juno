@@ -173,9 +173,18 @@ const CITY_RADIUS_KM = 30;
  * İstanbul is 283 times Eminönü and 30 times Üsküdar — while two cities
  * that merely sit near each other are within a factor of two: Sancaktepe
  * is 1.7 times Gebze, Mersin 1.5 times Tarsus, İsparta 1.8 times Burdur.
- * Five is the gap between those two populations of pairs, and the closest
- * real case to it is a town beside a metropolis (Gemlik and Bursa at 27
- * times), where naming the metropolis is what a person would say anyway.
+ * Five sits above every pair of that second kind and below every district
+ * that has to keep working.
+ *
+ * It is not a threshold with empty space around it, and the next person to
+ * tune it should know that: 26 Turkish records are answered at under ten
+ * times, the lowest at 5.3. Several of those are right (Akçaabat at 5.4
+ * and Genç at 5.7 are districts of the city they get). Bulancak is what
+ * the number costs — it answers "Ordu", the next province's city 29 km
+ * off, while Giresun, its own province's city 13 km away, is 2.9 times it
+ * and cannot qualify. Nothing between 3 and 5 would fix that without
+ * losing the pairs above, so five stands, but as a choice rather than a
+ * measurement.
  */
 const POPULATION_RATIO = 5;
 

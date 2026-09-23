@@ -205,9 +205,10 @@ describe('cityAt', () => {
   });
 
   it('keeps a city its own name when a neighbour is merely bigger', () => {
-    // Gebze's own coordinates. Sancaktepe, an İstanbul district 22 km
+    // Gebze's own coordinates. Sancaktepe, an İstanbul district 28 km
     // away, is 489 848 against Gebze's 281 436 — bigger, but nowhere
-    // near enough to speak for it.
+    // near enough to speak for it. (Sultanbeyli is the nearer İstanbul
+    // district at 22 km, and loses to the ratio in the same way.)
     expect(cityAt(40.8028, 29.4307)?.name).toBe('Gebze');
     // Tarsus, with Mersin (537 842 against 350 732) 25 km down the road.
     expect(cityAt(36.9177, 34.8928)?.name).toBe('Tarsus');

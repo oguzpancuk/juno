@@ -7237,12 +7237,29 @@ Eminönü, 30 times Üsküdar — while two cities that merely sit near each
 other are within a factor of two: Sancaktepe is 1.7 times Gebze, Mersin
 1.5 times Tarsus, İsparta 1.8 times Burdur. So `cityAt` now takes the
 record a point stands nearest to, unless one in reach is at least five
-times its population, and then the largest such. Five is the empty space
-between those two populations of pairs; the nearest real case to it is a
-town beside a metropolis (Gemlik and Bursa, 27 times), and naming the
-metropolis there is what a person would say anyway. Both wrong answers
-the review named are tests now, red before the change: `expected
-'Sancaktepe' to be 'Gebze'`.
+times its population, and then the largest such. Five sits above every
+pair of that second kind and below every district that has to keep
+working. Both wrong answers the review named are tests now, red before
+the change: `expected 'Sancaktepe' to be 'Gebze'`.
+
+**Five is a choice, not a measurement, and the next round said so before
+this entry could pretend otherwise.** There is no empty space around it:
+26 Turkish records are answered at under ten times, the lowest at 5.3.
+Several of those are right — Akçaabat at 5.4 and Genç at 5.7 are
+districts of the city they get. Bulancak is what the number costs: it
+answers "Ordu", the next province's city 29 km away, while Giresun, its
+own province's city 13 km away, is 2.9 times it and cannot qualify.
+Nothing between 3 and 5 fixes that without losing the pairs above.
+
+**What the rule leaves, named as a class rather than as one case.** The
+list mixes cities with districts, so where a city's own record falls
+outside 30 km one of its districts can answer for a town that is not in
+it: Belek reads "Muratpaşa" (Antalya is 33 km off), Çatalca and Kavaklı
+read "Esenyurt", Torbalı "Karabağlar", Kazan "Batıkent", Büyükçekmece
+"Esenyurt" (İstanbul is 30.6 km, just past the edge). Six in all, and
+moving the radius trades them for the far pairs the radius exists to
+stop. Gemlik reading "Bursa" (43.6 times, 27.5 km) is the other
+leftover, and that one is right: it is a town on Bursa's own bay.
 
 **A second rule came out of the sweep, which the review did not ask
 for.** The ratio on its own hands a Hong Kong address to Shenzhen (7.8
