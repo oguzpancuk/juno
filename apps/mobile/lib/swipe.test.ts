@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  claimsCard,
+  CLAIM_DISTANCE,
   deckOffset,
   decideSwipe,
   isUpwardGesture,
@@ -273,5 +275,40 @@ describe('deckOffset', () => {
         expect(drawn.up ? drawn.y : drawn.x).toBe(drawn.up ? dy : dx);
       }
     }
+  });
+});
+
+describe('claimsCard', () => {
+  // The rule that decides whether the card comes under the finger at
+  // all. It lived inline in the deck until QA found a finger going up at
+  // exactly 45° that satisfied neither of its arms, and a one-character
+  // fix shipped with no test at all (2026-09-23).
+  it('takes a clearly sideways drag', () => {
+    expect(claimsCard(CLAIM_DISTANCE + 1, 0)).toBe(true);
+    expect(claimsCard(-(CLAIM_DISTANCE + 1), 4)).toBe(true);
+  });
+
+  it('takes an upward drag, including one at exactly 45°', () => {
+    expect(claimsCard(0, -(CLAIM_DISTANCE + 1))).toBe(true);
+    expect(claimsCard(200, -200)).toBe(true);
+    expect(claimsCard(-200, -200)).toBe(true);
+  });
+
+  it('leaves a downward drag alone, whatever its angle', () => {
+    // Nothing is bound to it, so the card must not follow the finger.
+    expect(claimsCard(0, 200)).toBe(false);
+    expect(claimsCard(4, 200)).toBe(false);
+  });
+
+  it('leaves a touch that has barely moved alone', () => {
+    // A tap on the photograph opens the profile, and a tap on the band
+    // opens the reading; neither may be eaten by the card.
+    expect(claimsCard(CLAIM_DISTANCE, 0)).toBe(false);
+    expect(claimsCard(0, -CLAIM_DISTANCE)).toBe(false);
+    expect(claimsCard(0, 0)).toBe(false);
+  });
+
+  it('is false for a gesture that is not a number', () => {
+    expect(claimsCard(Number.NaN, -200)).toBe(false);
   });
 });

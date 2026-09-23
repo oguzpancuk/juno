@@ -7186,3 +7186,28 @@ verdict that contradicted a visible stamp, in either direction. That is
 the evidence the battery cannot produce, and it is the third round in a
 row where the finding was visible only to something driving real touch
 sequences against a built bundle.
+
+## 2026-09-23 — Fifth QA round: the stamp was inside the photograph
+
+Round 4 stopped the stamp climbing out of the top of the screen by
+pinning it in screen space. It was still a child of the card's photo
+`Pressable`, and that view is `overflow: 'hidden'` so the picture keeps
+its rounded corners. Past about 365 points of upward travel the card has
+moved far enough that the pinned stamp falls outside the photograph's
+box and is clipped — invisible at the very moment the gesture is most
+committed. `getBoundingClientRect` reported it at full opacity in the
+right place throughout, so only the pixels showed it; QA caught it by
+photographing the frame rather than by asking the DOM.
+
+The stamp is now a sibling of the card, laid out against the screen. The
+card can travel as far as it likes underneath it. `upward` is also reset
+to zero before the fly-out, so the word cannot linger over an empty
+deck.
+
+The other change is QA's, and it is the first time a gesture rule of this
+deck has been testable: the tap-versus-drag predicate that decides
+whether the deck claims a touch was written inline in the move handler.
+It is `claimsCard(dx, dy)` in `apps/mobile/lib/swipe.ts` now, with
+`CLAIM_DISTANCE`, and five cases of its own seen red first — a straight
+tap, a short drift, a sideways drag, an upward drag, and the 45° case
+round 4 found by hand. The deck imports both.

@@ -48,6 +48,12 @@ export const UP_DOMINANCE = 2;
  * what draws with it.
  */
 export const CROSS_FOLLOW = 0.25;
+/**
+ * How far a finger travels before the card comes under it. A tap on the
+ * photograph opens the profile and a tap on the band opens the reading,
+ * so the card may not take a touch that has barely moved.
+ */
+export const CLAIM_DISTANCE = 8;
 /** Points per millisecond: the speed of a flick that counts on its own. */
 export const FLICK_VELOCITY = 0.5;
 /**
@@ -165,4 +171,20 @@ function decideUp({
   // A flick still counts short of the line, but not from nowhere.
   if (velocity < -FLICK_VELOCITY && -dy > height * SUPER_FLOOR) return 'super';
   return null;
+}
+
+/**
+ * Whether the card comes under the finger at all.
+ *
+ * Sideways either way, upwards only: nothing is bound to a downward drag
+ * and a card that followed one would be moving for no reason. The
+ * upward arm takes the tie, because a finger going up at exactly 45°
+ * satisfied neither arm and the card sat still under it (QA,
+ * 2026-09-23). Here rather than inline in the deck for the same reason
+ * as `deckOffset`: it is a rule, and rules in this file have tests.
+ */
+export function claimsCard(dx: number, dy: number): boolean {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+  if (Math.abs(dx) > CLAIM_DISTANCE && Math.abs(dx) > Math.abs(dy)) return true;
+  return -dy > CLAIM_DISTANCE && Math.abs(dy) >= Math.abs(dx);
 }

@@ -49,6 +49,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import {
+  CLAIM_DISTANCE,
+  claimsCard,
   CROSS_FOLLOW,
   deckOffset,
   decideSwipe,
@@ -56,12 +58,6 @@ import {
   SWIPE_THRESHOLD,
 } from '@/lib/swipe';
 import { color, font, gradient, radius, space, type } from '@/theme/tokens';
-
-/**
- * Horizontal travel before the card owns the touch. Under it a finger is
- * still deciding, and a tap on a button is well under it.
- */
-const CLAIM_DISTANCE = 8;
 
 /** How far away someone is, as the card and the person sheet write it. */
 function distanceLine(km: number): string {
@@ -472,20 +468,6 @@ export default function Discover() {
       extrapolate: 'clamp',
     }),
   );
-  // The star's stamp is held still on the screen while the card climbs
-  // out from under it, by exactly undoing the card's own lift. The two
-  // side stamps ride the card because the card goes sideways past them;
-  // this one would ride it off the top — first at the travel that fills
-  // it in, and, when that was answered by starting it lower, again a
-  // hundred points further up (QA, 2026-09-23, twice). A place on the
-  // screen has no "further up" left to fail at. The lift is undone only
-  // as far as one screen height, so the fly-out at the end — a screen
-  // and a half — takes the stamp away with the card.
-  const superStampLift = pan.y.interpolate({
-    inputRange: [-height, 0],
-    outputRange: [height, 0],
-    extrapolate: 'clamp',
-  });
 
   const currentId = current?.row.id;
   // From the middle, whatever the last card's gesture left behind.
@@ -530,187 +512,193 @@ export default function Discover() {
           </Text>
         </View>
       ) : (
-        <Animated.View
-          style={[
-            styles.card,
-            {
-              transform: [
-                { translateX: pan.x },
-                { translateY: pan.y },
-                { rotate: tilt },
-              ],
-            },
-          ]}
-          testID={`card-${current.row.id}`}
-          {...responder.panHandlers}
-        >
-          {/* The photo is both surfaces now (owner, 2026-09-14, reversing
+        <>
+          <Animated.View
+            style={[
+              styles.card,
+              {
+                transform: [
+                  { translateX: pan.x },
+                  { translateY: pan.y },
+                  { rotate: tilt },
+                ],
+              },
+            ]}
+            testID={`card-${current.row.id}`}
+            {...responder.panHandlers}
+          >
+            {/* The photo is both surfaces now (owner, 2026-09-14, reversing
               2026-09-11): a tap anywhere on it opens the person, a drag
               swipes. They do not fight — the card's responder claims only
               on horizontal movement, and taking the touch cancels this
               press before it can fire. A vertical drag is not claimed, so
               the press itself refuses a finger that travelled (review,
               2026-09-15). */}
-          <Pressable
-            style={[
-              styles.photoWrap,
-              { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
-            ]}
-            onPressIn={(event) => {
-              pressedAt.current = {
-                x: event.nativeEvent.pageX,
-                y: event.nativeEvent.pageY,
-              };
-            }}
-            onPress={(event) => {
-              const from = pressedAt.current;
-              pressedAt.current = null;
-              // A screen reader's activation carries no travel: NaN is
-              // not past the line, so it still opens.
-              if (
-                from !== null &&
-                Math.hypot(
-                  event.nativeEvent.pageX - from.x,
-                  event.nativeEvent.pageY - from.y,
-                ) > CLAIM_DISTANCE
-              )
-                return;
-              setSheet({ id: current.row.id, of: 'person' });
-            }}
-            accessibilityRole="button"
-            // The name, age and distance drawn on the photo, which the
-            // label would otherwise hide from VoiceOver (review, 2026-09-15).
-            accessibilityLabel={t.discover.openPerson(
-              current.row.display_name,
-              current.row.age,
-              distanceLine(current.row.distance_km),
-            )}
-            testID="open-person"
-          >
-            {cardSource ? (
-              <Image
-                source={cardSource}
-                style={styles.cardPhoto}
-                resizeMode="cover"
-                testID="card-photo"
-              />
-            ) : null}
-            {/* The name sits on the photo, as in the design; the chart
-                below it is what the card is actually about. */}
-            <LinearGradient
-              colors={['transparent', color.scrim, color.bg]}
-              style={styles.photoScrim}
+            <Pressable
+              style={[
+                styles.photoWrap,
+                { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
+              ]}
+              onPressIn={(event) => {
+                pressedAt.current = {
+                  x: event.nativeEvent.pageX,
+                  y: event.nativeEvent.pageY,
+                };
+              }}
+              onPress={(event) => {
+                const from = pressedAt.current;
+                pressedAt.current = null;
+                // A screen reader's activation carries no travel: NaN is
+                // not past the line, so it still opens.
+                if (
+                  from !== null &&
+                  Math.hypot(
+                    event.nativeEvent.pageX - from.x,
+                    event.nativeEvent.pageY - from.y,
+                  ) > CLAIM_DISTANCE
+                )
+                  return;
+                setSheet({ id: current.row.id, of: 'person' });
+              }}
+              accessibilityRole="button"
+              // The name, age and distance drawn on the photo, which the
+              // label would otherwise hide from VoiceOver (review, 2026-09-15).
+              accessibilityLabel={t.discover.openPerson(
+                current.row.display_name,
+                current.row.age,
+                distanceLine(current.row.distance_km),
+              )}
+              testID="open-person"
             >
-              <Text style={styles.name} maxFontSizeMultiplier={MAX_DECK_SCALE}>
-                {current.row.display_name}, {current.row.age}
-              </Text>
-              <Text
-                style={styles.distance}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              {cardSource ? (
+                <Image
+                  source={cardSource}
+                  style={styles.cardPhoto}
+                  resizeMode="cover"
+                  testID="card-photo"
+                />
+              ) : null}
+              {/* The name sits on the photo, as in the design; the chart
+                below it is what the card is actually about. */}
+              <LinearGradient
+                colors={['transparent', color.scrim, color.bg]}
+                style={styles.photoScrim}
               >
-                {distanceLine(current.row.distance_km)}
-              </Text>
-            </LinearGradient>
-            {/* The band on the photo's bottom corner, opposite the name
+                <Text
+                  style={styles.name}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {current.row.display_name}, {current.row.age}
+                </Text>
+                <Text
+                  style={styles.distance}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {distanceLine(current.row.distance_km)}
+                </Text>
+              </LinearGradient>
+              {/* The band on the photo's bottom corner, opposite the name
                 (owner, 2026-09-23: "uyum gostergesi fotografin sag
                 altina gitsin"). Its own Pressable inside the photo's:
                 the child takes the touch, so the tap that opens the
                 reading is not the tap that opens the person. */}
-            <Pressable
-              style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
-              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-              accessibilityRole="button"
-              accessibilityLabel={t.discover.openDetail(
-                bandName(current.match.score),
-              )}
-              hitSlop={space.sm}
-              testID="open-detail"
-            >
-              <BandRing
-                band={bandOf(current.match.score)}
-                label={`${bandName(current.match.score)} ${t.discover.scoreLabel}`}
-                size={52}
-                stroke={5}
-              />
-              <Text
-                style={styles.bandName}
-                testID="band"
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              <Pressable
+                style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
+                onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+                accessibilityRole="button"
+                accessibilityLabel={t.discover.openDetail(
+                  bandName(current.match.score),
+                )}
+                hitSlop={space.sm}
+                testID="open-detail"
               >
-                {bandName(current.match.score)}
-              </Text>
-            </Pressable>
-            {/* The verdict as it forms, for sighted eyes only: the round
+                <BandRing
+                  band={bandOf(current.match.score)}
+                  label={`${bandName(current.match.score)} ${t.discover.scoreLabel}`}
+                  size={52}
+                  stroke={5}
+                />
+                <Text
+                  style={styles.bandName}
+                  testID="band"
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                >
+                  {bandName(current.match.score)}
+                </Text>
+              </Pressable>
+              {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
-            <Animated.View
-              style={[
-                styles.stamp,
-                styles.stampLike,
-                { top: stampTop, opacity: likeOpacity },
-              ]}
-              accessible={false}
-              aria-hidden
-              testID="stamp-like"
-            >
-              <Text style={[styles.stampText, styles.stampTextLike]}>
-                {t.discover.swipeLike}
-              </Text>
-            </Animated.View>
-            <Animated.View
-              style={[
-                styles.stamp,
-                styles.stampPass,
-                { top: stampTop, opacity: passOpacity },
-              ]}
-              accessible={false}
-              aria-hidden
-              testID="stamp-pass"
-            >
-              <Text style={[styles.stampText, styles.stampTextPass]}>
-                {t.discover.swipePass}
-              </Text>
-            </Animated.View>
-            {/* The third one, for the gesture that has no side: it comes
-                up the middle with the card. */}
-            <Animated.View
-              style={[
-                styles.stamp,
-                styles.stampSuper,
-                {
-                  top: stampTop,
-                  opacity: superOpacity,
-                  transform: [{ translateY: superStampLift }],
-                },
-              ]}
-              accessible={false}
-              aria-hidden
-              testID="stamp-super"
-            >
-              <Text style={[styles.stampText, styles.stampTextSuper]}>
-                {t.discover.swipeSuper}
-              </Text>
-            </Animated.View>
-          </Pressable>
-          <View style={styles.info}>
-            <BigThreeRow
-              three={current.row.big_three}
-              maxFontSizeMultiplier={MAX_DECK_SCALE}
-            />
-            {/* Their own words, two lines of them, between the chart and
+              <Animated.View
+                style={[
+                  styles.stamp,
+                  styles.stampLike,
+                  { top: stampTop, opacity: likeOpacity },
+                ]}
+                accessible={false}
+                aria-hidden
+                testID="stamp-like"
+              >
+                <Text style={[styles.stampText, styles.stampTextLike]}>
+                  {t.discover.swipeLike}
+                </Text>
+              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.stamp,
+                  styles.stampPass,
+                  { top: stampTop, opacity: passOpacity },
+                ]}
+                accessible={false}
+                aria-hidden
+                testID="stamp-pass"
+              >
+                <Text style={[styles.stampText, styles.stampTextPass]}>
+                  {t.discover.swipePass}
+                </Text>
+              </Animated.View>
+            </Pressable>
+            <View style={styles.info}>
+              <BigThreeRow
+                three={current.row.big_three}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              />
+              {/* Their own words, two lines of them, between the chart and
                 the band (sheet frame 05). The full text is on the person
                 page a tap away. */}
-            {current.row.bio ? (
-              <Text
-                style={styles.bio}
-                numberOfLines={2}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-                testID="card-bio"
-              >
-                {current.row.bio}
-              </Text>
-            ) : null}
-          </View>
-        </Animated.View>
+              {current.row.bio ? (
+                <Text
+                  style={styles.bio}
+                  numberOfLines={2}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                  testID="card-bio"
+                >
+                  {current.row.bio}
+                </Text>
+              ) : null}
+            </View>
+          </Animated.View>
+          {/* The third stamp, and the only one that is not on the card.
+            The other two ride it because a card going sideways travels
+            past them; this gesture lifts the card, and a stamp on it
+            went off the top of the screen — then, pushed down to answer
+            that, out through the bottom of the photograph, which is
+            clipped (QA, 2026-09-23, twice over). Here it is a thing on
+            the screen: no parent to clip it and no lift to undo. */}
+          <Animated.View
+            style={[
+              styles.stamp,
+              styles.stampSuper,
+              { top: stampTop, opacity: superOpacity },
+            ]}
+            accessible={false}
+            aria-hidden
+            testID="stamp-super"
+          >
+            <Text style={[styles.stampText, styles.stampTextSuper]}>
+              {t.discover.swipeSuper}
+            </Text>
+          </Animated.View>
+        </>
       )}
       {current ? (
         // Outside the card on purpose: at screen height, buttons tilting
@@ -1016,11 +1004,7 @@ function createDeckResponder({
     // and is drawn sideways, which is what its release will send. A
     // claim as strict as the star would leave that finger holding
     // nothing at all.
-    onMoveShouldSetPanResponder: (_, g) =>
-      (Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy)) ||
-      // `>=` on this one: a finger going up at exactly 45° satisfied
-      // neither arm and the card sat still under it (QA, 2026-09-23).
-      (-g.dy > CLAIM_DISTANCE && Math.abs(g.dy) >= Math.abs(g.dx)),
+    onMoveShouldSetPanResponder: (_, g) => claimsCard(g.dx, g.dy),
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
       upward.setValue(0);
@@ -1060,6 +1044,9 @@ function createDeckResponder({
         return;
       }
       setFlying(true);
+      // The verdict is made and the card is leaving; the stamp is not on
+      // it any more, so nothing would take it away.
+      upward.setValue(0);
       Animated.timing(pan, {
         toValue:
           decision === 'super'
