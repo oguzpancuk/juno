@@ -86,7 +86,8 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
   NEEDS_WORK means not done: fix, run it again, open the pull request only
   on PASS. A clause that names a test needs no QA pass.
 - A native mobile screen cannot be driven from a cloud thread. For such a
-  clause the pull request says exactly what to try and where (see Preview);
+  clause the pull request says exactly what to try and where (see Looking
+  at it);
   the owner checks it on a device before merging, and the item is not
   reported done until then.
 - Never report a check you did not run.
@@ -104,27 +105,16 @@ the backend · npm workspaces monorepo. Stack rationale: `docs/adr/0002-*`.
 - Never merge, force-push, or change CI configuration. Merging is the
   owner's.
 
-## Preview
-Every pull request gets a preview URL and its body carries it. A pull
-request without its preview link is not ready for the owner.
-Provider: a Cloudflare Worker VERSION per pull request
-(`.github/workflows/preview.yml`): the Expo web export, uploaded with the
-alias `pr-<number>` — never deployed, so production traffic is untouched.
-URL: `https://pr-<number>-juno.oguzpancuk.workers.dev` — put it in the pull
-request body; it is true once the `preview` check is green. Both of its
-jobs, `build` and `upload`, are REQUIRED checks: a pull request whose
-preview is red or still running cannot merge.
-What a preview is NOT: it talks to the PRODUCTION Supabase project (owner
-decision) — real data behind RLS, so try it with a test account and never
-bulk-write; a pull request's MIGRATIONS and Edge Function changes are not
-applied, so a change that needs them cannot be tried here at all — say so
-in the pull request. Google sign-in has no button (no client ids). A
-native-only screen has no URL: the pull request says what to try, and the
-owner checks it on a TestFlight build he asks for himself (maya's rule:
-Xcode Cloud, on request — not set up here yet; until then, a device
-build). A thread never triggers a build.
-The workflow runs from `main` (`pull_request_target`): a pull request
-cannot change how its own preview is built or what the token is used for.
+## Looking at it
+There is no preview URL. A thread runs the web target in its own
+container (the `dev` row, web flag), drives it with `evaluator-qa` and
+puts the screenshots in the pull request body: that is what the owner
+sees of the change. When the owner wants to try it himself he brings it
+up from a LOCAL session — web and the iOS simulator on the local Supabase
+stack — before merging. A thread never sets up hosting for that and never
+triggers a build. Until 2026-09-23 every pull request had a Cloudflare
+Worker version (`pr-<n>-juno.oguzpancuk.workers.dev`); `docs/NOTES.md`
+says why it went.
 
 ## Deploy
 Deploys are the owner's, run from a LOCAL Claude Code session through

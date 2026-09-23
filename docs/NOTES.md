@@ -6842,3 +6842,20 @@ way the list already did.
   image's `/opt/pw-browsers/chromium` as a fallback — would end the
   copying. Not done here: it is a second problem, and this branch is a
   feature.
+
+## 2026-09-23 — port of maya e87bb6f: no preview URL; the Worker versions go
+
+Owner decision two days after they were built, for simplicity: projects
+develop, looking is local. A thread already puts screenshots of the web
+target in its pull request; whatever the owner wants to try himself he
+brings up from a local session, web and simulator on the local Supabase
+stack, which the cloud container cannot do anyway. So `preview.yml` is
+removed, `preview_urls` leaves `wrangler.jsonc` (the deployed setting
+changes on the owner's next `npx wrangler triggers deploy`), the
+`Preview` section of `CLAUDE.md` becomes `Looking at it`, and the project
+instructions lose the preview-URL and TestFlight lines (the owner pastes
+them again). The merge gate is `verify` again; `build` and `upload` stop
+being required when this merges. Owner-side, after the merge: delete the
+`CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
+Cloudflare token. The exception entry above is void with the rule it
+excepted.
