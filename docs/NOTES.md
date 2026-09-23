@@ -7083,8 +7083,13 @@ strict as the star would leave it holding nothing.
 Three cases, red first (the predicate did not exist): the two sides of
 QA's band by name, and a sweep of the whole quadrant asserting that
 nothing `decideSwipe` stars is a gesture the card was not drawn for.
-That sweep is the real guard — the pair can only drift apart again by
-someone deleting it.
+
+(QA's next round showed that sweep up: it imports only `swipe.ts`, and
+the module already agreed with itself, so it was red only because the
+export was missing. Reverting the deck's move handler alone would have
+brought the whole defect back with the battery green. The drawing is a
+function in `swipe.ts` now — `deckOffset` — and the round below says
+what that does and does not buy.)
 
 **The lesson worth carrying.** A gesture has two readers: the one that
 decides and the one that draws. A change to one is a change to both, and
@@ -7100,3 +7105,56 @@ because the picture is the only thing the person can act on.
   unit tests cover the rule, and nothing covers the card. The sweep
   above is the cheapest substitute: it pins the drawing predicate to the
   deciding one without rendering anything.
+
+## 2026-09-23 — Third QA round: a star taken back was sending a pass
+
+Two findings, both about the same seam, and the first is the worst thing
+found on this branch.
+
+**A gesture drawn as a star, then taken back, dismissed the person.**
+Drag up past the line, then yank the finger back down and lift: the card
+is up, the SÜPER stamp is full, and the release wrote `kind: "pass"`.
+`decideUp` answered `null` for the change of mind — and `null` meant
+"not a star", so `decideSwipe` fell through to the sideways arms, where
+122 points of left drift is past the threshold. Sideways, the same
+change of mind answers nothing; upwards it was being converted into a
+verdict, and a pass is permanent: there is no undo in this app and the
+row takes the person out of `discover` for ever. The mirror, drifting
+right, spent a like.
+
+The rule now reads: a gesture `isUpwardGesture` is true of is answered
+by the star or not at all, and never by the sideways arms. That is the
+same sentence the drawing already obeyed — the card follows the finger
+up and only a quarter of the way across — so the two are one statement
+now rather than two that happened to agree in most places. Both of QA's
+gestures are named cases, and a sweep asserts no upward gesture can come
+back `like` or `pass`, at every release velocity.
+
+**The SÜPER stamp was never visible while it was full.** It sat beside
+the other two, near the top of the card, and the star gesture lifts the
+card: by the travel that fills the stamp in, it was off the top of the
+screen. QA measured `opacity: 1` with nothing on screen, which is a
+worse failure than a stamp that does not appear at all, because the
+comment in the code claimed the stamp was the guarantee. It starts
+exactly that travel lower now, so it arrives where ✕ and ♥'s stamps sit
+at the moment it is fully there. Still to be checked on a device: the
+owner's list in the pull request says what to try.
+
+**What the drawing being a function does and does not buy.** `deckOffset`
+is in `swipe.ts` with the decision, and the tests hold the two to each
+other: drawn upward exactly when the star can be sent, and the whole
+travel of the axis it is drawn on under the finger. What it cannot do is
+prove the deck calls it — nothing in this repository renders a component
+in a test, so a move handler that went back to doing its own arithmetic
+would pass the battery. The cheap guard is that there is now only one
+sentence to call.
+
+### Battery gaps
+
+- Still nothing that drives a gesture, and now demonstrated rather than
+  suspected: QA reverted the deck's move handler by hand and the battery
+  stayed green. Three rounds of gesture findings have come from a QA
+  agent driving CDP touch sequences against a built bundle, which is not
+  something `vitest` does. Either a component test (a first for this
+  repository) or the QA drive being written down as part of the deck's
+  done-when clause.

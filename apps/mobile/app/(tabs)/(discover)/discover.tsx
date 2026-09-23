@@ -49,8 +49,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import {
+  CROSS_FOLLOW,
+  deckOffset,
   decideSwipe,
-  isUpwardGesture,
   SUPER_THRESHOLD,
   SWIPE_THRESHOLD,
 } from '@/lib/swipe';
@@ -109,11 +110,6 @@ function upsellLine(why: Upsell): string {
   if (why === 'super-spent') return t.premium.lockedSuperSpent;
   return t.premium.lockedSuper;
 }
-/**
- * How much of a vertical drag the card follows: enough to feel held, not
- * so much that a wobble looks like an answer.
- */
-const DY_FOLLOW = 0.25;
 /** The card's tilt at one full width of travel. */
 const MAX_TILT_DEG = 12;
 const FLY_OUT_MS = 220;
@@ -412,6 +408,13 @@ export default function Discover() {
   // below it: the pass stamp shares the right-hand corner.
   const cornerTop = Math.max(insets.top, space.xl);
   const stampTop = cornerTop + CORNER_CHIP + space.md;
+  // The star's stamp rides the card, and the card's star gesture is a
+  // climb: at the travel that fills the stamp in, one drawn beside the
+  // other two would be off the top of the screen — QA measured it
+  // reporting an opacity of 1 with nothing visible (2026-09-23). It
+  // starts exactly that travel lower, so it arrives where the other two
+  // sit at the moment it is fully there.
+  const superStampTop = stampTop + height * SUPER_THRESHOLD;
   const [pan] = useState(() => new Animated.ValueXY());
   // 1 while the finger is making the star's gesture, 0 otherwise, set by
   // the same predicate that decides it. The SÜPER stamp is drawn through
@@ -666,7 +669,7 @@ export default function Discover() {
               style={[
                 styles.stamp,
                 styles.stampSuper,
-                { top: stampTop, opacity: superOpacity },
+                { top: superStampTop, opacity: superOpacity },
               ]}
               accessible={false}
               aria-hidden
@@ -1017,18 +1020,12 @@ function createDeckResponder({
     // still terminates.
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, g) => {
-      // Whichever axis the finger means, the card follows it fully and
-      // only leans on the other: a sideways drag lifts a quarter of its
-      // vertical wobble, an upward one slides a quarter of its sway.
-      // `isUpwardGesture` and not a rule of its own: the card is drawn
-      // by exactly what will decide it, so what the person watches
-      // forming is what the release sends.
-      const up = isUpwardGesture(g.dx, g.dy);
-      upward.setValue(up ? 1 : 0);
-      pan.setValue({
-        x: up ? g.dx * DY_FOLLOW : g.dx,
-        y: up ? g.dy : g.dy * DY_FOLLOW,
-      });
+      // One call, and `deckOffset` is what `decideSwipe` reads the
+      // gesture with too: the picture and the verdict cannot be two
+      // rules that drift apart, which is what they were.
+      const drawn = deckOffset(g.dx, g.dy);
+      upward.setValue(drawn.up ? 1 : 0);
+      pan.setValue({ x: drawn.x, y: drawn.y });
     },
     onPanResponderRelease: (_, g) => {
       // Not idle: a record is in flight for this very card. No decision,
@@ -1053,10 +1050,10 @@ function createDeckResponder({
       Animated.timing(pan, {
         toValue:
           decision === 'super'
-            ? { x: g.dx * DY_FOLLOW, y: -height * 1.5 }
+            ? { x: g.dx * CROSS_FOLLOW, y: -height * 1.5 }
             : {
                 x: (decision === 'like' ? 1 : -1) * width * 1.5,
-                y: g.dy * DY_FOLLOW,
+                y: g.dy * CROSS_FOLLOW,
               },
         duration: FLY_OUT_MS,
         useNativeDriver: NATIVE_DRIVER,

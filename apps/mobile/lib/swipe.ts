@@ -41,6 +41,13 @@ export const SUPER_FLOOR = 0.05;
  * sideways rules, veto included.
  */
 export const UP_DOMINANCE = 2;
+/**
+ * How much of the *other* axis the card follows while a gesture is being
+ * made: enough to feel held, not so much that a wobble looks like an
+ * answer. Here rather than on the deck because `deckOffset` below is
+ * what draws with it.
+ */
+export const CROSS_FOLLOW = 0.25;
 /** Points per millisecond: the speed of a flick that counts on its own. */
 export const FLICK_VELOCITY = 0.5;
 /**
@@ -65,6 +72,23 @@ export type SwipeDecision = 'like' | 'pass' | 'super' | null;
  * 2026-09-23). One predicate, read by the drawing and by the decision,
  * is what keeps the card from lying about what it is about to do.
  */
+/**
+ * Where the card sits under a finger, and which gesture it is being
+ * drawn as. The deck's move handler is one call to this, so the picture
+ * and the verdict cannot be two rules that drift apart — which is what
+ * they were, and the card then showed a star and sent a pass (QA,
+ * 2026-09-23).
+ */
+export function deckOffset(
+  dx: number,
+  dy: number,
+): { x: number; y: number; up: boolean } {
+  const up = isUpwardGesture(dx, dy);
+  return up
+    ? { x: dx * CROSS_FOLLOW, y: dy, up }
+    : { x: dx, y: dy * CROSS_FOLLOW, up };
+}
+
 export function isUpwardGesture(dx: number, dy: number): boolean {
   if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
   // `-dy`, not its size: a card that travelled down fails this outright.
@@ -101,9 +125,14 @@ export function decideSwipe({
   if (!Number.isFinite(dx) || !(width > 0)) return null;
   // A velocity the platform could not compute (one move event, dt of 0)
   // is no velocity: the distance decides.
+  // A gesture drawn as a star is answered as one or not at all. It is
+  // never handed to the sideways arms below: the card followed the
+  // finger upwards and only a quarter of the way across, so a verdict
+  // it never showed must not come out of it — least of all a pass,
+  // which is permanent and which is exactly what a star taken back used
+  // to send (QA, 2026-09-23).
+  if (isUpwardGesture(dx, dy)) return decideUp({ dy, vy, height });
   const velocity = Number.isFinite(vx) ? vx : 0;
-  const up = decideUp({ dx, dy, vy, height });
-  if (up !== null) return up;
   const opposes =
     Math.abs(velocity) > VETO_VELOCITY &&
     Math.sign(velocity) === -Math.sign(dx);
@@ -115,27 +144,20 @@ export function decideSwipe({
 }
 
 /**
- * The upward half, asked first by `decideSwipe` and only when the finger
- * meant the vertical axis more than the horizontal one: a diagonal
- * belongs to whichever travel is larger, so neither gesture can be
- * triggered by the other's slop.
+ * The star, or nothing. Asked by `decideSwipe` for every gesture
+ * `isUpwardGesture` is true of, and for no other, so what it answers is
+ * the whole answer for that gesture.
  */
 function decideUp({
-  dx,
   dy,
   vy,
   height,
 }: {
-  readonly dx: number;
   readonly dy: number;
   readonly vy: number;
   readonly height: number;
 }): SwipeDecision {
-  if (!(height > 0)) return null;
-  // The same predicate the card was drawn with, and it is what closes
-  // the flick arm's old hole: a card that travelled *down* is not an
-  // upward gesture, whatever it was doing at the moment it was let go.
-  if (!isUpwardGesture(dx, dy)) return null;
+  if (!(height > 0) || !Number.isFinite(dy)) return null;
   const velocity = Number.isFinite(vy) ? vy : 0;
   // Let go while coming back down: a change of mind, as sideways.
   if (velocity > VETO_VELOCITY) return null;

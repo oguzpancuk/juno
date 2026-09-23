@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  deckOffset,
   decideSwipe,
   isUpwardGesture,
   FLICK_VELOCITY,
@@ -213,5 +214,64 @@ describe('isUpwardGesture', () => {
   it('is false for a gesture that has not moved, or is not a number', () => {
     expect(isUpwardGesture(0, 0)).toBe(false);
     expect(isUpwardGesture(Number.NaN, -300)).toBe(false);
+  });
+});
+
+describe('a gesture the card was drawn as a star for', () => {
+  it('answers nothing when it is taken back, rather than passing', () => {
+    // QA's third round: drag up past the line, then yank the finger back
+    // down and lift. The card is up, the SÜPER stamp is full — and the
+    // release used to fall through to the sideways rules, where 122
+    // points of left drift is past the threshold, so the person was
+    // dismissed for good. Sideways this is a change of mind and answers
+    // nothing; upwards it has to mean the same thing.
+    expect(
+      decideSwipe({ dx: -122, vx: 0, dy: -250, vy: 0.6, width, height }),
+    ).toBeNull();
+    // The mirror: drifting right, it used to spend a like.
+    expect(
+      decideSwipe({ dx: 122, vx: 0, dy: -250, vy: 0.6, width, height }),
+    ).toBeNull();
+  });
+
+  it('is never answered sideways', () => {
+    // The card follows the finger up and only a quarter of the way
+    // across, so a verdict it never showed must not come out of it.
+    for (let dx = -300; dx <= 300; dx += 15) {
+      for (let dy = -400; dy <= 0; dy += 15) {
+        if (!isUpwardGesture(dx, dy)) continue;
+        for (const vx of [0, -1, 1]) {
+          for (const vy of [0, -1, 1]) {
+            const decision = decideSwipe({ dx, vx, dy, vy, width, height });
+            expect(
+              decision === 'like' || decision === 'pass',
+              `${dx},${dy}`,
+            ).toBe(false);
+          }
+        }
+      }
+    }
+  });
+});
+
+describe('deckOffset', () => {
+  // The deck draws the card with this, so the drawing is a pure function
+  // the tests can hold to the decision (QA, 2026-09-23: the two were
+  // separate rules and the card lied about what it would send).
+  it('follows the axis the gesture is on, and leans on the other', () => {
+    expect(deckOffset(120, 10)).toEqual({ x: 120, y: 2.5, up: false });
+    expect(deckOffset(20, -200)).toEqual({ x: 5, y: -200, up: true });
+  });
+
+  it('calls a gesture upward exactly when the star can be sent', () => {
+    for (let dx = -300; dx <= 300; dx += 15) {
+      for (let dy = -400; dy <= 200; dy += 15) {
+        const drawn = deckOffset(dx, dy);
+        expect(drawn.up, `${dx},${dy}`).toBe(isUpwardGesture(dx, dy));
+        // Drawn as a star means the whole upward travel is under the
+        // finger; drawn sideways means the whole sideways travel is.
+        expect(drawn.up ? drawn.y : drawn.x).toBe(drawn.up ? dy : dx);
+      }
+    }
   });
 });
