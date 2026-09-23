@@ -6719,3 +6719,20 @@ have to be settled first in any case: Workers Builds deploys the production
 branch by default, which the owner's "deploys run locally" rule forbids;
 whether that can be switched off was not verified. Revisit if the hosting
 changes for another reason, or if the workflow starts costing upkeep.
+
+## 2026-09-23 — port of maya e87bb6f: no preview URL; the Worker versions go
+
+Owner decision two days after they were built, for simplicity: projects
+develop, looking is local. A thread already puts screenshots of the web
+target in its pull request; whatever the owner wants to try himself he
+brings up from a local session, web and simulator on the local Supabase
+stack, which the cloud container cannot do anyway. So `preview.yml` is
+removed, `preview_urls` leaves `wrangler.jsonc` (the deployed setting
+changes on the owner's next `npx wrangler triggers deploy`), the
+`Preview` section of `CLAUDE.md` becomes `Looking at it`, and the project
+instructions lose the preview-URL and TestFlight lines (the owner pastes
+them again). The merge gate is `verify` again; `build` and `upload` stop
+being required when this merges. Owner-side, after the merge: delete the
+`CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
+Cloudflare token. The exception entry above is void with the rule it
+excepted.
