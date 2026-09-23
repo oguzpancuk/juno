@@ -72,14 +72,25 @@ export const SCREEN_TOP_GUTTER = 20;
  * How much of the window a full-screen photo takes, on the deck and on the
  * profile. One number so the two line up (owner, 2026-09-14: "keşfette ve
  * profilde resimler aynı hizada olsun") — both start at the top edge, so
- * equal heights put their bottoms on the same line. The deck arrives at it
- * by filling what its fixed block below leaves and capping here; the
- * profile, which scrolls, takes it directly.
+ * equal heights put their bottoms on the same line. The profile, which
+ * scrolls, takes it directly; the deck takes it as the height its
+ * photograph asks for and grows into whatever the block below leaves
+ * over, so that the leftover never turns into a gap above the buttons.
+ *
+ * Raised from 0.56 on 2026-09-23. At 0.56 the deck's block below left 51
+ * points spare on a 390x844 phone and the footer spread them around the
+ * round buttons (owner: "hala cok bosluk var"); the number is now what
+ * the deck settles at for a card with a two-line bio, so on that card the
+ * two screens are within a couple of points of each other and the deck
+ * has nothing left to spend. A card with a short bio or none leaves the
+ * deck's photograph up to about 25 points taller than the profile's,
+ * which is the price of never drawing that gap again (owner told,
+ * 2026-09-23).
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
  */
-export const PHOTO_SCREEN_FRACTION = 0.56;
+export const PHOTO_SCREEN_FRACTION = 0.64;
 
 /**
  * What a host owes its first child if that child takes the top edge.

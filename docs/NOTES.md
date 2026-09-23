@@ -7443,12 +7443,29 @@ and the buttons. The photograph now grows into the leftover
 Measured in the browser, before and after: photo 0–473 → 0–544, bio box
 bottom 597 → 682, buttons top 648 → 690.
 
-That has a cost worth writing down: `PHOTO_SCREEN_FRACTION` exists
-because the deck's photograph and the profile's must end on the same line
-(owner, 2026-09-14). The deck's is now taller than the profile's on any
-screen with room to spare. The owner was told in the same message and can
-have the profile's grown to match with one word; until he says so, the
-two differ deliberately.
+That had a cost, and he settled it the same hour. `PHOTO_SCREEN_FRACTION`
+exists because the deck's photograph and the profile's must end on the
+same line (owner, 2026-09-14), and growing the deck's into the leftover
+broke that. He answered "profildekini de aynı boyuta getir", so the
+fraction itself moved, 0.56 to 0.64 — one number, both screens, nothing
+else touched, because PR #9 is editing that same profile screen. 0.64 is
+where the deck settles for a card with a two-line bio: profile 0–540,
+deck 0–542. The two cannot be identical on every card, because the deck's
+photograph still absorbs what a shorter block below leaves — 565 on a
+one-line bio, 626 on a card with no bio at all — and that is the price of
+never drawing the gap again.
+
+A long bio costs nothing: it is cut at two lines with an ellipsis, so its
+card is the two-line card to the point (photo 0–542, box 610–682), and
+the whole text is on the profile a tap away.
+
+The box itself he called ugly, and it was drawn as its own thing —
+`glass.fillHigh`, no border, the medium radius. It is the app's ordinary
+card now (`glass.fill` behind `glass.edge` at `radius.lg`), which is what
+"diğer kutucuklar gibi yarısaydam yap" asked for and what every other box
+on the screen already was. Worth remembering as a rule rather than a fix:
+a new surface here should reach for the shared card look before inventing
+a fill.
 
 **`discover.likes_me`.** Three values — null, 'like', 'super' — withheld
 from a free member _in the view_, not on the device, because who has

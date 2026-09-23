@@ -1295,10 +1295,15 @@ const styles = StyleSheet.create({
   },
   likedBannerSuper: { borderColor: color.warm },
   likedBannerText: { ...type.caption, color: color.text },
+  // The sheet's own card, as every other box in the app is drawn
+  // (owner, 2026-09-23: "diğer kutucuklar gibi yarısaydam yap"): the
+  // translucent fill and the hairline edge, at the card radius.
   bioBox: {
-    borderRadius: radius.md,
-    backgroundColor: glass.fillHigh,
-    paddingHorizontal: space.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    backgroundColor: glass.fill,
+    paddingHorizontal: space.lg,
     paddingVertical: space.md,
   },
   bio: { ...type.body, color: color.text },
