@@ -890,6 +890,16 @@ const s = StyleSheet.create({
     borderRadius: radius.lg,
     color: color.text,
     fontSize: 17,
+    // Spelled out rather than left to the default (owner, 2026-09-23: on
+    // iOS the university placeholder drew a gap between every letter and
+    // ran off the right edge, while the occupation field one line above
+    // it — the same component, a shorter string — drew normally). The
+    // cause was not found in this repository: both fields are this same
+    // `Field` with no style of their own, and neither string holds a
+    // separator character. So this is a guard, not a diagnosis; it costs
+    // nothing, since 0 is what the default already is everywhere the bug
+    // does not appear.
+    letterSpacing: 0,
     padding: space.lg,
   },
   buttonWrap: { borderRadius: radius.pill, overflow: 'hidden' },

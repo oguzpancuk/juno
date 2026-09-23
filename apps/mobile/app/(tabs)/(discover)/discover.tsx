@@ -56,19 +56,20 @@ function distanceLine(km: number): string {
 
 /**
  * The line under the name on the deck's card: the distance, then whatever
- * of the height and the occupation was answered.
+ * of the height, the occupation and the university was answered.
  *
  * On the line that was already there rather than on one of its own: the
  * card has to fit one screen with nothing to scroll into (owner,
- * 2026-09-14), and two of the four new fields are short enough to ride
- * along. The interests and the university are on the profile sheet a tap
- * away, which is the whole card in full.
+ * 2026-09-14). It is one line and it clips, so the order is what a reader
+ * wants first — where they are, then who they are. The interests are on
+ * the profile sheet a tap away, which is the whole card in full.
  */
 function cardLine(row: DiscoverRow): string {
   return [
     distanceLine(row.distance_km),
     row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
     row.occupation,
+    row.university,
   ]
     .filter((part): part is string => part !== null)
     .join(' · ');
@@ -498,19 +499,11 @@ export default function Discover() {
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
             />
-            {/* Their own words, two lines of them, between the chart and
-                the band (sheet frame 05). The full text is on the person
-                page a tap away. */}
-            {current.row.bio ? (
-              <Text
-                style={styles.bio}
-                numberOfLines={2}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-                testID="card-bio"
-              >
-                {current.row.bio}
-              </Text>
-            ) : null}
+            {/* No bio here (owner, 2026-09-23). It used to sit between
+                the chart and the band; the card now says where they are
+                and the four facts on one line, and their own words are
+                on the person page a tap away, in full rather than in the
+                two lines this had room for. */}
             {/* The reading opens from the thing it explains (owner,
                 2026-09-14). */}
             <Pressable
@@ -853,7 +846,6 @@ const styles = StyleSheet.create({
   },
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
-  bio: { ...type.body, color: color.text },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

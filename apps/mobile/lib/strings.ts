@@ -245,6 +245,8 @@ export const t = {
       `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
     detailsEmpty:
       'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
+    /** Drawn in a fact's column when that one was left unanswered. */
+    detailMissing: '—',
     interestNames: {
       music: 'Müzik',
       live_music: 'Canlı müzik',

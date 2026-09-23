@@ -210,10 +210,17 @@ export function ProfileView({
 }
 
 /**
- * The four optional fields as another person reads them: the facts that
- * were answered on one row, the interest tags as tags underneath. A field
- * nobody filled in is simply absent — a profile does not owe a reader a
- * row of blanks.
+ * The four optional fields as another person reads them: the height, the
+ * occupation and the university as three columns across the card, the
+ * interest tags in a card of their own under it (owner, 2026-09-23).
+ *
+ * The three keep their columns whether or not they were answered, with a
+ * dash where one was not, because a row that dropped its empty fields put
+ * one answer on a third of the card and left the rest blank — the labels
+ * are what make the answers readable, and they only line up if they
+ * always stand in the same place. The dash is only drawn once at least
+ * one of the three is answered: a profile with none of them says nothing
+ * here rather than showing three dashes.
  *
  * The owner, with none of them answered, gets the empty card instead, for
  * the same reason the bio has one: it is where the fields will be, and it
@@ -226,36 +233,29 @@ function DetailsCard({
   details: ProfileDetails;
   own: boolean;
 }) {
-  const facts: readonly { key: string; label: string; value: string }[] = [
-    ...(details.height_cm === null
-      ? []
-      : [
-          {
-            key: 'height',
-            label: t.profile.height,
-            value: t.profile.heightValue(details.height_cm),
-          },
-        ]),
-    ...(details.occupation === null
-      ? []
-      : [
-          {
-            key: 'occupation',
-            label: t.profile.occupation,
-            value: details.occupation,
-          },
-        ]),
-    ...(details.university === null
-      ? []
-      : [
-          {
-            key: 'university',
-            label: t.profile.university,
-            value: details.university,
-          },
-        ]),
-  ];
-  if (facts.length === 0 && details.interests.length === 0) {
+  const facts: readonly { key: string; label: string; value: string | null }[] =
+    [
+      {
+        key: 'height',
+        label: t.profile.height,
+        value:
+          details.height_cm === null
+            ? null
+            : t.profile.heightValue(details.height_cm),
+      },
+      {
+        key: 'occupation',
+        label: t.profile.occupation,
+        value: details.occupation,
+      },
+      {
+        key: 'university',
+        label: t.profile.university,
+        value: details.university,
+      },
+    ];
+  const anyFact = facts.some((fact) => fact.value !== null);
+  if (!anyFact && details.interests.length === 0) {
     return own ? (
       <Card testID="details-card">
         <Body muted>{t.profile.detailsEmpty}</Body>
@@ -263,31 +263,39 @@ function DetailsCard({
     ) : null;
   }
   return (
-    <Card testID="details-card">
-      {facts.length > 0 ? (
-        <View style={styles.facts}>
-          {facts.map((fact) => (
-            <View
-              key={fact.key}
-              style={styles.fact}
-              testID={`fact-${fact.key}`}
-            >
-              <Text style={styles.factLabel}>{fact.label}</Text>
-              <Text style={styles.factValue}>{fact.value}</Text>
-            </View>
-          ))}
-        </View>
+    <>
+      {anyFact ? (
+        <Card testID="details-card">
+          <View style={styles.facts}>
+            {facts.map((fact) => (
+              <View
+                key={fact.key}
+                style={styles.fact}
+                testID={`fact-${fact.key}`}
+              >
+                <Text style={styles.factLabel}>{fact.label}</Text>
+                <Text style={styles.factValue}>
+                  {fact.value ?? t.profile.detailMissing}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
       ) : null}
       {details.interests.length > 0 ? (
-        <View style={styles.tags} testID="interest-tags">
-          {details.interests.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
-            </View>
-          ))}
-        </View>
+        <Card testID="interests-card">
+          <View style={styles.tags} testID="interest-tags">
+            {details.interests.map((tag) => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>
+                  {t.profile.interestNames[tag]}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
       ) : null}
-    </Card>
+    </>
   );
 }
 
@@ -753,11 +761,13 @@ const styles = StyleSheet.create({
   hint: { ...type.caption, color: color.textFaint },
   // The answered facts on one wrapping row: a label over its value, the
   // way the match page sets a number under its word.
-  facts: { flexDirection: 'row', flexWrap: 'wrap', gap: space.lg },
-  // `flexShrink` is 0 by default in React Native, so without this a value
-  // near the column's 60 characters keeps its single-line width and runs
-  // out past the card, which has no `overflow: 'hidden'` to stop it.
-  fact: { gap: 2, flexShrink: 1 },
+  facts: { flexDirection: 'row', gap: space.md },
+  // Three equal columns across the card (owner, 2026-09-23). `flexBasis`
+  // 0 rather than the content's width, so a long occupation cannot take
+  // room from the other two; `minWidth` 0 lets a value wrap inside its
+  // column instead of running out past the card, which has no
+  // `overflow: 'hidden'` to stop it.
+  fact: { flex: 1, flexBasis: 0, minWidth: 0, gap: 2 },
   factLabel: { ...type.label, color: color.textFaint },
   factValue: { ...type.body, color: color.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
