@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
+import { Marquee } from '@/components/Marquee';
 import {
   ChartDetail,
   PROFILE_PRIMARY_COUNT,
@@ -274,7 +275,11 @@ function DetailsCard({
                 testID={`fact-${fact.key}`}
               >
                 <Text style={styles.factLabel}>{fact.label}</Text>
-                <Text
+                {/* Never onto a second line (owner, 2026-09-23: "meslek
+                    ve okul asla alt satira tasmasin"). A column is a
+                    third of the card, so an occupation or a school that
+                    does not fit it travels instead of wrapping. */}
+                <Marquee
                   style={styles.factValue}
                   // The dash is a drawing, not a word: VoiceOver would
                   // read it out ("Boy, tire") where an unanswered field
@@ -286,7 +291,7 @@ function DetailsCard({
                   }
                 >
                   {fact.value ?? t.profile.detailMissing}
-                </Text>
+                </Marquee>
               </View>
             ))}
           </View>

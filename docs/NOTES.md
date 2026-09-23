@@ -6915,3 +6915,46 @@ hundred and fifty lines and it is thrown away with the container. If the
 owner wants cloud screenshots to stay cheap, it belongs in
 `apps/mobile/scripts/` beside the driver, clearly marked as what it is: a
 look at the UI, with no RLS, no constraints and no triggers behind it.
+
+## 2026-09-23 — one line for the occupation and the school; a short school name on the deck
+
+Owner's second device round on the profile fields. "Meslek ve okul asla
+alt satıra taşmasın. Gerekirse yavaşça sağa sola oynayan text olabilir",
+and "keşfette okul ismini kısaltalım — üniversitesi, üniversite,
+university, college gibi terimler yer almasın, sadece ismi yer alsın."
+
+**The travelling line.** `components/Marquee.tsx`. The part worth
+remembering is the measurement: a `<Text numberOfLines={1}>` laid out
+anywhere normal is measured against the box it sits in and reports the
+box's width however long the string is, so there is no way to ask whether
+it overflowed — `flexShrink: 0` does not help, because the text measure
+has already clamped to the available width. A horizontal `ScrollView`
+lays its content out with no width to fit into, so
+`onContentSizeChange` is the width the line wants and `onLayout` is the
+width it has. It is a measuring device, not a scroller:
+`scrollEnabled` is false, so the profile page's own scroll view keeps
+every touch, and the travel is an `Animated` `translateX`.
+
+With Reduce Motion on there is no marquee: a plain one-line `<Text>` that
+ellipsizes. It still never wraps, which is what was asked for, and it
+does not move a page for someone who asked for less movement.
+
+**The short school name.** `shortSchool` in `lib/profile-details.ts`,
+applied on the deck's card line only. The profile page keeps the name in
+full — there it has a card to itself rather than a share of one clipping
+line — and nothing about what is stored changes. Whole words, folded with
+the same `searchKey`, so "UNIVERSITESI" and "Üniversitesi" both go and
+"Üsküdar" is not mistaken for a term inside it. A name that is nothing
+but its kind comes back whole, and "University of Cambridge" loses the
+stranded "of". The term list is six entries and is meant to grow — the
+owner's "gibi" says as much.
+
+### Battery gaps
+
+Neither of these is reachable from the battery. The marquee's whole
+behaviour is layout and motion over time, and the repo still has no
+renderer to write a component test with — the same gap the height
+control left, recorded under "Battery gaps" on 2026-09-21. What is covered is the pure half:
+`shortSchool` has six cases in `profile-details.test.ts`, written red.
+The moving half was checked by driving the web target and photographing
+it at rest and mid-travel, which is a look, not a verification.

@@ -143,6 +143,59 @@ export function searchInterests(
 }
 
 /**
+ * The words that say what kind of school something is rather than which
+ * one it is. Dropped from the name on the deck's card (owner,
+ * 2026-09-23: "kesfette okul ismini kisaltalim. universitesi,
+ * universite, university, college gibi terimler yer almasin. sadece ismi
+ * yer alsin") — the card's line is one line that clips, and "Üniversitesi"
+ * is the part of it nobody needs to read.
+ *
+ * Folded keys, so every casing and both Turkish i's match; "gibi" in his
+ * message means the list is meant to grow, and growing it is one entry.
+ */
+const SCHOOL_KINDS: ReadonlySet<string> = new Set([
+  'universitesi',
+  'universite',
+  'university',
+  'college',
+  'koleji',
+  'kolej',
+]);
+
+/**
+ * English connectors that a dropped term can leave stranded at an end —
+ * "University of Cambridge" would otherwise shorten to "of Cambridge".
+ * Only at the ends, and only English: the Turkish names put no connector
+ * next to the kind.
+ */
+const STRANDED: ReadonlySet<string> = new Set(['of', 'the']);
+
+/** A word as it is compared: folded, and without the punctuation around it. */
+function wordKey(word: string): string {
+  return searchKey(word.replace(/[.,;:()]/g, ''));
+}
+
+/**
+ * A school name with the kind of school taken out: "Boğaziçi
+ * Üniversitesi" reads "Boğaziçi". Whole words only, so "Üsküdar" is not
+ * mistaken for a term inside it.
+ *
+ * For display, never for storage — the profile page still gives the name
+ * in full, because there it has a card to itself rather than a share of
+ * one line. A name that is nothing but its kind ("Üniversite") comes back
+ * whole: shortening it to nothing would lose the only thing it said.
+ */
+export function shortSchool(name: string): string {
+  const words = name.split(/\s+/).filter((word) => word.length > 0);
+  const kept = words.filter((word) => !SCHOOL_KINDS.has(wordKey(word)));
+  while (kept.length > 0 && STRANDED.has(wordKey(kept[0] ?? ''))) kept.shift();
+  while (kept.length > 0 && STRANDED.has(wordKey(kept.at(-1) ?? '')))
+    kept.pop();
+  const short = kept.join(' ');
+  return short.length === 0 ? name : short;
+}
+
+/**
  * One line of free text as it is stored: trimmed, inner runs of
  * whitespace collapsed, and null when nothing is left. Null rather than
  * an empty string because the column is nullable and "" would be a

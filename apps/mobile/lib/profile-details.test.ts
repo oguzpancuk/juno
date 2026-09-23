@@ -11,6 +11,7 @@ import {
   isInterestTag,
   normalizeInterests,
   searchInterests,
+  shortSchool,
   stopHeight,
   toggleInterest,
 } from './profile-details';
@@ -120,6 +121,41 @@ describe('interest search', () => {
       'live_music',
     ]);
     expect(searchInterests('kripto', name)).toEqual([]);
+  });
+});
+
+describe('short school name', () => {
+  it('drops the kind of school and keeps the name', () => {
+    expect(shortSchool('Boğaziçi Üniversitesi')).toBe('Boğaziçi');
+    expect(shortSchool('Orta Doğu Teknik Üniversitesi')).toBe(
+      'Orta Doğu Teknik',
+    );
+    expect(shortSchool('Robert Koleji')).toBe('Robert');
+  });
+
+  it('matches the term whatever its case or diacritics', () => {
+    expect(shortSchool('Koç UNIVERSITESI')).toBe('Koç');
+    expect(shortSchool('Sabancı universite')).toBe('Sabancı');
+    expect(shortSchool('Boston College')).toBe('Boston');
+  });
+
+  it('does not eat a name that only contains the term', () => {
+    // "Üsküdar" is not "üniversite"; only whole words go.
+    expect(shortSchool('Üsküdar Üniversitesi')).toBe('Üsküdar');
+    expect(shortSchool('İTÜ')).toBe('İTÜ');
+  });
+
+  it('drops an English connector left stranded at either end', () => {
+    expect(shortSchool('University of Cambridge')).toBe('Cambridge');
+  });
+
+  it('gives the original back rather than nothing', () => {
+    expect(shortSchool('Üniversite')).toBe('Üniversite');
+    expect(shortSchool('')).toBe('');
+  });
+
+  it('leaves a name with no such term alone', () => {
+    expect(shortSchool('Galatasaray Lisesi')).toBe('Galatasaray Lisesi');
   });
 });
 

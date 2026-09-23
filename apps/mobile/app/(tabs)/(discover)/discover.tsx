@@ -37,6 +37,7 @@ import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
+import { shortSchool } from '@/lib/profile-details';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -69,7 +70,10 @@ function cardLine(row: DiscoverRow): string {
     distanceLine(row.distance_km),
     row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
     row.occupation,
-    row.university,
+    // Short here and nowhere else: this line clips, and "Üniversitesi"
+    // is the half of a school name that says nothing about which one it
+    // is. The profile sheet a tap away still gives it in full.
+    row.university === null ? null : shortSchool(row.university),
   ]
     .filter((part): part is string => part !== null)
     .join(' · ');
