@@ -818,12 +818,26 @@ export function Halo({
  * reproduce" because it strikes at random. The owner hit it on the
  * university field on 2026-09-23 while the occupation field one line
  * above — this same component, a shorter string — drew normally; typed
- * text is unaffected, only the placeholder. Nothing here causes it and
- * no style switches it off (letterSpacing is not applied to an iOS
- * placeholder at all, react-native#19002), so the only cure is to stop
- * using the platform's placeholder and draw one here. That touches every
- * field in the app, including onboarding and sign-in, so it is the
- * owner's call and not taken yet.
+ * text is unaffected, only the placeholder.
+ *
+ * Nothing here causes it, and no style is known to switch it off.
+ * `letterSpacing` is not the lever it looks like: an iOS placeholder is
+ * built from the field's own default text attributes, kerning included
+ * (`_placeholderTextAttributes` in `RCTUITextField.mm` copies them and
+ * swaps only the colour; on Fabric, which this app runs,
+ * `RCTAttributedTextUtils.mm:192` puts `letterSpacing` in
+ * `NSKernAttributeName`), so a value set here does reach the
+ * placeholder — and an explicit `0` is not the default but kern zero,
+ * which turns the font's kerning pairs off for every field in the app.
+ * A guard like that was tried here and removed (review, 2026-09-23).
+ *
+ * What the owner chose instead is to show no placeholder on the fields
+ * that carry a label above them — the profile's occupation and
+ * university ("placeholder textleri kaldıralım", 2026-09-23), which name
+ * themselves to a screen reader with `accessibilityLabel`. Where the
+ * placeholder *is* the label, as on onboarding's date boxes, it stays;
+ * drawing our own there would need a wrapper `View` around every field,
+ * and that is still nobody's decision to take here.
  */
 export const Field = forwardRef<TextInput, TextInputProps>(function Field(
   { style, ...props },
