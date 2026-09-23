@@ -7492,6 +7492,18 @@ schema could not be tested at all, because `discover.ts` imports
 The rule generalises: anything worth a test must not be one import away
 from the device.
 
+**A pin cleared on every path loses the tap on the failing ones.** Round
+4 asked for `pinned.current` to be taken into a local where the load
+begins, so no later load could act on it, and round 5 pointed out what
+that bought: a dropped connection now ate the tap. "Tekrar dene" only
+bumps the attempt, and somebody outside your filters is in no deck to
+scroll back to, so they were gone with no way back but the list. The
+answer is both — take it out at the start, and put it back on every exit
+that did not deliver it, guarded by `pinned.current === null` so a second
+tap still wins. Driven either side of the change with the same script and
+the same stub, the second `discover` read answering 500: the old bundle
+comes back on Selin, the new one on Irmak.
+
 ### Battery gaps
 
 - The screenshot harness has a trap that cost an hour here. The Expo web

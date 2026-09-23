@@ -179,6 +179,15 @@ export default function Discover() {
       // ref for an unrelated load to act on (review, 2026-09-23).
       const wanted = pinned.current;
       pinned.current = null;
+      // …but a load that did not deliver the person must not swallow the
+      // tap either: somebody outside the filters is in no deck to scroll
+      // back to, so "Tekrar dene" after a dropped connection would lose
+      // them with no way back but the list (review, 2026-09-23). Put it
+      // back only if nothing newer has claimed the ref, so two taps in
+      // flight are still two locals and the second one wins.
+      const restore = (): void => {
+        if (pinned.current === null) pinned.current = wanted;
+      };
       // After any filter write still in flight: closing the filters sheet
       // reloads the deck at once, and it must load with what was just set.
       filterWritesAnswered()
@@ -210,7 +219,10 @@ export default function Discover() {
           };
         })
         .then((result) => {
-          if (cancelled) return;
+          if (cancelled) {
+            restore();
+            return;
+          }
           if (result.status === 'missing') {
             router.replace('/onboarding');
             return;
@@ -222,6 +234,7 @@ export default function Discover() {
           // ready or error — and a spinner would be the wrong end state
           // for it anyway.
           if (result.status !== 'ready') {
+            restore();
             setState({ status: 'error' });
             return;
           }
@@ -237,6 +250,7 @@ export default function Discover() {
           });
         })
         .catch(() => {
+          restore();
           if (!cancelled) setState({ status: 'error' });
         });
       return () => {
