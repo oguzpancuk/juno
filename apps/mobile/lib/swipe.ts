@@ -59,15 +59,22 @@ export const CROSS_FOLLOW = 0.25;
  * A share rather than a number of points because the gap between the two
  * rules is itself proportional — three quarters of each axis' travel —
  * so a fixed band would be gentle on a small gesture and a lurch on a
- * large one. A straight drag never enters the band at all: its angle
- * does not change, so its share is fixed and the card is exactly under
- * the finger. Only a finger that turns mid-gesture crosses it, and there
- * the card is closing a gap rather than tracking — measured at about
- * twice the finger's rate, against the single 151-point frame this
- * replaced (QA, 2026-09-23).
+ * large one.
  *
- * The decision does not blend: the star is still the 2:1 line exactly,
- * and the stamp with it. Only the picture does.
+ * The share is read off the angle, so a straight drag holds one share
+ * for its whole length however deep in the band it is: the card sits at
+ * a fixed fraction of the finger's travel and never moves faster than
+ * the finger. It does not sit *under* the finger — a straight drag
+ * between about 51° and 70° is inside the band the whole way, and at
+ * (100, -200) the card is drawn at (62.5, -125), 84 points behind
+ * (review, 2026-09-23). Only a finger that turns mid-gesture crosses the
+ * band, and there the card is closing a gap rather than tracking —
+ * measured at about twice the finger's rate, against the single
+ * 151-point frame this replaced (QA, 2026-09-23).
+ *
+ * The decision does not blend: the star is still the 2:1 line exactly.
+ * Neither do the stamps, which are drawn from the gesture itself
+ * (`stampStrength`) for that reason. Only the picture does.
  */
 export const UP_BLEND = 0.75;
 /**
@@ -126,6 +133,41 @@ export function deckOffset(
     x: dx * follow(1, CROSS_FOLLOW),
     y: dy * follow(CROSS_FOLLOW, 1),
     up: isUpwardGesture(dx, dy),
+  };
+}
+
+/**
+ * How fully each stamp is drawn while a finger is still down.
+ *
+ * The deck draws these with `Animated.interpolate`, so that they can run
+ * on the UI thread; this is the same rule written once, where a test can
+ * hold it against `decideSwipe`. The two have to agree: a release that
+ * counts with its stamp part-drawn spends one of five weekly stars on a
+ * gesture the card never showed the person it had committed to.
+ */
+export function stampStrength(
+  dx: number,
+  dy: number,
+  width: number,
+  height: number,
+): { like: number; pass: number; super: number } {
+  const none = { like: 0, pass: 0, super: 0 };
+  if (!Number.isFinite(dx) || !Number.isFinite(dy) || !(width > 0)) return none;
+  const clamp = (share: number): number =>
+    share < 0 ? 0 : share > 1 ? 1 : share;
+  // The gesture itself, not where `deckOffset` drew the card: the blend
+  // that keeps the picture continuous also holds the card back, and a
+  // stamp that followed it read 0.63 on a release that sent SÜPER
+  // (review, 2026-09-23).
+  const up = isUpwardGesture(dx, dy);
+  // A star's gesture draws no sideways stamp at all, for the same reason
+  // `decideSwipe` never hands one to the sideways arms. Without this a
+  // card 300 left and 700 up drew PASS in full and sent SÜPER.
+  const across = up ? 0 : dx / (width * SWIPE_THRESHOLD);
+  return {
+    like: clamp(across),
+    pass: clamp(-across),
+    super: up && height > 0 ? clamp(-dy / (height * SUPER_THRESHOLD)) : 0,
   };
 }
 

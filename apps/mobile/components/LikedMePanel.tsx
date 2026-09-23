@@ -51,7 +51,7 @@ export function LikedMePanel({
    * 2026-09-23). The caption is this row's own "when" line, so the
    * profile the host may end up showing says the same thing the row did.
    */
-  onOpen?: (person: Admirer, caption: string) => void;
+  onOpen?: (person: Admirer) => void;
 }) {
   const [state, setState] = useState<LikedMeState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -209,7 +209,7 @@ export function LikedMePanel({
               accessibilityRole="button"
               accessibilityLabel={t.likedMe.openPerson(person.display_name)}
               disabled={busy || onOpen === undefined}
-              onPress={() => onOpen?.(person, agoLine(person.liked_at))}
+              onPress={() => onOpen?.(person)}
               testID={`open-admirer-${person.id}`}
             >
               <Avatar

@@ -59,7 +59,15 @@ import {
   SUPER_THRESHOLD,
   SWIPE_THRESHOLD,
 } from '@/lib/swipe';
-import { color, font, gradient, radius, space, type } from '@/theme/tokens';
+import {
+  color,
+  font,
+  glass,
+  gradient,
+  radius,
+  space,
+  type,
+} from '@/theme/tokens';
 
 /** How far away someone is, as the card and the person sheet write it. */
 function distanceLine(km: number): string {
@@ -152,8 +160,7 @@ export default function Discover() {
   // list already has (owner, 2026-09-23: "kesfet filtresinde olmasa da
   // ... burada bir ayrim olmasin"). They chose this member; the filters
   // decide who is offered, not who may be answered.
-  type Waiting = { readonly person: Admirer; readonly caption: string };
-  const pinned = useRef<Waiting | null>(null);
+  const pinned = useRef<Admirer | null>(null);
   const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -225,7 +232,7 @@ export default function Discover() {
                 ? result.candidates
                 : bringToFront(
                     result.candidates,
-                    candidateOf(result.me.chart, cardOf(wanted.person)),
+                    candidateOf(result.me.chart, cardOf(wanted)),
                   ),
           });
         })
@@ -401,6 +408,13 @@ export default function Discover() {
   const cornerTop = Math.max(insets.top, space.xl);
   const stampTop = cornerTop + CORNER_CHIP + space.md;
   const [pan] = useState(() => new Animated.ValueXY());
+  // The gesture itself, which the stamps are drawn from. Separate from
+  // `pan` because `pan` is blended near the star's line to keep the
+  // picture continuous, and a stamp drawn from the blend reads 63% on a
+  // release that counts (review, 2026-09-23). `stampStrength` is the
+  // same rule in one testable place; the interpolations below are its
+  // animated form, so that they can run on the UI thread.
+  const [gesture] = useState(() => new Animated.ValueXY());
   // 1 while the finger is making the star's gesture, 0 otherwise, set by
   // the same predicate that decides it. The SÜPER stamp is drawn through
   // this, so it cannot appear on a gesture that will send something else
@@ -409,12 +423,17 @@ export default function Discover() {
   const [upward] = useState(() => new Animated.Value(0));
   const settle = useCallback(() => {
     upward.setValue(0);
-    Animated.spring(pan, {
-      toValue: { x: 0, y: 0 },
-      friction: 7,
-      useNativeDriver: NATIVE_DRIVER,
-    }).start();
-  }, [pan, upward]);
+    // Both, in step: the card comes home and the stamps fade with it.
+    Animated.parallel(
+      [pan, gesture].map((value) =>
+        Animated.spring(value, {
+          toValue: { x: 0, y: 0 },
+          friction: 7,
+          useNativeDriver: NATIVE_DRIVER,
+        }),
+      ),
+    ).start();
+  }, [gesture, pan, upward]);
   // Memoised on exactly what the handlers close over: a new responder
   // starts with an empty gesture state, so one made on every render would
   // snap the card back to the middle when the photo arrived mid-drag. Not
@@ -424,6 +443,7 @@ export default function Discover() {
     () =>
       createDeckResponder({
         pan,
+        gesture,
         upward,
         width,
         height,
@@ -433,7 +453,7 @@ export default function Discover() {
         settle,
         setFlying,
       }),
-    [act, busy, current, flying, height, pan, settle, upward, width],
+    [act, busy, current, flying, gesture, height, pan, settle, upward, width],
   );
   const threshold = width * SWIPE_THRESHOLD;
   const tilt = pan.x.interpolate({
@@ -441,24 +461,37 @@ export default function Discover() {
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
     extrapolate: 'clamp',
   });
-  // Each stamp is fully there exactly where a release would count — the
-  // star's through `upward`, so it never forms on a gesture the release
-  // will answer some other way.
-  const likeOpacity = pan.x.interpolate({
-    inputRange: [0, threshold],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-  const passOpacity = pan.x.interpolate({
-    inputRange: [-threshold, 0],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-  // The star's own, on the other axis and upwards only — and nothing at
-  // all unless the gesture is the star's, which is what `upward` carries.
+  // Each stamp is fully there exactly where a release would count, and
+  // none of them is ever fully there for a verdict a release would send
+  // instead: `stampStrength` in `lib/swipe.ts` is that rule, swept
+  // against `decideSwipe` over the whole gesture space by its tests.
+  // These three are the same arithmetic as animated nodes, reading the
+  // gesture — not `pan`, which is blended.
+  //
+  // A star's gesture draws no sideways stamp at all, which is what the
+  // `sideways` gate carries, for the same reason `decideSwipe` never
+  // hands an upward gesture to its sideways arms.
+  const sideways = Animated.subtract(1, upward);
+  const likeOpacity = Animated.multiply(
+    sideways,
+    gesture.x.interpolate({
+      inputRange: [0, threshold],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    }),
+  );
+  const passOpacity = Animated.multiply(
+    sideways,
+    gesture.x.interpolate({
+      inputRange: [-threshold, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    }),
+  );
+  // The star's own, on the other axis and upwards only.
   const superOpacity = Animated.multiply(
     upward,
-    pan.y.interpolate({
+    gesture.y.interpolate({
       inputRange: [-height * SUPER_THRESHOLD, 0],
       outputRange: [1, 0],
       extrapolate: 'clamp',
@@ -471,7 +504,8 @@ export default function Discover() {
   // out where the last card flew to.
   useLayoutEffect(() => {
     pan.setValue({ x: 0, y: 0 });
-  }, [currentId, pan]);
+    gesture.setValue({ x: 0, y: 0 });
+  }, [currentId, gesture, pan]);
 
   // After every hook, like its siblings. The deck was the one signed-in
   // screen with no guard: `if (!userId) return` in the load effect leaves
@@ -669,18 +703,21 @@ export default function Discover() {
                 three={current.row.big_three}
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
               />
-              {/* Their own words, two lines of them, between the chart and
-                the band (sheet frame 05). The full text is on the person
+              {/* Their own words, two lines of them, in a box of their
+                own (owner, 2026-09-23: "bioyu bir kutucuk icine alip
+                ui'i guzellestirelim"). The full text is on the person
                 page a tap away. */}
               {current.row.bio ? (
-                <Text
-                  style={styles.bio}
-                  numberOfLines={2}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                  testID="card-bio"
-                >
-                  {current.row.bio}
-                </Text>
+                <View style={styles.bioBox}>
+                  <Text
+                    style={styles.bio}
+                    numberOfLines={2}
+                    maxFontSizeMultiplier={MAX_DECK_SCALE}
+                    testID="card-bio"
+                  >
+                    {current.row.bio}
+                  </Text>
+                </View>
               ) : null}
             </View>
           </Animated.View>
@@ -883,8 +920,8 @@ export default function Discover() {
             <LikedMePanel
               me={me}
               onAnswered={() => setAdmirers((n) => Math.max(0, n - 1))}
-              onOpen={(person, caption) => {
-                pinned.current = { person, caption };
+              onOpen={(person) => {
+                pinned.current = person;
                 setShowLiked(false);
                 setSheet(null);
                 setState({ status: 'loading' });
@@ -919,10 +956,6 @@ export default function Discover() {
   );
 }
 
-/**
- * The deck with one card brought to the front, or null when that person
- * is not in it at all.
- */
 /**
  * The deck with one person on top. Somebody the deck did not fetch — a
  * liker outside this member's filters — is put there as the card the
@@ -969,6 +1002,7 @@ function cardOf(person: Admirer): DiscoverRow {
  */
 function createDeckResponder({
   pan,
+  gesture,
   upward,
   width,
   height,
@@ -979,6 +1013,8 @@ function createDeckResponder({
   setFlying,
 }: {
   pan: Animated.ValueXY;
+  /** The gesture itself, which the stamps read; see the stamps above. */
+  gesture: Animated.ValueXY;
   /** 1 while the gesture is the star's; see the stamp above. */
   upward: Animated.Value;
   width: number;
@@ -1034,6 +1070,9 @@ function createDeckResponder({
       const drawn = deckOffset(g.dx, g.dy);
       upward.setValue(drawn.up ? 1 : 0);
       pan.setValue({ x: drawn.x, y: drawn.y });
+      // The stamps read this one. `pan` is blended near the star's line
+      // and would under-draw a stamp on a release that counts.
+      gesture.setValue({ x: g.dx, y: g.dy });
     },
     onPanResponderRelease: (_, g) => {
       // Not idle: a record is in flight for this very card. No decision,
@@ -1055,9 +1094,17 @@ function createDeckResponder({
         return;
       }
       setFlying(true);
-      // The verdict is made and the card is leaving; the stamp is not on
-      // it any more, so nothing would take it away.
-      upward.setValue(0);
+      // The verdict is made and the card is leaving, so the stamps are
+      // pinned to what is being sent: the one that counts rides out with
+      // the card and the other two go. Left on the finger's own last
+      // numbers, a star flung away to the left would draw PASS on its
+      // way out.
+      upward.setValue(decision === 'super' ? 1 : 0);
+      gesture.setValue(
+        decision === 'super'
+          ? { x: 0, y: -height }
+          : { x: (decision === 'like' ? 1 : -1) * width, y: 0 },
+      );
       Animated.timing(pan, {
         toValue:
           decision === 'super'
@@ -1124,7 +1171,7 @@ const styles = StyleSheet.create({
   // 2026-09-14). Both card and photo may shrink: on a screen too short for
   // the full photo share it is the picture that gives way, never the
   // buttons, which keep the footer's minimum height.
-  card: { flexGrow: 1, flexShrink: 1 },
+  card: { flexGrow: 0, flexShrink: 1 },
   photoWrap: {
     flexShrink: 1,
     minHeight: 0,
@@ -1136,21 +1183,22 @@ const styles = StyleSheet.create({
   // card was given between the two, so the band floats down to meet the
   // buttons' spacing instead of sticking to the chips.
   info: {
-    flexGrow: 1,
     paddingHorizontal: SCREEN_PADDING,
     // `Screen`'s own gap between children, so the big three sit the same
     // distance below the photo here as they do on the profile.
     paddingTop: space.md,
     gap: SPACING_FLOOR,
   },
-  // Three equal gaps below the chips — chips to band, band to buttons,
-  // buttons to the tab bar (owner, 2026-09-15: "uyum ile alt ve üstteki
-  // mesafeler aynı mı?"). The free space splits by flex weight: one share
-  // to the card, where `info` spends it between chips and band; two to the
-  // footer, which spends them evenly above and below the buttons. Each
-  // side also carries the same floor, so the three stay equal when the
-  // free space runs out. No bottom inset: the tab bar under this screen
-  // already covers the home indicator (lib/insets.ts).
+  // Equal gaps around the buttons — the words to the buttons, the buttons
+  // to the tab bar (owner, 2026-09-15: "uyum ile alt ve üstteki mesafeler
+  // aynı mı?"). Every share of the free space is the footer's, and
+  // `space-evenly` splits it above and below the row. It used to be split
+  // with the card, which spent its share between the chips and the band —
+  // but the band moved onto the photograph on 2026-09-23 and nothing was
+  // left down here to spend it on, so the share became a hole between the
+  // words and the buttons (owner: "bio ve butonlar arasindaki bosluk cok
+  // fazla"). No bottom inset: the tab bar under this screen already covers
+  // the home indicator (lib/insets.ts).
   footer: {
     flexGrow: 2,
     minHeight: ROUND_SIZE + 2 * SPACING_FLOOR,
@@ -1192,6 +1240,17 @@ const styles = StyleSheet.create({
   },
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
+  // The words in a box, like the boxes the profile page is made of, so
+  // the card's bottom half is two blocks rather than a row of chips and
+  // then loose text (owner, 2026-09-23).
+  bioBox: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    backgroundColor: glass.fillSoft,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+  },
   bio: { ...type.body, color: color.text },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.

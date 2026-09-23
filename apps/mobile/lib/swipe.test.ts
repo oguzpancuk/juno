@@ -10,6 +10,7 @@ import {
   UP_BLEND,
   UP_DOMINANCE,
   SUPER_THRESHOLD,
+  stampStrength,
   SWIPE_THRESHOLD,
   VETO_VELOCITY,
 } from './swipe';
@@ -346,6 +347,71 @@ describe('deckOffset', () => {
       x: 0,
       y: 0,
       up: false,
+    });
+  });
+});
+
+describe('stampStrength', () => {
+  // The stamp is the card's promise. Until this test the promise and the
+  // verdict were computed from two different numbers — the verdict from
+  // the gesture, the stamp from where the blend had drawn the card — and
+  // a release inside the blend band counted with its stamp at 63%
+  // (review, 2026-09-23).
+  const height = 800;
+
+  it('is fully drawn on every release that counts on distance alone', () => {
+    const worst = { like: 1, pass: 1, super: 1 };
+    let worstAt = '';
+    for (let dx = -400; dx <= 400; dx += 1) {
+      for (let dy = -400; dy <= 400; dy += 1) {
+        const decision = decideSwipe({ dx, vx: 0, dy, vy: 0, width, height });
+        if (decision === null) continue;
+        const shown = stampStrength(dx, dy, width, height)[decision];
+        if (shown < worst[decision]) {
+          worst[decision] = shown;
+          worstAt = `${decision} at dx=${dx}, dy=${dy}`;
+        }
+      }
+    }
+    expect({ ...worst, worstAt }).toEqual({
+      like: 1,
+      pass: 1,
+      super: 1,
+      worstAt: '',
+    });
+  });
+
+  it('never fully draws a stamp the release would contradict', () => {
+    // The dangerous direction: a full stamp that lies. A star taken back
+    // sending a pass is what this whole file exists to stop. A gesture
+    // sitting exactly on its line is drawn in full and sends nothing —
+    // the release asks for strictly past it — so `null` is allowed here
+    // and only a different verdict is not.
+    const lies: string[] = [];
+    for (let dx = -400; dx <= 400; dx += 1) {
+      for (let dy = -400; dy <= 400; dy += 1) {
+        const shown = stampStrength(dx, dy, width, height);
+        for (const kind of ['like', 'pass', 'super'] as const) {
+          if (shown[kind] < 1) continue;
+          const decision = decideSwipe({ dx, vx: 0, dy, vy: 0, width, height });
+          if (decision !== null && decision !== kind)
+            lies.push(`${kind} drawn at dx=${dx}, dy=${dy}, sends ${decision}`);
+        }
+      }
+    }
+    expect(lies).toEqual([]);
+  });
+
+  it('draws nothing at all for a gesture that is not a number', () => {
+    expect(stampStrength(Number.NaN, -200, width, height)).toEqual({
+      like: 0,
+      pass: 0,
+      super: 0,
+    });
+    expect(stampStrength(100, -200, 0, height)).toEqual({
+      like: 0,
+      pass: 0,
+      super: 0,
     });
   });
 });

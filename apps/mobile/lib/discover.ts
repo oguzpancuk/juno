@@ -47,18 +47,6 @@ export type DiscoverState =
   | { readonly status: 'error' };
 
 /**
- * Fetch candidates and score them on device against the caller's chart.
- *
- * The order is the member's: nearest first, or — the premium choice —
- * best match first (`orderCandidates`). Until 2026-09-21 every deck was
- * ordered by score, which left the membership nothing to offer.
- *
- * Two of the filters cannot run in `discover`: the band comes from a score
- * computed here from two charts, and the element from a chart the view
- * only carries as JSON. They are applied after scoring, over rows the
- * server has already filtered by radius, gender and age.
- */
-/**
  * One row, scored against the reader's chart. The deck also builds a card
  * this way for somebody it did not fetch — a person tapped on "Seni
  * beğenenler" who is outside the reader's filters (owner, 2026-09-23:
@@ -74,6 +62,18 @@ export function candidateOf(myChart: PublicChart, row: DiscoverRow): Candidate {
   };
 }
 
+/**
+ * Fetch candidates and score them on device against the caller's chart.
+ *
+ * The order is the member's: nearest first, or — the premium choice —
+ * best match first (`orderCandidates`). Until 2026-09-21 every deck was
+ * ordered by score, which left the membership nothing to offer.
+ *
+ * Two of the filters cannot run in `discover`: the band comes from a score
+ * computed here from two charts, and the element from a chart the view
+ * only carries as JSON. They are applied after scoring, over rows the
+ * server has already filtered by radius, gender and age.
+ */
 export async function fetchCandidates(
   myChart: PublicChart,
   filters: DiscoverFilters = {

@@ -7347,11 +7347,16 @@ that was already fixed.
 
 The one finding was in a comment, not in code: `UP_BLEND`'s doc claimed
 the band's width "keeps the card from outrunning the finger". It does
-not, and the next sentence already said the true thing. A straight drag
-never enters the band — its angle is fixed, so its share is fixed and the
-card is exactly under the finger. A finger that turns crosses it, and
-there the card closes a gap at about twice the finger's rate. Measured,
-and now what the comment says.
+not, and the next sentence already said the true thing: a straight drag
+holds one share for its whole length, because the share is read off the
+angle. A finger that turns crosses the band, and there the card closes a
+gap at about twice the finger's rate. Measured, and now what the comment
+says.
+
+(The replacement was half wrong too, and round 5 of the review caught it
+— see below. "A straight drag never enters the band" is false: every
+straight drag between about 51° and 70° is inside it for its whole
+length. A fixed share is not the same as being under the finger.)
 
 Also from this round: the owner's web report and the review's VoiceOver
 finding were one bug. `react-native-web` renders `accessibilityRole="button"`
@@ -7365,3 +7370,58 @@ as a real `<button>`, and iOS collapses an accessible subtree; a nested
   message that did not cross inside a 2-second budget. First flake seen
   in this suite. If it comes back, the budget is the thing to look at
   rather than the test.
+
+## 2026-09-23 — the stamp and the verdict, read from one number
+
+Review round 5 closed all four of round 4's findings by measurement and
+opened one that the blend fix had created the other way round. The blend
+made the picture continuous by holding the card back near the star's
+line; the stamps were drawn from that held-back position while
+`decideSwipe` read the gesture. So inside the band a release counted
+while its stamp was part-drawn — worst case SÜPER sent with its stamp at
+0.63 — and one of five weekly stars went on a gesture the card had not
+committed to.
+
+The fix is a rule rather than a patch. `stampStrength` in `lib/swipe.ts`
+says how fully each stamp is drawn, from the gesture itself, and the deck
+keeps a second `Animated.ValueXY` carrying the raw gesture for the three
+interpolations to read; `pan`, still blended, only moves the card. Two
+tests sweep the whole gesture space against `decideSwipe`: every release
+that counts on distance shows its stamp in full, and no full stamp is
+ever contradicted by the verdict.
+
+Writing the rule down first found a second case nobody had measured. The
+sideways stamps had no equivalent of the star's `upward` gate, so a card
+dragged 300 left and 700 up drew **PASS in full** and sent SÜPER. A full
+stamp that lies is the exact thing this file exists to stop, and the old
+pre-blend drawing had been hiding it behind a quarter-strength `pan.x`.
+`decideSwipe` never hands an upward gesture to its sideways arms; now
+neither does the drawing.
+
+Both tests were seen red against the previous rule: `like at dx=121,
+dy=-242` with the stamp at 0.630, and forty-six gestures inside the
+swept box drawing a stamp the release contradicts (the count is the
+box's, not the phone's — every one of them is a steep leftward or
+rightward fling, and the box reaches 400 points on each axis).
+
+The other three findings were comments describing what the code does
+not do — the stale `bringToFront` doc left stacked above its
+replacement, `fetchCandidates`' doc stranded over `candidateOf` after the
+extraction, and the `UP_BLEND` sentence above. `Waiting.caption` went
+with the admirer popup and was still being computed for nobody, so the
+pin is now just the `Admirer`.
+
+Also this round, from the owner: the bio sits in a box of its own, and
+the gap under it is gone. That gap was a consequence of moving the band
+onto the photograph earlier in the round — `info` was still claiming a
+growing share of a card that no longer had one to give, so the space
+went between the bio and the buttons.
+
+### Upstream candidates
+
+- A rule the UI draws with belongs in the pure module beside the rule
+  that decides with it, even when the drawing has to be an animated
+  interpolation for the UI thread. Writing `stampStrength` as ordinary
+  arithmetic is what made the second case findable at all; the
+  interpolations are its animated form, and the tests hold the two
+  together.
