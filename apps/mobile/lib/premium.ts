@@ -103,6 +103,7 @@ export const LikedMeRowSchema = z.object({
   chart: PublicChartSchema.nullable(),
   bio: z.string().nullable(),
   photos: z.array(z.string()).nullable(),
+  distance_km: z.number().int().nonnegative().nullable(),
   is_super: z.boolean(),
   liked_at: z.string(),
 });

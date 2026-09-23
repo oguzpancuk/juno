@@ -139,6 +139,7 @@ const LikedMeRows = z.array(
       chart: z.record(z.unknown()).nullable(),
       bio: z.string().nullable(),
       photos: z.array(z.string()).nullable(),
+      distance_km: z.number().int().nonnegative().nullable(),
       is_super: z.boolean(),
       liked_at: z.string(),
     })
@@ -445,6 +446,9 @@ describe('liked_me', () => {
       expect(row.big_three).toBeNull();
       expect(row.chart).toBeNull();
       expect(row.photos).toBeNull();
+      // Withheld with the rest of the person: a distance on its own is
+      // still something about somebody a free member may not see.
+      expect(row.distance_km).toBeNull();
     }
     // What the upsell is made of: one of the two pressed the star, and
     // both carry the day they arrived.
@@ -461,6 +465,9 @@ describe('liked_me', () => {
     for (const row of rows) {
       expect(row.chart).not.toBeNull();
       expect(row.photos?.length).toBeGreaterThan(0);
+      // The card the list opens needs it, and these two are in the same
+      // place, so it is a real number rather than merely present.
+      expect(row.distance_km).toBe(0);
     }
     expect(rows.find((row) => row.display_name === 'Zoe')?.is_super).toBe(true);
   });
@@ -566,6 +573,9 @@ describe('liked_me and the demo accounts', () => {
     expect(rows[0]?.chart).not.toBeNull();
     expect(rows[0]?.photos?.length).toBeGreaterThan(0);
     expect(rows[0]?.is_super).toBe(false);
+    // Everything the deck's own card carries, so tapping this row can
+    // open one whether or not the filters would have offered them.
+    expect(rows[0]?.distance_km).toBe(0);
   });
 
   it('matches on the answer and drops it from the list', async () => {

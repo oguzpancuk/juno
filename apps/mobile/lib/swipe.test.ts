@@ -7,6 +7,8 @@ import {
   isUpwardGesture,
   FLICK_VELOCITY,
   SUPER_FLOOR,
+  UP_BLEND,
+  UP_DOMINANCE,
   SUPER_THRESHOLD,
   SWIPE_THRESHOLD,
   VETO_VELOCITY,
@@ -270,11 +272,81 @@ describe('deckOffset', () => {
       for (let dy = -400; dy <= 200; dy += 15) {
         const drawn = deckOffset(dx, dy);
         expect(drawn.up, `${dx},${dy}`).toBe(isUpwardGesture(dx, dy));
-        // Drawn as a star means the whole upward travel is under the
-        // finger; drawn sideways means the whole sideways travel is.
+        // Well away from the line, the whole travel on the gesture's own
+        // axis is under the finger. Inside the band the two rules are
+        // being mixed, which is the next test's business.
+        const band = Math.abs(dx) * UP_BLEND;
+        if (Math.abs(-dy - Math.abs(dx) * UP_DOMINANCE) < band) continue;
         expect(drawn.up ? drawn.y : drawn.x).toBe(drawn.up ? dy : dx);
       }
     }
+  });
+
+  it('does not jump across the line the star is decided on', () => {
+    // The two rules used to meet nowhere: one frame either side of the
+    // boundary, a card at (100, -200) leapt 151 points up and 75 left,
+    // and a finger held near that angle flickered between the two
+    // positions (review, 2026-09-23).
+    for (let dx = -300; dx <= 300; dx += 10) {
+      const edge = -Math.abs(dx) * UP_DOMINANCE;
+      const below = deckOffset(dx, edge + 1);
+      const above = deckOffset(dx, edge - 1);
+      expect(below.up, `${dx}`).toBe(false);
+      expect(above.up, `${dx}`).toBe(true);
+      expect(Math.abs(above.x - below.x), `x at ${dx}`).toBeLessThan(6);
+      expect(Math.abs(above.y - below.y), `y at ${dx}`).toBeLessThan(6);
+    }
+  });
+
+  it('keeps a straight drag exactly under the finger', () => {
+    // The share of each rule is read off the angle alone, so a finger
+    // going one way holds one share the whole way out and the card simply
+    // tracks it: never faster than the finger, never backwards.
+    for (let dx = -3; dx <= 3; dx += 1) {
+      for (let dy = -4; dy <= 1; dy += 1) {
+        if (dx === 0 && dy === 0) continue;
+        let last = deckOffset(0, 0);
+        for (let step = 1; step <= 120; step += 1) {
+          const now = deckOffset(dx * step, dy * step);
+          const moved = Math.hypot(now.x - last.x, now.y - last.y);
+          expect(moved, `${dx},${dy} at ${step}`).toBeLessThanOrEqual(
+            Math.hypot(dx, dy) + 1e-9,
+          );
+          last = now;
+        }
+      }
+    }
+  });
+
+  it('never sends the card back against a finger that changed direction', () => {
+    // A finger that drags sideways and then turns upward crosses the band,
+    // and the card closes the gap as it does. It may lead the finger there
+    // — the old code closed that same gap in a single frame — but it never
+    // reverses and it never leaps.
+    for (let dx = -200; dx <= 200; dx += 25) {
+      let last = deckOffset(dx, 60);
+      for (let dy = 55; dy >= -600; dy -= 5) {
+        const now = deckOffset(dx, dy);
+        expect(now.y, `y at ${dx},${dy}`).toBeLessThanOrEqual(last.y);
+        expect(Math.abs(now.x), `x at ${dx},${dy}`).toBeLessThanOrEqual(
+          Math.abs(last.x) + 1e-9,
+        );
+        expect(
+          Math.abs(now.y - last.y),
+          `step at ${dx},${dy}`,
+        ).toBeLessThanOrEqual(5 * 2.5);
+        last = now;
+      }
+    }
+  });
+
+  it('answers a still card for a gesture that is not a number', () => {
+    expect(deckOffset(Number.NaN, -200)).toEqual({ x: 0, y: 0, up: false });
+    expect(deckOffset(10, Number.POSITIVE_INFINITY)).toEqual({
+      x: 0,
+      y: 0,
+      up: false,
+    });
   });
 });
 

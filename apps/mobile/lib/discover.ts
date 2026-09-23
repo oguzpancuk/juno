@@ -58,6 +58,22 @@ export type DiscoverState =
  * only carries as JSON. They are applied after scoring, over rows the
  * server has already filtered by radius, gender and age.
  */
+/**
+ * One row, scored against the reader's chart. The deck also builds a card
+ * this way for somebody it did not fetch — a person tapped on "Seni
+ * beğenenler" who is outside the reader's filters (owner, 2026-09-23:
+ * "burada bir ayrim olmasin") — so the scoring lives here rather than
+ * inline below, and both cards are made the same way.
+ */
+export function candidateOf(myChart: PublicChart, row: DiscoverRow): Candidate {
+  const match = compatibility(myChart, row.chart);
+  return {
+    row,
+    match,
+    why: match.strongest ? describeAspectTr(match.strongest) : null,
+  };
+}
+
 export async function fetchCandidates(
   myChart: PublicChart,
   filters: DiscoverFilters = {
@@ -81,14 +97,7 @@ export async function fetchCandidates(
   const floor = BANDS.indexOf(filters.minBand);
   const wanted = filters.sunElements;
   const candidates = parsed
-    .map((row) => {
-      const match = compatibility(myChart, row.chart);
-      return {
-        row,
-        match,
-        why: match.strongest ? describeAspectTr(match.strongest) : null,
-      };
-    })
+    .map((row) => candidateOf(myChart, row))
     .filter(({ row, match }) => {
       if (BANDS.indexOf(bandOf(match.score)) < floor) return false;
       // null means every element; the column forbids an empty list, which

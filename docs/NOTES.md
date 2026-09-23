@@ -7246,3 +7246,88 @@ aim at; the `idle`/`grantedId` guards were read, not run.
   five rounds and the probe reported success. Anything the QA harness
   selects by should be grepped out of `apps/mobile` once before it is
   trusted.
+
+## 2026-09-23 — Review round 4 on premium: four findings, all real
+
+The review looked at `f895401..c185a22` in one pass, as the owner's new
+cadence asks, and found four things. Two of them are the kind only a
+reviewer finds, because they are about what happens on a path nobody
+drives.
+
+**The band went silent for VoiceOver.** Moving the compatibility ring
+onto the photograph put its `Pressable` inside the photograph's, and on
+iOS a view with `accessible={true}` collapses its whole subtree into one
+element. The ring's button and its reading were simply gone from the
+accessibility tree, and the compatibility popup is opened from there and
+nowhere else on the screen. The photograph's button is now an
+`absoluteFill` child of a plain `View` rather than the thing that
+contains everything drawn on it, so the band is a sibling again: its own
+element, still drawn after and so still taking the touch in its corner.
+The lesson is small and worth keeping: a `Pressable` is not only a touch
+target, it is an accessibility boundary, and nesting one inside another
+hides the inner one on iOS.
+
+**A pin that was only cleared when everything went right.** The person
+tapped on "Seni beğenenler" was held in a ref and consumed at the end of
+the load it belongs to. Three ways out of that promise skipped the line
+that clears it — the effect cancelled, a non-ready result, a rejection —
+so the ref kept a stranger, and the next successful load jumped the deck
+to them or popped their profile with nothing the member had done to ask.
+It is taken out of the ref at the _start_ of the load now, in the effect
+body, which also makes the A-then-B race right: two taps in flight are
+two locals, not one ref.
+
+**The card crossed the star's line by teleporting.** `deckOffset` had two
+arms that each followed a different axis, and they did not meet: at
+(100, -200) one frame either side of the 2:1 line the card leapt 151
+points up and 75 left, and a finger held near that angle flickered
+between the two positions. The share of each rule is now read off the
+angle over a band three quarters of the sideways travel wide, which is
+exactly as wide as the gap it has to close. A straight drag holds one
+share the whole way out, so the card tracks the finger exactly; only a
+finger that turns mid-gesture crosses the band, and there the card leads
+it by at most a third rather than jumping. The decision did not change:
+the star is still the 2:1 line, and the stamp with it, so nothing about
+what the card _promises_ moved.
+
+**`liked_me` had stopped being indexable.** With `profiles` as the
+driving table the WHERE is an OR whose arms live in different relations,
+so PostgreSQL could only sequentially scan every profile — on the one
+view `fetchLikedMeCount` asks to count on every open of the deck. Naming
+the candidates first, as a UNION _inside_ FROM, makes both arms index
+reads and leaves the top-level SELECT plain, so the `resorigtbl` origins
+that `supabase gen types` reads are untouched. Measured on the throwaway
+cluster ([[postgres-without-docker]] is the recipe) at 50k profiles,
+both shapes returning the same 43 rows: 85.3 ms before, 0.583 ms after,
+and the origins compared column by column.
+
+### Battery gaps
+
+- Three of these four are invisible to `verify.sh`, and in three
+  different ways: an accessibility tree nothing inspects, an error path
+  nothing exercises, and a query plan nothing measures. The gesture rule
+  was the one the battery could have caught, and now does.
+
+## 2026-09-23 — Two more from the owner, one of them the same bug twice
+
+He signed in on the web and got a red overlay: a `<button>` cannot
+contain a `<button>`. `react-native-web` renders `accessibilityRole="button"`
+as a real `<button>`, and the compatibility ring's `Pressable` was inside
+the photograph's, so the DOM had one nested in the other. That is the
+review's VoiceOver finding wearing different clothes — an iOS
+accessibility element and an HTML button are the same nesting, reported
+by two different platforms — and hoisting the ring out of the photograph
+fixed both at once. Worth remembering: on this stack a nested `Pressable`
+with a role is not a styling detail, it is invalid on one platform and
+invisible on the other.
+
+The second: tapping somebody on "Seni beğenenler" must land on their card
+in the deck **always**, not only when the member's filters would have
+offered them ("burada bir ayrim olmasin"). The profile-instead fallback
+is gone. A card needs a distance and `liked_me` did not carry one, so the
+view does now — masked with the rest of the person, so a free member's
+row still says nothing — and `candidateOf` in `lib/discover.ts` is the
+one place a row becomes a card, whether it came from the deck's own fetch
+or from the list. The filters decide who is _offered_, not who may be
+answered: somebody who chose this member is answerable whatever the
+radius says.

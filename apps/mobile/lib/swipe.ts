@@ -49,6 +49,24 @@ export const UP_DOMINANCE = 2;
  */
 export const CROSS_FOLLOW = 0.25;
 /**
+ * The band over which the card changes from being drawn as a sideways
+ * gesture to being drawn as a star, as a share of the sideways travel.
+ * Without it the two rules met nowhere: one frame either side of the 2:1
+ * line a card at (100, -200) leapt 151 points up and 75 left, and a
+ * finger held near that angle flickered between the two positions
+ * (review, 2026-09-23).
+ *
+ * A share rather than a number of points because the gap between the two
+ * rules is itself proportional — three quarters of each axis' travel —
+ * so a fixed band would be gentle on a small gesture and a lurch on a
+ * large one. At 0.75 the band is exactly as wide as the gap it has to
+ * cover, which is what keeps the card from outrunning the finger.
+ *
+ * The decision does not blend: the star is still the 2:1 line exactly,
+ * and the stamp with it. Only the picture does.
+ */
+export const UP_BLEND = 0.75;
+/**
  * How far a finger travels before the card comes under it. A tap on the
  * photograph opens the profile and a tap on the band opens the reading,
  * so the card may not take a touch that has barely moved.
@@ -89,10 +107,22 @@ export function deckOffset(
   dx: number,
   dy: number,
 ): { x: number; y: number; up: boolean } {
-  const up = isUpwardGesture(dx, dy);
-  return up
-    ? { x: dx * CROSS_FOLLOW, y: dy, up }
-    : { x: dx, y: dy * CROSS_FOLLOW, up };
+  if (!Number.isFinite(dx) || !Number.isFinite(dy))
+    return { x: 0, y: 0, up: false };
+  // How far past the 2:1 line the gesture is, in points: negative below
+  // it, zero on it. `UP_BLEND` either side of that is where the card is
+  // drawn as a mixture of the two, so that no frame moves it on its own.
+  const past = -dy - Math.abs(dx) * UP_DOMINANCE;
+  const band = Math.abs(dx) * UP_BLEND;
+  const star =
+    past <= -band ? 0 : past >= band ? 1 : (past + band) / (2 * band);
+  const follow = (side: number, starward: number): number =>
+    side + (starward - side) * star;
+  return {
+    x: dx * follow(1, CROSS_FOLLOW),
+    y: dy * follow(CROSS_FOLLOW, 1),
+    up: isUpwardGesture(dx, dy),
+  };
 }
 
 export function isUpwardGesture(dx: number, dy: number): boolean {

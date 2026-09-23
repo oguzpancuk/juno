@@ -86,6 +86,11 @@ alter table public.likes
 -- with from_id but cannot narrow by time.
 create index likes_from_id_created_at_idx on public.likes (from_id, created_at);
 
+-- The demo arm of `liked_me` below asks for the demo accounts and nothing
+-- else. There are twenty of them among every member, so without this the
+-- question is a scan of the whole table on every open of the deck.
+create index profiles_demo_idx on public.profiles (id) where is_demo;
+
 -- ---------------------------------------------------------------- quotas
 /**
  * What a free membership costs at the counter.
@@ -236,14 +241,26 @@ revoke all on function private.likes_enforce_quota() from public, anon, authenti
  * reaches this list whatever the member's filters say, because they chose
  * this member; a demo has chosen nobody.
  *
- * One SELECT with an OR rather than two branches under a UNION, and this
- * is load-bearing: PostgreSQL records the origin of a view's column
+ * The *top-level* SELECT has no set operation in it, and this is
+ * load-bearing: PostgreSQL records the origin of a view's column
  * (`resorigtbl` in the stored rewrite rule) only for a plain SELECT, and
  * zeroes it for every column of a set operation. That origin is what
  * `supabase gen types` reads to see `liked_me.id` as `profiles.id`, so a
- * UNION here would silently drop this view from twelve foreign-key lists
- * in `tests/database.types.ts` and take PostgREST's embedding with it.
- * Checked on a throwaway PostgreSQL 16 cluster, both shapes, 2026-09-23.
+ * UNION at the top would silently drop this view from twelve foreign-key
+ * lists in `tests/database.types.ts` and take PostgREST's embedding with
+ * it. A UNION *inside* FROM does not: the columns above still come from
+ * `profiles`, and the stored rule says so.
+ *
+ * That is what the `k` subquery is for, and it is not only about types.
+ * With `profiles` as the driving table the WHERE is an OR whose arms
+ * live in different relations, so no index can serve it and every read
+ * is a sequential scan of every profile — on a view `fetchLikedMeCount`
+ * asks for on every open of the deck (review, 2026-09-23). Naming the
+ * candidates first makes each arm indexable: the likes by
+ * `likes_to_id_idx`, the demos by `profiles_demo_idx` below. On a
+ * throwaway PostgreSQL 16 cluster at 50k profiles, both shapes returning
+ * the same 43 rows: 85.3 ms before, 0.583 ms after, and the column
+ * origins byte-identical.
  */
 create view public.liked_me
 with (security_invoker = false)
@@ -257,6 +274,13 @@ select
   p.chart,
   p.bio,
   p.photos,
+  -- Withheld with the rest of the person, because it comes off `p`. It is
+  -- here so that tapping somebody on the list can open their card in the
+  -- deck even when this member's filters would never have shown them
+  -- (owner, 2026-09-23: "burada bir ayrim olmasin") — a card needs a
+  -- distance, and `discover` is exactly where this one cannot be read.
+  round(extensions.st_distance(p.location, me.location) / 1000)::int
+    as distance_km,
   -- Free or premium, both of these are shown: "someone super liked you
   -- two days ago" is the whole argument for the membership. A demo never
   -- stars — the star is scarce on purpose, and a member who has never
@@ -268,7 +292,17 @@ select
   -- signed up today.
   coalesce(l.created_at, greatest(me.created_at, liker.created_at))
     as liked_at
-from public.profiles liker
+-- Everyone who could possibly be on this list: the people who liked this
+-- member, and the demo accounts. Both arms are index reads. The WHERE
+-- below is unchanged and still decides who actually appears.
+from (
+    select mine.from_id as id
+      from public.likes mine
+     where mine.to_id = (select auth.uid()) and mine.kind = 'like'
+    union
+    select demo.id from public.profiles demo where demo.is_demo
+  ) k
+join public.profiles liker on liker.id = k.id
 join public.profiles me on me.id = (select auth.uid())
 -- The like, when there is one. At most one row: the pair is the primary
 -- key of `likes`.

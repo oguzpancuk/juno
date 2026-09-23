@@ -98,12 +98,22 @@ asymmetry worth naming is that a real liker reaches the list whatever the
 member's filters say, because they chose this member, while a demo has
 chosen nobody and so has to obey them.
 
-That half is one condition rather than a second branch under a UNION, and
-the reason is not style. PostgreSQL records a view column's origin
-(`resorigtbl` in the stored rewrite rule) only for a plain SELECT, and
-zeroes it for every column of a set operation; that origin is what
-`supabase gen types` reads to see `liked_me.id` as `profiles.id`. A UNION
-would have quietly dropped this view from twelve foreign-key lists in
-`tests/database.types.ts` and taken PostgREST's embedding with it. Both
-shapes were checked on a throwaway PostgreSQL 16 cluster before the view
-was written.
+That half is one condition of the same WHERE rather than a second branch
+under a UNION _at the top_, and the reason is not style. PostgreSQL
+records a view column's origin (`resorigtbl` in the stored rewrite rule)
+only for a plain SELECT, and zeroes it for every column of a set
+operation; that origin is what `supabase gen types` reads to see
+`liked_me.id` as `profiles.id`. A UNION there would have quietly dropped
+this view from twelve foreign-key lists in `tests/database.types.ts` and
+taken PostgREST's embedding with it. Both shapes were checked on a
+throwaway PostgreSQL 16 cluster before the view was written.
+
+A UNION _inside_ FROM turned out to be a different thing, and the review
+of 2026-09-23 is why the view has one. With `profiles` as the driving
+table, the OR's two arms live in different relations and no index can
+serve them, so every read was a sequential scan of every profile — on a
+view the deck asks to count each time it opens. Naming the candidates
+first (the people who liked this member, union the demo accounts) makes
+both arms index reads and leaves the top-level SELECT plain, so the
+origins are untouched. On the same cluster at 50k profiles, both shapes
+answering the same 43 rows: 85.3 ms before, 0.583 ms after.

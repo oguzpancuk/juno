@@ -15,9 +15,11 @@ import {
   type PanResponderInstance,
 } from 'react-native';
 import {
+  candidateOf,
   fetchCandidates,
   swipe,
   type Candidate,
+  type DiscoverRow,
   type DiscoverState,
   type SwipeResult,
 } from '@/lib/discover';
@@ -146,11 +148,12 @@ export default function Discover() {
   // load below — the list may have answered somebody while it was open,
   // and a deck reordered without a reload could still hold them. Whoever
   // is not in the deck at all — someone who liked this member from
-  // outside their filters — cannot be a card, so their profile opens
-  // instead; that sheet is `admirer`.
+  // outside their filters — becomes a card anyway, made from the row the
+  // list already has (owner, 2026-09-23: "kesfet filtresinde olmasa da
+  // ... burada bir ayrim olmasin"). They chose this member; the filters
+  // decide who is offered, not who may be answered.
   type Waiting = { readonly person: Admirer; readonly caption: string };
   const pinned = useRef<Waiting | null>(null);
-  const [admirer, setAdmirer] = useState<Waiting | null>(null);
   const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -163,6 +166,12 @@ export default function Discover() {
     useCallback(() => {
       if (!userId) return;
       let cancelled = false;
+      // Taken out here rather than where it is used, because this load is
+      // the one it was set for: every other way out of the promise below
+      // (cancelled, an error, a rejection) would otherwise leave it in the
+      // ref for an unrelated load to act on (review, 2026-09-23).
+      const wanted = pinned.current;
+      pinned.current = null;
       // After any filter write still in flight: closing the filters sheet
       // reloads the deck at once, and it must load with what was just set.
       filterWritesAnswered()
@@ -209,16 +218,16 @@ export default function Discover() {
             setState({ status: 'error' });
             return;
           }
-          const wanted = pinned.current;
-          pinned.current = null;
-          const deck =
-            wanted === null
-              ? result.candidates
-              : bringToFront(result.candidates, wanted.person.id);
-          // Not in the deck: nobody this member's filters would ever be
-          // shown, so the card cannot be the answer and the profile is.
-          if (wanted !== null && deck === null) setAdmirer(wanted);
-          setState({ status: 'ready', candidates: deck ?? result.candidates });
+          setState({
+            status: 'ready',
+            candidates:
+              wanted === null
+                ? result.candidates
+                : bringToFront(
+                    result.candidates,
+                    candidateOf(result.me.chart, cardOf(wanted.person)),
+                  ),
+          });
         })
         .catch(() => {
           if (!cancelled) setState({ status: 'error' });
@@ -382,19 +391,6 @@ export default function Discover() {
     () => (current ? natalReading(current.row.chart) : null),
     [current],
   );
-  // The same two things for somebody opened from the list instead of
-  // from the deck. Their photographs are not the card's, so they have
-  // their own request; nothing is asked for while the sheet is shut.
-  const admirerPaths = useMemo(
-    () => (admirer ? [...admirer.person.photos] : []),
-    [admirer],
-  );
-  const admirerSources = usePhotoSources(admirerPaths);
-  const admirerReading = useMemo(
-    () => (admirer ? natalReading(admirer.person.chart) : null),
-    [admirer],
-  );
-
   // Where the card is under the finger. State, not a ref: it is read during
   // render for the interpolations below (see Calculating.tsx), and the
   // initialiser is lazy so the value is created once.
@@ -534,74 +530,85 @@ export default function Discover() {
               press before it can fire. A vertical drag is not claimed, so
               the press itself refuses a finger that travelled (review,
               2026-09-15). */}
-            <Pressable
+            <View
               style={[
                 styles.photoWrap,
                 { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
               ]}
-              onPressIn={(event) => {
-                pressedAt.current = {
-                  x: event.nativeEvent.pageX,
-                  y: event.nativeEvent.pageY,
-                };
-              }}
-              onPress={(event) => {
-                const from = pressedAt.current;
-                pressedAt.current = null;
-                // A screen reader's activation carries no travel: NaN is
-                // not past the line, so it still opens.
-                if (
-                  from !== null &&
-                  Math.hypot(
-                    event.nativeEvent.pageX - from.x,
-                    event.nativeEvent.pageY - from.y,
-                  ) > CLAIM_DISTANCE
-                )
-                  return;
-                setSheet({ id: current.row.id, of: 'person' });
-              }}
-              accessibilityRole="button"
-              // The name, age and distance drawn on the photo, which the
-              // label would otherwise hide from VoiceOver (review, 2026-09-15).
-              accessibilityLabel={t.discover.openPerson(
-                current.row.display_name,
-                current.row.age,
-                distanceLine(current.row.distance_km),
-              )}
-              testID="open-person"
             >
-              {cardSource ? (
-                <Image
-                  source={cardSource}
-                  style={styles.cardPhoto}
-                  resizeMode="cover"
-                  testID="card-photo"
-                />
-              ) : null}
-              {/* The name sits on the photo, as in the design; the chart
-                below it is what the card is actually about. */}
-              <LinearGradient
-                colors={['transparent', color.scrim, color.bg]}
-                style={styles.photoScrim}
+              {/* The photo's own button fills it, rather than containing
+                everything drawn on it. A Pressable is one accessibility
+                element and hides what is inside it, which took the band's
+                button and the ring's reading away from VoiceOver when the
+                band moved onto the photograph (review, 2026-09-23). As a
+                sibling the band is its own element again, and it still
+                takes the touch in its corner because it is drawn after. */}
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPressIn={(event) => {
+                  pressedAt.current = {
+                    x: event.nativeEvent.pageX,
+                    y: event.nativeEvent.pageY,
+                  };
+                }}
+                onPress={(event) => {
+                  const from = pressedAt.current;
+                  pressedAt.current = null;
+                  // A screen reader's activation carries no travel: NaN is
+                  // not past the line, so it still opens.
+                  if (
+                    from !== null &&
+                    Math.hypot(
+                      event.nativeEvent.pageX - from.x,
+                      event.nativeEvent.pageY - from.y,
+                    ) > CLAIM_DISTANCE
+                  )
+                    return;
+                  setSheet({ id: current.row.id, of: 'person' });
+                }}
+                accessibilityRole="button"
+                // The name, age and distance drawn on the photo, which the
+                // label would otherwise hide from VoiceOver (review, 2026-09-15).
+                accessibilityLabel={t.discover.openPerson(
+                  current.row.display_name,
+                  current.row.age,
+                  distanceLine(current.row.distance_km),
+                )}
+                testID="open-person"
               >
-                <Text
-                  style={styles.name}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                {cardSource ? (
+                  <Image
+                    source={cardSource}
+                    style={styles.cardPhoto}
+                    resizeMode="cover"
+                    testID="card-photo"
+                  />
+                ) : null}
+                {/* The name sits on the photo, as in the design; the chart
+                below it is what the card is actually about. */}
+                <LinearGradient
+                  colors={['transparent', color.scrim, color.bg]}
+                  style={styles.photoScrim}
                 >
-                  {current.row.display_name}, {current.row.age}
-                </Text>
-                <Text
-                  style={styles.distance}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                >
-                  {distanceLine(current.row.distance_km)}
-                </Text>
-              </LinearGradient>
+                  <Text
+                    style={styles.name}
+                    maxFontSizeMultiplier={MAX_DECK_SCALE}
+                  >
+                    {current.row.display_name}, {current.row.age}
+                  </Text>
+                  <Text
+                    style={styles.distance}
+                    maxFontSizeMultiplier={MAX_DECK_SCALE}
+                  >
+                    {distanceLine(current.row.distance_km)}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
               {/* The band on the photo's bottom corner, opposite the name
                 (owner, 2026-09-23: "uyum gostergesi fotografin sag
-                altina gitsin"). Its own Pressable inside the photo's:
-                the child takes the touch, so the tap that opens the
-                reading is not the tap that opens the person. */}
+                altina gitsin"). Drawn after the photo's button and over
+                it, so the tap that opens the reading is not the tap that
+                opens the person. */}
               <Pressable
                 style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
                 onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
@@ -656,7 +663,7 @@ export default function Discover() {
                   {t.discover.swipePass}
                 </Text>
               </Animated.View>
-            </Pressable>
+            </View>
             <View style={styles.info}>
               <BigThreeRow
                 three={current.row.big_three}
@@ -803,30 +810,6 @@ export default function Discover() {
           />
         </Popup>
       ) : null}
-      {/* Somebody from the list who is not in the deck: their profile,
-          which is as far as this screen can take us. */}
-      {admirer && admirerReading ? (
-        <Popup
-          visible
-          onClose={() => setAdmirer(null)}
-          bleed
-          testID="admirer-popup"
-        >
-          <ProfileView
-            name={admirer.person.display_name}
-            age={admirer.person.age}
-            caption={admirer.caption}
-            photos={admirer.person.photos}
-            sources={admirerSources}
-            three={admirer.person.big_three}
-            bio={admirer.person.bio}
-            reading={admirerReading}
-            chart={admirer.person.chart}
-            fullChartLabel={t.person.fullChart}
-            fullChartTitle={t.person.chartTitle(admirer.person.display_name)}
-          />
-        </Popup>
-      ) : null}
       {/* Over everything else on the screen, and outside the card so it does
           not fly away with a swipe. Present in every state — loading, empty,
           error — because widening the filters is the way out of an empty
@@ -940,13 +923,41 @@ export default function Discover() {
  * The deck with one card brought to the front, or null when that person
  * is not in it at all.
  */
+/**
+ * The deck with one person on top. Somebody the deck did not fetch — a
+ * liker outside this member's filters — is put there as the card the
+ * caller made of them, so tapping a name on "Seni beğenenler" always
+ * lands on a card and never on a different kind of screen (owner,
+ * 2026-09-23: "burada bir ayrim olmasin").
+ */
 function bringToFront(
   candidates: readonly Candidate[],
-  id: string,
-): readonly Candidate[] | null {
-  const found = candidates.find((candidate) => candidate.row.id === id);
-  if (found === undefined) return null;
+  wanted: Candidate,
+): readonly Candidate[] {
+  const found = candidates.find(
+    (candidate) => candidate.row.id === wanted.row.id,
+  );
+  if (found === undefined) return [wanted, ...candidates];
   return [found, ...candidates.filter((candidate) => candidate !== found)];
+}
+
+/**
+ * The card's row for somebody read off "Seni beğenenler". Every column a
+ * card draws is on the `liked_me` row already — the distance included,
+ * which is why it is on the view.
+ */
+function cardOf(person: Admirer): DiscoverRow {
+  return {
+    id: person.id,
+    display_name: person.display_name,
+    age: person.age,
+    gender: person.gender,
+    big_three: person.big_three,
+    chart: person.chart,
+    distance_km: person.distance_km,
+    bio: person.bio,
+    photos: [...person.photos],
+  };
 }
 
 /**

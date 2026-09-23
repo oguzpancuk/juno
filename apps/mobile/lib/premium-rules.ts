@@ -110,6 +110,7 @@ export interface LikedMeFields {
   readonly chart: PublicChart | null;
   readonly bio: string | null;
   readonly photos: readonly string[] | null;
+  readonly distance_km: number | null;
   readonly is_super: boolean;
   readonly liked_at: string;
 }
@@ -124,6 +125,9 @@ export interface Admirer {
   readonly chart: PublicChart;
   readonly bio: string | null;
   readonly photos: readonly string[];
+  /** Kilometres, the same number `discover` gives, so the list can hand
+   * the deck a card for somebody the deck's own filters left out. */
+  readonly distance_km: number;
   readonly is_super: boolean;
   readonly liked_at: string;
 }
@@ -141,7 +145,8 @@ export function admirerOf(row: LikedMeFields): Admirer | null {
     row.gender === null ||
     row.big_three === null ||
     row.chart === null ||
-    row.photos === null
+    row.photos === null ||
+    row.distance_km === null
   ) {
     return null;
   }
@@ -154,6 +159,7 @@ export function admirerOf(row: LikedMeFields): Admirer | null {
     chart: row.chart,
     bio: row.bio,
     photos: row.photos,
+    distance_km: row.distance_km,
     is_super: row.is_super,
     liked_at: row.liked_at,
   };

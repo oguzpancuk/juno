@@ -124,6 +124,7 @@ describe('who liked you', () => {
     } as unknown as LikedMeFields['chart'],
     bio: null,
     photos: ['a/1.png'],
+    distance_km: 4,
     is_super: false,
     liked_at: '2026-09-20T08:00:00.000Z',
     ...over,
@@ -133,6 +134,9 @@ describe('who liked you', () => {
     const person = admirerOf(row());
     expect(person?.display_name).toBe('Derya');
     expect(person?.photos).toEqual(['a/1.png']);
+    // The distance comes with them, because the list hands the deck a
+    // card and a card says how far away somebody is.
+    expect(person?.distance_km).toBe(4);
   });
 
   it('withholds the person when the view withheld the columns', () => {
@@ -149,11 +153,13 @@ describe('who liked you', () => {
           chart: null,
           bio: null,
           photos: null,
+          distance_km: null,
         }),
       ),
     ).toBeNull();
     // A row missing one column is withheld too, rather than drawn half.
     expect(admirerOf(row({ photos: null }))).toBeNull();
+    expect(admirerOf(row({ distance_km: null }))).toBeNull();
   });
 
   it('puts the stars first, then the newest', () => {

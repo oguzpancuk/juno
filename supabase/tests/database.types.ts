@@ -597,6 +597,7 @@ export type Database = {
           bio: string | null
           chart: Json | null
           display_name: string | null
+          distance_km: number | null
           gender: Database["public"]["Enums"]["gender"] | null
           id: string | null
           is_super: boolean | null
