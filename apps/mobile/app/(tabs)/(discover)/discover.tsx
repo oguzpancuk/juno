@@ -624,6 +624,31 @@ export default function Discover() {
                   colors={['transparent', color.scrim, color.bg]}
                   style={styles.photoScrim}
                 >
+                  {/* Over the name, inside the photograph, so it is the
+                    first thing read about the person (owner, 2026-09-23,
+                    choosing between three drafts). Its own Text rather
+                    than part of the photo button's label, so VoiceOver
+                    reads it in the order it is drawn — and the scrim is
+                    paint, so nothing here takes a touch. */}
+                  {current.row.likes_me ? (
+                    <View
+                      style={[
+                        styles.likedBanner,
+                        current.row.likes_me === 'super' &&
+                          styles.likedBannerSuper,
+                      ]}
+                      testID="likes-me"
+                    >
+                      <Text
+                        style={styles.likedBannerText}
+                        maxFontSizeMultiplier={MAX_DECK_SCALE}
+                      >
+                        {current.row.likes_me === 'super'
+                          ? `★  ${t.discover.likedYouSuper}`
+                          : `♥  ${t.discover.likedYou}`}
+                      </Text>
+                    </View>
+                  ) : null}
                   <Text
                     style={styles.name}
                     maxFontSizeMultiplier={MAX_DECK_SCALE}
@@ -990,6 +1015,10 @@ function cardOf(person: Admirer): DiscoverRow {
     distance_km: person.distance_km,
     bio: person.bio,
     photos: [...person.photos],
+    // Being on that list is what they did: this person chose this member.
+    // Only a premium member can open the list at all, which is the same
+    // condition the view puts on `discover.likes_me`.
+    likes_me: person.is_super ? 'super' : 'like',
   };
 }
 
@@ -1171,8 +1200,15 @@ const styles = StyleSheet.create({
   // 2026-09-14). Both card and photo may shrink: on a screen too short for
   // the full photo share it is the picture that gives way, never the
   // buttons, which keep the footer's minimum height.
-  card: { flexGrow: 0, flexShrink: 1 },
+  card: { flexGrow: 1, flexShrink: 1 },
   photoWrap: {
+    // `PHOTO_SCREEN_FRACTION` is the height it asks for; growing is what
+    // it does with whatever the block below leaves over. Fixed at the
+    // fraction, that leftover piled up between the bio and the round
+    // buttons — 51 points of it at 390x844 — which is what the owner saw
+    // (2026-09-23: "hala cok bosluk var"). The photograph is the only
+    // thing on this screen that can spend space without looking padded.
+    flexGrow: 1,
     flexShrink: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -1186,8 +1222,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
     // `Screen`'s own gap between children, so the big three sit the same
     // distance below the photo here as they do on the profile.
-    paddingTop: space.md,
-    gap: SPACING_FLOOR,
+    paddingTop: space.lg,
+    gap: space.md,
   },
   // Equal gaps around the buttons — the words to the buttons, the buttons
   // to the tab bar (owner, 2026-09-15: "uyum ile alt ve üstteki mesafeler
@@ -1200,7 +1236,7 @@ const styles = StyleSheet.create({
   // fazla"). No bottom inset: the tab bar under this screen already covers
   // the home indicator (lib/insets.ts).
   footer: {
-    flexGrow: 2,
+    flexGrow: 0,
     minHeight: ROUND_SIZE + 2 * SPACING_FLOOR,
     justifyContent: 'space-evenly',
     paddingTop: SPACING_FLOOR,
@@ -1243,13 +1279,27 @@ const styles = StyleSheet.create({
   // The words in a box, like the boxes the profile page is made of, so
   // the card's bottom half is two blocks rather than a row of chips and
   // then loose text (owner, 2026-09-23).
-  bioBox: {
-    borderRadius: radius.lg,
+  // A badge, not a button: it says what has already happened. The pill
+  // shape and the hairline are the membership sheet's, so the one thing
+  // on the card that only a premium member sees looks like the rest of
+  // what the membership draws.
+  likedBanner: {
+    alignSelf: 'flex-start',
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: glass.edge,
-    backgroundColor: glass.fillSoft,
+    borderColor: color.pink,
+    backgroundColor: glass.sheet,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+    paddingVertical: space.xs,
+    marginBottom: space.xs,
+  },
+  likedBannerSuper: { borderColor: color.warm },
+  likedBannerText: { ...type.caption, color: color.text },
+  bioBox: {
+    borderRadius: radius.md,
+    backgroundColor: glass.fillHigh,
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
   },
   bio: { ...type.body, color: color.text },
   // A stamp on the photo's upper corner, on the side the card is heading

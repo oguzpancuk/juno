@@ -200,6 +200,87 @@ create trigger likes_enforce_quota
 
 revoke all on function private.likes_enforce_quota() from public, anon, authenticated;
 
+-- -------------------------------------------------------------- discover
+/**
+ * `likes_me`: whether the person on this card has already chosen you.
+ *
+ * The deck draws a small badge above the name for it (owner, 2026-09-23:
+ * "kesfette bir profil kisiyi begendiyse ya da superlike attiysa bunu
+ * gostermemiz lazim"). Three values: null, 'like', 'super'.
+ *
+ * **Premium only, and withheld in the view rather than on the device.**
+ * Who has liked you is exactly what `liked_me` sells; a column every
+ * member could read over PostgREST would give the whole list away one
+ * card at a time, filters or no filters. So the answer is null for a
+ * free member, the same way `liked_me` nulls a person's columns — there
+ * is nothing to withhold on the client, because nothing is sent.
+ *
+ * A demo answers 'like' and never 'super'. It has no like row, so it is
+ * recognised by the flag, and it is on "Seni beğenenler" under exactly
+ * the condition that it is in this view (`liked_me`'s demo arm), so a
+ * demo without a badge here would be a demo the two screens disagree
+ * about. The star stays scarce: nothing that is not a person ever gives
+ * one.
+ *
+ * Everything else about the view is unchanged. The join is on `likes`'
+ * own primary key, so this costs one index probe per candidate.
+ */
+create or replace view public.discover
+with (security_invoker = false)
+as
+select
+  p.id,
+  p.display_name,
+  extract(year from age(current_date, p.birth_date))::int as age,
+  p.gender,
+  p.big_three,
+  p.chart,
+  round(extensions.st_distance(p.location, me.location) / 1000)::int
+    as distance_km,
+  p.bio,
+  p.photos,
+  case
+    when not me.is_premium then null
+    when p.is_demo then 'like'::text
+    when theirs.from_id is not null then
+      case when theirs.is_super then 'super'::text else 'like'::text end
+  end as likes_me
+from public.profiles p
+join public.profiles me on me.id = (select auth.uid())
+-- Their like on me, when there is one. `kind = 'like'`: a pass is not an
+-- interest, and the badge must never be drawn for one.
+left join public.likes theirs
+  on theirs.from_id = p.id
+ and theirs.to_id = me.id
+ and theirs.kind = 'like'
+where p.id <> me.id
+  and extensions.st_dwithin(p.location, me.location, me.radius_km * 1000)
+  and (
+    me.interested_in = 'everyone'
+    or (me.interested_in = 'women' and p.gender = 'woman')
+    or (me.interested_in = 'men' and p.gender = 'man')
+  )
+  and (
+    p.interested_in = 'everyone'
+    or (p.interested_in = 'women' and me.gender = 'woman')
+    or (p.interested_in = 'men' and me.gender = 'man')
+  )
+  -- Mine, then theirs: both ranges have to hold.
+  and extract(year from age(current_date, p.birth_date))::int
+      between me.age_min and me.age_max
+  and extract(year from age(current_date, me.birth_date))::int
+      between p.age_min and p.age_max
+  and not exists (
+    select 1 from public.likes l
+     where l.from_id = me.id and l.to_id = p.id
+  )
+  and not private.is_blocked(p.id)
+  and not exists (
+    select 1 from public.reports r
+     where r.reporter_id = me.id and r.reported_id = p.id
+  )
+  and cardinality(p.photos) > 0;
+
 -- -------------------------------------------------------------- liked_me
 /**
  * The people who have liked you and are still waiting for an answer.

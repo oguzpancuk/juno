@@ -157,6 +157,12 @@ export const t = {
     noAspect:
       'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
     detail: 'Uyum detayı',
+    // The badge over the name, for somebody who has already chosen you
+    // (owner, 2026-09-23). Only a premium member ever sees one: the view
+    // sends null to everybody else, because who has liked you is what
+    // the membership sells.
+    likedYou: 'Seni beğendi',
+    likedYouSuper: 'Seni süper beğendi',
     // What is left of a quota is not drawn anywhere (owner, 2026-09-23:
     // "kac begeni kaldigi gozukmesin, sadece bitince engel olunsun"), so
     // the three lines that counted it down are gone. The sentences for a

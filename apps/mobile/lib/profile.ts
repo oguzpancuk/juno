@@ -14,18 +14,28 @@ import {
 } from '@juno/geo';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { z } from 'zod';
+import {
+  ELEMENTS,
+  GENDERS,
+  INTERESTS,
+  type Gender,
+  type Interest,
+  type SunElement,
+} from './profile-enums';
 import { LEGAL_VERSION } from './legal';
 import { SORT_ORDERS } from './premium-rules';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 
-/** The four elements a Sun sign can have, as the filter offers them. */
-export const ELEMENTS = ['fire', 'earth', 'air', 'water'] as const;
-export type SunElement = (typeof ELEMENTS)[number];
-
-export const GENDERS = ['woman', 'man', 'unspecified'] as const;
-export const INTERESTS = ['women', 'men', 'everyone'] as const;
-export type Gender = (typeof GENDERS)[number];
-export type Interest = (typeof INTERESTS)[number];
+// One import for a profile's vocabulary, as it has always been; the
+// lists themselves live in a module with no device runtime behind it.
+export {
+  ELEMENTS,
+  GENDERS,
+  INTERESTS,
+  type Gender,
+  type Interest,
+  type SunElement,
+};
 
 /** Own profile as read back from `profiles` (Zod at the row boundary). */
 export const OwnProfileSchema = z.object({

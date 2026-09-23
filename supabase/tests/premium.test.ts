@@ -5,6 +5,7 @@ import {
   ISTANBUL,
   ISTANBUL_NEARBY,
   NOWHERE,
+  NOWHERE_ELSE,
   STARTER,
   insertProfileRow,
   profileRow,
@@ -606,5 +607,154 @@ describe('liked_me and the demo accounts', () => {
     expect(z.array(z.object({ id: z.string() })).parse(matched)).toHaveLength(
       1,
     );
+  });
+});
+
+/**
+ * `discover.likes_me`: the badge the deck draws over somebody's name
+ * (owner, 2026-09-23: "kesfette bir profil kisiyi begendiyse ya da
+ * superlike attiysa bunu gostermemiz lazim").
+ *
+ * The same rule as `liked_me`, on the other screen and therefore worth
+ * its own cases: who has chosen you is what the membership sells, so a
+ * free member's answer is null — in the view, not on the device. Its
+ * people live in their own stretch of ocean for the reason the demo
+ * block above names.
+ */
+describe('discover says who has already chosen you', () => {
+  let ray: TestUser; // the member reading her deck
+  let ivy: TestUser; // likes ray plainly
+  let lea: TestUser; // premium; stars ray
+  let tan: TestUser; // passes on ray
+  let oya: TestUser; // does nothing
+  let dem: TestUser; // a demo in ray's radius
+
+  /** The whole deck as ray sees it, by name. */
+  async function deck(): Promise<Map<string, string | null>> {
+    const { data, error } = await ray.client
+      .from('discover')
+      .select('display_name, likes_me');
+    expect(error).toBeNull();
+    return new Map(
+      z
+        .array(
+          z.object({
+            display_name: z.string(),
+            likes_me: z.string().nullable(),
+          }),
+        )
+        .parse(data)
+        .map((row) => [row.display_name, row.likes_me]),
+    );
+  }
+
+  beforeAll(async () => {
+    [ray, ivy, lea, tan, oya, dem] = await Promise.all([
+      user('ray'),
+      user('ivy'),
+      user('lea'),
+      user('tan'),
+      user('oya'),
+      user('demo-ray'),
+    ]);
+    for (const [who, name] of [
+      [ray, 'Ray'],
+      [ivy, 'Ivy'],
+      [lea, 'Lea'],
+      [tan, 'Tan'],
+      [oya, 'Oya'],
+    ] as const) {
+      await insertProfileRow(
+        who.client,
+        profileRow({
+          id: who.id,
+          display_name: name,
+          gender: 'woman',
+          interested_in: 'everyone',
+          lonLat: NOWHERE_ELSE,
+        }),
+      );
+    }
+    await uploadPhotos(dem.client, [`${dem.id}/1.png`]);
+    const { error } = await admin.from('profiles').insert({
+      ...profileRow({
+        id: dem.id,
+        display_name: 'Dem',
+        gender: 'woman',
+        interested_in: 'everyone',
+        lonLat: NOWHERE_ELSE,
+      }),
+      is_demo: true,
+    });
+    if (error) throw new Error(`insert demo Dem: ${error.message}`);
+
+    expect((await like(ivy.client, ivy.id, ray.id)).error).toBeNull();
+    await setPremium(lea, true);
+    expect(
+      (await like(lea.client, lea.id, ray.id, { super: true })).error,
+    ).toBeNull();
+    // A pass is not an interest, and the badge must never be drawn for
+    // one. Written as the passer, exactly as the deck writes it.
+    expect(
+      (
+        await tan.client.from('likes').insert({
+          from_id: tan.id,
+          to_id: ray.id,
+          kind: 'pass',
+        })
+      ).error,
+    ).toBeNull();
+  }, 60_000);
+
+  it('tells a free member nothing, while still giving her the deck', async () => {
+    const seen = await deck();
+    // The people are all there; only the badge is withheld.
+    expect([...seen.keys()].sort()).toEqual([
+      'Dem',
+      'Ivy',
+      'Lea',
+      'Oya',
+      'Tan',
+    ]);
+    expect([...seen.values()].filter((v) => v !== null)).toEqual([]);
+  });
+
+  it('names the two kinds once she is premium, and only those', async () => {
+    await setPremium(ray, true);
+    const seen = await deck();
+    expect(seen.get('Ivy')).toBe('like');
+    expect(seen.get('Lea')).toBe('super');
+    // Nothing for the one who passed, and nothing for the one who has
+    // not looked. A pass reaching the badge would tell her the opposite
+    // of the truth about Tan.
+    expect(seen.get('Tan')).toBeNull();
+    expect(seen.get('Oya')).toBeNull();
+  });
+
+  it('says a demo has liked her, and never that it starred her', async () => {
+    // The two screens have to agree: a demo is on "Seni beğenenler"
+    // under exactly the condition that it is in this deck, so a demo
+    // without a badge here would be a demo the screens disagree about.
+    // The star stays scarce — nothing that is not a person gives one.
+    expect((await deck()).get('Dem')).toBe('like');
+    const { data } = await ray.client
+      .from('liked_me')
+      .select('display_name, is_super');
+    const listed = z
+      .array(
+        z.object({
+          display_name: z.string().nullable(),
+          is_super: z.boolean(),
+        }),
+      )
+      .parse(data);
+    expect(listed.find((row) => row.display_name === 'Dem')?.is_super).toBe(
+      false,
+    );
+  });
+
+  it('drops the badge with the card once she has answered', async () => {
+    expect((await like(ray.client, ray.id, ivy.id)).error).toBeNull();
+    expect((await deck()).has('Ivy')).toBe(false);
   });
 });

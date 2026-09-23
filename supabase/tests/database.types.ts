@@ -586,6 +586,7 @@ export type Database = {
           distance_km: number | null
           gender: Database["public"]["Enums"]["gender"] | null
           id: string | null
+          likes_me: string | null
           photos: string[] | null
         }
         Relationships: []

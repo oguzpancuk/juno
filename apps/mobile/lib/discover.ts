@@ -1,66 +1,32 @@
 import {
   bandOf,
   BANDS,
-  BigThreeSchema,
-  compatibility,
-  describeAspectTr,
   elementOf,
   isLesserId,
-  PublicChartSchema,
   starterKey,
   type Band,
-  type Compatibility,
   type PublicChart,
 } from '@juno/astro';
 import { z } from 'zod';
-import { GENDERS } from './profile';
 import { orderCandidates, quotaRefusal, type SortBy } from './premium';
 import { parseRows, warnDropped } from './rows';
 import type { SunElement } from './profile';
 import { supabase } from './supabase';
+import { candidateOf, DiscoverRowSchema, type Candidate } from './discover-row';
 
-/** A row of the `discover` view (public columns only), Zod at the boundary. */
-export const DiscoverRowSchema = z.object({
-  id: z.string().uuid(),
-  display_name: z.string(),
-  age: z.number().int(),
-  gender: z.enum(GENDERS),
-  big_three: BigThreeSchema,
-  chart: PublicChartSchema,
-  distance_km: z.number().int().nonnegative(),
-  bio: z.string().nullable(),
-  photos: z.array(z.string()),
-});
-
-export type DiscoverRow = z.infer<typeof DiscoverRowSchema>;
-
-export interface Candidate {
-  readonly row: DiscoverRow;
-  readonly match: Compatibility;
-  /** Turkish one-liner from the caller's point of view, or null. */
-  readonly why: string | null;
-}
+export {
+  candidateOf,
+  DiscoverRowSchema,
+  LIKES_ME,
+  type Candidate,
+  type DiscoverRow,
+  type LikesMe,
+} from './discover-row';
 
 export type DiscoverState =
   | { readonly status: 'loading' }
   | { readonly status: 'ready'; readonly candidates: readonly Candidate[] }
   | { readonly status: 'error' };
-
-/**
- * One row, scored against the reader's chart. The deck also builds a card
- * this way for somebody it did not fetch — a person tapped on "Seni
- * beğenenler" who is outside the reader's filters (owner, 2026-09-23:
- * "burada bir ayrim olmasin") — so the scoring lives here rather than
- * inline below, and both cards are made the same way.
- */
-export function candidateOf(myChart: PublicChart, row: DiscoverRow): Candidate {
-  const match = compatibility(myChart, row.chart);
-  return {
-    row,
-    match,
-    why: match.strongest ? describeAspectTr(match.strongest) : null,
-  };
-}
 
 /**
  * Fetch candidates and score them on device against the caller's chart.

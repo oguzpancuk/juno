@@ -7425,3 +7425,65 @@ went between the bio and the buttons.
   arithmetic is what made the second case findable at all; the
   interpolations are its animated form, and the tests hold the two
   together.
+
+## 2026-09-23 — the badge, the bio box, and a port the harness lied about
+
+The owner asked for two things off one screenshot: the bio in a box, and
+some sign on a card that this person has already chosen you. The second
+went out as a design round — three drafts photographed from the stub
+harness, a recommendation, one word back. He picked the label over the
+name, and said the first box was ugly and the gap still too wide.
+
+**The gap was arithmetic, not taste.** The photograph's height is a fixed
+fraction of the window, so whatever the block below leaves over piles up
+in the one flexible thing on the screen — the footer, which spreads it
+around the round buttons. At 390x844 that was 51 points between the bio
+and the buttons. The photograph now grows into the leftover
+(`flexGrow: 1` over the same fraction as its basis), and the gap is 8.
+Measured in the browser, before and after: photo 0–473 → 0–544, bio box
+bottom 597 → 682, buttons top 648 → 690.
+
+That has a cost worth writing down: `PHOTO_SCREEN_FRACTION` exists
+because the deck's photograph and the profile's must end on the same line
+(owner, 2026-09-14). The deck's is now taller than the profile's on any
+screen with room to spare. The owner was told in the same message and can
+have the profile's grown to match with one word; until he says so, the
+two differ deliberately.
+
+**`discover.likes_me`.** Three values — null, 'like', 'super' — withheld
+from a free member _in the view_, not on the device, because who has
+liked you is exactly what `liked_me` sells and a column every member
+could read over PostgREST would give that list away one card at a time. A
+demo answers 'like' and never 'super': it is on "Seni beğenenler" under
+exactly the condition that it is in this deck, so a demo without a badge
+would be a demo the two screens disagree about. A _pass_ answers null,
+which is the case worth having a test for — the badge saying the
+opposite of the truth about somebody is the only way this feature can
+hurt.
+
+Verified on a throwaway PostgreSQL 16 cluster with the view's own text: a
+plain liker 'like', a starrer 'super', somebody who passed null, somebody
+who has not looked null, a demo 'like', and for a free member all five
+rows present with every badge null. The column origins are unchanged —
+seven columns still point at `profiles` in the stored rewrite rule, the
+same seven as before — so the generated types keep their foreign keys.
+
+Splitting `discover-row.ts` out of `discover.ts` was not tidying: the
+schema could not be tested at all, because `discover.ts` imports
+`./supabase`, which imports React Native, which Vitest cannot even parse.
+`profile-enums.ts` came out for the same reason, one import further down.
+The rule generalises: anything worth a test must not be one import away
+from the device.
+
+### Battery gaps
+
+- The screenshot harness has a trap that cost an hour here. The Expo web
+  export bakes `EXPO_PUBLIC_SUPABASE_URL` in, so a stub started on any
+  other port serves the _page_ while the _data_ still comes from whatever
+  is answering on the baked port. A second stub on 8093 looked like it
+  was working — the page was new, the deck was full — and every row came
+  from a stale process on 8099 that had never heard of the new column.
+  The symptom is a screen that renders perfectly and shows old data, with
+  nothing in the console. The tell is in the console all along: the
+  realtime socket names the baked port. Serve on the baked port, or check
+  it first.

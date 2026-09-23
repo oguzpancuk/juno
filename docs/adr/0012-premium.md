@@ -117,3 +117,27 @@ first (the people who liked this member, union the demo accounts) makes
 both arms index reads and leaves the top-level SELECT plain, so the
 origins are untouched. On the same cluster at 50k profiles, both shapes
 answering the same 43 rows: 85.3 ms before, 0.583 ms after.
+
+## The badge on the deck
+
+`discover.likes_me` says whether the person on the card has already
+chosen you: null, `'like'` or `'super'`. It is a third place the same
+fact is drawn, and it is withheld the same way as the other two — in the
+view, for a free member, not on the device. Who has liked you is the
+whole of what `liked_me` sells, and a column every member could read over
+PostgREST would hand that list over one card at a time, which is worse
+than showing the list, because it would look like nothing was being sold.
+
+Two answers are not obvious and are both pinned by tests. A **pass** is
+null: it is not an interest, and a badge is the one thing in this feature
+that can tell somebody the opposite of the truth about another person. A
+**demo** is `'like'` and never `'super'`: it appears on "Seni beğenenler"
+under exactly the condition that it appears in this deck, so a demo
+without a badge would be a demo the two screens disagree about, while the
+star stays scarce because nothing that is not a person gives one.
+
+The column is a CASE rather than another masking join, because unlike
+`liked_me` there is nothing here to mask — the person is on the deck
+either way, and only the badge is withheld. The existing columns' origins
+are unaffected: the top-level SELECT is still plain, and the seven that
+pointed at `profiles` still do.
