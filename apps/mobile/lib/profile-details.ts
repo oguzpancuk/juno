@@ -155,13 +155,14 @@ export function searchInterests(
  * so a name does not change language halfway through.
  *
  * Keyed folded, so every casing and both Turkish i's match; "gibi" in his
- * message means the list is meant to grow, and growing it is one entry.
+ * message means the list is meant to grow, and growing it is one entry —
+ * for every word but "üni", which `kindMark` below answers instead and
+ * says why.
  */
 const SCHOOL_KINDS: ReadonlyMap<string, string> = new Map([
   ['universitesi', 'Ü.'],
   ['universite', 'Ü.'],
   ['university', 'U.'],
-  ['uni', 'U.'],
   ['koleji', 'K.'],
   ['kolej', 'K.'],
   ['college', 'C.'],
@@ -170,6 +171,25 @@ const SCHOOL_KINDS: ReadonlyMap<string, string> = new Map([
 /** A word as it is compared: folded, and without the punctuation around it. */
 function wordKey(word: string): string {
   return searchKey(word.replace(/[.,;:()]/g, ''));
+}
+
+/**
+ * The initial a word stands for, or undefined when it names no kind.
+ *
+ * "Üni" is not in the map above and cannot be: the fold that makes every
+ * casing match drops the diaeresis too, so "Üni" and "Uni" arrive as one
+ * key `uni` and a map can only answer it once. It is also the one key
+ * where that letter is the whole difference — everywhere else the Turkish
+ * and English words differ by more than a diacritic. So this one is read
+ * off the word as it was typed.
+ */
+function kindMark(word: string): string | undefined {
+  const key = wordKey(word);
+  if (key === 'uni') {
+    const first = word[0] ?? '';
+    return first === 'ü' || first === 'Ü' ? 'Ü.' : 'U.';
+  }
+  return SCHOOL_KINDS.get(key);
 }
 
 /**
@@ -186,7 +206,7 @@ function wordKey(word: string): string {
  */
 export function shortSchool(name: string): string {
   const words = name.split(/\s+/).filter((word) => word.length > 0);
-  const marks = words.map((word) => SCHOOL_KINDS.get(wordKey(word)));
+  const marks = words.map(kindMark);
   if (marks.every((mark) => mark !== undefined)) return name;
   return words.map((word, at) => marks[at] ?? word).join(' ');
 }

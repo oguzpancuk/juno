@@ -147,6 +147,15 @@ describe('short school name', () => {
     expect(shortSchool('Cambridge University')).toBe('Cambridge U.');
   });
 
+  it('tells the two short forms apart, which the fold cannot', () => {
+    // "Üni" and "Uni" fold to the same key — the fold drops exactly the
+    // letter that says which language it is — so the answer is read off
+    // the word as it was typed, not off the key.
+    expect(shortSchool('Boğaziçi Üni')).toBe('Boğaziçi Ü.');
+    expect(shortSchool('Boğaziçi ÜNİ')).toBe('Boğaziçi Ü.');
+    expect(shortSchool('Boston Uni')).toBe('Boston U.');
+  });
+
   it('does not eat a word that holds a term inside it', () => {
     // Whole words only. These two carry a term as a substring, which is
     // what separates the rule from a `replace(/üniversite|.../gi, ...)`:

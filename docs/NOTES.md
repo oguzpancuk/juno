@@ -7009,3 +7009,34 @@ with. `shortSchool` is the pure half and has seven cases in
 blocks went red on the rewrite, and the sixth is the one the change does
 not touch. The widths were checked by driving the web target and
 photographing it, which is a look, not a verification.
+
+## 2026-09-23 — the one abbreviation the fold cannot key
+
+Review round 7 on the entry above. `searchKey` drops the diaeresis along
+with the casing, so "Üni" and "Uni" both arrive as the key `uni` and a
+map can answer them only once — it answered "U.", which put the English
+initial next to a Turkish name, and "Üni" is what a member here is
+likelier to type. It is also the only such collision: every other pair
+(üniversitesi/university, koleji/college) differs by more than a
+diacritic.
+
+`kindMark` in `lib/profile-details.ts` now answers that one key off the
+word as it was typed — a leading "ü" or "Ü" gives "Ü.", anything else
+"U." — and the rest still come from the map. Three cases, seen red first.
+
+The general shape is worth remembering: a fold built for _searching_ is
+the wrong key for a lookup whose **answer depends on what the fold threw
+away**. Searching wants "Üni" and "Uni" to be the same word; writing the
+abbreviation needs them told apart.
+
+### Left for the owner
+
+The same round measured the profile card's Okul column at this head:
+120 pt on a 390 pt screen, and 8 of the 13 seeded school names end in an
+ellipsis there, against 2 of 20 occupations. The reason is the word the
+deck now abbreviates — "Üniversitesi" alone is about 90 pt of the 120.
+`shortSchool` on that column would fit every seeded name ("Mimar Sinan
+Ü." is the widest at 102 pt), but the owner scoped the abbreviation to
+"keşfette" and the full name on the profile was a decision taken when
+the deck's rule was to _drop_ the kind rather than shorten it. Put to
+him rather than changed here.
