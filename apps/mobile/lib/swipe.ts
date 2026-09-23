@@ -59,8 +59,12 @@ export const CROSS_FOLLOW = 0.25;
  * A share rather than a number of points because the gap between the two
  * rules is itself proportional — three quarters of each axis' travel —
  * so a fixed band would be gentle on a small gesture and a lurch on a
- * large one. At 0.75 the band is exactly as wide as the gap it has to
- * cover, which is what keeps the card from outrunning the finger.
+ * large one. A straight drag never enters the band at all: its angle
+ * does not change, so its share is fixed and the card is exactly under
+ * the finger. Only a finger that turns mid-gesture crosses it, and there
+ * the card is closing a gap rather than tracking — measured at about
+ * twice the finger's rate, against the single 151-point frame this
+ * replaced (QA, 2026-09-23).
  *
  * The decision does not blend: the star is still the 2:1 line exactly,
  * and the stamp with it. Only the picture does.

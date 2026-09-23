@@ -7331,3 +7331,37 @@ one place a row becomes a card, whether it came from the deck's own fetch
 or from the list. The filters decide who is _offered_, not who may be
 answered: somebody who chose this member is answerable whatever the
 radius says.
+
+## 2026-09-23 — QA round 7, and one sentence that was not true
+
+PASS on all four, and the method is the part worth keeping: every probe
+was run against a **control** — the pre-fix bundle, same script — so
+nothing passed vacuously. The nested `<button>` probe finds one in the
+old build and none in the new; the boundary crossing moves 172 points in
+one frame on the old build and at most 11 on the new; the tap on a row
+leaves the old build on Selin with a profile popup and puts the new one
+on Irmak's card. After round 6's phantom testIDs that is the right habit,
+and the harness also prints the `entry-<hash>.js` it is actually serving,
+because a stale stub on a busy port once made a run "reproduce" a bug
+that was already fixed.
+
+The one finding was in a comment, not in code: `UP_BLEND`'s doc claimed
+the band's width "keeps the card from outrunning the finger". It does
+not, and the next sentence already said the true thing. A straight drag
+never enters the band — its angle is fixed, so its share is fixed and the
+card is exactly under the finger. A finger that turns crosses it, and
+there the card closes a gap at about twice the finger's rate. Measured,
+and now what the comment says.
+
+Also from this round: the owner's web report and the review's VoiceOver
+finding were one bug. `react-native-web` renders `accessibilityRole="button"`
+as a real `<button>`, and iOS collapses an accessible subtree; a nested
+`Pressable` with a role is invalid on one and invisible on the other.
+
+### Battery gaps
+
+- `tests/realtime.test.ts` failed once in CI on a commit that touched
+  nothing near it, and passed on the re-run of the same commit — a
+  message that did not cross inside a 2-second budget. First flake seen
+  in this suite. If it comes back, the budget is the thing to look at
+  rather than the test.
