@@ -7211,3 +7211,38 @@ It is `claimsCard(dx, dy)` in `apps/mobile/lib/swipe.ts` now, with
 `CLAIM_DISTANCE`, and five cases of its own seen red first — a straight
 tap, a short drift, a sideways drag, an upward drag, and the 45° case
 round 4 found by hand. The deck imports both.
+
+## 2026-09-23 — Sixth QA round: PASS, and the earlier rounds' tap check was vacuous
+
+165 driven gestures against the export of `431fa4f`, every one photographed
+and matched to the row the stub backend received. The stamp is legible in
+the pixels from 200 points of travel all the way to 844 — a full screen
+height, card long gone — and its box never moves (`top: 72` in all 165).
+It is faint but readable at the flick floor. Nothing lingers after a
+fly-out. Over a 132-gesture quadrant sweep there was no gesture whose
+verdict disagreed with what was drawn, in either direction, and the row
+always named the card that was on top. Taking a star back, in four
+shapes, liked and passed nobody.
+
+**The finding is about the harness, not the app, and it reaches
+backwards.** The probe the earlier rounds used asked for
+`[data-testid="person-sheet"]` and `[data-testid="detail-sheet"]`.
+Neither exists: the deck's are `person-popup` and `detail`. So every
+"sheet: false" those rounds printed was vacuously false, and no round
+before this one actually demonstrated that a tap opens a profile. With
+the right selectors it does, including the short-drift taps.
+
+Two limits worth writing down. Chrome's CDP touch pipeline swallows the
+first move under about 15 px on both axes, so the 8-point
+`CLAIM_DISTANCE` boundary cannot be exercised in a browser at all — the
+predicate is covered by `swipe.test.ts` and the wiring is verified from
+16 points up. And a finger coming down again during the 220 ms fly-out
+cannot be driven, because there is no longer a card under the touch to
+aim at; the `idle`/`grantedId` guards were read, not run.
+
+### Battery gaps
+
+- A testID in a QA probe is unchecked text. Two of them were wrong for
+  five rounds and the probe reported success. Anything the QA harness
+  selects by should be grepped out of `apps/mobile` once before it is
+  trusted.
