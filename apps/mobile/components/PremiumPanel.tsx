@@ -108,12 +108,13 @@ export function PremiumPanel({ onBought }: { onBought?: () => void }) {
           .map((line, index, all) => (
             <View key={line} style={styles.benefit}>
               {/* The last line is what a free membership is, not a
-                  benefit, so it carries no mark and reads quieter. */}
-              <Text
-                style={index === all.length - 1 ? styles.note : styles.mark}
-              >
-                {index === all.length - 1 ? '' : '✦'}
-              </Text>
+                  benefit, so it carries no mark and reads quieter. No
+                  empty mark either: an empty `Text` styled like the note
+                  is a second `flex: 1` child, and the row splits itself
+                  in half around it (QA, 2026-09-23). */}
+              {index === all.length - 1 ? null : (
+                <Text style={styles.mark}>✦</Text>
+              )}
               <Text
                 style={
                   index === all.length - 1 ? styles.note : styles.benefitText

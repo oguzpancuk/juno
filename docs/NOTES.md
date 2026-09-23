@@ -6791,12 +6791,26 @@ refuses and a browser draws happily as two stacked overlays, so
 `premium-sort-free.png` was taken of a screen that was broken on a
 phone. The harness was not kept, same as the sibling's.
 
-The eight: `premium-deck-free` (the star button between ✕ and ♥, the
+The nine: `premium-deck-free` (the star button between ✕ and ♥, the
 day's like counter, the chip with its badge), `premium-liked-me-locked`,
 `premium-sort-free` (the toggle with Uyum behind the lock),
+`premium-sort-upsell` (the membership opened inside the filters sheet),
 `premium-screen`, `premium-active`, `premium-liked-me-list`,
 `premium-sort-on`, `premium-deck-premium` (the star count where the like
-counter was).
+counter was). All nine were re-driven on 2026-09-23 after the QA pass,
+so they show the code as it stands rather than as it was before the
+review rounds.
+
+**The QA pass (2026-09-23), PASS with one defect.** `evaluator-qa` built
+its own stand-in rather than trusting this one, re-rendered every screen
+and compared: the free filters sheet came out byte-identical to the
+committed shot, and no shot showed a state the current code can no longer
+produce. What it did find is in the benefits card: the last line — the
+one that says what a free membership is — was rendered with an empty
+`Text` in the mark slot, styled like the line itself, so the row had two
+`flex: 1` children and the sentence was squeezed into the right half.
+Fixed by rendering no mark at all for that line, and the three shots that
+show the card were re-driven.
 
 **The review round, same day.** Six findings, one of them the quota's
 own: `private.likes_enforce_quota` was written SECURITY INVOKER on the
