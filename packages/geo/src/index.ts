@@ -4,7 +4,7 @@ export {
   type BirthPlaceTime,
   type ResolvedBirth,
 } from './birth';
-export { allCities, cityById, searchCities, searchKey } from './cities';
+export { allCities, cityAt, cityById, searchCities, searchKey } from './cities';
 export {
   CityListSchema,
   CitySchema,

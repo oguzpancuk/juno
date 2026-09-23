@@ -38,6 +38,7 @@ import {
 } from '@/lib/photos';
 import type { ProfileDraft } from '@/lib/photos';
 import { cleanDetail } from '@/lib/profile-details';
+import { useOwnCity } from '@/lib/own-city';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -68,6 +69,9 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   // The same height the deck's photo reaches, so the two line up.
   const { height: windowHeight } = useWindowDimensions();
+  // Worked out on the device and kept here; see the hook for why that is
+  // the whole of it.
+  const city = useOwnCity();
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -302,6 +306,10 @@ export default function Profile() {
         <ProfileView
           name={state.profile.display_name}
           age={ageOn(state.profile.birth_date)}
+          // Where a deck member's card has the distance. Undefined until
+          // it is known, and if it never is the line stays empty, as it
+          // was before this had anything to put there.
+          caption={city ?? undefined}
           photos={photos}
           sources={sources}
           three={state.profile.big_three}

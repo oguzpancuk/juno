@@ -3,7 +3,9 @@ import { resolveBirth } from './birth';
 import {
   EXONYMS,
   allCities,
+  cityAt,
   cityById,
+  distanceKm,
   exonymCities,
   searchCities,
   searchKey,
@@ -179,5 +181,49 @@ describe('search ranking', () => {
     expect(searchCities('', 5)).toEqual([]);
     expect(searchCities('   ', 5)).toEqual([]);
     expect(searchCities('zzzznotacity', 5)).toEqual([]);
+  });
+});
+
+describe('cityAt', () => {
+  it('names the city a point stands in', () => {
+    // Sultanahmet, a street corner in Ankara, and Konak in İzmir.
+    expect(cityAt(41.0082, 28.9784)?.name).toBe('İstanbul');
+    expect(cityAt(39.9334, 32.8597)?.name).toBe('Ankara');
+    expect(cityAt(38.4237, 27.1428)?.name).toBe('İzmir');
+  });
+
+  it('answers with the city rather than the district it is in', () => {
+    // The bundled list holds districts as well as cities, and a district
+    // centre is the nearer point: Eminönü is 1.2 km from Sultanahmet and
+    // the İstanbul entry is 2.5 km. Someone there is in İstanbul, so the
+    // answer is the most populous city in reach, not the closest one.
+    expect(cityAt(41.0082, 28.9784)?.name).not.toBe('Eminönü');
+    // The same from the other shore, where Kadıköy and Üsküdar are the
+    // near entries.
+    expect(cityAt(40.99, 29.03)?.name).toBe('İstanbul');
+  });
+
+  it('does not reach past its radius for a bigger neighbour', () => {
+    // İzmit, where Adapazarı is 39 km away and half as populous again.
+    expect(cityAt(40.7654, 29.9408)?.name).toBe('İzmit');
+    // Bursa, 92 km from İstanbul across the water.
+    expect(cityAt(40.1826, 29.0665)?.name).toBe('Bursa');
+  });
+
+  it('says nothing where no city is near', () => {
+    // Mid-Atlantic, and the empty quarter of the Sahara: "the city you
+    // are in" has no answer there, and the nearest one is not it.
+    expect(cityAt(0, -30)).toBeUndefined();
+    expect(cityAt(21.5, 21.5)).toBeUndefined();
+  });
+
+  it('measures the short way round, not through the numbers', () => {
+    // Two points either side of the antimeridian are neighbours. A flat
+    // subtraction of the longitudes puts them most of the planet apart,
+    // and every radius above would then be read off a nonsense distance.
+    expect(distanceKm(0, 179.9, 0, -179.9)).toBeLessThan(30);
+    // A sanity pair with a known answer: İstanbul to Ankara is ~350 km.
+    expect(distanceKm(41.0082, 28.9784, 39.9334, 32.8597)).toBeGreaterThan(330);
+    expect(distanceKm(41.0082, 28.9784, 39.9334, 32.8597)).toBeLessThan(370);
   });
 });

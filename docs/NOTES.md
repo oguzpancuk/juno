@@ -7157,3 +7157,54 @@ driving the web target and photographing the deck.
 ### Upstream candidates
 
 None this round.
+
+## 2026-09-23 — the city on your own page, and nobody else's
+
+Owner: "kisinin profilinde isim ve diger alanlar arasinda bosluk yerine
+bulundugu sehir yazsin", then, when asked which profiles he meant, "ben
+zaten sadece kendi profilinde sehir goziksun dedim, baskalarininkinde
+ayni yerde mesafe gozukecek". So the always-drawn caption line under the
+name carries the city on your own page and the distance on everyone
+else's, which is the one it already carried.
+
+**The app knew nobody's city, and still does.** `profiles` has
+`birth_city_id`, immutable and the wrong city for anyone who has moved,
+and a `location` point snapped to a ~1 km grid that never leaves the
+server — what another member gets is `round(st_distance(...)/1000)` and
+nothing else. That is the same decision as the grid snapping and the
+privacy notice's "kimse tam yerini görmez", defended in several places.
+A city visible to other members would have been a column, an append to
+both views, a `grant update` line, three Zod schemas and a KVKK notice
+change. His answer took all of that off the table: the city is worked
+out on the device from the device's own fix, drawn, and never stored or
+sent, so nothing about anybody else changed.
+
+`cityAt(latitude, longitude)` in `packages/geo` is the new piece, with
+`distanceKm` beside it. Two things in it are worth knowing before
+touching it:
+
+- **The most populous city in reach, not the nearest one.** The bundled
+  list holds districts as well as cities, and a district centre is the
+  closer point for someone standing in it: nearest answers "Eminönü" for
+  a point in Sultanahmet, where the İstanbul entry is 1.3 km further
+  away. That case is a test.
+- **A radius, so open country has no answer.** 30 km: wide enough to
+  cover a big city's spread, short enough that Adapazarı cannot answer
+  for İzmit at 39 km or İstanbul for Bursa at 92. Outside it the line is
+  empty, exactly as it looked before.
+
+Haversine rather than subtracting the coordinates, because longitudes
+wrap; `distanceKm` is exported for the test that proves it.
+
+### Battery gaps
+
+`cityAt` is tested; the wiring is not, as ever. What no test here can
+reach either: the device fix itself. `useOwnCity` is a hook over
+`deviceLocation()`, and a refused or slow fix, which returns undefined
+after 5 s, leaves the line empty. The web screenshots grant the browser a
+geolocation override to show the filled line — that is the rig, not the
+app.
+
+### Upstream candidates
+
+None this round.

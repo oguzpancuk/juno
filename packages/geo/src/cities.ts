@@ -146,6 +146,70 @@ export function cityById(id: number): City | undefined {
 }
 
 /**
+ * How far a point may be from a city's centre and still be answered with
+ * that city. A city here is one coordinate pair, so someone across town
+ * is already tens of kilometres from it; 30 km covers the spread of the
+ * largest Turkish cities and stops short of the next one along — Bursa
+ * is 92 km from İstanbul and Adapazarı 39 km from İzmit, and neither
+ * must be able to answer for the other.
+ */
+const CITY_RADIUS_KM = 30;
+
+const EARTH_KM = 6371;
+const RADIAN = Math.PI / 180;
+
+/**
+ * Great-circle distance in kilometres. Haversine rather than a flat
+ * subtraction of the coordinates: longitudes wrap, and two points either
+ * side of the antimeridian are neighbours however far apart their
+ * numbers are.
+ *
+ * Exported for the test that proves that; `cityAt` is the way to use it.
+ */
+export function distanceKm(
+  aLat: number,
+  aLon: number,
+  bLat: number,
+  bLon: number,
+): number {
+  const dLat = (bLat - aLat) * RADIAN;
+  const dLon = (bLon - aLon) * RADIAN;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(aLat * RADIAN) * Math.cos(bLat * RADIAN) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/**
+ * The city a point is in, or undefined when no city is within
+ * `CITY_RADIUS_KM` — open country has no answer to "which city are you
+ * in", and the nearest town an hour away is not it.
+ *
+ * The most populous city in reach, not the nearest one. The list holds
+ * districts as well as cities, and a district's centre is the closer
+ * point for anyone standing in it: nearest would answer "Eminönü" for
+ * someone in Sultanahmet, where the İstanbul entry is 1.3 km further
+ * away. Population is compared rather than trusting the list's own
+ * order, so a rebuild that sorted differently cannot change the answer.
+ *
+ * Offline, like everything else here: no reverse-geocoding service sees
+ * the point, which is the whole reason the coordinates can be used for
+ * this at all.
+ */
+export function cityAt(latitude: number, longitude: number): City | undefined {
+  let best: City | undefined;
+  for (const { city } of load()) {
+    if (best !== undefined && city.population <= best.population) continue;
+    if (
+      distanceKm(latitude, longitude, city.latitude, city.longitude) <=
+      CITY_RADIUS_KM
+    )
+      best = city;
+  }
+  return best;
+}
+
+/**
  * Diacritic-insensitive search, best match first: a fully typed Turkish
  * exonym, then a whole-name hit, then a name that starts with the query,
  * then a half-typed exonym, then a name whose later word starts with it

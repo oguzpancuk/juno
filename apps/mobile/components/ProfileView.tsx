@@ -109,7 +109,14 @@ export function ProfileView({
   name: string;
   /** null when the date could not be read; the name then stands alone. */
   age: number | null;
-  /** A line under the name on the photo — the distance, for a deck member. */
+  /**
+   * The line under the name on the photo: how far away a deck member is,
+   * and the city you are in on your own page (owner, 2026-09-23: "ben
+   * zaten sadece kendi profilinde sehir goziksun dedim, baskalarininkinde
+   * ayni yerde mesafe gozukecek"). One line, two things, because it is
+   * one place — what a reader wants there is where this person is.
+   * Omitted where neither is known, and then it is drawn empty.
+   */
   caption?: string | undefined;
   photos: readonly string[];
   /** From `usePhotoSources(photos)`: aligned with `photos` by index. */
@@ -568,7 +575,8 @@ function PhotoCarousel({
             has a distance line here, and the two are supposed to be the
             same card (owner, 2026-09-14). An empty line keeps the name on
             the same y rather than letting it drop 22pt on the one screen
-            that has no caption. */}
+            that has no caption — the chat header, and your own page
+            before the city is known or where there is none. */}
         <Text style={styles.caption}>{caption ?? ''}</Text>
         <FactRows details={details} />
       </LinearGradient>
