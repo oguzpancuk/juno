@@ -7513,7 +7513,7 @@ while JavaScript is busy, so the deck had the same arithmetic written out
 a second time. They agreed — that day. `stampRamps` exports the three
 ramps as data, the deck builds its interpolations from them, and a test
 composes them exactly as the deck does (gate times ramp) and sweeps the
-result against `stampStrength` at 13 456 points. Perturbing one ramp by
+result against `stampStrength` at 13 225 points. Perturbing one ramp by
 20% fails it. The general shape: when a pure rule cannot be _called_ by
 the code that draws it, export the drawing's _parameters_ from the rule
 and check the composition, rather than trusting two copies to stay equal.
@@ -7540,6 +7540,24 @@ that did not deliver it, guarded by `pinned.current === null` so a second
 tap still wins. Driven either side of the change with the same script and
 the same stub, the second `discover` read answering 500: the old bundle
 comes back on Selin, the new one on Irmak.
+
+**…and putting it back on a _cancelled_ load is round 4 all over again.**
+Round 7 read the same six lines the other way round, and it is right. A
+load is cancelled because a newer one replaced it, and React runs that
+newer effect body synchronously on the change: it has already read the
+ref and emptied it by the time the old promise lands, so
+`pinned.current === null` is its ordinary state rather than evidence that
+nobody wants the tap. Putting it back there hands it to whatever reload
+comes next. Driven on the current head: tap Irmak, open and close the
+filters while that load is in flight — the deck comes back on Selin, as
+it should — then leave the tab and return, and the deck is on Irmak, two
+loads and a tab switch after the tap, asked for by nobody. The guard is
+`cancelled`, and the two cases are now named separately: a load that
+**failed** gives the tap back (round 5), a load that was **replaced**
+forgets it (round 4). The generalisable bit is smaller than either: a
+sentinel that a newer run also writes cannot tell you whether the newer
+run wants it — only a flag about _this_ run can, and `cancelled` was
+already sitting there.
 
 ### Battery gaps
 

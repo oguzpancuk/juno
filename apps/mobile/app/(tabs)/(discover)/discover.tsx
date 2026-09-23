@@ -186,8 +186,22 @@ export default function Discover() {
       // them with no way back but the list (review, 2026-09-23). Put it
       // back only if nothing newer has claimed the ref, so two taps in
       // flight are still two locals and the second one wins.
+      //
+      // Never on a cancelled load, though — that is this same ref's
+      // round-4 leak from the other end (review, 2026-09-23). A load is
+      // cancelled because a newer one replaced it, and that newer one
+      // has already read the ref and emptied it, synchronously, before
+      // this promise lands: `=== null` is then its ordinary state rather
+      // than evidence that nobody wants it, so putting the tap back
+      // hands it to whatever reload comes next. Driven: tap somebody,
+      // open and close the filters while that load is in flight, and the
+      // deck goes where it should — then the next return to the tab
+      // jumped to the tapped person, two loads later, asked for by
+      // nobody. A cancelled load forgets the tap, which is what round 4
+      // decided and what the deck has always done.
       const restore = (): void => {
-        if (pinned.current === null) pinned.current = wanted;
+        if (cancelled || pinned.current !== null) return;
+        pinned.current = wanted;
       };
       // After any filter write still in flight: closing the filters sheet
       // reloads the deck at once, and it must load with what was just set.
@@ -220,10 +234,7 @@ export default function Discover() {
           };
         })
         .then((result) => {
-          if (cancelled) {
-            restore();
-            return;
-          }
+          if (cancelled) return;
           if (result.status === 'missing') {
             router.replace('/onboarding');
             return;
