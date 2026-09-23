@@ -7040,3 +7040,31 @@ deck now abbreviates — "Üniversitesi" alone is about 90 pt of the 120.
 "keşfette" and the full name on the profile was a decision taken when
 the deck's rule was to _drop_ the kind rather than shorten it. Put to
 him rather than changed here.
+
+## 2026-09-23 — the profile card shortens the school too
+
+Owner's answer to the question the entry above left him: "profilde de
+kısaltalım". `DetailsCard`'s Okul column draws
+`shortSchool(details.university)`, so both places a school name is read —
+the deck's line and the profile card — go through the same function.
+
+This closes the measurement round 7 made: 8 of the 13 seeded names
+ellipsized in that column at 120 pt, because "Üniversitesi" alone is
+about 90 pt of it. `Boğaziçi Üniversitesi` now reads `Boğaziçi Ü.` at
+73.7 pt and the widest seeded name, `Mimar Sinan Ü.`, at 101.5.
+
+Nothing about storage changes and the editor is untouched: the field
+holds what was typed and the row keeps it, which is the property that
+lets this stay a drawing decision rather than a data one. The earlier
+comments saying the shortening was deck-only are corrected in place
+rather than left to contradict the code.
+
+A long **occupation** can still clip — "Kıdemli ürün tasarımcısı" does
+not fit 120 pt — and that is unchanged and deliberate: there is no
+equivalent of "Üniversitesi" to take out of a job title.
+
+### Battery gaps
+
+Same as the two entries above. `shortSchool` is tested; which columns
+call it is wiring the battery cannot see, so it was checked by driving
+the web target and photographing both screens.

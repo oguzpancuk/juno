@@ -39,6 +39,7 @@ import {
   MAX_INTERESTS,
   heightStop,
   searchInterests,
+  shortSchool,
   stopHeight,
   toggleInterest,
   type ProfileDetails,
@@ -258,7 +259,13 @@ function DetailsCard({
     {
       key: 'university',
       label: t.profile.universityColumn,
-      value: details.university,
+      // Short here as on the deck (owner, 2026-09-23: "profilde de
+      // kisaltalim"). The column is about a third of the card, and
+      // "Üniversitesi" is most of what a school name spends it on while
+      // saying nothing about which school it is. The editor still holds
+      // the name as it was typed; this is the drawing, not the value.
+      value:
+        details.university === null ? null : shortSchool(details.university),
       share: true,
     },
   ];
@@ -283,10 +290,10 @@ function DetailsCard({
               >
                 <Text style={styles.factLabel}>{fact.label}</Text>
                 {/* Never onto a second line (owner, 2026-09-23: "meslek
-                    ve okul asla alt satira tasmasin"). Now that the two
-                    text columns have the whole card but the height's own
-                    width, most values fit; one that still does not ends
-                    in an ellipsis rather than wrapping. */}
+                    ve okul asla alt satira tasmasin"). Between the wider
+                    columns and the shortened school most values fit; one
+                    that still does not ends in an ellipsis rather than
+                    wrapping. */}
                 <Text
                   style={styles.factValue}
                   numberOfLines={1}

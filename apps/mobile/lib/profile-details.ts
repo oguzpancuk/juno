@@ -144,11 +144,12 @@ export function searchInterests(
 
 /**
  * The words that say what kind of school something is rather than which
- * one it is, each with the initial it is written as on the deck's card
- * (owner, 2026-09-23: "kesfette universitesi, uni, college, university
- * gibi alanlari atmak yerine kisaltma yazalim. yani bogazici universitesi
- * degil bogazici u.") — the card's line is one line that clips, and this
- * is the half of a school name that says nothing about which one it is.
+ * one it is, each with the initial it stands for (owner, 2026-09-23:
+ * "kesfette universitesi, uni, college, university gibi alanlari atmak
+ * yerine kisaltma yazalim. yani bogazici universitesi degil bogazici
+ * u.", then "profilde de kisaltalim") — every place a school name is
+ * drawn gives it a share of one line that clips, and this is the half of
+ * the name that says nothing about which school it is.
  *
  * The initial keeps the language of the word it replaces: the Turkish
  * "Üniversitesi" becomes "Ü." and the English "University" becomes "U.",
@@ -199,10 +200,12 @@ function kindMark(word: string): string | undefined {
  * shortened where it stands rather than moved or dropped, so
  * "University of Cambridge" reads "U. of Cambridge".
  *
- * For display, never for storage — the profile page still gives the name
- * in full, because there it has a card to itself rather than a share of
- * one line. A name that is nothing but its kind ("Üniversite") comes back
- * whole: a bare "Ü." would lose the only thing it said.
+ * For display, never for storage. Both places a school is read — the
+ * deck's card line and the profile's Okul column — draw it through here,
+ * and the field in the editor holds what was typed, unchanged, which is
+ * also what the row keeps. A name that is nothing but its kind
+ * ("Üniversite") comes back whole: a bare "Ü." would lose the only thing
+ * it said.
  */
 export function shortSchool(name: string): string {
   const words = name.split(/\s+/).filter((word) => word.length > 0);
