@@ -171,6 +171,52 @@ export function stampStrength(
   };
 }
 
+/** One clamped straight line between two points, as `interpolate` draws it. */
+export interface StampRamp {
+  /** The gesture values the ramp runs between, ascending. */
+  readonly inputRange: readonly [number, number];
+  /** What the stamp's opacity is at each end. */
+  readonly outputRange: readonly [number, number];
+}
+
+/**
+ * The three ramps the deck animates the stamps with, as data.
+ *
+ * `stampStrength` is the rule, but the deck cannot call it once a frame:
+ * an opacity has to be an animated node so it runs on the UI thread
+ * while JavaScript is busy. So the deck builds its three
+ * `Animated.interpolate` calls from these, and
+ * `holds the deck's own ramps to the same rule` sweeps them back against
+ * `stampStrength`. Without that the tested rule and the drawn one are
+ * two rules again — which is the defect this corner of the screen has
+ * produced three times now (review, 2026-09-23).
+ *
+ * The `upward` gate is not in here because it is not a ramp: it is 1 or
+ * 0 either side of `isUpwardGesture`, and the deck multiplies by it.
+ */
+export function stampRamps(
+  width: number,
+  height: number,
+): { like: StampRamp; pass: StampRamp; super: StampRamp } {
+  const across = width * SWIPE_THRESHOLD;
+  const up = height * SUPER_THRESHOLD;
+  return {
+    like: { inputRange: [0, across], outputRange: [0, 1] },
+    pass: { inputRange: [-across, 0], outputRange: [1, 0] },
+    super: { inputRange: [-up, 0], outputRange: [1, 0] },
+  };
+}
+
+/** `Animated.interpolate` with `extrapolate: 'clamp'`, on the JS side. */
+export function rampAt(ramp: StampRamp, value: number): number {
+  const [from, to] = ramp.inputRange;
+  const [low, high] = ramp.outputRange;
+  if (!(to > from) || !Number.isFinite(value)) return low;
+  const share = (value - from) / (to - from);
+  const held = share < 0 ? 0 : share > 1 ? 1 : share;
+  return low + (high - low) * held;
+}
+
 export function isUpwardGesture(dx: number, dy: number): boolean {
   if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
   // `-dy`, not its size: a card that travelled down fails this outright.

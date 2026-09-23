@@ -77,20 +77,24 @@ export const SCREEN_TOP_GUTTER = 20;
  * photograph asks for and grows into whatever the block below leaves
  * over, so that the leftover never turns into a gap above the buttons.
  *
- * Raised from 0.56 on 2026-09-23. At 0.56 the deck's block below left 51
- * points spare on a 390x844 phone and the footer spread them around the
- * round buttons (owner: "hala cok bosluk var"); the number is now what
- * the deck settles at for a card with a two-line bio, so on that card the
- * two screens are within a couple of points of each other and the deck
- * has nothing left to spend. A card with a short bio or none leaves the
- * deck's photograph up to about 25 points taller than the profile's,
- * which is the price of never drawing that gap again (owner told,
- * 2026-09-23).
+ * 0.56 → 0.64 → 0.615, all on 2026-09-23. At 0.56 the deck's block below
+ * left 51 points spare on a 390x844 phone and the footer spread them
+ * around the round buttons (owner: "hala cok bosluk var"), so the
+ * photograph grows into the leftover now; 0.64 then matched the two
+ * screens on a card with a two-line bio. The bio takes three lines since
+ * "bioyu 3 satir gozukecek sekilde yap", and a full three-line box is
+ * the tallest the block below ever gets — 0.615 is the height the deck
+ * settles at there, which makes that card and the profile the same
+ * (519 each at 390x844) and means the deck's photograph is never
+ * *shorter* than the profile's. A card with less to say lets its
+ * photograph take the slack instead: 542 on two lines, 565 on one, 626
+ * on a card with no bio at all. That is the price of never drawing the
+ * gap above the buttons again, and the owner has been told the numbers.
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
  */
-export const PHOTO_SCREEN_FRACTION = 0.64;
+export const PHOTO_SCREEN_FRACTION = 0.615;
 
 /**
  * What a host owes its first child if that child takes the top edge.

@@ -138,8 +138,17 @@ export const t = {
     // What VoiceOver reads for the photo and for the band. A label takes
     // the place of the text inside a button, so it carries what is drawn
     // there first, then what a tap does.
-    openPerson: (name: string, age: number, distance: string) =>
-      `${name}, ${age}, ${distance}. Profili gör`,
+    openPerson: (
+      name: string,
+      age: number,
+      distance: string,
+      // What the badge over the name says, when there is one. It has to
+      // be in here: a label replaces everything drawn inside the button,
+      // so a badge left out of it is a badge VoiceOver never reads
+      // (review, 2026-09-23). First, because it is drawn first.
+      liked: string | null,
+    ) =>
+      `${liked === null ? '' : `${liked}. `}${name}, ${age}, ${distance}. Profili gör`,
     openDetail: (band: string) => `${band} uyum. Uyum detayı`,
     // The stamps a drag reveals. Pre-uppercased: RN textTransform maps
     // Turkish i → I, not İ.

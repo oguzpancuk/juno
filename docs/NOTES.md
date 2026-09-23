@@ -7492,6 +7492,43 @@ schema could not be tested at all, because `discover.ts` imports
 The rule generalises: anything worth a test must not be one import away
 from the device.
 
+**A badge drawn inside a button is a badge no screen reader reads.** The
+"seni beğendi" label sits over the name, inside the photograph's
+`Pressable`, and that `Pressable` carries its own `accessibilityLabel` —
+which _replaces_ everything drawn inside it, on iOS by collapsing the
+subtree and on the web by winning over the inner text as the accessible
+name. So the one new fact on the card was invisible to VoiceOver, and
+the comment beside it claimed the opposite. It goes in the label now,
+first, because it is drawn first, and the painted copy is `aria-hidden`
+so the web does not read it twice. `likedYouBadge` in
+`apps/mobile/lib/card-a11y.ts` returns the drawn form and the spoken form
+together for the same reason `stampStrength` exists: two consumers of one
+fact drift apart when each writes it out. Driven on the web —
+`aria-label` reads "Seni süper beğendi. Ece, 31, 8 km. Profili gör".
+
+**A rule with no caller is a rule the battery cannot hold.** Round 6 also
+pointed out that `stampStrength`, swept by its tests, is never called by
+the app: an opacity has to be an `Animated` node to run on the UI thread
+while JavaScript is busy, so the deck had the same arithmetic written out
+a second time. They agreed — that day. `stampRamps` exports the three
+ramps as data, the deck builds its interpolations from them, and a test
+composes them exactly as the deck does (gate times ramp) and sweeps the
+result against `stampStrength` at 13 456 points. Perturbing one ramp by
+20% fails it. The general shape: when a pure rule cannot be _called_ by
+the code that draws it, export the drawing's _parameters_ from the rule
+and check the composition, rather than trusting two copies to stay equal.
+
+**Three lines of bio, and the fraction moved again.** The owner: "bioyu 3
+satir gozukecek sekilde yap". A three-line box is the tallest the block
+under the photograph ever gets, so it is the card where the photograph is
+squeezed hardest — and `PHOTO_SCREEN_FRACTION` is now that height
+(0.615), which makes the three-line card and the profile identical at 519
+and means the deck's photograph is never _shorter_ than the profile's,
+only taller when a card has less to say (542 on two lines, 565 on one,
+626 on none). Matching the fullest card rather than the common one is the
+choice worth remembering: it turns the rule into a floor instead of a
+coincidence.
+
 **A pin cleared on every path loses the tap on the failing ones.** Round
 4 asked for `pinned.current` to be taken into a local where the load
 begins, so no later load could act on it, and round 5 pointed out what

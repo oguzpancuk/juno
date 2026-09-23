@@ -10,6 +10,8 @@ import {
   UP_BLEND,
   UP_DOMINANCE,
   SUPER_THRESHOLD,
+  rampAt,
+  stampRamps,
   stampStrength,
   SWIPE_THRESHOLD,
   VETO_VELOCITY,
@@ -448,5 +450,49 @@ describe('claimsCard', () => {
 
   it('is false for a gesture that is not a number', () => {
     expect(claimsCard(Number.NaN, -200)).toBe(false);
+  });
+});
+
+describe('the ramps the deck draws the stamps with', () => {
+  // The deck cannot call `stampStrength` once a frame — an opacity has to
+  // be an animated node — so it builds three interpolations from
+  // `stampRamps`. If those two ever drift the card is drawn by one rule
+  // and decided by another again, which is the defect that has now
+  // appeared three times in this screen.
+  it("holds the deck's own ramps to the same rule", () => {
+    const width = 390;
+    const height = 844;
+    const ramps = stampRamps(width, height);
+    let checked = 0;
+    for (let dx = -400; dx <= 400; dx += 7) {
+      for (let dy = -400; dy <= 400; dy += 7) {
+        const up = isUpwardGesture(dx, dy) ? 1 : 0;
+        const sideways = 1 - up;
+        // Exactly what `discover.tsx` composes: the gate times the ramp.
+        const drawn = {
+          like: sideways * rampAt(ramps.like, dx),
+          pass: sideways * rampAt(ramps.pass, dx),
+          super: up * rampAt(ramps.super, dy),
+        };
+        const rule = stampStrength(dx, dy, width, height);
+        expect(drawn.like).toBeCloseTo(rule.like, 10);
+        expect(drawn.pass).toBeCloseTo(rule.pass, 10);
+        expect(drawn.super).toBeCloseTo(rule.super, 10);
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(13000);
+  });
+
+  it('puts each ramp on the threshold the verdict is read at', () => {
+    const ramps = stampRamps(390, 844);
+    expect(rampAt(ramps.like, 390 * SWIPE_THRESHOLD)).toBe(1);
+    expect(rampAt(ramps.pass, -390 * SWIPE_THRESHOLD)).toBe(1);
+    expect(rampAt(ramps.super, -844 * SUPER_THRESHOLD)).toBe(1);
+    expect(rampAt(ramps.like, 0)).toBe(0);
+    expect(rampAt(ramps.pass, 0)).toBe(0);
+    expect(rampAt(ramps.super, 0)).toBe(0);
+    // Past the line the stamp stays whole rather than growing.
+    expect(rampAt(ramps.super, -844)).toBe(1);
   });
 });

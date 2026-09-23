@@ -36,6 +36,7 @@ import { SlidersIcon } from '@/components/SlidersIcon';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
+import { likedYouBadge } from '@/lib/card-a11y';
 import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
@@ -56,8 +57,8 @@ import {
   CROSS_FOLLOW,
   deckOffset,
   decideSwipe,
-  SUPER_THRESHOLD,
-  SWIPE_THRESHOLD,
+  stampRamps,
+  type StampRamp,
 } from '@/lib/swipe';
 import {
   color,
@@ -469,7 +470,9 @@ export default function Discover() {
       }),
     [act, busy, current, flying, gesture, height, pan, settle, upward, width],
   );
-  const threshold = width * SWIPE_THRESHOLD;
+  // Drawn and spoken from one rule, because the photograph's label
+  // replaces everything painted inside it (review, 2026-09-23).
+  const badge = current ? likedYouBadge(current.row.likes_me) : null;
   const tilt = pan.x.interpolate({
     inputRange: [-width, 0, width],
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
@@ -479,37 +482,38 @@ export default function Discover() {
   // none of them is ever fully there for a verdict a release would send
   // instead: `stampStrength` in `lib/swipe.ts` is that rule, swept
   // against `decideSwipe` over the whole gesture space by its tests.
-  // These three are the same arithmetic as animated nodes, reading the
-  // gesture — not `pan`, which is blended.
+  //
+  // An opacity has to be an animated node to run on the UI thread, so
+  // the rule cannot be *called* here once a frame. The ramps are taken
+  // from `stampRamps` instead, and a test sweeps the same composition
+  // this makes — gate times ramp — back against `stampStrength`, so the
+  // drawing and the rule cannot drift apart unnoticed (review,
+  // 2026-09-23). They read the gesture, not `pan`, which is blended.
   //
   // A star's gesture draws no sideways stamp at all, which is what the
   // `sideways` gate carries, for the same reason `decideSwipe` never
   // hands an upward gesture to its sideways arms.
+  const ramps = stampRamps(width, height);
   const sideways = Animated.subtract(1, upward);
+  // `InterpolationConfigType` wants mutable arrays; a ramp is readonly
+  // because nothing should be editing the rule on its way to the screen.
+  const clamped = (ramp: StampRamp): Animated.InterpolationConfigType => ({
+    inputRange: [...ramp.inputRange],
+    outputRange: [...ramp.outputRange],
+    extrapolate: 'clamp',
+  });
   const likeOpacity = Animated.multiply(
     sideways,
-    gesture.x.interpolate({
-      inputRange: [0, threshold],
-      outputRange: [0, 1],
-      extrapolate: 'clamp',
-    }),
+    gesture.x.interpolate(clamped(ramps.like)),
   );
   const passOpacity = Animated.multiply(
     sideways,
-    gesture.x.interpolate({
-      inputRange: [-threshold, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    }),
+    gesture.x.interpolate(clamped(ramps.pass)),
   );
   // The star's own, on the other axis and upwards only.
   const superOpacity = Animated.multiply(
     upward,
-    gesture.y.interpolate({
-      inputRange: [-height * SUPER_THRESHOLD, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    }),
+    gesture.y.interpolate(clamped(ramps.super)),
   );
 
   const currentId = current?.row.id;
@@ -621,6 +625,7 @@ export default function Discover() {
                   current.row.display_name,
                   current.row.age,
                   distanceLine(current.row.distance_km),
+                  badge === null ? null : badge.spoken,
                 )}
                 testID="open-person"
               >
@@ -640,29 +645,31 @@ export default function Discover() {
                 >
                   {/* Over the name, inside the photograph, so it is the
                     first thing read about the person (owner, 2026-09-23,
-                    choosing between three drafts). Its own Text rather
-                    than part of the photo button's label, so VoiceOver
-                    reads it in the order it is drawn — and the scrim is
-                    paint, so nothing here takes a touch. */}
-                  {current.row.likes_me ? (
+                    choosing between three drafts). Paint only: this is
+                    inside the photo's button, which replaces everything
+                    drawn in it with its own label, so the words reach
+                    VoiceOver through `openPerson` above and are hidden
+                    here rather than announced twice on the web (review,
+                    2026-09-23). */}
+                  {badge === null ? null : (
                     <View
                       style={[
                         styles.likedBanner,
                         current.row.likes_me === 'super' &&
                           styles.likedBannerSuper,
                       ]}
+                      accessible={false}
+                      aria-hidden
                       testID="likes-me"
                     >
                       <Text
                         style={styles.likedBannerText}
                         maxFontSizeMultiplier={MAX_DECK_SCALE}
                       >
-                        {current.row.likes_me === 'super'
-                          ? `★  ${t.discover.likedYouSuper}`
-                          : `♥  ${t.discover.likedYou}`}
+                        {badge.drawn}
                       </Text>
                     </View>
-                  ) : null}
+                  )}
                   <Text
                     style={styles.name}
                     maxFontSizeMultiplier={MAX_DECK_SCALE}
@@ -742,15 +749,16 @@ export default function Discover() {
                 three={current.row.big_three}
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
               />
-              {/* Their own words, two lines of them, in a box of their
+              {/* Their own words, three lines of them, in a box of their
                 own (owner, 2026-09-23: "bioyu bir kutucuk icine alip
-                ui'i guzellestirelim"). The full text is on the person
-                page a tap away. */}
+                ui'i guzellestirelim", then "bioyu 3 satir gozukecek
+                sekilde yap"). The full text is on the person page a tap
+                away. */}
               {current.row.bio ? (
                 <View style={styles.bioBox}>
                   <Text
                     style={styles.bio}
-                    numberOfLines={2}
+                    numberOfLines={3}
                     maxFontSizeMultiplier={MAX_DECK_SCALE}
                     testID="card-bio"
                   >
