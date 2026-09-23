@@ -6936,3 +6936,62 @@ a person.
   binaries in the image are the workaround — a bare cluster with
   stand-in tables answered both questions above in a couple of minutes,
   without PostGIS and without Supabase.
+
+## 2026-09-23 — What the owner asked for after testing premium: four changes on the deck
+
+He tried the membership and sent four (project chat, 06:00). All four are
+UI; none of them touches the quotas the database enforces.
+
+**1. No count of what is left.** "kac begeni kaldigi gozukmesin, sadece
+bitince engel olunsun". The line under the deck is gone, and with it
+`t.discover.likesLeft` / `likesGone` / `superLeft`. The allowance is still
+read on focus, because `act` uses it to open the membership instead of
+spending a round trip on a like the server has already said no to — the
+number is simply never drawn. I took the star's "4 süper beğeni hakkın
+var" out with it: it is the same kind of sentence, and he can have it back
+if he meant only the daily one.
+
+**2. A tap on the list goes to the person.** "seni begenenler listesinde
+birine tiklandiginda kesfet sayfasinda ona gidilsin". The row's avatar and
+words are now one target; the sheet closes, the deck reloads, and that
+person's card is brought to the front. The reload is deliberate: the list
+may have answered somebody while it was open, so reordering a deck that
+was loaded before would keep a card that is no longer a candidate. Whoever
+is not in the deck at all — somebody who liked this member from outside
+their own filters, which the `liked_me` view lets through on purpose —
+cannot be made into a card, so their profile sheet opens instead. That is
+the only fork in the behaviour, and it is the honest one.
+
+**3. The star is a verdict now.** Same 88pt circle as ✕ and ♥, and an
+upward swipe does it too. `decideSwipe` grew the other axis: the same two
+ways past the line (distance, or a flick) and the same veto, with a
+diagonal going to whichever travel is larger, so neither gesture can be
+triggered by the other's slop. Downwards stays unclaimed — nothing is
+bound to it, and a card that followed a downward finger would eventually
+star somebody by accident. The gates moved off the button and into `act`,
+so the button and the swipe meet the same two answers (no membership →
+the offer; no stars left this week → the refusal).
+
+**4. The band is on the photograph.** "kesfette uyum gostergesi
+fotografin sag altina gitsin. fotografa tiklandiginda profil aciliyor ona
+dikkat et. uyuma tiklaninca uyum acilmali". It is a Pressable inside the
+photo's Pressable, bottom-right, opposite the name: a child that takes
+the touch keeps the parent's press from firing, so the picture still
+opens the profile and the ring still opens the reading. The word under
+the ring is `type.label` now rather than `type.title` — at title size it
+reached a third of the way across the picture. `BAND_LIFT`, which existed
+to make the three gaps around the band read equal when it sat between the
+chips and the buttons, went with it.
+
+**Where this touches the other branch.** PR #9 is changing the same card
+(school in the info line, bio out). My edits are the photo overlay, the
+footer and the gesture; the only shared ground is the `info` block, which
+lost the band and its `space-between`.
+
+**Verified here.** `apps/mobile/lib/swipe.test.ts` grew six cases for the
+upward half, seen red first — three of them failed on the missing
+`SUPER_THRESHOLD` export, which is exactly the state the change was made
+from. The battery is green and the ten screenshots were re-driven, one of
+them new: tapping Bade on the list and landing on her card. What a
+browser still cannot show is the gesture itself; the upward swipe is on
+the device list in the pull request.

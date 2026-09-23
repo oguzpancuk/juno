@@ -145,6 +145,7 @@ export const t = {
     // Turkish i → I, not İ.
     swipeLike: 'BEĞEN',
     swipePass: 'GEÇ',
+    swipeSuper: 'SÜPER',
     // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
     like: 'Beğen',
@@ -156,10 +157,11 @@ export const t = {
     noAspect:
       'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
     detail: 'Uyum detayı',
-    /** The free member's counter, under the deck. */
-    likesLeft: (n: number) => `Bugün ${n} beğeni hakkın kaldı`,
-    likesGone: 'Bugünlük beğeni hakkın bitti',
-    superLeft: (n: number) => `${n} süper beğeni hakkın var`,
+    // What is left of a quota is not drawn anywhere (owner, 2026-09-23:
+    // "kac begeni kaldigi gozukmesin, sadece bitince engel olunsun"), so
+    // the three lines that counted it down are gone. The sentences for a
+    // quota that has run out are in `premium`, where the membership
+    // sheet reads them.
   },
   match: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
@@ -363,6 +365,8 @@ export const t = {
     open: 'Premium’a bak',
   },
   likedMe: {
+    /** A row on the list: what a tap on the person does. */
+    openPerson: (name: string) => `${name}. Keşfette aç`,
     title: 'Seni beğenenler',
     /** The chip on the deck, and what VoiceOver reads on it. */
     open: 'Seni beğenenler',

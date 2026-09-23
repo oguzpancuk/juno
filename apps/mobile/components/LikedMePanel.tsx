@@ -41,10 +41,17 @@ const AVATAR = 52;
 export function LikedMePanel({
   me,
   onAnswered,
+  onOpen,
 }: {
   me: OwnProfile;
   /** A like or a pass here changes the deck; the host reloads it. */
   onAnswered?: () => void;
+  /**
+   * Somebody was tapped: the host takes the deck to them (owner,
+   * 2026-09-23). The caption is this row's own "when" line, so the
+   * profile the host may end up showing says the same thing the row did.
+   */
+  onOpen?: (person: Admirer, caption: string) => void;
 }) {
   const [state, setState] = useState<LikedMeState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -194,25 +201,37 @@ export function LikedMePanel({
             style={styles.row}
             testID={`admirer-${person.id}`}
           >
-            <Avatar
-              name={person.display_name}
-              source={sources[index] ?? null}
-              size={AVATAR}
-            />
-            <View style={styles.who}>
-              <Text style={styles.name}>
-                {person.display_name}, {person.age}
-              </Text>
-              <Text style={styles.meta}>
-                {bandName(match.score)} {t.discover.scoreLabel} ·{' '}
-                {agoLine(person.liked_at)}
-              </Text>
-              {person.is_super ? (
-                <Text style={styles.super} testID="admirer-super">
-                  ★ {t.likedMe.superBadge}
+            {/* The person, and a tap on them: the deck goes to their
+                card and this sheet closes. The two answer buttons are
+                outside it, so ♥ is still one press from here. */}
+            <Pressable
+              style={({ pressed }) => [styles.person, pressed && styles.dim]}
+              accessibilityRole="button"
+              accessibilityLabel={t.likedMe.openPerson(person.display_name)}
+              disabled={busy || onOpen === undefined}
+              onPress={() => onOpen?.(person, agoLine(person.liked_at))}
+              testID={`open-admirer-${person.id}`}
+            >
+              <Avatar
+                name={person.display_name}
+                source={sources[index] ?? null}
+                size={AVATAR}
+              />
+              <View style={styles.who}>
+                <Text style={styles.name}>
+                  {person.display_name}, {person.age}
                 </Text>
-              ) : null}
-            </View>
+                <Text style={styles.meta}>
+                  {bandName(match.score)} {t.discover.scoreLabel} ·{' '}
+                  {agoLine(person.liked_at)}
+                </Text>
+                {person.is_super ? (
+                  <Text style={styles.super} testID="admirer-super">
+                    ★ {t.likedMe.superBadge}
+                  </Text>
+                ) : null}
+              </View>
+            </Pressable>
             <View style={styles.actions}>
               <Pressable
                 testID={`pass-back-${person.id}`}
@@ -283,6 +302,13 @@ const styles = StyleSheet.create({
   lockedTitle: { ...type.heading, color: color.text },
   list: { gap: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  // The avatar and the words, as one target.
+  person: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+  },
   who: { flex: 1, gap: 2 },
   name: { ...type.body, color: color.text, fontFamily: font.semibold },
   meta: { ...type.bodySmall, color: color.textFaint },

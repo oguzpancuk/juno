@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decideSwipe,
   FLICK_VELOCITY,
+  SUPER_THRESHOLD,
   SWIPE_THRESHOLD,
   VETO_VELOCITY,
 } from './swipe';
@@ -75,5 +76,58 @@ describe('decideSwipe', () => {
     // One move event and a dt of zero: the platform divides by it.
     expect(decideSwipe({ dx: past, vx: Number.NaN, width })).toBe('like');
     expect(decideSwipe({ dx: short, vx: Number.NaN, width })).toBeNull();
+  });
+});
+
+/** The same phone, upright: the super threshold is 126 points. */
+const height = 844;
+const upPast = -(height * SUPER_THRESHOLD + 10);
+const upShort = -(height * SUPER_THRESHOLD - 20);
+
+describe('decideSwipe, upwards', () => {
+  it('super likes a card dragged up past the threshold', () => {
+    expect(
+      decideSwipe({ dx: 0, vx: 0, dy: upPast, vy: 0, width, height }),
+    ).toBe('super');
+  });
+
+  it('super likes an upward flick that stopped short', () => {
+    expect(
+      decideSwipe({ dx: 0, vx: 0, dy: upShort, vy: -flick, width, height }),
+    ).toBe('super');
+  });
+
+  it('answers nothing for a drag downwards, however far', () => {
+    // Nothing is bound to it, and a card pulled down must not star anyone.
+    expect(
+      decideSwipe({ dx: 0, vx: 0, dy: -upPast, vy: 0, width, height }),
+    ).toBeNull();
+    expect(
+      decideSwipe({ dx: 0, vx: 0, dy: -upShort, vy: flick, width, height }),
+    ).toBeNull();
+  });
+
+  it('lets the larger travel decide a diagonal', () => {
+    // Up and to the right: whichever axis the finger meant more.
+    expect(
+      decideSwipe({ dx: past, vx: 0, dy: upShort, vy: 0, width, height }),
+    ).toBe('like');
+    expect(
+      decideSwipe({ dx: short, vx: 0, dy: upPast, vy: 0, width, height }),
+    ).toBe('super');
+  });
+
+  it('answers nothing when the drag and the release disagree', () => {
+    // Dragged up, let go while coming back down: a change of mind.
+    expect(
+      decideSwipe({ dx: 0, vx: 0, dy: upPast, vy: slow, width, height }),
+    ).toBeNull();
+  });
+
+  it('still decides the old way when nothing vertical is given', () => {
+    // Every caller before the star passed three arguments, and a missing
+    // height cannot make an upward gesture out of them.
+    expect(decideSwipe({ dx: past, vx: 0, width })).toBe('like');
+    expect(decideSwipe({ dx: 0, vx: 0, dy: upPast, vy: 0, width })).toBeNull();
   });
 });

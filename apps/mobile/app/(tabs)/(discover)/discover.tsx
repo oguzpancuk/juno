@@ -41,14 +41,14 @@ import {
   fetchAllowance,
   fetchLikedMeCount,
   NO_ALLOWANCE,
-  SUPER_LIKES_PER_WEEK,
+  type Admirer,
   type Allowance,
 } from '@/lib/premium';
 import { fetchOwnProfile, type OwnProfile } from '@/lib/profile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
-import { decideSwipe, SWIPE_THRESHOLD } from '@/lib/swipe';
+import { decideSwipe, SUPER_THRESHOLD, SWIPE_THRESHOLD } from '@/lib/swipe';
 import { color, font, gradient, radius, space, type } from '@/theme/tokens';
 
 /**
@@ -73,20 +73,19 @@ const CORNER_CHIP = 36;
  */
 const MAX_DECK_SCALE = 1.35;
 
-/** ✕ and ♥ — the verdict, the largest targets on the screen. */
+/** ✕, ★ and ♥ — the three answers, all the same target (owner,
+ * 2026-09-23: "superlike butonu da ayni boyutta olsun"). The star was
+ * smaller when it was the rare move offered quietly; it is now one of
+ * the three things a card can be answered with, and an upward swipe
+ * does it too. */
 const ROUND_SIZE = 88;
-/** ★ — the premium move, between them and deliberately smaller. */
-const SUPER_SIZE = 56;
 /** The least each of the three gaps under the chips may shrink to. */
 const SPACING_FLOOR = space.sm;
 /**
- * The band word's own line box is taller than its glyphs: measured on the
- * device, about 4.7pt of it is empty above the letters and 0.7pt below.
- * The layout gaps are equal, so the *drawn* gap above the band came out
- * ~5pt larger than the two below it. Lifting the band by 4 and giving the
- * bottom gap 5 more makes the three read equal to within half a point.
+ * The band used to sit between the chart chips and the buttons, and this
+ * made the three gaps around it read equal. It is on the photograph now
+ * (owner, 2026-09-23), so only the footer's share is left.
  */
-const BAND_LIFT = 4;
 const BAR_GAP_EXTRA = 5;
 
 /** The two sheets a card can open; only ever one at a time. */
@@ -144,6 +143,17 @@ export default function Discover() {
   const [admirers, setAdmirers] = useState(0);
   const [showLiked, setShowLiked] = useState(false);
   const [upsell, setUpsell] = useState<Upsell | null>(null);
+  // Somebody tapped on the "seni beğenenler" list: the deck goes to them
+  // (owner, 2026-09-23: "listesinde birine tiklandiginda kesfet
+  // sayfasinda ona gidilsin"). A ref, because what does the moving is the
+  // load below — the list may have answered somebody while it was open,
+  // and a deck reordered without a reload could still hold them. Whoever
+  // is not in the deck at all — someone who liked this member from
+  // outside their filters — cannot be a card, so their profile opens
+  // instead; that sheet is `admirer`.
+  type Waiting = { readonly person: Admirer; readonly caption: string };
+  const pinned = useRef<Waiting | null>(null);
+  const [admirer, setAdmirer] = useState<Waiting | null>(null);
   const { width, height } = useWindowDimensions();
 
   // Own profile first (for the chart), then the candidates scored against it.
@@ -195,7 +205,23 @@ export default function Discover() {
           setMe(result.me);
           setAllowance(result.allowance);
           setAdmirers(result.admirers);
-          setState(result.status === 'error' ? { status: 'error' } : result);
+          // 'loading' never arrives here — `fetchCandidates` answers
+          // ready or error — and a spinner would be the wrong end state
+          // for it anyway.
+          if (result.status !== 'ready') {
+            setState({ status: 'error' });
+            return;
+          }
+          const wanted = pinned.current;
+          pinned.current = null;
+          const deck =
+            wanted === null
+              ? result.candidates
+              : bringToFront(result.candidates, wanted.person.id);
+          // Not in the deck: nobody this member's filters would ever be
+          // shown, so the card cannot be the answer and the profile is.
+          if (wanted !== null && deck === null) setAdmirer(wanted);
+          setState({ status: 'ready', candidates: deck ?? result.candidates });
         })
         .catch(() => {
           if (!cancelled) setState({ status: 'error' });
@@ -226,6 +252,16 @@ export default function Discover() {
       // does, which is why the guard is not on the button.
       if (kind === 'like' && !isSuper && allowance.likesLeft === 0) {
         setUpsell('daily');
+        return false;
+      }
+      // The star's own gates, here rather than on the button: a swipe up
+      // is the same move and has to meet the same two answers.
+      if (isSuper && !me.is_premium) {
+        setUpsell('super-premium');
+        return false;
+      }
+      if (isSuper && allowance.superLeft === 0) {
+        setUpsell('super-spent');
         return false;
       }
       setBusy(true);
@@ -295,7 +331,7 @@ export default function Discover() {
         router.navigate(matchArrivedHref(result.matchId), INTO_MATCHES);
       return true;
     },
-    [me, busy, allowance.likesLeft],
+    [me, busy, allowance.likesLeft, allowance.superLeft],
   );
 
   const current = state.status === 'ready' ? state.candidates[0] : undefined;
@@ -349,6 +385,18 @@ export default function Discover() {
     () => (current ? natalReading(current.row.chart) : null),
     [current],
   );
+  // The same two things for somebody opened from the list instead of
+  // from the deck. Their photographs are not the card's, so they have
+  // their own request; nothing is asked for while the sheet is shut.
+  const admirerPaths = useMemo(
+    () => (admirer ? [...admirer.person.photos] : []),
+    [admirer],
+  );
+  const admirerSources = usePhotoSources(admirerPaths);
+  const admirerReading = useMemo(
+    () => (admirer ? natalReading(admirer.person.chart) : null),
+    [admirer],
+  );
 
   // Where the card is under the finger. State, not a ref: it is read during
   // render for the interpolations below (see Calculating.tsx), and the
@@ -377,13 +425,14 @@ export default function Discover() {
       createDeckResponder({
         pan,
         width,
+        height,
         current,
         idle: !busy && !flying,
         act,
         settle,
         setFlying,
       }),
-    [act, busy, current, flying, pan, settle, width],
+    [act, busy, current, flying, height, pan, settle, width],
   );
   const threshold = width * SWIPE_THRESHOLD;
   const tilt = pan.x.interpolate({
@@ -399,6 +448,12 @@ export default function Discover() {
   });
   const passOpacity = pan.x.interpolate({
     inputRange: [-threshold, 0],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  // The star's own, on the other axis and upwards only.
+  const superOpacity = pan.y.interpolate({
+    inputRange: [-height * SUPER_THRESHOLD, 0],
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
@@ -527,6 +582,35 @@ export default function Discover() {
                 {distanceLine(current.row.distance_km)}
               </Text>
             </LinearGradient>
+            {/* The band on the photo's bottom corner, opposite the name
+                (owner, 2026-09-23: "uyum gostergesi fotografin sag
+                altina gitsin"). Its own Pressable inside the photo's:
+                the child takes the touch, so the tap that opens the
+                reading is not the tap that opens the person. */}
+            <Pressable
+              style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
+              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
+              accessibilityRole="button"
+              accessibilityLabel={t.discover.openDetail(
+                bandName(current.match.score),
+              )}
+              hitSlop={space.sm}
+              testID="open-detail"
+            >
+              <BandRing
+                band={bandOf(current.match.score)}
+                label={`${bandName(current.match.score)} ${t.discover.scoreLabel}`}
+                size={52}
+                stroke={5}
+              />
+              <Text
+                style={styles.bandName}
+                testID="band"
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              >
+                {bandName(current.match.score)}
+              </Text>
+            </Pressable>
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
             <Animated.View
@@ -557,6 +641,22 @@ export default function Discover() {
                 {t.discover.swipePass}
               </Text>
             </Animated.View>
+            {/* The third one, for the gesture that has no side: it comes
+                up the middle with the card. */}
+            <Animated.View
+              style={[
+                styles.stamp,
+                styles.stampSuper,
+                { top: stampTop, opacity: superOpacity },
+              ]}
+              accessible={false}
+              aria-hidden
+              testID="stamp-super"
+            >
+              <Text style={[styles.stampText, styles.stampTextSuper]}>
+                {t.discover.swipeSuper}
+              </Text>
+            </Animated.View>
           </Pressable>
           <View style={styles.info}>
             <BigThreeRow
@@ -576,41 +676,6 @@ export default function Discover() {
                 {current.row.bio}
               </Text>
             ) : null}
-            {/* The reading opens from the thing it explains (owner,
-                2026-09-14). */}
-            <Pressable
-              style={({ pressed }) => [styles.bandBox, pressed && styles.dim]}
-              onPress={() => setSheet({ id: current.row.id, of: 'detail' })}
-              accessibilityRole="button"
-              // The band word drawn inside, then what a tap opens.
-              accessibilityLabel={t.discover.openDetail(
-                bandName(current.match.score),
-              )}
-              hitSlop={space.md}
-              testID="open-detail"
-            >
-              <BandRing
-                band={bandOf(current.match.score)}
-                label={`${bandName(current.match.score)} ${t.discover.scoreLabel}`}
-                size={56}
-                stroke={5}
-              />
-              <View>
-                <Text
-                  style={styles.bandName}
-                  testID="band"
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                >
-                  {bandName(current.match.score)}
-                </Text>
-                <Text
-                  style={styles.scoreLabel}
-                  maxFontSizeMultiplier={MAX_DECK_SCALE}
-                >
-                  {t.discover.scoreLabel}
-                </Text>
-              </View>
-            </Pressable>
           </View>
         </Animated.View>
       )}
@@ -620,14 +685,11 @@ export default function Discover() {
         // has drifted under the finger turns a press into a swipe.
         <View style={styles.footer}>
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {/* What is left, for whoever has a limit: a free member's day
-              of likes, a premium member's week of stars. Silent for a
-              premium member who has all five. */}
-          {allowanceLine(allowance) ? (
-            <Text style={styles.allowance} testID="allowance">
-              {allowanceLine(allowance)}
-            </Text>
-          ) : null}
+          {/* No count of what is left (owner, 2026-09-23: "kac begeni
+              kaldigi gozukmesin, sadece bitince engel olunsun"). The
+              allowance is still read — `act` uses it to open the
+              membership instead of spending a round trip on a like the
+              server would refuse — it is simply not drawn. */}
           <View style={styles.actions}>
             <Pressable
               testID="pass"
@@ -643,25 +705,17 @@ export default function Discover() {
                 ✕
               </Text>
             </Pressable>
-            {/* The star sits between the two verdicts and is smaller than
-                either: it is the rarer thing, not the louder one. A free
-                member may press it — the sheet it opens is the offer. */}
+            {/* The star sits between the two verdicts, the same size as
+                either (owner, 2026-09-23). A free member may press it —
+                the sheet it opens is the offer, and `act` is what
+                decides that, so the button and the upward swipe answer
+                alike. */}
             <Pressable
               testID="super-like"
               accessibilityLabel={t.discover.superLike}
               style={[styles.roundSuper, (busy || flying) && styles.buttonBusy]}
               disabled={busy || flying}
-              onPress={() => {
-                if (!me?.is_premium) {
-                  setUpsell('super-premium');
-                  return;
-                }
-                if (allowance.superLeft === 0) {
-                  setUpsell('super-spent');
-                  return;
-                }
-                void act(current, 'like', true);
-              }}
+              onPress={() => void act(current, 'like', true)}
             >
               <Text
                 style={styles.roundGlyphSuper}
@@ -725,6 +779,30 @@ export default function Discover() {
             chart={current.row.chart}
             fullChartLabel={t.person.fullChart}
             fullChartTitle={t.person.chartTitle(current.row.display_name)}
+          />
+        </Popup>
+      ) : null}
+      {/* Somebody from the list who is not in the deck: their profile,
+          which is as far as this screen can take us. */}
+      {admirer && admirerReading ? (
+        <Popup
+          visible
+          onClose={() => setAdmirer(null)}
+          bleed
+          testID="admirer-popup"
+        >
+          <ProfileView
+            name={admirer.person.display_name}
+            age={admirer.person.age}
+            caption={admirer.caption}
+            photos={admirer.person.photos}
+            sources={admirerSources}
+            three={admirer.person.big_three}
+            bio={admirer.person.bio}
+            reading={admirerReading}
+            chart={admirer.person.chart}
+            fullChartLabel={t.person.fullChart}
+            fullChartTitle={t.person.chartTitle(admirer.person.display_name)}
           />
         </Popup>
       ) : null}
@@ -801,6 +879,13 @@ export default function Discover() {
             <LikedMePanel
               me={me}
               onAnswered={() => setAdmirers((n) => Math.max(0, n - 1))}
+              onOpen={(person, caption) => {
+                pinned.current = { person, caption };
+                setShowLiked(false);
+                setSheet(null);
+                setState({ status: 'loading' });
+                setAttempt((n) => n + 1);
+              }}
             />
           </Popup>
         </>
@@ -831,20 +916,16 @@ export default function Discover() {
 }
 
 /**
- * The line under the deck, or none. A free member is counting likes; a
- * premium member is only told about the stars, and only once some are
- * gone — a full week of them is not news.
+ * The deck with one card brought to the front, or null when that person
+ * is not in it at all.
  */
-function allowanceLine(allowance: Allowance): string | null {
-  if (allowance.likesLeft !== null) {
-    return allowance.likesLeft === 0
-      ? t.discover.likesGone
-      : t.discover.likesLeft(allowance.likesLeft);
-  }
-  if (allowance.superLeft < SUPER_LIKES_PER_WEEK) {
-    return t.discover.superLeft(allowance.superLeft);
-  }
-  return null;
+function bringToFront(
+  candidates: readonly Candidate[],
+  id: string,
+): readonly Candidate[] | null {
+  const found = candidates.find((candidate) => candidate.row.id === id);
+  if (found === undefined) return null;
+  return [found, ...candidates.filter((candidate) => candidate !== found)];
 }
 
 /**
@@ -857,6 +938,7 @@ function allowanceLine(allowance: Allowance): string | null {
 function createDeckResponder({
   pan,
   width,
+  height,
   current,
   idle,
   act,
@@ -865,10 +947,15 @@ function createDeckResponder({
 }: {
   pan: Animated.ValueXY;
   width: number;
+  height: number;
   current: Candidate | undefined;
   /** No record in flight and no card flying: a release may decide. */
   idle: boolean;
-  act: (candidate: Candidate, kind: 'like' | 'pass') => Promise<boolean>;
+  act: (
+    candidate: Candidate,
+    kind: 'like' | 'pass',
+    isSuper?: boolean,
+  ) => Promise<boolean>;
   settle: () => void;
   setFlying: (flying: boolean) => void;
 }): PanResponderInstance {
@@ -885,8 +972,13 @@ function createDeckResponder({
     // view on this surface any more (owner, 2026-09-14), so nothing else
     // wants a vertical drag — but a deliberate vertical flick must still
     // not read as a verdict.
+    // Upwards is the star, and it claims the same way on the other axis
+    // (owner, 2026-09-23). Downwards is still nobody's: nothing is bound
+    // to it, and it stays unclaimed so the card does not follow a finger
+    // that means nothing by it.
     onMoveShouldSetPanResponder: (_, g) =>
-      Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy),
+      (Math.abs(g.dx) > CLAIM_DISTANCE && Math.abs(g.dx) > Math.abs(g.dy)) ||
+      (-g.dy > CLAIM_DISTANCE && Math.abs(g.dy) > Math.abs(g.dx)),
     onPanResponderGrant: () => {
       grantedId = current?.row.id;
     },
@@ -898,7 +990,14 @@ function createDeckResponder({
     // still terminates.
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, g) => {
-      pan.setValue({ x: g.dx, y: g.dy * DY_FOLLOW });
+      // Whichever axis the finger means, the card follows it fully and
+      // only leans on the other: a sideways drag lifts a quarter of its
+      // vertical wobble, an upward one slides a quarter of its sway.
+      const up = g.dy < 0 && Math.abs(g.dy) > Math.abs(g.dx);
+      pan.setValue({
+        x: up ? g.dx * DY_FOLLOW : g.dx,
+        y: up ? g.dy : g.dy * DY_FOLLOW,
+      });
     },
     onPanResponderRelease: (_, g) => {
       // Not idle: a record is in flight for this very card. No decision,
@@ -907,17 +1006,27 @@ function createDeckResponder({
         settle();
         return;
       }
-      const decision = decideSwipe({ dx: g.dx, vx: g.vx, width });
+      const decision = decideSwipe({
+        dx: g.dx,
+        vx: g.vx,
+        dy: g.dy,
+        vy: g.vy,
+        width,
+        height,
+      });
       if (decision === null) {
         settle();
         return;
       }
       setFlying(true);
       Animated.timing(pan, {
-        toValue: {
-          x: (decision === 'like' ? 1 : -1) * width * 1.5,
-          y: g.dy * DY_FOLLOW,
-        },
+        toValue:
+          decision === 'super'
+            ? { x: g.dx * DY_FOLLOW, y: -height * 1.5 }
+            : {
+                x: (decision === 'like' ? 1 : -1) * width * 1.5,
+                y: g.dy * DY_FOLLOW,
+              },
         duration: FLY_OUT_MS,
         useNativeDriver: NATIVE_DRIVER,
       }).start(({ finished }) => {
@@ -932,7 +1041,14 @@ function createDeckResponder({
         // A dropped card's successor starts from the middle (the layout
         // effect in the component); a card that could not be recorded is
         // still the one on top and comes home.
-        void act(current, decision).then(
+        // A star that the membership or the week's quota refuses comes
+        // back exactly as a failed like does: `act` answers false, and
+        // the card settles with the membership sheet open over it.
+        void act(
+          current,
+          decision === 'super' ? 'like' : decision,
+          decision === 'super',
+        ).then(
           (dropped) => {
             setFlying(false);
             if (!dropped) settle();
@@ -982,7 +1098,6 @@ const styles = StyleSheet.create({
   // buttons' spacing instead of sticking to the chips.
   info: {
     flexGrow: 1,
-    justifyContent: 'space-between',
     paddingHorizontal: SCREEN_PADDING,
     // `Screen`'s own gap between children, so the big three sit the same
     // distance below the photo here as they do on the profile.
@@ -1061,21 +1176,23 @@ const styles = StyleSheet.create({
     borderColor: color.textMuted,
     transform: [{ rotate: `${MAX_TILT_DEG}deg` }],
   },
+  // Upright and in the middle: the gesture it belongs to has no side.
+  stampSuper: { alignSelf: 'center', borderColor: color.warm },
   stampText: { ...type.heading, letterSpacing: 2 },
   stampTextLike: { color: color.pink },
   stampTextPass: { color: color.textMuted },
-  // No vertical padding: it would add to the gap on each side of the band
-  // and break the equal spacing. The touch target keeps its reach through
-  // `hitSlop` on the Pressable instead.
+  stampTextSuper: { color: color.warm },
+  // On the photograph now, in the corner opposite the name, sitting on
+  // the same bottom line as it. The ring and the word stack, because
+  // side by side they would reach halfway across the picture.
   bandBox: {
-    flexDirection: 'row',
+    position: 'absolute',
+    right: SCREEN_PADDING,
+    bottom: space.md,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.md,
-    marginBottom: BAND_LIFT,
+    gap: 2,
   },
-  bandName: { ...type.title, color: color.text },
-  scoreLabel: { ...type.label, color: color.textFaint },
+  bandName: { ...type.label, color: color.text, textAlign: 'center' },
   link: {
     ...type.bodySmall,
     color: color.textMuted,
@@ -1105,11 +1222,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   roundFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  // Smaller than ✕ and ♥ and centred between them: the star is the rare
-  // move, offered without competing with the verdict.
+  // The same circle as ✕, in the star's own colour.
   roundSuper: {
-    width: SUPER_SIZE,
-    height: SUPER_SIZE,
+    width: ROUND_SIZE,
+    height: ROUND_SIZE,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: color.warm,
@@ -1120,13 +1236,7 @@ const styles = StyleSheet.create({
   },
   roundGlyph: { fontSize: 32, color: color.textMuted },
   roundGlyphOn: { fontSize: 35, color: color.onBright },
-  roundGlyphSuper: { fontSize: 24, color: color.warm },
-  // Above the three buttons, in the footer's even spacing.
-  allowance: {
-    ...type.bodySmall,
-    color: color.textFaint,
-    textAlign: 'center',
-  },
+  roundGlyphSuper: { fontSize: 32, color: color.warm },
   // The filters chip's twin, in the other corner.
   likedButton: {
     position: 'absolute',
