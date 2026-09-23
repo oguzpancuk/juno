@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decideSwipe,
   FLICK_VELOCITY,
+  SUPER_FLOOR,
   SUPER_THRESHOLD,
   SWIPE_THRESHOLD,
   VETO_VELOCITY,
@@ -91,7 +92,7 @@ describe('decideSwipe, upwards', () => {
     ).toBe('super');
   });
 
-  it('super likes an upward flick that stopped short', () => {
+  it('super likes an upward flick that stopped short of the threshold', () => {
     expect(
       decideSwipe({ dx: 0, vx: 0, dy: upShort, vy: -flick, width, height }),
     ).toBe('super');
@@ -107,14 +108,57 @@ describe('decideSwipe, upwards', () => {
     ).toBeNull();
   });
 
-  it('lets the larger travel decide a diagonal', () => {
-    // Up and to the right: whichever axis the finger meant more.
+  it('wants a diagonal to be clearly upward, not merely more upward', () => {
+    // A card flung up and away to the left is a dismissal with an arc in
+    // it, and it used to star the person being dismissed (QA,
+    // 2026-09-23). The star now asks for twice the sideways travel.
+    expect(
+      decideSwipe({ dx: -150, vx: 0, dy: -200, vy: 0, width, height }),
+    ).toBe('pass');
+    expect(decideSwipe({ dx: 40, vx: 0, dy: -200, vy: 0, width, height })).toBe(
+      'super',
+    );
+    // Mostly sideways is still the verdict it looks like.
     expect(
       decideSwipe({ dx: past, vx: 0, dy: upShort, vy: 0, width, height }),
     ).toBe('like');
+  });
+
+  it('never stars a card that travelled downwards', () => {
+    // The hole QA found: the flick arm did not look at where the card
+    // actually was. Dragged down 300 points and released with the finger
+    // snapping back up, this sent a super like — the most expensive
+    // thing on the screen — with no stamp ever shown.
     expect(
-      decideSwipe({ dx: short, vx: 0, dy: upPast, vy: 0, width, height }),
+      decideSwipe({ dx: 20, vx: 0, dy: 300, vy: -0.6, width, height }),
+    ).toBeNull();
+  });
+
+  it('asks a flick for some travel before it stars anybody', () => {
+    // Ten points up off the photograph is a tap with a twitch in it, and
+    // the card is claimed at eight. A wrong pass costs a card; a wrong
+    // star costs one of five in the week.
+    expect(
+      decideSwipe({ dx: 9, vx: 0, dy: -10, vy: -flick, width, height }),
+    ).toBeNull();
+    expect(
+      decideSwipe({
+        dx: 0,
+        vx: 0,
+        dy: -(height * SUPER_FLOOR + 5),
+        vy: -flick,
+        width,
+        height,
+      }),
     ).toBe('super');
+  });
+
+  it('keeps the change-of-mind veto that sideways has', () => {
+    // Past the sideways line, let go moving left, with a drift upwards:
+    // the star used to answer before the veto was ever asked.
+    expect(
+      decideSwipe({ dx: 200, vx: -0.6, dy: -250, vy: 0, width, height }),
+    ).toBeNull();
   });
 
   it('answers nothing when the drag and the release disagree', () => {

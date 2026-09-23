@@ -6995,3 +6995,54 @@ from. The battery is green and the ten screenshots were re-driven, one of
 them new: tapping Bade on the list and landing on her card. What a
 browser still cannot show is the gesture itself; the upward swipe is on
 the device list in the pull request.
+
+## 2026-09-23 — QA on the four: the upward swipe had a hole, and a dismissal starred the person
+
+`evaluator-qa` on the screenshot clause came back **NEEDS_WORK**, with two
+findings I had not covered and one evidence gap. It built its own bundle
+from HEAD, served it through a stub that logged every `likes` insert, and
+drove real touch input through CDP — so both findings are gestures it
+actually performed, not readings of the code.
+
+**A card dragged down and released with the finger snapping up sent a
+super like.** `decideUp`'s flick arm asked only for an upward _velocity_
+at release and never looked at where the card had travelled. Dragged 300
+points down and flicked back up, the card flew upwards and the insert
+went in with `is_super: true` — the most expensive action in the app,
+with no stamp ever drawn, since the stamp's opacity is clamped to zero
+below the middle. The rule now asks for upward travel before a flick may
+star anybody, and for at least `SUPER_FLOOR` (5% of the height, 42
+points) of it: sideways has no such floor because a wrong pass costs one
+card, and the card is claimed after eight points.
+
+**A card flung up and away to the left starred the person being
+dismissed.** "Whichever travel is larger wins" was too weak a rule for an
+arc that is plainly a dismissal — and because the upward half answered
+first, it also skipped the change-of-mind veto that protects a like and a
+pass. The star now wants twice the sideways travel (`UP_DOMINANCE`);
+everything below that falls through to the sideways rules, veto included.
+QA's own case, dragged 150 left and 200 up, is a pass now.
+
+Four cases, each red first against the shipped rule, each named after the
+gesture QA performed. The lesson for the next gesture: a rule with two
+arms needs a test per arm per axis, and "the docstring says down is
+nothing" is not one of them.
+
+**Evidence gap, also fixed.** The ten shots showed the band's new
+position but neither half of "fotografa tiklandiginda profil aciliyor…
+uyuma tiklaninca uyum acilmali". Two more are in the pull request now:
+the band tapped, and the photograph tapped.
+
+### Battery gaps
+
+- `verify.sh`'s `format` step FAILs on an untracked `apps/mobile/dist-*`
+  that is not `dist-local` — only `dist-local/` is in `.gitignore`, and
+  prettier walks whatever else is there. A thread that exports the web
+  bundle under any other name gets a red battery with nothing wrong in
+  the repository. QA hit it; the fix is either a `dist-*` ignore or a
+  prettierignore line.
+
+### Upstream candidates
+
+- `.gitignore` / `.prettierignore` for `apps/mobile/dist-*`, per the gap
+  above.

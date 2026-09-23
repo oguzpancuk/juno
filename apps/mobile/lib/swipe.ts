@@ -23,6 +23,24 @@ export const SWIPE_THRESHOLD = 0.3;
  * for about the same finger.
  */
 export const SUPER_THRESHOLD = 0.15;
+/**
+ * The least upward travel a flick may star somebody on, as a fraction of
+ * the height: 42 points on a 390x844 phone. Sideways has no such floor,
+ * because a wrong pass costs one card and a wrong star costs one of the
+ * five in the week — and the card is claimed after eight points, so
+ * without this a tap with a twitch in it reached the most expensive
+ * thing on the screen (QA, 2026-09-23).
+ */
+export const SUPER_FLOOR = 0.05;
+/**
+ * How much more upward than sideways a diagonal has to be. A card flung
+ * up and away to the left travels more vertically than horizontally
+ * while plainly being a dismissal, and it used to star the person being
+ * dismissed (QA, 2026-09-23). At twice the sideways travel the gesture
+ * reads as deliberate, and everything below that falls through to the
+ * sideways rules, veto included.
+ */
+export const UP_DOMINANCE = 2;
 /** Points per millisecond: the speed of a flick that counts on its own. */
 export const FLICK_VELOCITY = 0.5;
 /**
@@ -97,11 +115,16 @@ function decideUp({
   readonly height: number;
 }): SwipeDecision {
   if (!Number.isFinite(dy) || !(height > 0)) return null;
-  if (Math.abs(dy) <= Math.abs(dx)) return null;
+  // Upward, and clearly so. `-dy` rather than its size: a card that
+  // travelled *down* fails this line, whatever it was doing at the
+  // moment it was let go, which is the hole the flick arm below used to
+  // leave open.
+  if (-dy <= Math.abs(dx) * UP_DOMINANCE) return null;
   const velocity = Number.isFinite(vy) ? vy : 0;
   // Let go while coming back down: a change of mind, as sideways.
   if (velocity > VETO_VELOCITY) return null;
-  const distance = height * SUPER_THRESHOLD;
-  if (-dy > distance || velocity < -FLICK_VELOCITY) return 'super';
+  if (-dy > height * SUPER_THRESHOLD) return 'super';
+  // A flick still counts short of the line, but not from nowhere.
+  if (velocity < -FLICK_VELOCITY && -dy > height * SUPER_FLOOR) return 'super';
   return null;
 }
