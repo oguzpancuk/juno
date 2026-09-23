@@ -139,8 +139,16 @@ describe('short school name', () => {
     expect(shortSchool('Boston College')).toBe('Boston');
   });
 
-  it('does not eat a name that only contains the term', () => {
-    // "Üsküdar" is not "üniversite"; only whole words go.
+  it('does not eat a word that holds a term inside it', () => {
+    // Whole words only. These two carry a term as a substring, which is
+    // what separates the rule from a `replace(/üniversite|.../gi, '')`:
+    // that version turns the first into "liler Vakfı Lisesi".
+    expect(shortSchool('Kolejliler Vakfı Lisesi')).toBe(
+      'Kolejliler Vakfı Lisesi',
+    );
+    expect(shortSchool('Üniversiteliler Derneği')).toBe(
+      'Üniversiteliler Derneği',
+    );
     expect(shortSchool('Üsküdar Üniversitesi')).toBe('Üsküdar');
     expect(shortSchool('İTÜ')).toBe('İTÜ');
   });
