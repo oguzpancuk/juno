@@ -48,8 +48,8 @@ export function LikedMePanel({
   onAnswered?: () => void;
   /**
    * Somebody was tapped: the host takes the deck to them (owner,
-   * 2026-09-23). The caption is this row's own "when" line, so the
-   * profile the host may end up showing says the same thing the row did.
+   * 2026-09-23), always — a liker outside this member's filters is put
+   * on the deck as a card rather than shown some other way.
    */
   onOpen?: (person: Admirer) => void;
 }) {
