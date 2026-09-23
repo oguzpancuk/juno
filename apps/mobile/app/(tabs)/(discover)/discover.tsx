@@ -501,9 +501,9 @@ export default function Discover() {
             />
             {/* No bio here (owner, 2026-09-23). It used to sit between
                 the chart and the band; the card now says where they are
-                and the four facts on one line, and their own words are
-                on the person page a tap away, in full rather than in the
-                two lines this had room for. */}
+                and the three short facts on one line, and their own
+                words are on the person page a tap away, in full rather
+                than in the two lines this had room for. */}
             {/* The reading opens from the thing it explains (owner,
                 2026-09-14). */}
             <Pressable

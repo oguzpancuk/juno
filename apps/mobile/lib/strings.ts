@@ -235,6 +235,15 @@ export const t = {
     heightAny: 'Belirtmek istemiyorum',
     heightValue: (cm: number) => `${cm} cm`,
     university: 'Üniversite',
+    /**
+     * The same field's label where it is one of three columns across a
+     * card. "Üniversite" is one word and the column is a third of the
+     * card, so on a 375pt phone it breaks mid-word as soon as the system
+     * text size goes up a step — and a kicker that reads "Üniversit / e"
+     * over its value is worse than the shorter word the owner uses for
+     * it himself ("okul da gozukmeli", 2026-09-23).
+     */
+    universityColumn: 'Okul',
     universityPlaceholder: 'Okuduğun üniversite',
     occupation: 'Meslek',
     occupationPlaceholder: 'Ne iş yapıyorsun?',
@@ -245,8 +254,14 @@ export const t = {
       `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
     detailsEmpty:
       'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
-    /** Drawn in a fact's column when that one was left unanswered. */
+    /**
+     * Drawn in a fact's column when that one was left unanswered. It
+     * holds the column open for sighted eyes; a screen reader has no
+     * column to hold, and "Boy, tire" is not a sentence, so the value
+     * carries `detailMissingLabel` instead of the character.
+     */
     detailMissing: '—',
+    detailMissingLabel: 'Belirtilmemiş',
     interestNames: {
       music: 'Müzik',
       live_music: 'Canlı müzik',

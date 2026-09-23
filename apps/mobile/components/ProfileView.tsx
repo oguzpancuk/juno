@@ -250,7 +250,7 @@ function DetailsCard({
       },
       {
         key: 'university',
-        label: t.profile.university,
+        label: t.profile.universityColumn,
         value: details.university,
       },
     ];
@@ -274,7 +274,17 @@ function DetailsCard({
                 testID={`fact-${fact.key}`}
               >
                 <Text style={styles.factLabel}>{fact.label}</Text>
-                <Text style={styles.factValue}>
+                <Text
+                  style={styles.factValue}
+                  // The dash is a drawing, not a word: VoiceOver would
+                  // read it out ("Boy, tire") where an unanswered field
+                  // used to be absent from the tree altogether.
+                  accessibilityLabel={
+                    fact.value === null
+                      ? t.profile.detailMissingLabel
+                      : undefined
+                  }
+                >
                   {fact.value ?? t.profile.detailMissing}
                 </Text>
               </View>
