@@ -48,6 +48,11 @@ const DiscoverRows = z.array(
       ...PublicProfile,
       ...Presentation,
       distance_km: z.number().int(),
+      // Premium only, and withheld in the view rather than on the device;
+      // every member of this suite is free, so the case below asserts it
+      // is null for all of them. `.strict()` is what caught the column
+      // arriving at all, which is the point of parsing this way.
+      likes_me: z.enum(['like', 'super']).nullable(),
     })
     .strict(),
 );
@@ -324,6 +329,9 @@ describe('discover', () => {
     expect(seen).not.toContain(dave.id); // wants men
     expect(seen).not.toContain(erin.id); // unspecified: only for 'everyone'
     expect(seen).not.toContain(alice.id);
+    // Alice has not bought the membership, so nobody carries a badge —
+    // the view withholds it, so this is the one place a leak would show.
+    expect(rows.every((r) => r.likes_me === null)).toBe(true);
     const row = rows.find((r) => r.id === bob.id);
     // Both points snap to 0.01° nodes: (28.98, 41.01) → (29.03, 41.04) ≈ 5.4 km.
     expect(row?.distance_km).toBe(5);
