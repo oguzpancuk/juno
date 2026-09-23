@@ -213,23 +213,6 @@ export function ProfileView({
 }
 
 /**
- * The four optional fields as another person reads them: the height, the
- * occupation and the university as three columns across the card, the
- * interest tags in a card of their own under it (owner, 2026-09-23).
- *
- * The three keep their columns whether or not they were answered, with a
- * dash where one was not, because a row that dropped its empty fields put
- * one answer on a third of the card and left the rest blank — the labels
- * are what make the answers readable, and they only line up if they
- * always stand in the same place. The dash is only drawn once at least
- * one of the three is answered: a profile with none of them says nothing
- * here rather than showing three dashes.
- *
- * The owner, with none of them answered, gets the empty card instead, for
- * the same reason the bio has one: it is where the fields will be, and it
- * is the only thing on the page that says they exist.
- */
-/**
  * The facts that sit under the name, each with the glyph that says which
  * fact it is (owner, 2026-09-23: "su sekilde ismin hemen altinda olsun.
  * taglerle degil sembollerle gosterelim"). Unanswered ones are simply
@@ -239,32 +222,45 @@ export function ProfileView({
  *
  * The `label` never reaches the screen. It is what a screen reader hears
  * in the glyph's place, because a picture of a mortarboard says nothing
- * to it and "Boğaziçi Ü." alone does not say it is a school.
+ * to it and "Boğaziçi Ü." alone does not say it is a school. `spoken` is
+ * the rest of that label: the value, except for the school, where it is
+ * the name as it was typed.
  */
 interface FactRow {
   readonly key: DetailIconName;
   readonly label: string;
   readonly value: string;
+  /**
+   * What a screen reader says in place of `value`. They differ for the
+   * school: `shortSchool` exists because a line has a width and
+   * "Üniversitesi" spends most of it, and speech has no width — "Ü." is
+   * read out as a letter and a period.
+   */
+  readonly spoken: string;
 }
 
 function factRows(details: ProfileDetails): readonly FactRow[] {
+  const height =
+    details.height_cm === null
+      ? null
+      : t.profile.heightValue(details.height_cm);
   const rows: readonly {
     key: DetailIconName;
     label: string;
     value: string | null;
+    spoken: string | null;
   }[] = [
     {
       key: 'height' as const,
       label: t.profile.height,
-      value:
-        details.height_cm === null
-          ? null
-          : t.profile.heightValue(details.height_cm),
+      value: height,
+      spoken: height,
     },
     {
       key: 'occupation' as const,
       label: t.profile.occupation,
       value: details.occupation,
+      spoken: details.occupation,
     },
     {
       key: 'university' as const,
@@ -272,9 +268,12 @@ function factRows(details: ProfileDetails): readonly FactRow[] {
       // Short here as on the deck (owner, 2026-09-23: "profilde de
       // kisaltalim"): "Üniversitesi" is most of what a school name spends
       // a line on while saying nothing about which school it is. The
-      // editor still holds the name as it was typed; this is the drawing.
+      // editor still holds the name as it was typed; this is the drawing,
+      // and `spoken` is the one reader the width argument does not apply
+      // to.
       value:
         details.university === null ? null : shortSchool(details.university),
+      spoken: details.university,
     },
   ];
   return rows.filter((row): row is FactRow => row.value !== null);
@@ -295,7 +294,7 @@ function FactRows({ details }: { details: ProfileDetails }) {
           <Text
             style={styles.factRowText}
             numberOfLines={1}
-            accessibilityLabel={`${row.label}: ${row.value}`}
+            accessibilityLabel={`${row.label}: ${row.spoken}`}
           >
             {row.value}
           </Text>
@@ -305,6 +304,22 @@ function FactRows({ details }: { details: ProfileDetails }) {
   );
 }
 
+/**
+ * The interest tags in a card of their own, and — for an owner who has
+ * answered none of the four — the one line on the page that says the
+ * fields exist at all.
+ *
+ * The three other facts left this card for the rows under the name, but
+ * the empty state did not go with them: its sentence names all four, and
+ * it is still true in the only state that draws it. So the guard keeps
+ * both halves. Dropping the facts half would put "Boy, ilgi alanların,
+ * üniversite ve meslek isteğe bağlı" under the rows that already draw
+ * three of those four, which is the card calling answered fields empty.
+ *
+ * An owner who answered his facts but no tags gets no card, as before:
+ * nothing on the page is missing a word for it, and the tags are one tap
+ * away in the editor.
+ */
 function DetailsCard({
   details,
   own,
@@ -312,30 +327,23 @@ function DetailsCard({
   details: ProfileDetails;
   own: boolean;
 }) {
-  // The three facts moved under the name; this card is the interests now.
   if (details.interests.length === 0) {
-    return own ? (
+    return own && factRows(details).length === 0 ? (
       <Card testID="details-card">
         <Body muted>{t.profile.detailsEmpty}</Body>
       </Card>
     ) : null;
   }
   return (
-    <>
-      {details.interests.length > 0 ? (
-        <Card testID="interests-card">
-          <View style={styles.tags} testID="interest-tags">
-            {details.interests.map((tag) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>
-                  {t.profile.interestNames[tag]}
-                </Text>
-              </View>
-            ))}
+    <Card testID="interests-card">
+      <View style={styles.tags} testID="interest-tags">
+        {details.interests.map((tag) => (
+          <View key={tag} style={styles.tag}>
+            <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
           </View>
-        </Card>
-      ) : null}
-    </>
+        ))}
+      </View>
+    </Card>
   );
 }
 

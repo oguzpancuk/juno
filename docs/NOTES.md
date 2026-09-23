@@ -7103,6 +7103,19 @@ ellipsis past the end. A row has the whole card width now instead of a
 third of it, so only a very long occupation reaches that end —
 "Kıdemli ürün tasarımcısı" fits where it did not before.
 
+Moving the facts out of `DetailsCard` took half of that card's empty-state
+guard with it, and review caught it: the card's sentence names all four
+fields, so on the interests half alone it showed to an owner who had
+answered his height, occupation and school and told him they were empty,
+directly under the rows drawing them. The guard keeps both halves — no
+facts _and_ no tags — which is the behaviour that was there before. The
+general shape: when a component loses one of the things it drew, its
+empty state is about the thing that left as much as about what stayed.
+
+The screen-reader label keeps the **full** school name where the row
+draws the abbreviation. `shortSchool` exists because a line has a width;
+speech has none, and "Ü." is read out as a letter and a period.
+
 ### Battery gaps
 
 Unchanged from the entries above: `shortSchool` is tested, and which
