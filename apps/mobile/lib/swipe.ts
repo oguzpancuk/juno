@@ -141,9 +141,19 @@ export function deckOffset(
  *
  * The deck draws these with `Animated.interpolate`, so that they can run
  * on the UI thread; this is the same rule written once, where a test can
- * hold it against `decideSwipe`. The two have to agree: a release that
- * counts with its stamp part-drawn spends one of five weekly stars on a
- * gesture the card never showed the person it had committed to.
+ * hold it against `decideSwipe`. A release that counts with its stamp
+ * part-drawn spends one of five weekly stars on a gesture the card never
+ * showed the person it had committed to.
+ *
+ * The two agree **on distance**, which is what the sweeps check. A flick
+ * counts short of the line by design (`FLICK_VELOCITY`, `SUPER_FLOOR`)
+ * and a stamp has no way to draw speed, so a fast short gesture can send
+ * a verdict its word never finished: swept with velocities from −1.2 to
+ * 0.5, the lowest is SÜPER at 0.355, and a sideways flick can pass with
+ * no stamp at all (review, 2026-09-23). That is the flick rule doing its
+ * job. If the star should ask for more of the word before a flick may
+ * spend one, `SUPER_FLOOR` is the number to move, not this function —
+ * and it is the owner's call, not a thread's.
  */
 export function stampStrength(
   dx: number,
