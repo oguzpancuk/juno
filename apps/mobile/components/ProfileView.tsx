@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
+import { DetailIcon, type DetailIconName } from '@/components/DetailIcon';
 import {
   ChartDetail,
   PROFILE_PRIMARY_COUNT,
@@ -141,6 +142,7 @@ export function ProfileView({
         name={name}
         age={age}
         caption={caption}
+        details={details}
         height={photoHeight}
         emptyHint={own ? t.profile.noPhotos : undefined}
       />
@@ -227,6 +229,82 @@ export function ProfileView({
  * the same reason the bio has one: it is where the fields will be, and it
  * is the only thing on the page that says they exist.
  */
+/**
+ * The facts that sit under the name, each with the glyph that says which
+ * fact it is (owner, 2026-09-23: "su sekilde ismin hemen altinda olsun.
+ * taglerle degil sembollerle gosterelim"). Unanswered ones are simply
+ * absent: with no column to hold open there is nothing for a dash to
+ * stand in for, which is the trade he took when he picked this shape over
+ * the labelled columns it replaces.
+ *
+ * The `label` never reaches the screen. It is what a screen reader hears
+ * in the glyph's place, because a picture of a mortarboard says nothing
+ * to it and "Boğaziçi Ü." alone does not say it is a school.
+ */
+interface FactRow {
+  readonly key: DetailIconName;
+  readonly label: string;
+  readonly value: string;
+}
+
+function factRows(details: ProfileDetails): readonly FactRow[] {
+  const rows: readonly {
+    key: DetailIconName;
+    label: string;
+    value: string | null;
+  }[] = [
+    {
+      key: 'height' as const,
+      label: t.profile.height,
+      value:
+        details.height_cm === null
+          ? null
+          : t.profile.heightValue(details.height_cm),
+    },
+    {
+      key: 'occupation' as const,
+      label: t.profile.occupation,
+      value: details.occupation,
+    },
+    {
+      key: 'university' as const,
+      label: t.profile.universityColumn,
+      // Short here as on the deck (owner, 2026-09-23: "profilde de
+      // kisaltalim"): "Üniversitesi" is most of what a school name spends
+      // a line on while saying nothing about which school it is. The
+      // editor still holds the name as it was typed; this is the drawing.
+      value:
+        details.university === null ? null : shortSchool(details.university),
+    },
+  ];
+  return rows.filter((row): row is FactRow => row.value !== null);
+}
+
+/** The rows themselves, for a host that has somewhere to put them. */
+function FactRows({ details }: { details: ProfileDetails }) {
+  const rows = factRows(details);
+  if (rows.length === 0) return null;
+  return (
+    <View style={styles.factRows} testID="profile-facts">
+      {rows.map((row) => (
+        <View key={row.key} style={styles.factRow} testID={`fact-${row.key}`}>
+          <DetailIcon name={row.key} />
+          {/* Never onto a second line (owner, 2026-09-23: "meslek ve okul
+              asla alt satira tasmasin"). A row has the whole width now, so
+              only a very long occupation reaches the end of one. */}
+          <Text
+            style={styles.factRowText}
+            numberOfLines={1}
+            accessibilityLabel={`${row.label}: ${row.value}`}
+          >
+            {row.value}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function DetailsCard({
   details,
   own,
@@ -234,43 +312,8 @@ function DetailsCard({
   details: ProfileDetails;
   own: boolean;
 }) {
-  const facts: readonly {
-    key: string;
-    label: string;
-    value: string | null;
-    /** False for a column whose width is its content's; see `styles.fact`. */
-    share: boolean;
-  }[] = [
-    {
-      key: 'height',
-      label: t.profile.height,
-      value:
-        details.height_cm === null
-          ? null
-          : t.profile.heightValue(details.height_cm),
-      share: false,
-    },
-    {
-      key: 'occupation',
-      label: t.profile.occupation,
-      value: details.occupation,
-      share: true,
-    },
-    {
-      key: 'university',
-      label: t.profile.universityColumn,
-      // Short here as on the deck (owner, 2026-09-23: "profilde de
-      // kisaltalim"). The column is about a third of the card, and
-      // "Üniversitesi" is most of what a school name spends it on while
-      // saying nothing about which school it is. The editor still holds
-      // the name as it was typed; this is the drawing, not the value.
-      value:
-        details.university === null ? null : shortSchool(details.university),
-      share: true,
-    },
-  ];
-  const anyFact = facts.some((fact) => fact.value !== null);
-  if (!anyFact && details.interests.length === 0) {
+  // The three facts moved under the name; this card is the interests now.
+  if (details.interests.length === 0) {
     return own ? (
       <Card testID="details-card">
         <Body muted>{t.profile.detailsEmpty}</Body>
@@ -279,40 +322,6 @@ function DetailsCard({
   }
   return (
     <>
-      {anyFact ? (
-        <Card testID="details-card">
-          <View style={styles.facts}>
-            {facts.map((fact) => (
-              <View
-                key={fact.key}
-                style={[styles.fact, fact.share ? styles.factShare : null]}
-                testID={`fact-${fact.key}`}
-              >
-                <Text style={styles.factLabel}>{fact.label}</Text>
-                {/* Never onto a second line (owner, 2026-09-23: "meslek
-                    ve okul asla alt satira tasmasin"). Between the wider
-                    columns and the shortened school most values fit; one
-                    that still does not ends in an ellipsis rather than
-                    wrapping. */}
-                <Text
-                  style={styles.factValue}
-                  numberOfLines={1}
-                  // The dash is a drawing, not a word: VoiceOver would
-                  // read it out ("Boy, tire") where an unanswered field
-                  // used to be absent from the tree altogether.
-                  accessibilityLabel={
-                    fact.value === null
-                      ? t.profile.detailMissingLabel
-                      : undefined
-                  }
-                >
-                  {fact.value ?? t.profile.detailMissing}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </Card>
-      ) : null}
       {details.interests.length > 0 ? (
         <Card testID="interests-card">
           <View style={styles.tags} testID="interest-tags">
@@ -558,6 +567,7 @@ function PhotoCarousel({
   name,
   age,
   caption,
+  details,
   height: fixedHeight,
   emptyHint,
 }: {
@@ -566,6 +576,8 @@ function PhotoCarousel({
   name: string;
   age: number | null;
   caption: string | undefined;
+  /** Drawn under the name as iconed rows; nothing drawn for the unanswered. */
+  details: ProfileDetails;
   /** Set by a host that must line up with another screen. */
   height: number | undefined;
   /** What the owner reads in place of a photo; nothing for another person. */
@@ -643,6 +655,7 @@ function PhotoCarousel({
             the same y rather than letting it drop 22pt on the one screen
             that has no caption. */}
         <Text style={styles.caption}>{caption ?? ''}</Text>
+        <FactRows details={details} />
       </LinearGradient>
     </View>
   );
@@ -870,20 +883,15 @@ const styles = StyleSheet.create({
   addText: { ...type.caption, color: color.textMuted, textAlign: 'center' },
   dim: { opacity: 0.6 },
   hint: { ...type.caption, color: color.textFaint },
-  // The answered facts on one wrapping row: a label over its value, the
-  // way the match page sets a number under its word.
-  facts: { flexDirection: 'row', gap: space.md },
-  // A column takes the width of its content unless it is told to share
-  // (owner, 2026-09-23: "boy hep belli bir alan kaplayacak. kalan 2 alani
-  // da kalan alana esit bolusturelim"). Height is the one that does not:
-  // "168 cm" is as wide as it will ever be, and measuring it rather than
-  // fixing a width in points keeps it right at every text size.
-  fact: { flexGrow: 0, flexShrink: 0, gap: 2 },
-  // The other two split what is left, equally whatever is in them:
-  // `flexBasis` 0 so a long occupation cannot take room from the school,
-  // `minWidth` 0 so a value clips inside its column instead of running
-  // out past the card, which has no `overflow: 'hidden'` to stop it.
-  factShare: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
+  // The answered facts under the name, one per line, each behind its
+  // glyph (owner, 2026-09-23: "ismin hemen altinda olsun. taglerle degil
+  // sembollerle gosterelim"). A small gap above the first: they belong to
+  // the name, not to the picture behind them.
+  factRows: { gap: 2, marginTop: space.xs },
+  factRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  // `flexShrink` so the text, not the row, is what runs out of width; the
+  // glyph keeps its size and the name above keeps its place.
+  factRowText: { ...type.bodySmall, color: color.textMuted, flexShrink: 1 },
   factLabel: { ...type.label, color: color.textFaint },
   factValue: { ...type.body, color: color.text },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

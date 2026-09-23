@@ -7068,3 +7068,47 @@ equivalent of "Üniversitesi" to take out of a job title.
 Same as the two entries above. `shortSchool` is tested; which columns
 call it is wiring the battery cannot see, so it was checked by driving
 the web target and photographing both screens.
+
+## 2026-09-23 — the three facts move under the name, behind glyphs
+
+Fourth device round on the profile fields. The owner did not like the
+card of labelled columns — "profildeki boy okul ve meslek görüntüsünü
+beğenmedim. çok ayrık duruyorlar" — and then sent a Tinder screenshot
+with "şu şekilde ismin hemen altında olsun. taglerle değil sembollerle
+gösterelim".
+
+So the columns are gone. Height, occupation and school are now three
+stacked rows in the photo scrim, directly under the name and the
+distance line, each a small stroked glyph beside a muted line of text:
+a ruler, a briefcase, a mortarboard. `components/DetailIcon.tsx` draws
+them the way `TabIcon` and `SlidersIcon` already do — `react-native-svg`
+paths, no icon font and no PNG set, for three shapes of a dozen points
+each. The interests keep their own card; nothing else on the page moved.
+
+Two consequences worth writing down, because both reverse something
+decided earlier in this same pull request:
+
+- **An unanswered fact is simply absent now.** Round 1 asked for a dash
+  in its place, so the row read as a row whether or not it was answered.
+  With no columns to hold open there is nothing for a dash to stand in
+  for, and the reference he sent behaves the same way. `detailMissing`
+  and `detailMissingLabel` are out of `strings.ts` with the columns.
+- **The screen-reader text moved into the row.** The glyph says nothing
+  to VoiceOver and "Boğaziçi Ü." alone does not say it is a school, so
+  each row carries `accessibilityLabel` of the old column label plus the
+  value. The label never reaches the screen otherwise.
+
+The never-wrap rule from the second round still holds: one line per row,
+ellipsis past the end. A row has the whole card width now instead of a
+third of it, so only a very long occupation reaches that end —
+"Kıdemli ürün tasarımcısı" fits where it did not before.
+
+### Battery gaps
+
+Unchanged from the entries above: `shortSchool` is tested, and which
+screens draw it, and how the rows lay out, is wiring no test in this
+repo can see. Checked by driving the web target and photographing it.
+
+### Upstream candidates
+
+None this round.

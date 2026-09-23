@@ -263,14 +263,6 @@ export const t = {
     interestSearchEmpty: 'Bu aramayla eşleşen ilgi alanı yok.',
     detailsEmpty:
       'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
-    /**
-     * Drawn in a fact's column when that one was left unanswered. It
-     * holds the column open for sighted eyes; a screen reader has no
-     * column to hold, and "Boy, tire" is not a sentence, so the value
-     * carries `detailMissingLabel` instead of the character.
-     */
-    detailMissing: '—',
-    detailMissingLabel: 'Belirtilmemiş',
     interestNames: {
       music: 'Müzik',
       live_music: 'Canlı müzik',
