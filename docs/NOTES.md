@@ -8186,3 +8186,28 @@ default is unchanged (0–519 on every card again). What stays true at a
 larger text size: every card matches every other, and all of them are
 shorter than the profile's photograph, which scrolls and never shrinks.
 That is the owner's device check, not something a thread can drive.
+
+Same day, from the owner's phone: "profil ve kesfette fotolar ayni hizada
+degil. kesfetteki guzel, profildekini de ayni hale getir". The web export
+had measured them equal at 390x844, and the phone did not, because a
+phone's tab bar is 49 points plus the home indicator's 34 while the
+browser's is about 52. Inferred from `(tabs)/_layout.tsx` and the web
+measurements, not measured on his device: the deck's card had 31 points
+less, its photograph (the one thing on the card allowed to shrink) gave
+them up, and the profile, which scrolls, never did. So the profile now
+draws whatever the deck actually drew: the deck reports its photograph's
+layout height to `lib/deck-photo.ts`, keyed by window height, and the
+profile reads it through `useSyncExternalStore`, falling back to the
+fraction until the deck has drawn a card. `lib/deck-photo.test.ts` was
+run red against a do-nothing store (3 failed of 6). Driven on the web by
+making the viewport short enough that the deck has to give way, 390x700,
+which is the same situation the phone is in: before, deck 0–379 and
+profile 0–431; after, both 0–379, with the big three and the bio box on
+the same lines too. At 390x844 nothing changes (519 both).
+
+### Battery gaps
+
+The web export at 390x844 cannot show a mismatch that only a phone's tab
+bar causes: the browser reports no bottom inset. A layout claim about
+the two photographs needs a run at a height where the deck gives way, or
+the owner's device.

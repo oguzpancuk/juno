@@ -39,6 +39,7 @@ import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
 import { likedYouBadge } from '@/lib/card-a11y';
 import { bioSlotHeight, MAX_DECK_SCALE } from '@/lib/deck-layout';
+import { reportDeckPhoto } from '@/lib/deck-photo';
 import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
@@ -626,6 +627,11 @@ export default function Discover() {
                 styles.photoWrap,
                 { height: Math.round(height * PHOTO_SCREEN_FRACTION) },
               ]}
+              // What it was actually given, which on a phone is less than
+              // it asked for; the profile draws its photograph at this.
+              onLayout={(event) =>
+                reportDeckPhoto(height, event.nativeEvent.layout.height)
+              }
             >
               {/* The photo's own button fills it, rather than containing
                 everything drawn on it. A Pressable is one accessibility

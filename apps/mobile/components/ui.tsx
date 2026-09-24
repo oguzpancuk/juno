@@ -73,9 +73,13 @@ export const SCREEN_TOP_GUTTER = 20;
  * How much of the window a full-screen photo takes, on the deck and on the
  * profile. One number so the two line up (owner, 2026-09-14: "keşfette ve
  * profilde resimler aynı hizada olsun") — both start at the top edge, so
- * equal heights put their bottoms on the same line. Both take it as their
- * photograph's height, and on the deck that holds on every card (owner,
- * 2026-09-24: "profille ayni olsun").
+ * equal heights put their bottoms on the same line. The deck asks for it
+ * on every card (owner, 2026-09-24: "profille ayni olsun"), and the
+ * profile draws whatever the deck was actually given (`lib/deck-photo.ts`),
+ * because on a phone the tab bar is taller than in a browser and the deck
+ * gets less than it asks for (owner, same day: "kesfetteki guzel,
+ * profildekini de ayni hale getir"). The fraction is the profile's own
+ * height only until the deck has drawn a card.
  *
  * 0.56 → 0.64 → 0.615, all on 2026-09-23. At 0.56 the deck's block below
  * left 51 points spare on a 390x844 phone and the footer spread them
