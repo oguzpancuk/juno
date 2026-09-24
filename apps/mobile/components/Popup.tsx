@@ -92,6 +92,7 @@ export function Popup({
       glyph={t.common.backGlyph}
       accessibilityLabel={backLabel ?? t.common.close}
       onPress={onBack ?? onClose}
+      onPhoto={bleed}
       {...(testID === undefined ? {} : { testID: `${testID}-close` })}
     />
   );
@@ -242,26 +243,14 @@ const styles = StyleSheet.create({
   },
   // `flexShrink` so a long title yields to the chevron, as in the chat.
   title: { ...type.title, color: color.text, flexShrink: 1 },
-  // Over the photo, in the same place the header row would put it, on a
-  // chip like the deck's corner ones: bare, the muted glyph is lost on a
-  // bright photo. The left padding balances the chevron's own right one,
-  // so the glyph sits in the middle of the round.
+  // Over the photo, in the same place the header row would put it.
   overPhoto: {
     position: 'absolute',
     top: space.md,
     left: SCREEN_PADDING - space.sm,
-    width: 44,
-    height: 44,
-    paddingLeft: space.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    backgroundColor: color.surfaceSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // `flexGrow: 0` so a short sheet is short; `flexShrink: 1` so a long one
-  // scrolls inside the sheet instead of pushing the button off the screen.
+  // scrolls inside the sheet instead of running off the screen.
   body: { flexGrow: 0, flexShrink: 1 },
   bodyContent: {
     gap: space.md,

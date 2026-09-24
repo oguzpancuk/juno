@@ -385,16 +385,23 @@ export function goBack(fallback: Href): void {
  * `onPress` and the tap closes it — the same control at the top left of
  * both (owner, 2026-09-24: "kapat butonları … sol üstte geriye dönüş
  * olsun, mesajlardaki geri butonu gibi").
+ *
+ * `onPhoto` draws it on a round chip like the deck's corner ones, for a
+ * sheet whose photo runs to the top: bare, the muted glyph is lost on a
+ * bright picture. The chip is the pressable itself, so the whole round
+ * answers — react-native-web ignores `hitSlop`.
  */
 export function BackChevron({
   glyph,
   accessibilityLabel,
   testID,
+  onPhoto = false,
   ...way
 }: {
   glyph: string;
   accessibilityLabel: string;
   testID?: string;
+  onPhoto?: boolean;
 } & ({ fallback: Href } | { onPress: () => void })) {
   return (
     <Pressable
@@ -403,7 +410,10 @@ export function BackChevron({
       accessibilityLabel={accessibilityLabel}
       hitSlop={{ top: 0, bottom: 0, left: space.lg, right: space.md }}
       onPress={'onPress' in way ? way.onPress : () => goBack(way.fallback)}
-      style={({ pressed }) => [s.chevronHit, pressed && s.buttonDim]}
+      style={({ pressed }) => [
+        onPhoto ? s.chevronChip : s.chevronHit,
+        pressed && s.buttonDim,
+      ]}
     >
       <Text style={s.chevron}>{glyph}</Text>
     </Pressable>
@@ -1008,6 +1018,19 @@ const s = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     paddingRight: space.sm,
+  },
+  // 44pt round; the left padding balances the glyph's own right-hand
+  // bearing, so it sits in the middle of the circle.
+  chevronChip: {
+    width: 44,
+    height: 44,
+    paddingLeft: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Larger than the label it replaces: alone on the row it has to read as
   // a control rather than as punctuation.
