@@ -124,6 +124,17 @@ const SPACING_FLOOR = space.sm;
  */
 const BAR_GAP_EXTRA = 5;
 
+/**
+ * The bio's box, three lines tall on every card: the lines, the box's
+ * vertical padding and its two hairlines. The photograph is the
+ * profile's height now (owner, 2026-09-24: "profille ayni olsun"), so it
+ * no longer takes up what a short bio leaves over; a box the same size
+ * on every card is what keeps that from turning into a gap above the
+ * buttons, and keeps the buttons where the thumb left them. A card with
+ * no bio keeps the room empty rather than letting the buttons jump.
+ */
+const BIO_SLOT = 3 * type.body.lineHeight + 2 * space.md + 2;
+
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
 /**
@@ -824,7 +835,9 @@ export default function Discover() {
                     {current.row.bio}
                   </Text>
                 </View>
-              ) : null}
+              ) : (
+                <View style={styles.bioSlot} testID="card-bio-slot" />
+              )}
             </View>
           </Animated.View>
           {/* The third stamp, and the only one that is not on the card.
@@ -1286,15 +1299,18 @@ const styles = StyleSheet.create({
   // 2026-09-14). Both card and photo may shrink: on a screen too short for
   // the full photo share it is the picture that gives way, never the
   // buttons, which keep the footer's minimum height.
-  card: { flexGrow: 1, flexShrink: 1 },
+  // Its content's height, no more: what the screen has spare goes to the
+  // footer, split around the buttons, not to an empty strip in here.
+  card: { flexGrow: 0, flexShrink: 1 },
   photoWrap: {
-    // `PHOTO_SCREEN_FRACTION` is the height it asks for; growing is what
-    // it does with whatever the block below leaves over. Fixed at the
-    // fraction, that leftover piled up between the bio and the round
-    // buttons — 51 points of it at 390x844 — which is what the owner saw
-    // (2026-09-23: "hala cok bosluk var"). The photograph is the only
-    // thing on this screen that can spend space without looking padded.
-    flexGrow: 1,
+    // Exactly `PHOTO_SCREEN_FRACTION`, the profile's height (owner,
+    // 2026-09-24: "profille ayni olsun"). It used to grow into whatever
+    // the block below left over, which put a card with a one-line bio 46
+    // points taller than the profile at 390x844; the bio's box is now
+    // the same size on every card instead (`BIO_SLOT`). Shrinking stays:
+    // on a phone too short for the whole card the picture gives way
+    // rather than the buttons going under the tab bar.
+    flexGrow: 0,
     flexShrink: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -1308,7 +1324,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
     // `Screen`'s own gap between children, so the big three sit the same
     // distance below the photo here as they do on the profile.
-    paddingTop: space.lg,
+    paddingTop: space.md,
     gap: space.md,
   },
   // Equal gaps around the buttons — the words to the buttons, the buttons
@@ -1322,7 +1338,7 @@ const styles = StyleSheet.create({
   // fazla"). No bottom inset: the tab bar under this screen already covers
   // the home indicator (lib/insets.ts).
   footer: {
-    flexGrow: 0,
+    flexGrow: 1,
     minHeight: ROUND_SIZE + 2 * SPACING_FLOOR,
     justifyContent: 'space-evenly',
     paddingTop: SPACING_FLOOR,
@@ -1385,6 +1401,7 @@ const styles = StyleSheet.create({
   // (owner, 2026-09-23: "diğer kutucuklar gibi yarısaydam yap"): the
   // translucent fill and the hairline edge, at the card radius.
   bioBox: {
+    minHeight: BIO_SLOT,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: glass.edge,
@@ -1393,6 +1410,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   bio: { ...type.body, color: color.text },
+  bioSlot: { height: BIO_SLOT },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

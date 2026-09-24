@@ -8143,3 +8143,31 @@ The eight named cases are tests instead.
 A comment that says what a constant guarantees should be read as a
 claim to check, not as documentation. This one survived nine review
 rounds, and the code it described was wrong for every dense country.
+
+## 2026-09-24 — the deck's photograph is the profile's height again, on the merged card
+
+Owner, after PR #9 merged: "kesfetteki foto boyutunu guzel yapmamis.
+profille ayni olsun". Main was merged into the premium branch first, so
+the layout was built on the card as it ships, with #9's fact rows on
+the photograph.
+
+- The merge needed two things beyond conflict markers. The premium
+  migration redefines `discover`, and it predates #9's four columns;
+  without repeating them before `likes_me`, `create or replace view`
+  drops columns and PostgreSQL refuses (reproduced on a bare PostgreSQL
+  16 cluster: "cannot drop columns from view"). And `liked_me` now
+  carries the same four, withheld with the rest of the person, so a card
+  opened from "Seni beğenenler" draws the same rows as the deck's.
+- The photograph stops growing (`flexGrow: 0`) and the bio's box is three
+  lines tall on every card (`BIO_SLOT`), so every card is the fullest
+  card. The gap under the photograph goes back to `space.md`, the
+  profile's. Measured at 390x844 on the web export against the stub:
+  photograph 0–519 on the three-line, one-line and no-bio cards and on
+  the profile; big three at 531 on both; bio box top at 583 on both;
+  buttons 688–776 on every card. Before, at the merge commit: 519 on the
+  three-line card, 565 on a one-line card.
+- What it costs: a card with no bio shows an empty three-line room
+  between the big three and the buttons, so the buttons never move. On a
+  phone taller than 844 the spare goes around the buttons; on one shorter
+  than the full card (an SE at 667), the deck's photograph shrinks and is
+  then shorter than the profile's there.

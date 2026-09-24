@@ -73,24 +73,23 @@ export const SCREEN_TOP_GUTTER = 20;
  * How much of the window a full-screen photo takes, on the deck and on the
  * profile. One number so the two line up (owner, 2026-09-14: "keşfette ve
  * profilde resimler aynı hizada olsun") — both start at the top edge, so
- * equal heights put their bottoms on the same line. The profile, which
- * scrolls, takes it directly; the deck takes it as the height its
- * photograph asks for and grows into whatever the block below leaves
- * over, so that the leftover never turns into a gap above the buttons.
+ * equal heights put their bottoms on the same line. Both take it as their
+ * photograph's height, and on the deck that holds on every card (owner,
+ * 2026-09-24: "profille ayni olsun").
  *
  * 0.56 → 0.64 → 0.615, all on 2026-09-23. At 0.56 the deck's block below
  * left 51 points spare on a 390x844 phone and the footer spread them
- * around the round buttons (owner: "hala cok bosluk var"), so the
- * photograph grows into the leftover now; 0.64 then matched the two
- * screens on a card with a two-line bio. The bio takes three lines since
- * "bioyu 3 satir gozukecek sekilde yap", and a full three-line box is
- * the tallest the block below ever gets — 0.615 is the height the deck
- * settles at there, which makes that card and the profile the same
- * (519 each at 390x844) and means the deck's photograph is never
- * *shorter* than the profile's. A card with less to say lets its
- * photograph take the slack instead: 542 on two lines, 565 on one, 626
- * on a card with no bio at all. That is the price of never drawing the
- * gap above the buttons again, and the owner has been told the numbers.
+ * around the round buttons (owner: "hala cok bosluk var"); 0.64 then
+ * matched the two screens on a card with a two-line bio. The bio takes
+ * three lines since "bioyu 3 satir gozukecek sekilde yap", and 0.615 is
+ * the height at which a card with a full three-line box fits 390x844
+ * with nothing spare (519 points). For a day the deck's photograph grew
+ * into what a shorter bio left over — 565 on a one-line card, 626 with
+ * no bio — and so stopped matching the profile; the deck now keeps the
+ * bio's box three lines tall on every card instead (`BIO_SLOT` in the
+ * deck), so every card is that fullest card. On a taller phone the spare
+ * goes around the buttons; on one too short for the card, the deck's
+ * photograph is the one thing that gives way.
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
