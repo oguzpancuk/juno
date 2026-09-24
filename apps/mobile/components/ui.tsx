@@ -380,25 +380,29 @@ export function goBack(fallback: Href): void {
  * `glyph` is drawn and `accessibilityLabel` is spoken, because "‹" is not
  * a sentence. The box is 44pt tall and about 20 wide, and the slop carries
  * the narrow axis over the minimum without widening the header row.
+ *
+ * A screen passes `fallback` and the tap leaves the route; a sheet passes
+ * `onPress` and the tap closes it — the same control at the top left of
+ * both (owner, 2026-09-24: "kapat butonları … sol üstte geriye dönüş
+ * olsun, mesajlardaki geri butonu gibi").
  */
 export function BackChevron({
   glyph,
   accessibilityLabel,
-  fallback,
   testID,
+  ...way
 }: {
   glyph: string;
   accessibilityLabel: string;
-  fallback: Href;
   testID?: string;
-}) {
+} & ({ fallback: Href } | { onPress: () => void })) {
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       hitSlop={{ top: 0, bottom: 0, left: space.lg, right: space.md }}
-      onPress={() => goBack(fallback)}
+      onPress={'onPress' in way ? way.onPress : () => goBack(way.fallback)}
       style={({ pressed }) => [s.chevronHit, pressed && s.buttonDim]}
     >
       <Text style={s.chevron}>{glyph}</Text>

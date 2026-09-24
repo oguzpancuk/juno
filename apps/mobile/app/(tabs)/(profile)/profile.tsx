@@ -344,6 +344,12 @@ export default function Profile() {
         onClose={() => setShowSettings(false)}
         onDismissed={() => gate.dismissed()}
         title={settingsTitle(settingsView)}
+        {...(settingsView === 'menu'
+          ? {}
+          : {
+              onBack: () => setSettingsView('menu'),
+              backLabel: t.settings.backLabel,
+            })}
         contentKey={settingsView}
         testID="settings-popup"
       >

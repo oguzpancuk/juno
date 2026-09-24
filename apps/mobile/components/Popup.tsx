@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
-  GradientButton,
+  BackChevron,
   SCREEN_PADDING,
   TopGapContextProvider,
 } from '@/components/ui';
@@ -22,10 +22,16 @@ import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * The one popup in the product (owner, 2026-09-11): the screen behind it
- * dims, a sheet rises from the bottom, and there is exactly one button,
- * which closes it. Anything else the sheet needs to do it does inside its
- * own content; a second button would turn it into a dialog, and the
+ * dims, a sheet rises from the bottom, and there is exactly one way out of
+ * it, which closes it. Anything else the sheet needs to do it does inside
+ * its own content; a second button would turn it into a dialog, and the
  * owner asked for a popup.
+ *
+ * That way out is the chat header's back chevron at the sheet's top left,
+ * beside the title, not a full-width "Kapat" under the content (owner,
+ * 2026-09-24: "kapat butonları en alttaki full butondan sol üstte geriye
+ * dönüş olsun, mesajlardaki geri butonu gibi"). It keeps "Kapat" as its
+ * spoken name, so VoiceOver and the web still announce what it does.
  *
  * A native `Modal`, not an in-tree overlay: it sits above the tab bar as
  * well, which is what a dimmed background means on iOS, and react-native-
@@ -38,7 +44,8 @@ export function Popup({
   visible,
   onClose,
   title,
-  closeLabel,
+  onBack,
+  backLabel,
   bleed = false,
   onDismissed,
   contentKey,
@@ -61,8 +68,15 @@ export function Popup({
    * state survives the swap.
    */
   contentKey?: string;
-  /** Defaults to "Kapat". */
-  closeLabel?: string;
+  /**
+   * What the top-left chevron (and the hardware back) does, for a sheet
+   * with pages of its own — settings' blocked list and privacy text go
+   * back to the settings list. Defaults to `onClose`; the backdrop always
+   * closes.
+   */
+  onBack?: () => void;
+  /** The chevron's spoken name. Defaults to "Kapat". */
+  backLabel?: string;
   children: ReactNode;
   testID?: string;
 } & (
@@ -73,6 +87,14 @@ export function Popup({
 )) {
   const insets = useSafeAreaInsets();
   const [locked, setLocked] = useState(false);
+  const back = (
+    <BackChevron
+      glyph={t.common.backGlyph}
+      accessibilityLabel={backLabel ?? t.common.close}
+      onPress={onBack ?? onClose}
+      {...(testID === undefined ? {} : { testID: `${testID}-close` })}
+    />
+  );
   // Scrolled back, not remounted by a key: a remount would take the
   // children's state with it — a delete in flight in the settings sheet
   // among it, which would unlock its button (review, 2026-09-15).
@@ -99,12 +121,13 @@ export function Popup({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={onBack ?? onClose}
       onDismiss={() => dismissed.current?.()}
     >
       <View style={styles.layer} testID={testID}>
-        {/* A tap target for sighted users only: VoiceOver gets the one
-            Kapat button below, not a second full-screen one. */}
+        {/* A tap target for sighted users only: VoiceOver gets the
+            chevron at the sheet's top left, not a second full-screen
+            button. */}
         <Pressable
           style={styles.backdrop}
           onPress={onClose}
@@ -137,8 +160,16 @@ export function Popup({
             pointerEvents="none"
           />
           <CosmicGround planet={false} horizon={false} />
-          {title === undefined ? null : (
-            <Text style={styles.title}>{title}</Text>
+          {/* The chat header's row: the way out, then what this is. A
+              bleed sheet has no row — its photo runs to the top — so the
+              chevron is drawn over the photo instead, below. */}
+          {bleed ? null : (
+            <View style={styles.header}>
+              {back}
+              {title === undefined ? null : (
+                <Text style={styles.title}>{title}</Text>
+              )}
+            </View>
           )}
           {/* The gutter belongs to the scroll view's content, not to the
               sheet: on the sheet it clips, and a child that cancels it to
@@ -167,13 +198,7 @@ export function Popup({
               </ScrollLock.Provider>
             </TopGapContextProvider>
           </ScrollView>
-          <View style={styles.action}>
-            <GradientButton
-              label={closeLabel ?? t.common.close}
-              onPress={onClose}
-              {...(testID === undefined ? {} : { testID: `${testID}-close` })}
-            />
-          </View>
+          {bleed ? <View style={styles.overPhoto}>{back}</View> : null}
         </View>
       </View>
     </Modal>
@@ -198,7 +223,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
     borderWidth: 1,
     borderColor: glass.edge,
-    paddingTop: space.xl,
+    paddingTop: space.sm,
     overflow: 'hidden',
   },
   // The gap is the sheet's, above the scroll view, so only the sheet can
@@ -207,11 +232,21 @@ const styles = StyleSheet.create({
   // sheet's border box, where `overflow: hidden` rounds it into the
   // corners (owner, 2026-09-14: the photo must cover the top of the popup).
   sheetBleed: { paddingTop: 0 },
-  title: {
-    ...type.title,
-    color: color.text,
-    marginBottom: space.md,
+  // The chat header's measurements: the gutter, then the chevron's 44pt
+  // box and the title beside it, and a gap before the content.
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
+    marginBottom: space.sm,
+  },
+  // `flexShrink` so a long title yields to the chevron, as in the chat.
+  title: { ...type.title, color: color.text, flexShrink: 1 },
+  // Over the photo, in the same place the header row would put it.
+  overPhoto: {
+    position: 'absolute',
+    top: space.sm,
+    left: SCREEN_PADDING,
   },
   // `flexGrow: 0` so a short sheet is short; `flexShrink: 1` so a long one
   // scrolls inside the sheet instead of pushing the button off the screen.
@@ -221,5 +256,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
     paddingBottom: space.md,
   },
-  action: { paddingTop: space.md, paddingHorizontal: SCREEN_PADDING },
 });

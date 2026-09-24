@@ -5,7 +5,7 @@
   { "click": "Gizlilik metnini oku", "settle": 1500 },
   { "expect": "Gizlilik Politikası" },
   { "shot": "l1-web-legal-sheet" },
-  { "click": "Kapat", "settle": 1500 },
+  { "tap": "legal-popup-close", "settle": 1500 },
   { "click": "E-posta ile devam et", "settle": 2000 },
   { "click": "Zaten hesabın var mı? Giriş yap", "settle": 2000 },
   { "fill": "email", "text": "l1-shots@test.local" },

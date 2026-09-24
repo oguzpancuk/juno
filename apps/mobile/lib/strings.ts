@@ -323,8 +323,6 @@ export const t = {
   },
   chat: {
     backToMatches: '‹ Eşleşmeler',
-    // The header control: the glyph alone, with its own spoken label.
-    backGlyph: '‹',
     backToMatchesLabel: 'Eşleşmelere dön',
     tabThread: 'Sohbet',
     tabMatch: 'Uyum',
@@ -374,8 +372,8 @@ export const t = {
   },
   settings: {
     title: 'Ayarlar',
-    // Inside the sheet, from blocked people or the privacy text.
-    back: '‹ Ayarlar',
+    // The sheet's chevron, from blocked people or the privacy text.
+    backLabel: 'Ayarlara dön',
     signOut: 'Çıkış yap',
     radius: 'Keşif yarıçapı',
     radiusHint:
@@ -401,7 +399,14 @@ export const t = {
     open: 'Gizlilik ve lisanslar',
     updated: (date: string) => `Son güncelleme: ${date}`,
   },
-  common: { loading: 'Yükleniyor…', retry: 'Tekrar dene', close: 'Kapat' },
+  common: {
+    loading: 'Yükleniyor…',
+    retry: 'Tekrar dene',
+    close: 'Kapat',
+    // The chat header's and every sheet's way back: the glyph alone, with
+    // its own spoken label beside it at each call site.
+    backGlyph: '‹',
+  },
   errors: {
     generic: 'Bir şeyler ters gitti, tekrar dene.',
     weakPassword:

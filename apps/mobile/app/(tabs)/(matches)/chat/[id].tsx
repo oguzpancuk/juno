@@ -388,7 +388,7 @@ function ChatView({
             2026-09-14 — "buton profil resminin solunda olsun"). */}
         <View style={styles.headerRow}>
           <BackChevron
-            glyph={t.chat.backGlyph}
+            glyph={t.common.backGlyph}
             accessibilityLabel={t.chat.backToMatchesLabel}
             fallback="/matches"
             testID="chat-back"
