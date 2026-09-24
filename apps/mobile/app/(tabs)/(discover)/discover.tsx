@@ -181,28 +181,30 @@ export default function Discover() {
       const wanted = pinned.current;
       pinned.current = null;
       // …but a load that did not deliver the person must not swallow the
-      // tap either: somebody outside the filters is in no deck to scroll
+      // tap either. Somebody outside the filters is in no deck to scroll
       // back to, so "Tekrar dene" after a dropped connection would lose
-      // them with no way back but the list (review, 2026-09-23). Put it
-      // back only if nothing newer has claimed the ref, so two taps in
-      // flight are still two locals and the second one wins.
-      //
-      // Never on a cancelled load, though — that is this same ref's
-      // round-4 leak from the other end (review, 2026-09-23). A load is
-      // cancelled because a newer one replaced it, and that newer one
-      // has already read the ref and emptied it, synchronously, before
-      // this promise lands: `=== null` is then its ordinary state rather
-      // than evidence that nobody wants it, so putting the tap back
-      // hands it to whatever reload comes next. Driven: tap somebody,
-      // open and close the filters while that load is in flight, and the
-      // deck goes where it should — then the next return to the tab
-      // jumped to the tapped person, two loads later, asked for by
-      // nobody. A cancelled load forgets the tap, which is what round 4
-      // decided and what the deck has always done.
+      // them with no way back but the list (review, 2026-09-23) — and
+      // leaving the tab while the deck is loading must not lose them
+      // either (owner, 2026-09-24: "donuste o kisiye gidilsin"). So the
+      // tap goes back on every exit that did not deliver the person,
+      // unless something newer has claimed the ref: two taps in flight
+      // are two locals and the second one wins.
       const restore = (): void => {
-        if (cancelled || pinned.current !== null) return;
-        pinned.current = wanted;
+        if (pinned.current === null) pinned.current = wanted;
       };
+      // Where it goes back matters more than whether, and that is review
+      // round 7's lesson. `pinned.current === null` cannot tell you
+      // whether the newer run wants the tap, because emptying the ref is
+      // the first thing every run does — so a run that put the tap back
+      // *after* being replaced was handing it to whatever reload came
+      // next, two loads and a tab switch later, asked for by nobody. A
+      // flag about *this* run can tell the two apart. A run that
+      // answered — a deck, an error, onboarding — is done with the tap.
+      // A run that was replaced hands it on from its cleanup, which
+      // React runs before the replacing body reads the ref, so the load
+      // that supersedes this one carries the tap and nothing after it
+      // ever sees it.
+      let settled = false;
       // After any filter write still in flight: closing the filters sheet
       // reloads the deck at once, and it must load with what was just set.
       filterWritesAnswered()
@@ -234,7 +236,10 @@ export default function Discover() {
           };
         })
         .then((result) => {
+          // Cancelled: the cleanup below has already passed the tap to
+          // the load that replaced this one.
           if (cancelled) return;
+          settled = true;
           if (result.status === 'missing') {
             router.replace('/onboarding');
             return;
@@ -262,11 +267,17 @@ export default function Discover() {
           });
         })
         .catch(() => {
+          if (cancelled) return;
+          settled = true;
           restore();
-          if (!cancelled) setState({ status: 'error' });
+          setState({ status: 'error' });
         });
       return () => {
         cancelled = true;
+        // Nothing was delivered, so the tap travels with the reload that
+        // replaces this one rather than being dropped or left lying in
+        // the ref.
+        if (!settled) restore();
       };
     }, [userId, attempt]),
   );

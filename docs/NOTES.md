@@ -7559,6 +7559,35 @@ sentinel that a newer run also writes cannot tell you whether the newer
 run wants it — only a flag about _this_ run can, and `cancelled` was
 already sitting there.
 
+**The owner then chose the other answer, and it needed the flag, not the
+sentinel.** 2026-09-24, asked whether a tap on "Seni beğenenler" should
+survive leaving the tab mid-load: "donuste o kisiye gidilsin". Putting the
+tap back from the promise cannot do that — by the time a replaced load
+lands, the load that replaced it has already read the ref. The hand-off
+has to happen in the effect's **cleanup**, which React runs before the
+replacing body reads the ref, and only for a run that has not answered
+yet (`settled`): the next load carries the tap, and nothing after it ever
+sees it. Driven on the web export, each against the bundle before it:
+
+- leave the tab mid-load and come back: `97a2b9f` returns on Selin, now
+  on Irmak — and on Selin again at the second return, so the tap is
+  spent once;
+- open and close the filters mid-load: the reload that replaces it now
+  lands on Irmak at once, and the return after that is Selin;
+- tap Bade, reopen the list mid-load, tap Irmak: both bundles show Irmak,
+  and at the next unrelated reload `3665248` jumps to **Bade** — review
+  round 7's model, driven — while this one stays on Selin;
+- the second `discover` read answering 500: "Tekrar dene" lands on Irmak,
+  as since round 5.
+
+**Side finding, not fixed here:** a member who buys the membership
+_inside_ "Seni beğenenler", taps somebody, and reopens the list before
+that load lands sees the paywall for the length of the load. The deck's
+own profile is the one read before the purchase until that load
+replaces it, and `LikedMePanel`'s `bought` is local to the instance the
+reopen replaced. It heals when the load lands. It took three runs of the
+probe to notice, which is roughly how often a person would hit it.
+
 ### Battery gaps
 
 - The screenshot harness has a trap that cost an hour here. The Expo web
