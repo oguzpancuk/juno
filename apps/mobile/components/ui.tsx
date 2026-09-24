@@ -86,10 +86,13 @@ export const SCREEN_TOP_GUTTER = 20;
  * with nothing spare (519 points). For a day the deck's photograph grew
  * into what a shorter bio left over — 565 on a one-line card, 626 with
  * no bio — and so stopped matching the profile; the deck now keeps the
- * bio's box three lines tall on every card instead (`BIO_SLOT` in the
- * deck), so every card is that fullest card. On a taller phone the spare
- * goes around the buttons; on one too short for the card, the deck's
- * photograph is the one thing that gives way.
+ * bio's box three lines tall on every card instead (`bioSlotHeight` in
+ * `lib/deck-layout.ts`), so every card is that fullest card. On a taller
+ * phone the spare goes around the buttons; on one too short for the card,
+ * the deck's photograph is the one thing that gives way — and so it does
+ * at a larger text size, where the words below it grow and the profile's
+ * photograph (which scrolls) does not. Then every card still matches
+ * every other card, and all of them are shorter than the profile.
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.

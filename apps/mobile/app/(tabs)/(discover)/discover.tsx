@@ -38,6 +38,7 @@ import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
 import { likedYouBadge } from '@/lib/card-a11y';
+import { bioSlotHeight, MAX_DECK_SCALE } from '@/lib/deck-layout';
 import { usePhotoSources } from '@/lib/photos';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
@@ -100,15 +101,6 @@ function cardSpoken(row: DiscoverRow): string {
 /** The filters chip, the same size as the profile's settings chip. */
 const CORNER_CHIP = 36;
 
-/**
- * A ceiling on Dynamic Type below the photo. The card has to fit one
- * screen with nothing to scroll into (owner, 2026-09-14), so text that
- * grew without limit would eat the picture instead of running off the
- * bottom. 1.35 is the top of iOS's standard range; the accessibility
- * sizes are served uncapped by the two sheets, which do scroll.
- */
-const MAX_DECK_SCALE = 1.35;
-
 /** ✕, ★ and ♥ — the three answers, all the same target (owner,
  * 2026-09-23: "superlike butonu da ayni boyutta olsun"). The star was
  * smaller when it was the rare move offered quietly; it is now one of
@@ -123,17 +115,6 @@ const SPACING_FLOOR = space.sm;
  * (owner, 2026-09-23), so only the footer's share is left.
  */
 const BAR_GAP_EXTRA = 5;
-
-/**
- * The bio's box, three lines tall on every card: the lines, the box's
- * vertical padding and its two hairlines. The photograph is the
- * profile's height now (owner, 2026-09-24: "profille ayni olsun"), so it
- * no longer takes up what a short bio leaves over; a box the same size
- * on every card is what keeps that from turning into a gap above the
- * buttons, and keeps the buttons where the thumb left them. A card with
- * no bio keeps the room empty rather than letting the buttons jump.
- */
-const BIO_SLOT = 3 * type.body.lineHeight + 2 * space.md + 2;
 
 /** The two sheets a card can open; only ever one at a time. */
 type Sheet = 'detail' | 'person';
@@ -196,7 +177,9 @@ export default function Discover() {
   // ... burada bir ayrim olmasin"). They chose this member; the filters
   // decide who is offered, not who may be answered.
   const pinned = useRef<Admirer | null>(null);
-  const { width, height } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
+  // The bio's room, as tall as its three lines at this text size.
+  const bioSlot = bioSlotHeight(fontScale);
 
   // Own profile first (for the chart), then the candidates scored against it.
   // State is set from promise callbacks, never synchronously in the effect.
@@ -825,7 +808,7 @@ export default function Discover() {
                 sekilde yap"). The full text is on the person page a tap
                 away. */}
               {current.row.bio ? (
-                <View style={styles.bioBox}>
+                <View style={[styles.bioBox, { minHeight: bioSlot }]}>
                   <Text
                     style={styles.bio}
                     numberOfLines={3}
@@ -836,7 +819,7 @@ export default function Discover() {
                   </Text>
                 </View>
               ) : (
-                <View style={styles.bioSlot} testID="card-bio-slot" />
+                <View style={{ height: bioSlot }} testID="card-bio-slot" />
               )}
             </View>
           </Animated.View>
@@ -1307,7 +1290,7 @@ const styles = StyleSheet.create({
     // 2026-09-24: "profille ayni olsun"). It used to grow into whatever
     // the block below left over, which put a card with a one-line bio 46
     // points taller than the profile at 390x844; the bio's box is now
-    // the same size on every card instead (`BIO_SLOT`). Shrinking stays:
+    // the same size on every card instead (`bioSlotHeight`). Shrinking stays:
     // on a phone too short for the whole card the picture gives way
     // rather than the buttons going under the tab bar.
     flexGrow: 0,
@@ -1401,7 +1384,6 @@ const styles = StyleSheet.create({
   // (owner, 2026-09-23: "diğer kutucuklar gibi yarısaydam yap"): the
   // translucent fill and the hairline edge, at the card radius.
   bioBox: {
-    minHeight: BIO_SLOT,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: glass.edge,
@@ -1410,7 +1392,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   bio: { ...type.body, color: color.text },
-  bioSlot: { height: BIO_SLOT },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

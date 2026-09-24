@@ -8171,3 +8171,18 @@ the photograph.
   phone taller than 844 the spare goes around the buttons; on one shorter
   than the full card (an SE at 667), the deck's photograph shrinks and is
   then shorter than the profile's there.
+
+Same day, review round 10's one optional note, and the owner chose to fix
+it ("1"): the three-line room was sized at the default text size, while
+the bio inside it grows with Dynamic Type, line height included on iOS
+(`RCTTextAttributes`, `_lineHeight * effectiveFontSizeMultiplier`). At
+1.35 a full bio needs ~119 points against 95, and the photograph gave up
+the difference on that card only. `bioSlotHeight(fontScale)` in
+`lib/deck-layout.ts` now scales the lines (not the padding) and caps at
+`MAX_DECK_SCALE`, which moved there from the screen so Vitest can reach
+it. `lib/deck-layout.test.ts` was run red against the fixed room first (3
+failed of 5). The web has no text size, so the web export only shows the
+default is unchanged (0–519 on every card again). What stays true at a
+larger text size: every card matches every other, and all of them are
+shorter than the profile's photograph, which scrolls and never shrinks.
+That is the owner's device check, not something a thread can drive.
