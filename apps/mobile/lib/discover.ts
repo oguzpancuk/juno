@@ -1,46 +1,27 @@
 import {
   bandOf,
   BANDS,
-  BigThreeSchema,
-  compatibility,
-  describeAspectTr,
   elementOf,
   isLesserId,
-  PublicChartSchema,
   starterKey,
   type Band,
-  type Compatibility,
   type PublicChart,
 } from '@juno/astro';
 import { z } from 'zod';
-import { GENDERS } from './profile';
-import { ProfileDetailColumns } from './profile-details';
+import { orderCandidates, quotaRefusal, type SortBy } from './premium';
 import { parseRows, warnDropped } from './rows';
 import type { SunElement } from './profile';
 import { supabase } from './supabase';
+import { candidateOf, DiscoverRowSchema, type Candidate } from './discover-row';
 
-/** A row of the `discover` view (public columns only), Zod at the boundary. */
-export const DiscoverRowSchema = z.object({
-  id: z.string().uuid(),
-  display_name: z.string(),
-  age: z.number().int(),
-  gender: z.enum(GENDERS),
-  big_three: BigThreeSchema,
-  chart: PublicChartSchema,
-  distance_km: z.number().int().nonnegative(),
-  bio: z.string().nullable(),
-  photos: z.array(z.string()),
-  ...ProfileDetailColumns,
-});
-
-export type DiscoverRow = z.infer<typeof DiscoverRowSchema>;
-
-export interface Candidate {
-  readonly row: DiscoverRow;
-  readonly match: Compatibility;
-  /** Turkish one-liner from the caller's point of view, or null. */
-  readonly why: string | null;
-}
+export {
+  candidateOf,
+  DiscoverRowSchema,
+  LIKES_ME,
+  type Candidate,
+  type DiscoverRow,
+  type LikesMe,
+} from './discover-row';
 
 export type DiscoverState =
   | { readonly status: 'loading' }
@@ -49,7 +30,10 @@ export type DiscoverState =
 
 /**
  * Fetch candidates and score them on device against the caller's chart.
- * Sorted by score, then distance — the view itself orders by distance.
+ *
+ * The order is the member's: nearest first, or — the premium choice —
+ * best match first (`orderCandidates`). Until 2026-09-21 every deck was
+ * ordered by score, which left the membership nothing to offer.
  *
  * Two of the filters cannot run in `discover`: the band comes from a score
  * computed here from two charts, and the element from a chart the view
@@ -58,7 +42,11 @@ export type DiscoverState =
  */
 export async function fetchCandidates(
   myChart: PublicChart,
-  filters: DiscoverFilters = { minBand: 'quiet', sunElements: null },
+  filters: DiscoverFilters = {
+    minBand: 'quiet',
+    sunElements: null,
+    sortBy: 'distance',
+  },
 ): Promise<DiscoverState> {
   const { data, error } = await supabase.from('discover').select('*');
   if (error) return { status: 'error' };
@@ -75,41 +63,51 @@ export async function fetchCandidates(
   const floor = BANDS.indexOf(filters.minBand);
   const wanted = filters.sunElements;
   const candidates = parsed
-    .map((row) => {
-      const match = compatibility(myChart, row.chart);
-      return {
-        row,
-        match,
-        why: match.strongest ? describeAspectTr(match.strongest) : null,
-      };
-    })
+    .map((row) => candidateOf(myChart, row))
     .filter(({ row, match }) => {
       if (BANDS.indexOf(bandOf(match.score)) < floor) return false;
       // null means every element; the column forbids an empty list, which
       // would mean nobody.
       if (wanted === null || wanted.length === 0) return true;
       return wanted.includes(elementOf(row.big_three.sun));
-    })
-    .sort(
-      (a, b) =>
-        b.match.score - a.match.score || a.row.distance_km - b.row.distance_km,
-    );
-  return { status: 'ready', candidates };
+    });
+  return {
+    status: 'ready',
+    candidates: orderCandidates(candidates, filters.sortBy),
+  };
 }
 
 export type SwipeResult =
   | { readonly ok: true; readonly matchId: string | null }
-  | { readonly ok: false; readonly reason: 'no-aspect' | 'gone' | 'db' };
+  | {
+      readonly ok: false;
+      readonly reason:
+        | 'no-aspect'
+        | 'gone'
+        | 'db'
+        // What the quotas refused: a free day's likes are spent, this
+        // week's super likes are spent, or a super like was tried without
+        // the membership. `private.likes_enforce_quota` decides; the app
+        // only reads which.
+        | 'daily'
+        | 'super-spent'
+        | 'super-premium';
+    };
 
 /**
  * Record a like or pass. The starter key is oriented by uuid order (a < b),
  * the same orientation the other side will compute, so the trigger's
  * equality check passes.
+ *
+ * A super like is a like with the star on it: same key, same match the
+ * moment it is answered, and the person it is sent to sees the star on
+ * their "seni beğenenler" list.
  */
 export async function swipe(
   me: { readonly id: string; readonly chart: PublicChart },
   them: { readonly id: string; readonly chart: PublicChart },
   kind: 'like' | 'pass',
+  isSuper = false,
 ): Promise<SwipeResult> {
   let starter_key: string | null = null;
   if (kind === 'like') {
@@ -120,7 +118,19 @@ export async function swipe(
   }
   const { error } = await supabase
     .from('likes')
-    .insert({ from_id: me.id, to_id: them.id, kind, starter_key });
+    // `created_at` is not sent: the trigger stamps it, because a client
+    // that chose it could date its likes out of every quota window.
+    .insert({
+      from_id: me.id,
+      to_id: them.id,
+      kind,
+      starter_key,
+      is_super: isSuper && kind === 'like',
+    });
+  // Before the generic paths: a spent quota is a sentence the person can
+  // act on, not "bir şeyler ters gitti".
+  const refusal = quotaRefusal(error);
+  if (refusal) return { ok: false, reason: refusal };
   // 23505: already swiped (lost response); treat as done.
   // 42501: they blocked us while the card was on screen. 23503 on the
   // to_id foreign key: they deleted their account. Either way this person
@@ -191,4 +201,6 @@ export interface DiscoverFilters {
   readonly minBand: Band;
   /** null means every element. */
   readonly sunElements: readonly SunElement[] | null;
+  /** Nearest first, or best match first — the premium choice. */
+  readonly sortBy: SortBy;
 }

@@ -65,6 +65,13 @@ export type Database = {
             foreignKeyName: "blocks_blocked_id_fkey"
             columns: ["blocked_id"]
             isOneToOne: false
+            referencedRelation: "liked_me"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
             referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
@@ -80,6 +87,13 @@ export type Database = {
             columns: ["blocker_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -117,6 +131,7 @@ export type Database = {
         Row: {
           created_at: string
           from_id: string
+          is_super: boolean
           kind: Database["public"]["Enums"]["like_kind"]
           starter_key: string | null
           to_id: string
@@ -124,6 +139,7 @@ export type Database = {
         Insert: {
           created_at?: string
           from_id: string
+          is_super?: boolean
           kind: Database["public"]["Enums"]["like_kind"]
           starter_key?: string | null
           to_id: string
@@ -131,6 +147,7 @@ export type Database = {
         Update: {
           created_at?: string
           from_id?: string
+          is_super?: boolean
           kind?: Database["public"]["Enums"]["like_kind"]
           starter_key?: string | null
           to_id?: string
@@ -141,6 +158,13 @@ export type Database = {
             columns: ["from_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -162,6 +186,13 @@ export type Database = {
             columns: ["to_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_to_id_fkey"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -214,6 +245,13 @@ export type Database = {
             foreignKeyName: "matches_a_fkey"
             columns: ["a"]
             isOneToOne: false
+            referencedRelation: "liked_me"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_a_fkey"
+            columns: ["a"]
+            isOneToOne: false
             referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
@@ -229,6 +267,13 @@ export type Database = {
             columns: ["b"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_b_fkey"
+            columns: ["b"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -304,6 +349,13 @@ export type Database = {
             foreignKeyName: "messages_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "liked_me"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
@@ -326,6 +378,13 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -365,11 +424,14 @@ export type Database = {
           interested_in: Database["public"]["Enums"]["interest"]
           interests: string[]
           is_demo: boolean
+          is_premium: boolean
           location: unknown
           min_band: string
           occupation: string | null
           photos: string[]
+          premium_since: string | null
           radius_km: number
+          sort_by: string
           sun_elements: string[] | null
           university: string | null
           updated_at: string
@@ -394,11 +456,14 @@ export type Database = {
           interested_in: Database["public"]["Enums"]["interest"]
           interests?: string[]
           is_demo?: boolean
+          is_premium?: boolean
           location: unknown
           min_band?: string
           occupation?: string | null
           photos?: string[]
+          premium_since?: string | null
           radius_km?: number
+          sort_by?: string
           sun_elements?: string[] | null
           university?: string | null
           updated_at?: string
@@ -423,11 +488,14 @@ export type Database = {
           interested_in?: Database["public"]["Enums"]["interest"]
           interests?: string[]
           is_demo?: boolean
+          is_premium?: boolean
           location?: unknown
           min_band?: string
           occupation?: string | null
           photos?: string[]
+          premium_since?: string | null
           radius_km?: number
+          sort_by?: string
           sun_elements?: string[] | null
           university?: string | null
           updated_at?: string
@@ -471,6 +539,13 @@ export type Database = {
             foreignKeyName: "reports_reported_id_fkey"
             columns: ["reported_id"]
             isOneToOne: false
+            referencedRelation: "liked_me"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reported_id_fkey"
+            columns: ["reported_id"]
+            isOneToOne: false
             referencedRelation: "match_profiles"
             referencedColumns: ["id"]
           },
@@ -486,6 +561,13 @@ export type Database = {
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -518,6 +600,27 @@ export type Database = {
           height_cm: number | null
           id: string | null
           interests: string[] | null
+          likes_me: string | null
+          occupation: string | null
+          photos: string[] | null
+          university: string | null
+        }
+        Relationships: []
+      }
+      liked_me: {
+        Row: {
+          age: number | null
+          big_three: Json | null
+          bio: string | null
+          chart: Json | null
+          display_name: string | null
+          distance_km: number | null
+          gender: Database["public"]["Enums"]["gender"] | null
+          height_cm: number | null
+          id: string | null
+          interests: string[] | null
+          is_super: boolean | null
+          liked_at: string | null
           occupation: string | null
           photos: string[] | null
           university: string | null
@@ -552,6 +655,13 @@ export type Database = {
             columns: ["last_sender_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["last_sender_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {
@@ -626,6 +736,13 @@ export type Database = {
             columns: ["blocked_id"]
             isOneToOne: false
             referencedRelation: "discover"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "liked_me"
             referencedColumns: ["id"]
           },
           {

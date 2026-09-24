@@ -1,7 +1,14 @@
 import { natalReading } from '@juno/astro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -28,6 +35,7 @@ import {
   Screen,
 } from '@/components/ui';
 import { ageOn } from '@/lib/age';
+import { deckPhotoFor, subscribeDeckPhoto } from '@/lib/deck-photo';
 import { movePhoto } from '@/lib/photo-order';
 import {
   addPhoto,
@@ -67,8 +75,19 @@ const NO_DETAILS: ProfileDraft = {
 export default function Profile() {
   useScreenName(t.tabs.profile);
   const insets = useSafeAreaInsets();
-  // The same height the deck's photo reaches, so the two line up.
+  // The same height the deck's photo reaches, so the two line up: what
+  // the deck actually drew, which on a phone is less than the fraction
+  // (`lib/deck-photo.ts`), and the fraction until it has drawn one.
   const { height: windowHeight } = useWindowDimensions();
+  const readDeckPhoto = useCallback(
+    () => deckPhotoFor(windowHeight),
+    [windowHeight],
+  );
+  const deckPhoto = useSyncExternalStore(
+    subscribeDeckPhoto,
+    readDeckPhoto,
+    readDeckPhoto,
+  );
   // Worked out on the device and kept here; see the hook for why that is
   // the whole of it.
   const city = useOwnCity();
@@ -322,7 +341,9 @@ export default function Profile() {
           }}
           reading={reading}
           chart={state.profile.chart}
-          photoHeight={Math.round(windowHeight * PHOTO_SCREEN_FRACTION)}
+          photoHeight={
+            deckPhoto ?? Math.round(windowHeight * PHOTO_SCREEN_FRACTION)
+          }
           fullChartLabel={t.chart.fullChart}
           fullChartTitle={t.chart.title}
           edit={{

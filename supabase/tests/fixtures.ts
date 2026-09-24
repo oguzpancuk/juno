@@ -25,6 +25,12 @@ export const ISTANBUL_NEARBY: readonly [number, number] = [29.03, 41.04];
 export const ANKARA: readonly [number, number] = [32.8597, 39.9334];
 /** Mid-Atlantic: no other row can be within a 5 km radius, whatever the local DB holds. */
 export const NOWHERE: readonly [number, number] = [-30.0, -20.0];
+/**
+ * Another empty stretch of ocean, ~700 km from NOWHERE. A second
+ * describe that seeds a demo needs its own water: two demos in one
+ * radius make every count in both blocks depend on which ran first.
+ */
+export const NOWHERE_ELSE: readonly [number, number] = [-35.0, -25.0];
 /** A valid starter key (a<b orientation); its content is irrelevant to RLS. */
 export const STARTER = 'moon-trine-venus';
 

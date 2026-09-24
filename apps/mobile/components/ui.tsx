@@ -73,14 +73,35 @@ export const SCREEN_TOP_GUTTER = 20;
  * How much of the window a full-screen photo takes, on the deck and on the
  * profile. One number so the two line up (owner, 2026-09-14: "keşfette ve
  * profilde resimler aynı hizada olsun") — both start at the top edge, so
- * equal heights put their bottoms on the same line. The deck arrives at it
- * by filling what its fixed block below leaves and capping here; the
- * profile, which scrolls, takes it directly.
+ * equal heights put their bottoms on the same line. The deck asks for it
+ * on every card (owner, 2026-09-24: "profille ayni olsun"), and the
+ * profile draws whatever the deck was actually given (`lib/deck-photo.ts`),
+ * because on a phone the tab bar is taller than in a browser and the deck
+ * gets less than it asks for (owner, same day: "kesfetteki guzel,
+ * profildekini de ayni hale getir"). The fraction is the profile's own
+ * height only until the deck has drawn a card.
+ *
+ * 0.56 → 0.64 → 0.615, all on 2026-09-23. At 0.56 the deck's block below
+ * left 51 points spare on a 390x844 phone and the footer spread them
+ * around the round buttons (owner: "hala cok bosluk var"); 0.64 then
+ * matched the two screens on a card with a two-line bio. The bio takes
+ * three lines since "bioyu 3 satir gozukecek sekilde yap", and 0.615 is
+ * the height at which a card with a full three-line box fits 390x844
+ * with nothing spare (519 points). For a day the deck's photograph grew
+ * into what a shorter bio left over — 565 on a one-line card, 626 with
+ * no bio — and so stopped matching the profile; the deck now keeps the
+ * bio's box three lines tall on every card instead (`bioSlotHeight` in
+ * `lib/deck-layout.ts`), so every card is that fullest card. On a taller
+ * phone the spare goes around the buttons; on one too short for the card,
+ * and at a larger text size where the words below it grow, the deck's
+ * photograph is the one thing that gives way. The profile follows it
+ * there too, since it draws what the deck was given, so the two stay
+ * equal once the deck has drawn a card.
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
  */
-export const PHOTO_SCREEN_FRACTION = 0.56;
+export const PHOTO_SCREEN_FRACTION = 0.615;
 
 /**
  * What a host owes its first child if that child takes the top edge.

@@ -138,23 +138,49 @@ export const t = {
     // What VoiceOver reads for the photo and for the band. A label takes
     // the place of the text inside a button, so it carries what is drawn
     // there first, then what a tap does.
-    openPerson: (name: string, age: number, distance: string) =>
-      `${name}, ${age}, ${distance}. Profili gör`,
+    openPerson: (
+      name: string,
+      age: number,
+      distance: string,
+      // What the badge over the name says, when there is one. It has to
+      // be in here: a label replaces everything drawn inside the button,
+      // so a badge left out of it is a badge VoiceOver never reads
+      // (review, 2026-09-23). First, because it is drawn first.
+      liked: string | null,
+    ) =>
+      `${liked === null ? '' : `${liked}. `}${name}, ${age}, ${distance}. Profili gör`,
     openDetail: (band: string) => `${band} uyum. Uyum detayı`,
     // The stamps a drag reveals. Pre-uppercased: RN textTransform maps
     // Turkish i → I, not İ.
     swipeLike: 'BEĞEN',
     swipePass: 'GEÇ',
+    swipeSuper: 'SÜPER',
     // No number reaches the screen (ADR-0009 §3): the band word does.
     scoreLabel: 'uyum',
     like: 'Beğen',
     pass: 'Geç',
+    superLike: 'Süper beğen',
     under1km: '1 km altı',
     empty:
       'Yakınlarda şimdilik kimse kalmadı. Yarıçapı ayarlardan genişletebilirsin.',
     noAspect:
       'Bu iki harita arasında ortak bir açı yok; beğeni gönderilemiyor.',
     detail: 'Uyum detayı',
+    // The badge over the name, for somebody who has already chosen you
+    // (owner, 2026-09-23). Only a premium member ever sees one: the view
+    // sends null to everybody else, because who has liked you is what
+    // the membership sells.
+    likedYou: 'Seni beğendi',
+    likedYouSuper: 'Seni süper beğendi',
+    // In the bio's box on a card whose person wrote none (owner,
+    // 2026-09-24: "hakkinda yazilmamis gibi bir placeholder yazsin").
+    // Said about them, so a reader cannot take it for their own words.
+    noBio: 'Hakkında yazılmamış',
+    // What is left of a quota is not drawn anywhere (owner, 2026-09-23:
+    // "kac begeni kaldigi gozukmesin, sadece bitince engel olunsun"), so
+    // the three lines that counted it down are gone. The sentences for a
+    // quota that has run out are in `premium`, where the membership
+    // sheet reads them.
   },
   match: {
     // Pre-uppercased: RN textTransform maps Turkish i → I, not İ.
@@ -371,9 +397,17 @@ export const t = {
     // A write that got no answer may still have landed; the panel reads the
     // stored row back instead of reverting.
     unanswered: 'Bağlantı yanıt vermedi; kayıtlı ayar yeniden yüklendi.',
+    sort: 'Sıralama',
+    sortDistance: 'Yakınlık',
+    sortCompatibility: 'Uyum',
+    sortHint:
+      'Kartlar sana en yakın kişiden başlayarak gelir. Premium ile uyumu en yüksek kişiden başlatabilirsin.',
+    sortHintPremium:
+      'Kartların hangi sırayla geleceğini sen seçersin: en yakındakiler ya da uyumu en yüksek olanlar.',
   },
   settings: {
     title: 'Ayarlar',
+    premium: 'Premium üyelik',
     // Inside the sheet, from blocked people or the privacy text.
     back: '‹ Ayarlar',
     signOut: 'Çıkış yap',
@@ -389,6 +423,58 @@ export const t = {
     locationFailed: 'Konum kaydedilemedi, tekrar dene.',
     locationHint:
       'Konumun ~1 km’lik bir hücreye yuvarlanarak saklanır; kimse tam yerini görmez.',
+  },
+  /**
+   * The membership and the two screens it opens. There is no price and no
+   * payment step yet (owner, 2026-09-21), so nothing here names a sum or
+   * a period — "al" makes you premium in that tap.
+   */
+  premium: {
+    title: 'Premium üyelik',
+    kicker: 'JUNO PREMIUM',
+    pitch: 'Haritan kadar geniş bir keşif.',
+    benefits: (dailyLikes: number, superLikes: number) => [
+      'Sınırsız beğeni',
+      `Haftada ${superLikes} süper beğeni`,
+      'Seni beğenenleri gör',
+      'Kartları uyuma göre sırala',
+      `Ücretsiz üyelikte günde ${dailyLikes} beğeni hakkın var.`,
+    ],
+    buy: 'Premium ol',
+    buying: 'Açılıyor…',
+    failed: 'Premium açılamadı, tekrar dene.',
+    active: 'Premium üyeliğin açık.',
+    since: (date: string) => `${date} tarihinden beri premium üyesin.`,
+    noPayment:
+      'Ödeme adımı henüz yok: şimdilik dokunduğun anda premium oluyorsun.',
+    /** The upsell shown where a free member meets a premium-only thing. */
+    lockedLikes:
+      'Bugünkü beğeni hakkın bitti. Premium ile sınırsız beğenebilirsin.',
+    lockedSuper: 'Süper beğeni premium üyelere özel.',
+    lockedSuperSpent: 'Bu haftaki süper beğenilerin bitti.',
+    lockedSort: 'Uyuma göre sıralama premium üyelere özel.',
+    open: 'Premium’a bak',
+  },
+  likedMe: {
+    /** A row on the list: what a tap on the person does. */
+    openPerson: (name: string) => `${name}. Keşfette aç`,
+    title: 'Seni beğenenler',
+    /** The chip on the deck, and what VoiceOver reads on it. */
+    open: 'Seni beğenenler',
+    openCount: (n: number) => `Seni beğenenler, ${n} kişi`,
+    empty: 'Henüz kimse seni beğenmedi. Keşfetmeye devam et.',
+    lockedTitle: (n: number) =>
+      n === 1 ? 'Bir kişi seni beğendi' : `${n} kişi seni beğendi`,
+    lockedHint:
+      'Kimler olduğunu görmek ve hepsini tek tek beğenmek premium üyelere özel.',
+    superBadge: 'Süper beğeni',
+    likeBack: 'Beğen',
+    passBack: 'Geç',
+    failed: 'İşlem tamamlanamadı, tekrar dene.',
+    /** How long ago the like landed; days, because the list is not a feed. */
+    today: 'Bugün',
+    yesterday: 'Dün',
+    daysAgo: (n: number) => `${n} gün önce`,
   },
   blocked: {
     open: 'Engellediklerin',
