@@ -24,7 +24,7 @@ const BIO_LINES = 3;
  * longer takes up what a short bio leaves over; a box the same size on
  * every card is what keeps that from turning into a gap above the
  * buttons, and keeps the buttons where the thumb left them. A card with
- * no bio keeps the room empty rather than letting the buttons jump.
+ * no bio has the same box, holding a dim line that says so (`cardBio`).
  *
  * Scaled by the text size, capped where the card caps its text: iOS
  * grows a Text's line height with its font (`RCTTextAttributes`,

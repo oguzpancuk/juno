@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { likedYouBadge } from './card-a11y';
+import { cardBio, likedYouBadge } from './card-a11y';
 import { t } from './strings';
 
 describe('the badge over a name on the deck', () => {
@@ -40,5 +40,29 @@ describe('what VoiceOver reads for the photograph', () => {
         likedYouBadge(null)?.spoken ?? null,
       ),
     ).toBe('Melis, 27, 21 km. Profili gör');
+  });
+});
+
+describe('the bio box on a deck card', () => {
+  it("shows the person's own words when there are some", () => {
+    expect(cardBio('Kahve ve yıldızlar.')).toEqual({
+      text: 'Kahve ve yıldızlar.',
+      placeholder: false,
+    });
+  });
+
+  it('says nothing was written, in its own words, when there is no bio', () => {
+    expect(cardBio(null)).toEqual({
+      text: t.discover.noBio,
+      placeholder: true,
+    });
+    expect(t.discover.noBio).toBe('Hakkında yazılmamış');
+  });
+
+  it('treats a bio of only spaces as no bio, which the database allows', () => {
+    expect(cardBio('   \n ')).toEqual({
+      text: t.discover.noBio,
+      placeholder: true,
+    });
   });
 });

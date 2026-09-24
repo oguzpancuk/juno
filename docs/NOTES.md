@@ -8225,3 +8225,21 @@ Driven on the web export with the stub answering every like with a 500:
 before the guard, the error line took the deck's photograph from 519 to
 503 and the profile followed it to 503; with the guard the profile stays
 at 519, the ordinary card's height.
+
+## 2026-09-24 — Premium (#10): the bio box on a card with no bio
+
+Owner, 06:07: "kesfette biyografi yazmayanlar icin de bos textbox
+koyalim. hakkinda yazilmamis gibi bir placeholder yazsin". The empty
+three-line room a card with no bio had (the round-10 trade-off above) is
+now the same box every other card has, holding "Hakkında yazılmamış" in
+`color.textMuted`. `cardBio` in `lib/card-a11y.ts` picks between the
+person's words and that line; a bio of only spaces counts as none,
+because the column accepts one character of anything and only the app's
+own editor trims. `lib/card-a11y.test.ts` gained three cases, run red
+first against the file without `cardBio` (3 failed of 7).
+
+VoiceOver: the box sits outside the photograph's button, so it is read
+as its own text, as a real bio is. The placeholder was not folded into
+the photograph's label: it would then be read twice, and the words are
+already about the person ("Hakkında yazılmamış"), not in their voice, so
+nobody hears them as a bio.

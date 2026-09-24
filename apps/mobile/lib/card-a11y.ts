@@ -28,3 +28,24 @@ export function likedYouBadge(
   // later reaches here as null rather than as a badge nobody can read.
   return null;
 }
+
+/**
+ * What the bio's box on a deck card holds: the person's own words, or,
+ * when they wrote none, a line saying so (owner, 2026-09-24: "kesfette
+ * biyografi yazmayanlar icin de bos textbox koyalim"). The box is the
+ * same on every card either way, so the photograph and the buttons stay
+ * where they are. The placeholder is drawn dim and read as it stands:
+ * it sits outside the photograph's button, and it is worded about the
+ * person, not as them, so VoiceOver cannot pass it off as their bio.
+ *
+ * Blank counts as none. The app trims a bio before saving it, but the
+ * column only asks for one character, so a bio of spaces can arrive.
+ */
+export function cardBio(bio: string | null): {
+  readonly text: string;
+  readonly placeholder: boolean;
+} {
+  return bio === null || bio.trim() === ''
+    ? { text: t.discover.noBio, placeholder: true }
+    : { text: bio, placeholder: false };
+}

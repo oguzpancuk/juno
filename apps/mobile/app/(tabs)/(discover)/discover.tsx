@@ -37,7 +37,7 @@ import { SlidersIcon } from '@/components/SlidersIcon';
 import { PHOTO_SCREEN_FRACTION, SCREEN_PADDING } from '@/components/ui';
 import { ProfileView } from '@/components/ProfileView';
 import { useScreenName } from '@/lib/a11y';
-import { likedYouBadge } from '@/lib/card-a11y';
+import { cardBio, likedYouBadge } from '@/lib/card-a11y';
 import { bioSlotHeight, MAX_DECK_SCALE } from '@/lib/deck-layout';
 import { reportDeckPhoto } from '@/lib/deck-photo';
 import { usePhotoSources } from '@/lib/photos';
@@ -513,6 +513,7 @@ export default function Discover() {
   // Drawn and spoken from one rule, because the photograph's label
   // replaces everything painted inside it (review, 2026-09-23).
   const badge = current ? likedYouBadge(current.row.likes_me) : null;
+  const bio = cardBio(current ? current.row.bio : null);
   const tilt = pan.x.interpolate({
     inputRange: [-width, 0, width],
     outputRange: [`-${MAX_TILT_DEG}deg`, '0deg', `${MAX_TILT_DEG}deg`],
@@ -815,21 +816,19 @@ export default function Discover() {
                 own (owner, 2026-09-23: "bioyu bir kutucuk icine alip
                 ui'i guzellestirelim", then "bioyu 3 satir gozukecek
                 sekilde yap"). The full text is on the person page a tap
-                away. */}
-              {current.row.bio ? (
-                <View style={[styles.bioBox, { minHeight: bioSlot }]}>
-                  <Text
-                    style={styles.bio}
-                    numberOfLines={3}
-                    maxFontSizeMultiplier={MAX_DECK_SCALE}
-                    testID="card-bio"
-                  >
-                    {current.row.bio}
-                  </Text>
-                </View>
-              ) : (
-                <View style={{ height: bioSlot }} testID="card-bio-slot" />
-              )}
+                away. A card with no bio gets the same box with a dim
+                line saying so ("kesfette biyografi yazmayanlar icin de bos
+                textbox koyalim"), so nothing moves between cards. */}
+              <View style={[styles.bioBox, { minHeight: bioSlot }]}>
+                <Text
+                  style={bio.placeholder ? styles.bioPlaceholder : styles.bio}
+                  numberOfLines={3}
+                  maxFontSizeMultiplier={MAX_DECK_SCALE}
+                  testID={bio.placeholder ? 'card-no-bio' : 'card-bio'}
+                >
+                  {bio.text}
+                </Text>
+              </View>
             </View>
           </Animated.View>
           {/* The third stamp, and the only one that is not on the card.
@@ -1401,6 +1400,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   bio: { ...type.body, color: color.text },
+  bioPlaceholder: { ...type.body, color: color.textMuted },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

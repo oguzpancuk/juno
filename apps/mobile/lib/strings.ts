@@ -172,6 +172,10 @@ export const t = {
     // the membership sells.
     likedYou: 'Seni beğendi',
     likedYouSuper: 'Seni süper beğendi',
+    // In the bio's box on a card whose person wrote none (owner,
+    // 2026-09-24: "hakkinda yazilmamis gibi bir placeholder yazsin").
+    // Said about them, so a reader cannot take it for their own words.
+    noBio: 'Hakkında yazılmamış',
     // What is left of a quota is not drawn anywhere (owner, 2026-09-23:
     // "kac begeni kaldigi gozukmesin, sadece bitince engel olunsun"), so
     // the three lines that counted it down are gone. The sentences for a
