@@ -6720,6 +6720,153 @@ branch by default, which the owner's "deploys run locally" rule forbids;
 whether that can be switched off was not verified. Revisit if the hosting
 changes for another reason, or if the workflow starts costing upkeep.
 
+## 2026-09-21 — premium membership, with nothing behind the counter
+
+The owner's second off-ROADMAP ask of the evening: premium, without a
+payment step, giving unlimited likes, five super likes a week, the list of
+people who liked you, and the deck ordered by compatibility. ADR-0012 has
+the shape of it; this entry is what a next session would otherwise have to
+ask about.
+
+**Defaults chosen where the ask forked** (all reversible, all in
+`20260921000002_premium.sql` — numbered past the sibling thread's
+`20260921000001_profile_details.sql`, because the Supabase CLI keys an
+applied migration by the digits alone and two files sharing them would
+leave the second silently unapplied):
+
+- A free member gets 20 likes per rolling 24 hours. "Sınırsız" needed
+  something to be unlimited against and the repo had no cap at all. The
+  window rolls rather than resetting at a local midnight — the database
+  would need a timezone per member to do otherwise, and the sentence
+  "hakların gün içinde tek tek geri gelir" is the truer one.
+- Super likes are 5 per rolling 7 days, premium only. A super like is
+  `likes.is_super`, not a third `like_kind` value, so every existing
+  `kind = 'like'` condition still means what it says.
+- Free decks are ordered by distance now. Until today every deck was
+  ordered by compatibility, so "uyuma göre sıralama" had nothing to sell;
+  the order is `profiles.sort_by`, honoured on the device, because the
+  score is @juno/astro's and the database cannot rank by it.
+- `liked_me` gives a free member one row per waiting like carrying the
+  star and the day, with every identifying column null — the join that
+  fetches the person is only made for a premium member. So the lock is
+  the answer's shape, not a blur drawn over data the device already holds.
+
+**Open for the owner: the demos do not appear on "seni beğenenler".**
+(Answered on 2026-09-23 — "gorunsun". The entry at the end of this file
+says how they were put there.)
+`private.likes_demo_reciprocate` (2026-09-17) answers a member's like
+rather than pre-liking them, and its comment says why: twenty starter keys
+cannot be computed server-side. Its other comment — "Nothing in the
+product shows who has liked you, so there is no screen on which the two
+designs differ" — stopped being true today. A new member's list is empty
+until a real person likes them, which reads oddly against "gerçek biri
+kayıt olduğunda hepsi o kullanıcıyı beğensin". Showing the demos there
+means either pre-writing their likes (needs the keys) or a second shape
+in the view with different filter semantics (the demos would have to keep
+the radius, gender and age conditions that a real liker is deliberately
+exempt from). Not decided here; not a bug to fix quietly.
+
+**What could not be verified here.** The supabase suite — where every
+quota and the whole view live — cannot run in a cloud thread (no Docker
+daemon), so `supabase/tests/premium.test.ts` has only ever been
+typechecked and linted; CI's `verify` is its first real run. The screens
+below are photographed, but a photograph is not that run: nothing
+server-side is exercised in one.
+
+**How the eight screenshots were made.** `screenshots/premium-*.png` were
+driven the way the sibling thread drove its own an hour earlier: the Expo
+web export re-pointed at a small Node server that serves the bundle and
+answers the handful of auth, REST and photo endpoints these screens call,
+from fixed rows whose charts are real `@juno/astro` output. Headless
+Chromium at 390x844, clicked through by a copy of
+`apps/mobile/scripts/web-drive.mjs` with the browser path overridden.
+Deniz buys the membership mid-run, so the free and the premium shot of a
+screen are one session either side of one tap. What this shows is the
+app's own code, its Turkish copy and the state each screen goes into.
+What it does not show is Postgres: no trigger fired, no view answered, no
+RLS policy was consulted — `liked_me`'s locked shape in
+`premium-liked-me-locked.png` is the stand-in returning null columns
+because the real view would, and that the real view does is
+`supabase/tests/premium.test.ts`'s to prove, in CI. Nor is it iOS: the
+review found two `Popup`s presented at once, which a native runtime
+refuses and a browser draws happily as two stacked overlays, so
+`premium-sort-free.png` was taken of a screen that was broken on a
+phone. The harness was not kept, same as the sibling's.
+
+The nine: `premium-deck-free` (the star button between ✕ and ♥, the
+day's like counter, the chip with its badge), `premium-liked-me-locked`,
+`premium-sort-free` (the toggle with Uyum behind the lock),
+`premium-sort-upsell` (the membership opened inside the filters sheet),
+`premium-screen`, `premium-active`, `premium-liked-me-list`,
+`premium-sort-on`, `premium-deck-premium` (the star count where the like
+counter was). All nine were re-driven on 2026-09-23 after the QA pass,
+so they show the code as it stands rather than as it was before the
+review rounds.
+
+(Both parentheses about counters describe the screens as they were that
+afternoon. The owner had the counters taken out a few hours later — see
+the entry on his four changes — so the shots in the pull request no
+longer show either, and `premium-deck-free` and `premium-deck-premium`
+now differ only in what the membership buys. QA flagged the stale
+sentence on 2026-09-23; it is left standing with this note rather than
+rewritten, because the entry is the record of that afternoon.)
+
+**The QA pass (2026-09-23), PASS with one defect.** `evaluator-qa` built
+its own stand-in rather than trusting this one, re-rendered every screen
+and compared: the free filters sheet came out byte-identical to the
+committed shot, and no shot showed a state the current code can no longer
+produce. What it did find is in the benefits card: the last line — the
+one that says what a free membership is — was rendered with an empty
+`Text` in the mark slot, styled like the line itself, so the row had two
+`flex: 1` children and the sentence was squeezed into the right half.
+Fixed by rendering no mark at all for that line, and the three shots that
+show the card were re-driven.
+
+**The review round, same day.** Six findings, one of them the quota's
+own: `private.likes_enforce_quota` was written SECURITY INVOKER on the
+argument that it only reads rows the liker may already read. It does —
+but `likes: read own open` hides a like sent to somebody who has since
+blocked the liker, so the counter counted 17 where 20 had been spent and
+the cap was 20 plus however many people had blocked you. It is definer
+now, with EXECUTE revoked as before, and `supabase/tests/premium.test.ts`
+has the case: twenty likes, one target blocks, the twenty-first still
+refused. The app's own counter still reads through that policy and can
+therefore promise a like the database will refuse; the refusal opens the
+membership, so it degrades to the upsell rather than to an error. Left
+as it is — a definer read for the counter would be a new entry point for
+a number that is only ever advisory.
+
+Round 2 found the other half of the same sentence: a definer count is
+still only a count, and PostgREST will happily run ten inserts at once,
+each reading a `spent` from before the others committed. Nineteen spent
+and ten parallel requests stored twenty-nine likes. The fix is the one
+this repo already uses for the photo cap — `pg_advisory_xact_lock` keyed
+on the liker — taken below the demo return, so a demo's answering like
+never becomes the row every member queues behind. The suite now fires
+the last few likes with `Promise.all` and expects exactly one to land;
+a sequential loop passes either way, which is why the first pass missed
+it.
+
+The other five were the app's: a membership bought from inside a sheet
+left that sheet showing its free state (twice, on "seni beğenenler" and
+on the filters), the filters sheet raised the membership as a second
+native `Modal` over itself, the ♥ chip was drawn before the profile its
+sheet needs was in, and "Bugün"/"Dün" divided by 86 400 000 rather than
+comparing calendar dates — so a like at 23:30 read at 08:00 said
+"Bugün". The filters sheet now opens the membership inside itself, the
+way the list already did.
+
+### Upstream candidate
+
+- 2026-09-21 · `apps/mobile/scripts/web-drive.mjs` · The Chrome path is a
+  macOS literal, so the one tool this repo has for phone-width screenshots
+  refuses to start anywhere else, and both of today's threads worked
+  around it by copying the script and editing that line. A `CHROME`
+  environment override — the current literal as the default, the cloud
+  image's `/opt/pw-browsers/chromium` as a fallback — would end the
+  copying. Not done here: it is a second problem, and this branch is a
+  feature.
+
 ## 2026-09-21 — four optional profile fields, and how they were photographed
 
 Owner ask, off the ROADMAP: height, interests (multi-select), university
@@ -6868,6 +7015,723 @@ being required when this merges. Owner-side, after the merge: delete the
 `CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
 Cloudflare token. The exception entry above is void with the rule it
 excepted.
+
+## 2026-09-23 — "gorunsun": the demos on the list, and the UNION that would have cost the types
+
+The owner answered the open question from the premium entry above: the
+demo profiles should appear on "seni beğenenler". So `liked_me` now has a
+second kind of row.
+
+**Why it cannot be a like row.** `private.likes_demo_reciprocate`
+(2026-09-17) answers a member's like instead of pre-liking them, because
+pre-writing twenty likes needs twenty starter keys and a starter key is
+`@juno/astro`'s output, which the database does not run — worse,
+`create_match_on_mutual_like` refuses a pair whose keys disagree, so a
+server-computed key that drifted by one aspect would break the member's
+own swipe. Nothing about that changed today. The view therefore carries a
+demo on a condition rather than on a row: the demo appears if it would
+appear in this member's deck, which is `exists (select 1 from
+public.discover d where d.id = liker.id)`. That reads the deck's own
+filters — radius, both directions of `interested_in`, both age ranges, a
+photograph, blocks, reports, "not already swiped" — instead of repeating
+them here, and it is deliberately stricter than the real-liker half: a
+person who chose you reaches the list whatever your filters say; a demo
+has chosen nobody.
+
+**The part that nearly went wrong.** The obvious shape is `union all`,
+and I wrote it that way first. Before running the battery I went looking
+for what it would do to `tests/database.types.ts`, which `types-drift`
+compares byte for byte and which cannot be regenerated in a cloud thread
+(`supabase gen types --local` needs Docker). PostgreSQL stores a view's
+rewrite rule with a `resorigtbl`/`resorigcol` on each target entry, which
+is where a column came from; `supabase gen types` reads it to see
+`liked_me.id` as `profiles.id`, and that is what puts `liked_me` in the
+twelve foreign-key lists in the generated file. Checked on a throwaway
+PostgreSQL 16 cluster, both shapes side by side: a plain SELECT keeps the
+origin, and the top-level target list of a set operation has
+`:resorigtbl 0` on every column. A `union all` would have dropped this
+view out of those twelve lists and taken PostgREST's embedding with it,
+and the first sign of it would have been a byte-diff failure in CI with a
+file I cannot regenerate here. So the view stayed one SELECT with an OR:
+a left join to `likes`, `coalesce(l.is_super, false)` for the star and
+`coalesce(l.created_at, greatest(me.created_at, liker.created_at))` for
+the day. Same cluster, with stand-in tables: a free member gets the demo
+masked, a premium one gets the name, a demo without a photograph never
+appears, and answering either kind takes the row out.
+
+**What is verified and what is not.** `supabase/tests/premium.test.ts`
+has three more cases (a demo in the deck appears without a star, is named
+once the member is premium, and matches and leaves on the answer; a demo
+out of radius never appears), and like the rest of that file they cannot
+run here — no Docker daemon, so CI's `verify` is their first real run.
+The screenshots in the pull request are of the same build as before: this
+change is server-side, and the panel renders a demo exactly as it renders
+a person.
+
+### Battery gaps
+
+- `bash .claude/hooks/verify.sh` is green in a cloud thread with the
+  whole supabase suite reported NOT RUN, so a view that parses only in
+  CI, or a generated-types drift, is invisible here. The Postgres 16
+  binaries in the image are the workaround — a bare cluster with
+  stand-in tables answered both questions above in a couple of minutes,
+  without PostGIS and without Supabase.
+
+## 2026-09-23 — What the owner asked for after testing premium: four changes on the deck
+
+He tried the membership and sent four (project chat, 06:00). All four are
+UI; none of them touches the quotas the database enforces.
+
+**1. No count of what is left.** "kac begeni kaldigi gozukmesin, sadece
+bitince engel olunsun". The line under the deck is gone, and with it
+`t.discover.likesLeft` / `likesGone` / `superLeft`. The allowance is still
+read on focus, because `act` uses it to open the membership instead of
+spending a round trip on a like the server has already said no to — the
+number is simply never drawn. I took the star's "4 süper beğeni hakkın
+var" out with it: it is the same kind of sentence, and he can have it back
+if he meant only the daily one.
+
+**2. A tap on the list goes to the person.** "seni begenenler listesinde
+birine tiklandiginda kesfet sayfasinda ona gidilsin". The row's avatar and
+words are now one target; the sheet closes, the deck reloads, and that
+person's card is brought to the front. The reload is deliberate: the list
+may have answered somebody while it was open, so reordering a deck that
+was loaded before would keep a card that is no longer a candidate. Whoever
+is not in the deck at all — somebody who liked this member from outside
+their own filters, which the `liked_me` view lets through on purpose —
+cannot be made into a card, so their profile sheet opens instead. That is
+the only fork in the behaviour, and it is the honest one.
+
+**3. The star is a verdict now.** Same 88pt circle as ✕ and ♥, and an
+upward swipe does it too. `decideSwipe` grew the other axis: the same two
+ways past the line (distance, or a flick) and the same veto, with a
+diagonal going to whichever travel is larger, so neither gesture can be
+triggered by the other's slop. Downwards stays unclaimed — nothing is
+bound to it, and a card that followed a downward finger would eventually
+star somebody by accident. The gates moved off the button and into `act`,
+so the button and the swipe meet the same two answers (no membership →
+the offer; no stars left this week → the refusal).
+
+**4. The band is on the photograph.** "kesfette uyum gostergesi
+fotografin sag altina gitsin. fotografa tiklandiginda profil aciliyor ona
+dikkat et. uyuma tiklaninca uyum acilmali". It is a Pressable inside the
+photo's Pressable, bottom-right, opposite the name: a child that takes
+the touch keeps the parent's press from firing, so the picture still
+opens the profile and the ring still opens the reading. The word under
+the ring is `type.label` now rather than `type.title` — at title size it
+reached a third of the way across the picture. `BAND_LIFT`, which existed
+to make the three gaps around the band read equal when it sat between the
+chips and the buttons, went with it.
+
+**Where this touches the other branch.** PR #9 is changing the same card
+(school in the info line, bio out). My edits are the photo overlay, the
+footer and the gesture; the only shared ground is the `info` block, which
+lost the band and its `space-between`.
+
+**Verified here.** `apps/mobile/lib/swipe.test.ts` grew six cases for the
+upward half, seen red first — three of them failed on the missing
+`SUPER_THRESHOLD` export, which is exactly the state the change was made
+from. The battery is green and the ten screenshots were re-driven, one of
+them new: tapping Bade on the list and landing on her card. What a
+browser still cannot show is the gesture itself; the upward swipe is on
+the device list in the pull request.
+
+## 2026-09-23 — QA on the four: the upward swipe had a hole, and a dismissal starred the person
+
+`evaluator-qa` on the screenshot clause came back **NEEDS_WORK**, with two
+findings I had not covered and one evidence gap. It built its own bundle
+from HEAD, served it through a stub that logged every `likes` insert, and
+drove real touch input through CDP — so both findings are gestures it
+actually performed, not readings of the code.
+
+**A card dragged down and released with the finger snapping up sent a
+super like.** `decideUp`'s flick arm asked only for an upward _velocity_
+at release and never looked at where the card had travelled. Dragged 300
+points down and flicked back up, the card flew upwards and the insert
+went in with `is_super: true` — the most expensive action in the app,
+with no stamp ever drawn, since the stamp's opacity is clamped to zero
+below the middle. The rule now asks for upward travel before a flick may
+star anybody, and for at least `SUPER_FLOOR` (5% of the height, 42
+points) of it: sideways has no such floor because a wrong pass costs one
+card, and the card is claimed after eight points.
+
+**A card flung up and away to the left starred the person being
+dismissed.** "Whichever travel is larger wins" was too weak a rule for an
+arc that is plainly a dismissal — and because the upward half answered
+first, it also skipped the change-of-mind veto that protects a like and a
+pass. The star now wants twice the sideways travel (`UP_DOMINANCE`); below that
+line the gesture falls through to the sideways rules with their veto,
+and above it the star answers on its own — which is right, because above
+it the card has visibly flown up under the finger. QA's own case,
+dragged 150 left and 200 up, is a pass now.
+
+Four cases, each red first against the shipped rule, each named after the
+gesture QA performed. The lesson for the next gesture: a rule with two
+arms needs a test per arm per axis, and "the docstring says down is
+nothing" is not one of them.
+
+**Evidence gap, also fixed.** The ten shots showed the band's new
+position but neither half of "fotografa tiklandiginda profil aciliyor…
+uyuma tiklaninca uyum acilmali". Two more are in the pull request now:
+the band tapped, and the photograph tapped.
+
+### Battery gaps
+
+- `verify.sh`'s `format` step FAILs on an untracked `apps/mobile/dist-*`
+  that is not `dist-local` — only `dist-local/` is in `.gitignore`, and
+  prettier walks whatever else is there. A thread that exports the web
+  bundle under any other name gets a red battery with nothing wrong in
+  the repository. QA hit it; the fix is either a `dist-*` ignore or a
+  prettierignore line.
+
+### Upstream candidates
+
+- `.gitignore` / `.prettierignore` for `apps/mobile/dist-*`, per the gap
+  above.
+
+## 2026-09-23 — The second QA pass: the card was drawn by one rule and decided by another
+
+NEEDS_WORK again, and the finding was mine to have seen: tightening
+`decideUp` to 2:1 left the deck's own move handler at 1:1, and nothing
+tied the two together.
+
+Between the two lines the app drew a star and sent a pass. QA's gesture:
+272 points up with 140 of left drift, mid-drag the card at
+`translate(-23, -181)` with the SÜPER stamp at full opacity — and on
+release, `kind: "pass"`. The person is dismissed for good; there is no
+undo anywhere in this app, and a pass row takes them out of `discover`
+for ever. The mirror case, the same drag with rightward drift, spent a
+plain like where the star was shown. At the commit before the fix the
+same gesture starred them, so this band was made by the fix.
+
+`isUpwardGesture(dx, dy)` is exported from `lib/swipe.ts` now and is the
+only place the 2:1 rule is written. The move handler draws with it, the
+SÜPER stamp is multiplied by an `Animated.Value` the handler sets from
+it, and `decideUp` asks it first. The claim rule stays looser than all
+of them on purpose: a finger between the two lines still holds the card
+and is drawn sideways, which is what its release sends, where a claim as
+strict as the star would leave it holding nothing.
+
+Three cases, red first (the predicate did not exist): the two sides of
+QA's band by name, and a sweep of the whole quadrant asserting that
+nothing `decideSwipe` stars is a gesture the card was not drawn for.
+
+(QA's next round showed that sweep up: it imports only `swipe.ts`, and
+the module already agreed with itself, so it was red only because the
+export was missing. Reverting the deck's move handler alone would have
+brought the whole defect back with the battery green. The drawing is a
+function in `swipe.ts` now — `deckOffset` — and the round below says
+what that does and does not buy.)
+
+**The lesson worth carrying.** A gesture has two readers: the one that
+decides and the one that draws. A change to one is a change to both, and
+only a test that asks them the same question will say so. The first QA
+round caught the rule being wrong; this one caught the rule being right
+and the picture being wrong, which is the more expensive of the two,
+because the picture is the only thing the person can act on.
+
+### Battery gaps
+
+- Nothing in the battery drives a gesture. Both of these findings needed
+  a real touch sequence through CDP against a built bundle — `swipe.ts`'s
+  unit tests cover the rule, and nothing covers the card. The sweep
+  above is the cheapest substitute: it pins the drawing predicate to the
+  deciding one without rendering anything.
+
+## 2026-09-23 — Third QA round: a star taken back was sending a pass
+
+Two findings, both about the same seam, and the first is the worst thing
+found on this branch.
+
+**A gesture drawn as a star, then taken back, dismissed the person.**
+Drag up past the line, then yank the finger back down and lift: the card
+is up, the SÜPER stamp is full, and the release wrote `kind: "pass"`.
+`decideUp` answered `null` for the change of mind — and `null` meant
+"not a star", so `decideSwipe` fell through to the sideways arms, where
+122 points of left drift is past the threshold. Sideways, the same
+change of mind answers nothing; upwards it was being converted into a
+verdict, and a pass is permanent: there is no undo in this app and the
+row takes the person out of `discover` for ever. The mirror, drifting
+right, spent a like.
+
+The rule now reads: a gesture `isUpwardGesture` is true of is answered
+by the star or not at all, and never by the sideways arms. That is the
+same sentence the drawing already obeyed — the card follows the finger
+up and only a quarter of the way across — so the two are one statement
+now rather than two that happened to agree in most places. Both of QA's
+gestures are named cases, and a sweep asserts no upward gesture can come
+back `like` or `pass`, at every release velocity.
+
+**The SÜPER stamp was never visible while it was full.** It sat beside
+the other two, near the top of the card, and the star gesture lifts the
+card: by the travel that fills the stamp in, it was off the top of the
+screen. QA measured `opacity: 1` with nothing on screen, which is a
+worse failure than a stamp that does not appear at all, because the
+comment in the code claimed the stamp was the guarantee. It starts
+exactly that travel lower now, so it arrives where ✕ and ♥'s stamps sit
+at the moment it is fully there. Still to be checked on a device: the
+owner's list in the pull request says what to try.
+
+**What the drawing being a function does and does not buy.** `deckOffset`
+is in `swipe.ts` with the decision, and the tests hold the two to each
+other: drawn upward exactly when the star can be sent, and the whole
+travel of the axis it is drawn on under the finger. What it cannot do is
+prove the deck calls it — nothing in this repository renders a component
+in a test, so a move handler that went back to doing its own arithmetic
+would pass the battery. The cheap guard is that there is now only one
+sentence to call.
+
+### Battery gaps
+
+- Still nothing that drives a gesture, and now demonstrated rather than
+  suspected: QA reverted the deck's move handler by hand and the battery
+  stayed green. Three rounds of gesture findings have come from a QA
+  agent driving CDP touch sequences against a built bundle, which is not
+  something `vitest` does. Either a component test (a first for this
+  repository) or the QA drive being written down as part of the deck's
+  done-when clause.
+
+## 2026-09-23 — Fourth QA round: the stamp needed a place on the screen, not a better offset
+
+One finding, and it was the same one twice. Starting the SÜPER stamp a
+threshold lower put it exactly where ✕ and ♥'s stamps sit at the moment
+it fills in — QA measured that and photographed it — and then it carried
+on up with the card: past about 235 points of travel it was off the top
+again at full opacity, which is nine of the sixty-nine gestures in its
+sweep, and round 3's own canonical star was 272 points.
+
+An offset has a "further up" to fail at; a place on the screen does not.
+The stamp now undoes the card's lift exactly, so it stands still while
+the card climbs out from under it, as far as one screen height — beyond
+that is the fly-out, a screen and a half, which is meant to take the
+stamp away with the card. The two side stamps still ride the card,
+because sideways the card travels past them rather than over them.
+
+Also from the sweep, one character: a finger going up at exactly 45°
+satisfied neither arm of the claim rule and the card sat still under it.
+The upward arm takes `>=` now.
+
+**What that sweep is worth.** It compared the card's transform at the
+instant before release against the row the backend received, for 69
+gestures: 67 drawn exactly as `deckOffset` says, no gesture sending a
+verdict that contradicted a visible stamp, in either direction. That is
+the evidence the battery cannot produce, and it is the third round in a
+row where the finding was visible only to something driving real touch
+sequences against a built bundle.
+
+## 2026-09-23 — Fifth QA round: the stamp was inside the photograph
+
+Round 4 stopped the stamp climbing out of the top of the screen by
+pinning it in screen space. It was still a child of the card's photo
+`Pressable`, and that view is `overflow: 'hidden'` so the picture keeps
+its rounded corners. Past about 365 points of upward travel the card has
+moved far enough that the pinned stamp falls outside the photograph's
+box and is clipped — invisible at the very moment the gesture is most
+committed. `getBoundingClientRect` reported it at full opacity in the
+right place throughout, so only the pixels showed it; QA caught it by
+photographing the frame rather than by asking the DOM.
+
+The stamp is now a sibling of the card, laid out against the screen. The
+card can travel as far as it likes underneath it. `upward` is also reset
+to zero before the fly-out, so the word cannot linger over an empty
+deck.
+
+The other change is QA's, and it is the first time a gesture rule of this
+deck has been testable: the tap-versus-drag predicate that decides
+whether the deck claims a touch was written inline in the move handler.
+It is `claimsCard(dx, dy)` in `apps/mobile/lib/swipe.ts` now, with
+`CLAIM_DISTANCE`, and five cases of its own seen red first — a straight
+tap, a short drift, a sideways drag, an upward drag, and the 45° case
+round 4 found by hand. The deck imports both.
+
+## 2026-09-23 — Sixth QA round: PASS, and the earlier rounds' tap check was vacuous
+
+165 driven gestures against the export of `431fa4f`, every one photographed
+and matched to the row the stub backend received. The stamp is legible in
+the pixels from 200 points of travel all the way to 844 — a full screen
+height, card long gone — and its box never moves (`top: 72` in all 165).
+It is faint but readable at the flick floor. Nothing lingers after a
+fly-out. Over a 132-gesture quadrant sweep there was no gesture whose
+verdict disagreed with what was drawn, in either direction, and the row
+always named the card that was on top. Taking a star back, in four
+shapes, liked and passed nobody.
+
+**The finding is about the harness, not the app, and it reaches
+backwards.** The probe the earlier rounds used asked for
+`[data-testid="person-sheet"]` and `[data-testid="detail-sheet"]`.
+Neither exists: the deck's are `person-popup` and `detail`. So every
+"sheet: false" those rounds printed was vacuously false, and no round
+before this one actually demonstrated that a tap opens a profile. With
+the right selectors it does, including the short-drift taps.
+
+Two limits worth writing down. Chrome's CDP touch pipeline swallows the
+first move under about 15 px on both axes, so the 8-point
+`CLAIM_DISTANCE` boundary cannot be exercised in a browser at all — the
+predicate is covered by `swipe.test.ts` and the wiring is verified from
+16 points up. And a finger coming down again during the 220 ms fly-out
+cannot be driven, because there is no longer a card under the touch to
+aim at; the `idle`/`grantedId` guards were read, not run.
+
+### Battery gaps
+
+- A testID in a QA probe is unchecked text. Two of them were wrong for
+  five rounds and the probe reported success. Anything the QA harness
+  selects by should be grepped out of `apps/mobile` once before it is
+  trusted.
+
+## 2026-09-23 — Review round 4 on premium: four findings, all real
+
+The review looked at `f895401..c185a22` in one pass, as the owner's new
+cadence asks, and found four things. Two of them are the kind only a
+reviewer finds, because they are about what happens on a path nobody
+drives.
+
+**The band went silent for VoiceOver.** Moving the compatibility ring
+onto the photograph put its `Pressable` inside the photograph's, and on
+iOS a view with `accessible={true}` collapses its whole subtree into one
+element. The ring's button and its reading were simply gone from the
+accessibility tree, and the compatibility popup is opened from there and
+nowhere else on the screen. The photograph's button is now an
+`absoluteFill` child of a plain `View` rather than the thing that
+contains everything drawn on it, so the band is a sibling again: its own
+element, still drawn after and so still taking the touch in its corner.
+The lesson is small and worth keeping: a `Pressable` is not only a touch
+target, it is an accessibility boundary, and nesting one inside another
+hides the inner one on iOS.
+
+**A pin that was only cleared when everything went right.** The person
+tapped on "Seni beğenenler" was held in a ref and consumed at the end of
+the load it belongs to. Three ways out of that promise skipped the line
+that clears it — the effect cancelled, a non-ready result, a rejection —
+so the ref kept a stranger, and the next successful load jumped the deck
+to them or popped their profile with nothing the member had done to ask.
+It is taken out of the ref at the _start_ of the load now, in the effect
+body, which also makes the A-then-B race right: two taps in flight are
+two locals, not one ref.
+
+**The card crossed the star's line by teleporting.** `deckOffset` had two
+arms that each followed a different axis, and they did not meet: at
+(100, -200) one frame either side of the 2:1 line the card leapt 151
+points up and 75 left, and a finger held near that angle flickered
+between the two positions. The share of each rule is now read off the
+angle over a band three quarters of the sideways travel wide, which is
+exactly as wide as the gap it has to close. A straight drag holds one
+share the whole way out, so the card tracks the finger exactly; only a
+finger that turns mid-gesture crosses the band, and there the card leads
+it by at most a third rather than jumping. The decision did not change:
+the star is still the 2:1 line, and the stamp with it, so nothing about
+what the card _promises_ moved.
+
+**`liked_me` had stopped being indexable.** With `profiles` as the
+driving table the WHERE is an OR whose arms live in different relations,
+so PostgreSQL could only sequentially scan every profile — on the one
+view `fetchLikedMeCount` asks to count on every open of the deck. Naming
+the candidates first, as a UNION _inside_ FROM, makes both arms index
+reads and leaves the top-level SELECT plain, so the `resorigtbl` origins
+that `supabase gen types` reads are untouched. Measured on the throwaway
+cluster ([[postgres-without-docker]] is the recipe) at 50k profiles,
+both shapes returning the same 43 rows: 85.3 ms before, 0.583 ms after,
+and the origins compared column by column.
+
+### Battery gaps
+
+- Three of these four are invisible to `verify.sh`, and in three
+  different ways: an accessibility tree nothing inspects, an error path
+  nothing exercises, and a query plan nothing measures. The gesture rule
+  was the one the battery could have caught, and now does.
+
+## 2026-09-23 — Two more from the owner, one of them the same bug twice
+
+He signed in on the web and got a red overlay: a `<button>` cannot
+contain a `<button>`. `react-native-web` renders `accessibilityRole="button"`
+as a real `<button>`, and the compatibility ring's `Pressable` was inside
+the photograph's, so the DOM had one nested in the other. That is the
+review's VoiceOver finding wearing different clothes — an iOS
+accessibility element and an HTML button are the same nesting, reported
+by two different platforms — and hoisting the ring out of the photograph
+fixed both at once. Worth remembering: on this stack a nested `Pressable`
+with a role is not a styling detail, it is invalid on one platform and
+invisible on the other.
+
+The second: tapping somebody on "Seni beğenenler" must land on their card
+in the deck **always**, not only when the member's filters would have
+offered them ("burada bir ayrim olmasin"). The profile-instead fallback
+is gone. A card needs a distance and `liked_me` did not carry one, so the
+view does now — masked with the rest of the person, so a free member's
+row still says nothing — and `candidateOf` in `lib/discover.ts` is the
+one place a row becomes a card, whether it came from the deck's own fetch
+or from the list. The filters decide who is _offered_, not who may be
+answered: somebody who chose this member is answerable whatever the
+radius says.
+
+## 2026-09-23 — QA round 7, and one sentence that was not true
+
+PASS on all four, and the method is the part worth keeping: every probe
+was run against a **control** — the pre-fix bundle, same script — so
+nothing passed vacuously. The nested `<button>` probe finds one in the
+old build and none in the new; the boundary crossing moves 172 points in
+one frame on the old build and at most 11 on the new; the tap on a row
+leaves the old build on Selin with a profile popup and puts the new one
+on Irmak's card. After round 6's phantom testIDs that is the right habit,
+and the harness also prints the `entry-<hash>.js` it is actually serving,
+because a stale stub on a busy port once made a run "reproduce" a bug
+that was already fixed.
+
+The one finding was in a comment, not in code: `UP_BLEND`'s doc claimed
+the band's width "keeps the card from outrunning the finger". It does
+not, and the next sentence already said the true thing: a straight drag
+holds one share for its whole length, because the share is read off the
+angle. A finger that turns crosses the band, and there the card closes a
+gap at about twice the finger's rate. Measured, and now what the comment
+says.
+
+(The replacement was half wrong too, and round 5 of the review caught it
+— see below. "A straight drag never enters the band" is false: every
+straight drag between about 51° and 70° is inside it for its whole
+length. A fixed share is not the same as being under the finger.)
+
+Also from this round: the owner's web report and the review's VoiceOver
+finding were one bug. `react-native-web` renders `accessibilityRole="button"`
+as a real `<button>`, and iOS collapses an accessible subtree; a nested
+`Pressable` with a role is invalid on one and invisible on the other.
+
+### Battery gaps
+
+- `tests/realtime.test.ts` failed once in CI on a commit that touched
+  nothing near it, and passed on the re-run of the same commit — a
+  message that did not cross inside a 2-second budget. First flake seen
+  in this suite. If it comes back, the budget is the thing to look at
+  rather than the test.
+
+## 2026-09-23 — the stamp and the verdict, read from one number
+
+Review round 5 closed all four of round 4's findings by measurement and
+opened one that the blend fix had created the other way round. The blend
+made the picture continuous by holding the card back near the star's
+line; the stamps were drawn from that held-back position while
+`decideSwipe` read the gesture. So inside the band a release counted
+while its stamp was part-drawn — worst case SÜPER sent with its stamp at
+0.63 — and one of five weekly stars went on a gesture the card had not
+committed to.
+
+The fix is a rule rather than a patch. `stampStrength` in `lib/swipe.ts`
+says how fully each stamp is drawn, from the gesture itself, and the deck
+keeps a second `Animated.ValueXY` carrying the raw gesture for the three
+interpolations to read; `pan`, still blended, only moves the card. Two
+tests sweep the whole gesture space against `decideSwipe`: every release
+that counts on distance shows its stamp in full, and no full stamp is
+ever contradicted by the verdict.
+
+Writing the rule down first found a second case nobody had measured. The
+sideways stamps had no equivalent of the star's `upward` gate, so a card
+dragged 300 left and 700 up drew **PASS in full** and sent SÜPER. A full
+stamp that lies is the exact thing this file exists to stop, and the old
+pre-blend drawing had been hiding it behind a quarter-strength `pan.x`.
+`decideSwipe` never hands an upward gesture to its sideways arms; now
+neither does the drawing.
+
+Both tests were seen red against the previous rule: `like at dx=121,
+dy=-242` with the stamp at 0.630, and forty-six gestures inside the
+swept box drawing a stamp the release contradicts (the count is the
+box's, not the phone's — every one of them is a steep leftward or
+rightward fling, and the box reaches 400 points on each axis).
+
+The other three findings were comments describing what the code does
+not do — the stale `bringToFront` doc left stacked above its
+replacement, `fetchCandidates`' doc stranded over `candidateOf` after the
+extraction, and the `UP_BLEND` sentence above. `Waiting.caption` went
+with the admirer popup and was still being computed for nobody, so the
+pin is now just the `Admirer`.
+
+Also this round, from the owner: the bio sits in a box of its own, and
+the gap under it is gone. That gap was a consequence of moving the band
+onto the photograph earlier in the round — `info` was still claiming a
+growing share of a card that no longer had one to give, so the space
+went between the bio and the buttons.
+
+### Upstream candidates
+
+- A rule the UI draws with belongs in the pure module beside the rule
+  that decides with it, even when the drawing has to be an animated
+  interpolation for the UI thread. Writing `stampStrength` as ordinary
+  arithmetic is what made the second case findable at all; the
+  interpolations are its animated form, and the tests hold the two
+  together.
+
+## 2026-09-23 — the badge, the bio box, and a port the harness lied about
+
+The owner asked for two things off one screenshot: the bio in a box, and
+some sign on a card that this person has already chosen you. The second
+went out as a design round — three drafts photographed from the stub
+harness, a recommendation, one word back. He picked the label over the
+name, and said the first box was ugly and the gap still too wide.
+
+**The gap was arithmetic, not taste.** The photograph's height is a fixed
+fraction of the window, so whatever the block below leaves over piles up
+in the one flexible thing on the screen — the footer, which spreads it
+around the round buttons. At 390x844 that was 51 points between the bio
+and the buttons. The photograph now grows into the leftover
+(`flexGrow: 1` over the same fraction as its basis), and the gap is 8.
+Measured in the browser, before and after: photo 0–473 → 0–544, bio box
+bottom 597 → 682, buttons top 648 → 690.
+
+That had a cost, and he settled it the same hour. `PHOTO_SCREEN_FRACTION`
+exists because the deck's photograph and the profile's must end on the
+same line (owner, 2026-09-14), and growing the deck's into the leftover
+broke that. He answered "profildekini de aynı boyuta getir", so the
+fraction itself moved, 0.56 to 0.64 — one number, both screens, nothing
+else touched, because PR #9 is editing that same profile screen. 0.64 is
+where the deck settles for a card with a two-line bio: profile 0–540,
+deck 0–542. The two cannot be identical on every card, because the deck's
+photograph still absorbs what a shorter block below leaves — 565 on a
+one-line bio, 626 on a card with no bio at all — and that is the price of
+never drawing the gap again.
+
+A long bio costs nothing: it is cut at two lines with an ellipsis, so its
+card is the two-line card to the point (photo 0–542, box 610–682), and
+the whole text is on the profile a tap away.
+
+The box itself he called ugly, and it was drawn as its own thing —
+`glass.fillHigh`, no border, the medium radius. It is the app's ordinary
+card now (`glass.fill` behind `glass.edge` at `radius.lg`), which is what
+"diğer kutucuklar gibi yarısaydam yap" asked for and what every other box
+on the screen already was. Worth remembering as a rule rather than a fix:
+a new surface here should reach for the shared card look before inventing
+a fill.
+
+**`discover.likes_me`.** Three values — null, 'like', 'super' — withheld
+from a free member _in the view_, not on the device, because who has
+liked you is exactly what `liked_me` sells and a column every member
+could read over PostgREST would give that list away one card at a time. A
+demo answers 'like' and never 'super': it is on "Seni beğenenler" under
+exactly the condition that it is in this deck, so a demo without a badge
+would be a demo the two screens disagree about. A _pass_ answers null,
+which is the case worth having a test for — the badge saying the
+opposite of the truth about somebody is the only way this feature can
+hurt.
+
+Verified on a throwaway PostgreSQL 16 cluster with the view's own text: a
+plain liker 'like', a starrer 'super', somebody who passed null, somebody
+who has not looked null, a demo 'like', and for a free member all five
+rows present with every badge null. The column origins are unchanged —
+seven columns still point at `profiles` in the stored rewrite rule, the
+same seven as before — so the generated types keep their foreign keys.
+
+Splitting `discover-row.ts` out of `discover.ts` was not tidying: the
+schema could not be tested at all, because `discover.ts` imports
+`./supabase`, which imports React Native, which Vitest cannot even parse.
+`profile-enums.ts` came out for the same reason, one import further down.
+The rule generalises: anything worth a test must not be one import away
+from the device.
+
+**A badge drawn inside a button is a badge no screen reader reads.** The
+"seni beğendi" label sits over the name, inside the photograph's
+`Pressable`, and that `Pressable` carries its own `accessibilityLabel` —
+which _replaces_ everything drawn inside it, on iOS by collapsing the
+subtree and on the web by winning over the inner text as the accessible
+name. So the one new fact on the card was invisible to VoiceOver, and
+the comment beside it claimed the opposite. It goes in the label now,
+first, because it is drawn first, and the painted copy is `aria-hidden`
+so the web does not read it twice. `likedYouBadge` in
+`apps/mobile/lib/card-a11y.ts` returns the drawn form and the spoken form
+together for the same reason `stampStrength` exists: two consumers of one
+fact drift apart when each writes it out. Driven on the web —
+`aria-label` reads "Seni süper beğendi. Ece, 31, 8 km. Profili gör".
+
+**A rule with no caller is a rule the battery cannot hold.** Round 6 also
+pointed out that `stampStrength`, swept by its tests, is never called by
+the app: an opacity has to be an `Animated` node to run on the UI thread
+while JavaScript is busy, so the deck had the same arithmetic written out
+a second time. They agreed — that day. `stampRamps` exports the three
+ramps as data, the deck builds its interpolations from them, and a test
+composes them exactly as the deck does (gate times ramp) and sweeps the
+result against `stampStrength` at 13 225 points. Perturbing one ramp by
+20% fails it. The general shape: when a pure rule cannot be _called_ by
+the code that draws it, export the drawing's _parameters_ from the rule
+and check the composition, rather than trusting two copies to stay equal.
+
+**Three lines of bio, and the fraction moved again.** The owner: "bioyu 3
+satir gozukecek sekilde yap". A three-line box is the tallest the block
+under the photograph ever gets, so it is the card where the photograph is
+squeezed hardest — and `PHOTO_SCREEN_FRACTION` is now that height
+(0.615), which makes the three-line card and the profile identical at 519
+and means the deck's photograph is never _shorter_ than the profile's,
+only taller when a card has less to say (542 on two lines, 565 on one,
+626 on none). Matching the fullest card rather than the common one is the
+choice worth remembering: it turns the rule into a floor instead of a
+coincidence.
+
+**A pin cleared on every path loses the tap on the failing ones.** Round
+4 asked for `pinned.current` to be taken into a local where the load
+begins, so no later load could act on it, and round 5 pointed out what
+that bought: a dropped connection now ate the tap. "Tekrar dene" only
+bumps the attempt, and somebody outside your filters is in no deck to
+scroll back to, so they were gone with no way back but the list. The
+answer is both — take it out at the start, and put it back on every exit
+that did not deliver it, guarded by `pinned.current === null` so a second
+tap still wins. Driven either side of the change with the same script and
+the same stub, the second `discover` read answering 500: the old bundle
+comes back on Selin, the new one on Irmak.
+
+**…and putting it back on a _cancelled_ load is round 4 all over again.**
+Round 7 read the same six lines the other way round, and it is right. A
+load is cancelled because a newer one replaced it, and React runs that
+newer effect body synchronously on the change: it has already read the
+ref and emptied it by the time the old promise lands, so
+`pinned.current === null` is its ordinary state rather than evidence that
+nobody wants the tap. Putting it back there hands it to whatever reload
+comes next. Driven on the current head: tap Irmak, open and close the
+filters while that load is in flight — the deck comes back on Selin, as
+it should — then leave the tab and return, and the deck is on Irmak, two
+loads and a tab switch after the tap, asked for by nobody. The guard is
+`cancelled`, and the two cases are now named separately: a load that
+**failed** gives the tap back (round 5), a load that was **replaced**
+forgets it (round 4). The generalisable bit is smaller than either: a
+sentinel that a newer run also writes cannot tell you whether the newer
+run wants it — only a flag about _this_ run can, and `cancelled` was
+already sitting there.
+
+**The owner then chose the other answer, and it needed the flag, not the
+sentinel.** 2026-09-24, asked whether a tap on "Seni beğenenler" should
+survive leaving the tab mid-load: "donuste o kisiye gidilsin". Putting the
+tap back from the promise cannot do that — by the time a replaced load
+lands, the load that replaced it has already read the ref. The hand-off
+has to happen in the effect's **cleanup**, which React runs before the
+replacing body reads the ref, and only for a run that has not answered
+yet (`settled`): the next load carries the tap, and nothing after it ever
+sees it. Driven on the web export, each against the bundle before it:
+
+- leave the tab mid-load and come back: `97a2b9f` returns on Selin, now
+  on Irmak — and on Selin again at the second return, so the tap is
+  spent once;
+- open and close the filters mid-load: the reload that replaces it now
+  lands on Irmak at once, and the return after that is Selin;
+- tap Bade, reopen the list mid-load, tap Irmak: both bundles show Irmak,
+  and at the next unrelated reload `3665248` jumps to **Bade** — review
+  round 7's model, driven — while this one stays on Selin;
+- the second `discover` read answering 500: "Tekrar dene" lands on Irmak,
+  as since round 5.
+
+**Side finding, not fixed here:** a member who buys the membership
+_inside_ "Seni beğenenler", taps somebody, and reopens the list before
+that load lands sees the paywall for the length of the load. The deck's
+own profile is the one read before the purchase until that load
+replaces it, and `LikedMePanel`'s `bought` is local to the instance the
+reopen replaced. It heals when the load lands. It took three runs of the
+probe to notice, which is roughly how often a person would hit it.
+
+### Battery gaps
+
+- The screenshot harness has a trap that cost an hour here. The Expo web
+  export bakes `EXPO_PUBLIC_SUPABASE_URL` in, so a stub started on any
+  other port serves the _page_ while the _data_ still comes from whatever
+  is answering on the baked port. A second stub on 8093 looked like it
+  was working — the page was new, the deck was full — and every row came
+  from a stale process on 8099 that had never heard of the new column.
+  The symptom is a screen that renders perfectly and shows old data, with
+  nothing in the console. The tell is in the console all along: the
+  realtime socket names the baked port. Serve on the baked port, or check
+  it first.
 
 ## 2026-09-23 — the interest picker moves into a popup; placeholders go
 
@@ -7279,6 +8143,106 @@ The eight named cases are tests instead.
 A comment that says what a constant guarantees should be read as a
 claim to check, not as documentation. This one survived nine review
 rounds, and the code it described was wrong for every dense country.
+
+## 2026-09-24 — the deck's photograph is the profile's height again, on the merged card
+
+Owner, after PR #9 merged: "kesfetteki foto boyutunu guzel yapmamis.
+profille ayni olsun". Main was merged into the premium branch first, so
+the layout was built on the card as it ships, with #9's fact rows on
+the photograph.
+
+- The merge needed two things beyond conflict markers. The premium
+  migration redefines `discover`, and it predates #9's four columns;
+  without repeating them before `likes_me`, `create or replace view`
+  drops columns and PostgreSQL refuses (reproduced on a bare PostgreSQL
+  16 cluster: "cannot drop columns from view"). And `liked_me` now
+  carries the same four, withheld with the rest of the person, so a card
+  opened from "Seni beğenenler" draws the same rows as the deck's.
+- The photograph stops growing (`flexGrow: 0`) and the bio's box is three
+  lines tall on every card (`BIO_SLOT`), so every card is the fullest
+  card. The gap under the photograph goes back to `space.md`, the
+  profile's. Measured at 390x844 on the web export against the stub:
+  photograph 0–519 on the three-line, one-line and no-bio cards and on
+  the profile; big three at 531 on both; bio box top at 583 on both;
+  buttons 688–776 on every card. Before, at the merge commit: 519 on the
+  three-line card, 565 on a one-line card.
+- What it costs: a card with no bio shows an empty three-line room
+  between the big three and the buttons, so the buttons never move. On a
+  phone taller than 844 the spare goes around the buttons; on one shorter
+  than the full card (an SE at 667), the deck's photograph shrinks and is
+  then shorter than the profile's there.
+
+Same day, review round 10's one optional note, and the owner chose to fix
+it ("1"): the three-line room was sized at the default text size, while
+the bio inside it grows with Dynamic Type, line height included on iOS
+(`RCTTextAttributes`, `_lineHeight * effectiveFontSizeMultiplier`). At
+1.35 a full bio needs ~119 points against 95, and the photograph gave up
+the difference on that card only. `bioSlotHeight(fontScale)` in
+`lib/deck-layout.ts` now scales the lines (not the padding) and caps at
+`MAX_DECK_SCALE`, which moved there from the screen so Vitest can reach
+it. `lib/deck-layout.test.ts` was run red against the fixed room first (3
+failed of 5). The web has no text size, so the web export only shows the
+default is unchanged (0–519 on every card again). What stays true at a
+larger text size: every card matches every other, and all of them are
+shorter than the profile's photograph, which scrolls and never shrinks.
+That is the owner's device check, not something a thread can drive.
+
+Same day, from the owner's phone: "profil ve kesfette fotolar ayni hizada
+degil. kesfetteki guzel, profildekini de ayni hale getir". The web export
+had measured them equal at 390x844, and the phone did not, because a
+phone's tab bar is 49 points plus the home indicator's 34 while the
+browser's is about 52. Inferred from `(tabs)/_layout.tsx` and the web
+measurements, not measured on his device: the deck's card had 31 points
+less, its photograph (the one thing on the card allowed to shrink) gave
+them up, and the profile, which scrolls, never did. So the profile now
+draws whatever the deck actually drew: the deck reports its photograph's
+layout height to `lib/deck-photo.ts`, keyed by window height, and the
+profile reads it through `useSyncExternalStore`, falling back to the
+fraction until the deck has drawn a card. `lib/deck-photo.test.ts` was
+run red against a do-nothing store (3 failed of 6). Driven on the web by
+making the viewport short enough that the deck has to give way, 390x700,
+which is the same situation the phone is in: before, deck 0–379 and
+profile 0–431; after, both 0–379, with the big three and the bio box on
+the same lines too. At 390x844 nothing changes (519 both).
+
+### Battery gaps
+
+The web export at 390x844 cannot show a mismatch that only a phone's tab
+bar causes: the browser reports no bottom inset. A layout claim about
+the two photographs needs a run at a height where the deck gives way, or
+the owner's device.
+
+Review round 12 caught what that change did to two sentences above: once
+the profile follows the deck, a larger text size or a short phone no
+longer leaves the deck "shorter than the profile". The two stay equal
+once the deck has drawn a card, and the owner's device check 7 now says
+so. The same review's optional note is taken too: the deck does not
+report its photograph while the footer carries an error line (which
+takes ~20 points from the photograph until the next swipe), and
+`lib/deck-photo.ts` says a profile opened during the deck's first load
+moves once when the first card lays out.
+Driven on the web export with the stub answering every like with a 500:
+before the guard, the error line took the deck's photograph from 519 to
+503 and the profile followed it to 503; with the guard the profile stays
+at 519, the ordinary card's height.
+
+## 2026-09-24 — Premium (#10): the bio box on a card with no bio
+
+Owner, 06:07: "kesfette biyografi yazmayanlar icin de bos textbox
+koyalim. hakkinda yazilmamis gibi bir placeholder yazsin". The empty
+three-line room a card with no bio had (the round-10 trade-off above) is
+now the same box every other card has, holding "Hakkında yazılmamış" in
+`color.textMuted`. `cardBio` in `lib/card-a11y.ts` picks between the
+person's words and that line; a bio of only spaces counts as none,
+because the column accepts one character of anything and only the app's
+own editor trims. `lib/card-a11y.test.ts` gained three cases, run red
+first against the file without `cardBio` (3 failed of 7).
+
+VoiceOver: the box sits outside the photograph's button, so it is read
+as its own text, as a real bio is. The placeholder was not folded into
+the photograph's label: it would then be read twice, and the words are
+already about the person ("Hakkında yazılmamış"), not in their voice, so
+nobody hears them as a bio.
 
 ## 2026-09-24 — every sheet closes from a chevron at its top left
 

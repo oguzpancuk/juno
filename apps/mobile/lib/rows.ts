@@ -16,8 +16,10 @@ import type { z } from 'zod';
  */
 export function parseRows<T>(
   // The third parameter is the schema's INPUT: rows arrive untyped, and a
-  // schema that normalises as it parses (`profile-details`) has an input
-  // that is not its output. `z.ZodType<T>` would demand the two be equal.
+  // schema that normalises or falls back as it parses has an input that
+  // is not its output — `profile-details` tidies the interest tags, and
+  // `discover`'s badge column reads a value this build does not know as
+  // null. `z.ZodType<T>` would demand the two be equal.
   schema: z.ZodType<T, z.ZodTypeDef, unknown>,
   rows: readonly unknown[],
   onDropped: (dropped: number, total: number) => void,

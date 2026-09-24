@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card, OutlineButton } from '@/components/ui';
 import { BlockedList } from '@/components/BlockedList';
 import { LegalText } from '@/components/LegalText';
+import { PremiumPanel } from '@/components/PremiumPanel';
 import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
@@ -11,12 +12,13 @@ import { leaveToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, font, radius, space, type } from '@/theme/tokens';
 
-export type SettingsView = 'menu' | 'blocked' | 'legal';
+export type SettingsView = 'menu' | 'blocked' | 'legal' | 'premium';
 
 /** The sheet's title for each view. */
 export function settingsTitle(view: SettingsView): string {
   if (view === 'blocked') return t.blocked.title;
   if (view === 'legal') return t.legal.open;
+  if (view === 'premium') return t.premium.title;
   return t.settings.title;
 }
 
@@ -123,7 +125,13 @@ export function SettingsPanel({
   if (view !== 'menu') {
     return (
       <View style={styles.panel}>
-        {view === 'blocked' ? <BlockedList /> : <LegalText />}
+        {view === 'blocked' ? (
+          <BlockedList />
+        ) : view === 'premium' ? (
+          <PremiumPanel />
+        ) : (
+          <LegalText />
+        )}
       </View>
     );
   }
@@ -133,7 +141,18 @@ export function SettingsPanel({
       {/* Grouped rows, the way a settings list reads on the platform
           (owner, 2026-09-16: the flat buttons were disliked): what opens
           something ends in a chevron, what does something does not, and
-          the one that cannot be undone sits alone in its own group. */}
+          the one that cannot be undone sits alone in its own group.
+          The membership is first: it is the only row here that offers
+          something rather than changing something. */}
+      <Card style={styles.group}>
+        <Row
+          label={t.settings.premium}
+          chevron
+          onPress={() => onView('premium')}
+          testID="open-premium"
+        />
+      </Card>
+
       <Card style={styles.group}>
         <Row
           label={t.blocked.open}

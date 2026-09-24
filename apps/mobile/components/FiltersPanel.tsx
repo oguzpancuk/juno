@@ -1,8 +1,10 @@
 import { BANDS, bandName, type Band } from '@juno/astro';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PremiumPanel } from '@/components/PremiumPanel';
 import { Track, type TrackValues } from '@/components/Track';
 import { Chip, LinkText } from '@/components/ui';
+import { SORT_ORDERS, type SortBy } from '@/lib/premium-rules';
 import { fetchOwnProfile, ELEMENTS, type SunElement } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -38,6 +40,16 @@ export function FiltersPanel() {
   const [ageMax, setAgeMax] = useState(AGE_CEILING);
   const [band, setBand] = useState<Band>('quiet');
   const [elements, setElements] = useState<readonly SunElement[] | null>(null);
+  // The deck's order, and whether this member may choose it. Distance is
+  // what a free deck comes in; compatibility is the membership's.
+  const [sortBy, setSort] = useState<SortBy>('distance');
+  const [premium, setPremium] = useState(false);
+  // The membership opens inside this sheet, under the toggle that was
+  // refused, rather than as a second one over it: `Popup` is a native
+  // `Modal`, and presenting one over another that is still up is the iOS
+  // "already presenting" case. It is also how the membership is met on
+  // the "seni beğenenler" list, so the two read the same.
+  const [showPremium, setShowPremium] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What a drag in progress shows, above its track and on it. Null when no
   // finger is down; the saved state above is what the database was told.
@@ -74,6 +86,8 @@ export function FiltersPanel() {
         setAgeMax(Math.min(state.profile.age_max, AGE_CEILING));
         setBand(state.profile.min_band);
         setElements(state.profile.sun_elements);
+        setSort(state.profile.sort_by);
+        setPremium(state.profile.is_premium);
         setLoad('ready');
       });
     return () => {
@@ -206,7 +220,74 @@ export function FiltersPanel() {
 
   return (
     <View testID="filters-screen">
-      <View style={[styles.labelRow, styles.first]}>
+      {/* First in the sheet: the order the cards arrive in changes the
+          whole deck, where the rows below only narrow it. It also has to
+          be readable without a scroll, being the membership's shop
+          window. */}
+      <Text style={[styles.label, styles.first]}>{t.filters.sort}</Text>
+      {/* Two segments, the same control as the bands below. A free member
+          may press "Uyum": what it opens is the membership, not an error
+          — and it is the one place in the app where the order is
+          explained at all. */}
+      <View
+        style={[styles.segments, !ready && styles.off]}
+        accessibilityRole="radiogroup"
+      >
+        {SORT_ORDERS.map((option) => {
+          const on = ready && sortBy === option;
+          const locked = option === 'compatibility' && !premium;
+          return (
+            <Pressable
+              key={option}
+              testID={`sort-${option}`}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              disabled={!ready}
+              style={[styles.segment, on && styles.segmentOn]}
+              onPress={() => {
+                if (locked) {
+                  setShowPremium(true);
+                  return;
+                }
+                if (on) return;
+                const was = sortBy;
+                setSort(option);
+                void save({ sort_by: option }, () => setSort(was));
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={[styles.segmentText, on && styles.chipTextOn]}
+              >
+                {option === 'compatibility'
+                  ? `${t.filters.sortCompatibility}${locked ? ' ✦' : ''}`
+                  : t.filters.sortDistance}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={styles.hint}>
+        {premium ? t.filters.sortHintPremium : t.filters.sortHint}
+      </Text>
+      {showPremium ? (
+        <View style={styles.upsell} testID="filters-premium">
+          <Text style={styles.hint}>{t.premium.lockedSort}</Text>
+          <PremiumPanel
+            onBought={() => {
+              // The flag this panel read when the sheet opened is now
+              // wrong, and nothing remounts us: a sheet that stays open
+              // would keep "Uyum" locked for the rest of its life.
+              setPremium(true);
+              setShowPremium(false);
+            }}
+          />
+        </View>
+      ) : null}
+
+      <View style={styles.labelRow}>
         <Text style={styles.label}>{t.settings.radius}</Text>
         <Text style={styles.value} testID="radius-value">
           {ready && km !== null ? `${shownKm} km` : ''}
@@ -365,6 +446,9 @@ const styles = StyleSheet.create({
     marginTop: space.xl,
   },
   value: { ...type.heading, color: color.text },
+  // The membership, when the locked order opened it: its own block under
+  // the toggle, with the reason above it.
+  upsell: { gap: space.md, marginTop: space.lg },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   elements: { flexDirection: 'row', gap: space.sm },
   // Equal parts of the row, so the four fill it end to end.
