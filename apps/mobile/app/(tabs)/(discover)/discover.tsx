@@ -629,9 +629,12 @@ export default function Discover() {
               ]}
               // What it was actually given, which on a phone is less than
               // it asked for; the profile draws its photograph at this.
-              onLayout={(event) =>
-                reportDeckPhoto(height, event.nativeEvent.layout.height)
-              }
+              // Not while the footer carries an error line, which takes its
+              // height out of the photograph until the next swipe.
+              onLayout={(event) => {
+                if (error === null)
+                  reportDeckPhoto(height, event.nativeEvent.layout.height);
+              }}
             >
               {/* The photo's own button fills it, rather than containing
                 everything drawn on it. A Pressable is one accessibility

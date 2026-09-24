@@ -18,7 +18,16 @@
  * Kept per window height: a number measured on one window is no answer
  * for another. Until the deck has drawn a card at this height, the
  * profile falls back to the fraction; the deck is the first tab, so in
- * practice it has.
+ * practice it has. A profile opened during the deck's very first load
+ * (or while it shows an error or an empty deck) draws the fraction and
+ * then moves once, when the first card lays out: once per launch at most,
+ * and the price of following what was drawn rather than guessing it.
+ *
+ * Only an ordinary card reports. The deck's footer can carry a line of
+ * error text until the next swipe, and at 844 nothing is spare, so that
+ * line comes out of the photograph; the deck does not report while it is
+ * there, or a failed like would shorten the profile's photograph too
+ * (review round 12).
  *
  * Plain module state rather than a context: the two screens are siblings
  * under the tab navigator and share nothing else, and this has no React

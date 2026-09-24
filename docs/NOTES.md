@@ -8211,3 +8211,17 @@ The web export at 390x844 cannot show a mismatch that only a phone's tab
 bar causes: the browser reports no bottom inset. A layout claim about
 the two photographs needs a run at a height where the deck gives way, or
 the owner's device.
+
+Review round 12 caught what that change did to two sentences above: once
+the profile follows the deck, a larger text size or a short phone no
+longer leaves the deck "shorter than the profile". The two stay equal
+once the deck has drawn a card, and the owner's device check 7 now says
+so. The same review's optional note is taken too: the deck does not
+report its photograph while the footer carries an error line (which
+takes ~20 points from the photograph until the next swipe), and
+`lib/deck-photo.ts` says a profile opened during the deck's first load
+moves once when the first card lays out.
+Driven on the web export with the stub answering every like with a 500:
+before the guard, the error line took the deck's photograph from 519 to
+503 and the profile followed it to 503; with the guard the profile stays
+at 519, the ordinary card's height.

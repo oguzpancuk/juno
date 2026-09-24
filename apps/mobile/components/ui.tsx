@@ -93,10 +93,10 @@ export const SCREEN_TOP_GUTTER = 20;
  * bio's box three lines tall on every card instead (`bioSlotHeight` in
  * `lib/deck-layout.ts`), so every card is that fullest card. On a taller
  * phone the spare goes around the buttons; on one too short for the card,
- * the deck's photograph is the one thing that gives way — and so it does
- * at a larger text size, where the words below it grow and the profile's
- * photograph (which scrolls) does not. Then every card still matches
- * every other card, and all of them are shorter than the profile.
+ * and at a larger text size where the words below it grow, the deck's
+ * photograph is the one thing that gives way. The profile follows it
+ * there too, since it draws what the deck was given, so the two stay
+ * equal once the deck has drawn a card.
  *
  * The two popup sheets are not in this: they are 88% of the screen tall
  * and keep the picture's own 3:4.
