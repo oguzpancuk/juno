@@ -401,26 +401,47 @@ export function goBack(fallback: Href): void {
  * `glyph` is drawn and `accessibilityLabel` is spoken, because "‹" is not
  * a sentence. The box is 44pt tall and about 20 wide, and the slop carries
  * the narrow axis over the minimum without widening the header row.
+ *
+ * A screen passes `fallback` and the tap leaves the route; a sheet passes
+ * `onPress` and the tap closes it — the same control at the top left of
+ * both (owner, 2026-09-24: "kapat butonları … sol üstte geriye dönüş
+ * olsun, mesajlardaki geri butonu gibi").
+ *
+ * `onPhoto` draws it on a round chip in the deck's corner chips' look, for
+ * a sheet whose photo runs to the top: bare, the muted glyph is lost on a
+ * bright picture. The chip is the pressable itself, so the whole round
+ * answers.
+ *
+ * react-native-web ignores `hitSlop`, so on the web the bare chevron's box
+ * grows by the slop in padding and gives it back in negative margin: the
+ * same target as on a phone, with nothing around it moved. The chip needs
+ * neither: it is the 44pt target on both.
  */
+const CHEVRON_SLOP = { top: 0, bottom: 0, left: space.lg, right: space.md };
+
 export function BackChevron({
   glyph,
   accessibilityLabel,
-  fallback,
   testID,
+  onPhoto = false,
+  ...way
 }: {
   glyph: string;
   accessibilityLabel: string;
-  fallback: Href;
   testID?: string;
-}) {
+  onPhoto?: boolean;
+} & ({ fallback: Href } | { onPress: () => void })) {
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      hitSlop={{ top: 0, bottom: 0, left: space.lg, right: space.md }}
-      onPress={() => goBack(fallback)}
-      style={({ pressed }) => [s.chevronHit, pressed && s.buttonDim]}
+      {...(onPhoto ? {} : { hitSlop: CHEVRON_SLOP })}
+      onPress={'onPress' in way ? way.onPress : () => goBack(way.fallback)}
+      style={({ pressed }) => [
+        onPhoto ? s.chevronChip : s.chevronHit,
+        pressed && s.buttonDim,
+      ]}
     >
       <Text style={s.chevron}>{glyph}</Text>
     </Pressable>
@@ -1025,6 +1046,30 @@ const s = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     paddingRight: space.sm,
+    ...(Platform.OS === 'web'
+      ? {
+          paddingLeft: CHEVRON_SLOP.left,
+          marginLeft: -CHEVRON_SLOP.left,
+          paddingRight: space.sm + CHEVRON_SLOP.right,
+          marginRight: -CHEVRON_SLOP.right,
+        }
+      : null),
+  },
+  // The deck's corner chips' look (discover's `filtersButton`, the
+  // profile's `iconChip`) at 44 rather than their 36: those two carry a
+  // `hitSlop`, which the web ignores, and this one is a sheet's only way
+  // out, so it has to be the 44pt minimum by itself. The left padding
+  // balances the glyph's own right-hand bearing, so it sits in the middle.
+  chevronChip: {
+    width: 44,
+    height: 44,
+    paddingLeft: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Larger than the label it replaces: alone on the row it has to read as
   // a control rather than as punctuation.

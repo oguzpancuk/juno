@@ -8243,3 +8243,54 @@ as its own text, as a real bio is. The placeholder was not folded into
 the photograph's label: it would then be read twice, and the words are
 already about the person ("Hakkında yazılmamış"), not in their voice, so
 nobody hears them as a bio.
+
+## 2026-09-24 — every sheet closes from a chevron at its top left
+
+The owner's ask, in his words: "bütün sayfalardaki kapat butonları en
+alttaki full butondan sol üstte geriye dönüş olsun. mesajlardaki geri
+butonu gibi". Every page that ended in a full-width "Kapat" was a `Popup`
+— the compatibility detail, the person sheet on the deck and in the chat,
+the filters, the settings with its blocked list and privacy text, the
+full chart, the interest picker, the report reasons and the privacy
+notice on the door — so the change is in `Popup` once: the chat header's
+`BackChevron` beside the title, where the button used to sit under the
+content. `BackChevron` takes `onPress` as well as `fallback` for it.
+
+Three things decided on the way, none of them asked:
+
+- **The person sheet** has no row above its photo, so the chevron sits
+  over the photo on a round chip like the deck's corner ones. Bare, the
+  muted glyph disappeared on a bright photograph (the first after-shot).
+- **Settings' two inner pages** had their own "‹ Ayarlar" link under the
+  title. Two back controls one above the other read as a mistake, so the
+  sheet's chevron goes back to the list there (spoken "Ayarlara dön") and
+  the link is gone; on the list it closes, spoken "Kapat".
+- **The spoken name stays "Kapat"** everywhere else, so VoiceOver and the
+  web say what the "‹" does. Checked on the web export: each is a
+  `<button role="button" aria-label="Kapat">`, and each tap closes its
+  sheet.
+
+Screenshots in `screenshots/sheets-back-*.png`, before on the left and
+after on the right, from the web export at 390x844 against a stand-in
+backend — a look at the UI, not a verification.
+
+### Battery gaps
+
+**react-native-web ignores `hitSlop`.** The first version of the chevron
+answered only on its 18px glyph on the web: its reach was all `hitSlop`,
+which the web drops, so a target that leans on it is only as big as its
+box there. The battery passed it; evaluator-qa found it on the photo
+chip and review round 1 on every other sheet. `chevronHit` now turns the
+slop into padding and gives it back as negative margin on the web
+(`CHEVRON_SLOP`, one constant for both platforms). The other `hitSlop`
+users are not converted: `BackLink`, the deck's corner chips, the
+profile's settings chip and the chat's reply-cancel. Nothing in the
+battery measures a tap target, so the next one will pass it too.
+
+### Upstream candidates
+
+- A shared helper that turns a `hitSlop` into web padding and margin, for
+  the four controls above.
+- The stand-in backend was rebuilt from scratch a third time for this
+  thread. It belongs in `apps/mobile/scripts/` beside `web-drive.mjs`,
+  already named as a candidate above.

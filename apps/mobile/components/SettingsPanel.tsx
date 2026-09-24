@@ -49,8 +49,10 @@ function signOutAndLeave(): void {
  * the deck itself.
  *
  * Blocked people and the privacy text open inside the same sheet rather
- * than as pages (owner, same day), with a way back to the list. The view
- * is the host's, because the title it names is the sheet's.
+ * than as pages (owner, same day), with a way back to the list — the
+ * sheet's top-left chevron, which the host points at the list. The view
+ * is the host's, because the title and the chevron it names are the
+ * sheet's.
  *
  * Signing out and deleting the account do leave. What they need done —
  * the sign-out itself as well as the navigation — is handed to the host
@@ -118,19 +120,11 @@ export function SettingsPanel({
     });
   };
 
+  // The way back to the list is the sheet's own chevron (the host passes
+  // `onBack`), not a link of its own under the title.
   if (view !== 'menu') {
     return (
       <View style={styles.panel}>
-        <Pressable
-          testID="settings-back"
-          accessibilityRole="button"
-          accessibilityLabel={t.settings.back}
-          hitSlop={{ top: 10, bottom: 10, left: 16, right: 24 }}
-          onPress={() => onView('menu')}
-          style={({ pressed }) => [styles.backHit, pressed && styles.dim]}
-        >
-          <Text style={styles.back}>{t.settings.back}</Text>
-        </Pressable>
         {view === 'blocked' ? (
           <BlockedList />
         ) : view === 'premium' ? (
@@ -279,9 +273,6 @@ function Row({
 const styles = StyleSheet.create({
   // The sheet supplies the gutter and the title; this is the list.
   panel: { gap: 12 },
-  // The same control as the pages' `BackLink`, minus the navigation.
-  backHit: { alignSelf: 'flex-start', paddingVertical: space.sm },
-  back: { ...type.body, color: color.textMuted },
   dim: { opacity: 0.6 },
   // A group is a card with its padding on the rows, so a row's touch
   // target runs edge to edge inside it.

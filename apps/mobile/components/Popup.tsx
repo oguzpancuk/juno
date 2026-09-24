@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
-  GradientButton,
+  BackChevron,
   SCREEN_PADDING,
   TopGapContextProvider,
 } from '@/components/ui';
@@ -22,23 +22,34 @@ import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * The one popup in the product (owner, 2026-09-11): the screen behind it
- * dims, a sheet rises from the bottom, and there is exactly one button,
- * which closes it. Anything else the sheet needs to do it does inside its
- * own content; a second button would turn it into a dialog, and the
- * owner asked for a popup.
+ * dims, a sheet rises from the bottom, and there is exactly one control
+ * that leaves it. Anything else the sheet needs to do it does inside its
+ * own content; a second button would turn it into a dialog, and the owner
+ * asked for a popup.
+ *
+ * That way out is the chat header's back chevron at the sheet's top left,
+ * beside the title, not a full-width "Kapat" under the content (owner,
+ * 2026-09-24: "kapat butonları en alttaki full butondan sol üstte geriye
+ * dönüş olsun, mesajlardaki geri butonu gibi"). It keeps "Kapat" as its
+ * spoken name, so VoiceOver and the web still announce what it does. It
+ * closes the sheet, unless the host passes `onBack`: a sheet with pages of
+ * its own (settings) points it, and the hardware back, at its first page —
+ * so from an inner page the one-step close is the backdrop, which a screen
+ * reader or keyboard cannot reach; they go back, then close.
  *
  * A native `Modal`, not an in-tree overlay: it sits above the tab bar as
  * well, which is what a dimmed background means on iOS, and react-native-
  * web ships `Modal` (unlike `Alert`, which it renders as a no-op —
- * docs/NOTES.md). The backdrop and the hardware back both close it too,
- * because a sheet that can only be dismissed by its button traps anyone
- * whose thumb cannot reach it.
+ * docs/NOTES.md). The backdrop always closes it, and the hardware back
+ * does what the chevron does, because a sheet that can only be left by
+ * its button traps anyone whose thumb cannot reach it.
  */
 export function Popup({
   visible,
   onClose,
   title,
-  closeLabel,
+  onBack,
+  backLabel,
   bleed = false,
   onDismissed,
   contentKey,
@@ -61,8 +72,15 @@ export function Popup({
    * state survives the swap.
    */
   contentKey?: string;
-  /** Defaults to "Kapat". */
-  closeLabel?: string;
+  /**
+   * What the top-left chevron (and the hardware back) does, for a sheet
+   * with pages of its own — settings' blocked list and privacy text go
+   * back to the settings list. Defaults to `onClose`; the backdrop always
+   * closes.
+   */
+  onBack?: () => void;
+  /** The chevron's spoken name. Defaults to "Kapat". */
+  backLabel?: string;
   children: ReactNode;
   testID?: string;
 } & (
@@ -73,6 +91,15 @@ export function Popup({
 )) {
   const insets = useSafeAreaInsets();
   const [locked, setLocked] = useState(false);
+  const back = (
+    <BackChevron
+      glyph={t.common.backGlyph}
+      accessibilityLabel={backLabel ?? t.common.close}
+      onPress={onBack ?? onClose}
+      onPhoto={bleed}
+      {...(testID === undefined ? {} : { testID: `${testID}-close` })}
+    />
+  );
   // Scrolled back, not remounted by a key: a remount would take the
   // children's state with it — a delete in flight in the settings sheet
   // among it, which would unlock its button (review, 2026-09-15).
@@ -99,12 +126,13 @@ export function Popup({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={onBack ?? onClose}
       onDismiss={() => dismissed.current?.()}
     >
       <View style={styles.layer} testID={testID}>
-        {/* A tap target for sighted users only: VoiceOver gets the one
-            Kapat button below, not a second full-screen one. */}
+        {/* A tap target for sighted users only: VoiceOver gets the
+            chevron at the sheet's top left, not a second full-screen
+            button. */}
         <Pressable
           style={styles.backdrop}
           onPress={onClose}
@@ -137,9 +165,26 @@ export function Popup({
             pointerEvents="none"
           />
           <CosmicGround planet={false} horizon={false} />
-          {title === undefined ? null : (
-            <Text style={styles.title}>{title}</Text>
+          {/* The chat header's row: the way out, then what this is. A
+              bleed sheet has no row — its photo runs to the top — so the
+              chevron is drawn over the photo instead. It comes before the
+              scroll view either way, so the web's tab order and screen
+              reader reach the way out first (native: see `overPhoto`);
+              `zIndex` keeps the one over the photo painted above what
+              follows it. */}
+          {bleed ? null : (
+            <View style={styles.header}>
+              {back}
+              {title === undefined ? null : (
+                // Not a target, and the chevron's reach runs under it:
+                // taps there fall through to the chevron.
+                <Text style={styles.title} pointerEvents="none">
+                  {title}
+                </Text>
+              )}
+            </View>
           )}
+          {bleed ? <View style={styles.overPhoto}>{back}</View> : null}
           {/* The gutter belongs to the scroll view's content, not to the
               sheet: on the sheet it clips, and a child that cancels it to
               run edge to edge (ProfileView's carousel) would lose that
@@ -167,13 +212,6 @@ export function Popup({
               </ScrollLock.Provider>
             </TopGapContextProvider>
           </ScrollView>
-          <View style={styles.action}>
-            <GradientButton
-              label={closeLabel ?? t.common.close}
-              onPress={onClose}
-              {...(testID === undefined ? {} : { testID: `${testID}-close` })}
-            />
-          </View>
         </View>
       </View>
     </Modal>
@@ -198,7 +236,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
     borderWidth: 1,
     borderColor: glass.edge,
-    paddingTop: space.xl,
+    paddingTop: space.sm,
     overflow: 'hidden',
   },
   // The gap is the sheet's, above the scroll view, so only the sheet can
@@ -207,19 +245,36 @@ const styles = StyleSheet.create({
   // sheet's border box, where `overflow: hidden` rounds it into the
   // corners (owner, 2026-09-14: the photo must cover the top of the popup).
   sheetBleed: { paddingTop: 0 },
-  title: {
-    ...type.title,
-    color: color.text,
-    marginBottom: space.md,
+  // The chat header's measurements: the gutter, then the chevron's 44pt
+  // box and the title beside it, and a gap before the content.
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SCREEN_PADDING,
+    marginBottom: space.sm,
+  },
+  // `flexShrink` so a long title yields to the chevron, as in the chat.
+  title: { ...type.title, color: color.text, flexShrink: 1 },
+  // Over the photo, the chip's edge on the content's gutter, the way the
+  // deck's corner chips sit on theirs.
+  overPhoto: {
+    position: 'absolute',
+    top: space.md,
+    left: SCREEN_PADDING,
+    // Needed everywhere: it comes before the scroll view, which would
+    // otherwise paint over it. On the web the DOM order still puts it first
+    // for the keyboard and the screen reader. Fabric sorts siblings by
+    // zIndex before mounting, so on Android TalkBack may reach it last;
+    // VoiceOver orders by position on the screen (a device check).
+    zIndex: 1,
+    elevation: 1,
   },
   // `flexGrow: 0` so a short sheet is short; `flexShrink: 1` so a long one
-  // scrolls inside the sheet instead of pushing the button off the screen.
+  // scrolls inside the sheet instead of running off the screen.
   body: { flexGrow: 0, flexShrink: 1 },
   bodyContent: {
     gap: space.md,
     paddingHorizontal: SCREEN_PADDING,
     paddingBottom: space.md,
   },
-  action: { paddingTop: space.md, paddingHorizontal: SCREEN_PADDING },
 });
