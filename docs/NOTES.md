@@ -6720,6 +6720,138 @@ branch by default, which the owner's "deploys run locally" rule forbids;
 whether that can be switched off was not verified. Revisit if the hosting
 changes for another reason, or if the workflow starts costing upkeep.
 
+## 2026-09-21 — four optional profile fields, and how they were photographed
+
+Owner ask, off the ROADMAP: height, interests (multi-select), university
+and occupation, UI left to the thread. Height is a drag over 120–230 cm
+with one chip that clears it, like the radius and the age in the discovery
+sheet; the interest list is 36 fixed Turkish tags in
+`apps/mobile/lib/profile-details.ts` with a cap of eight, not free text;
+university and occupation are one line each, 60 characters. All four are
+optional, all four ride in the same `Kaydet` update as the photo order and
+the bio, and the deck's card carries the height and the occupation on the
+line that already held the distance, so the card does not grow.
+
+Uniqueness inside `interests` is checked by `private.is_set(text[])`,
+because a CHECK constraint may not hold a subquery and `unnest` needs one.
+A CHECK runs with the writer's privileges, so the function is granted to
+`authenticated` and `service_role`, the way the chart-shape helpers are
+(`20260910000005_chart_shape_numeric.sql`).
+
+### Battery gaps
+
+`bash .claude/hooks/verify.sh` was green here with
+`tests (@juno/supabase)` NOT RUN, as a cloud thread always is — which
+means the migration itself, the new CHECKs, the grants and the two
+rebuilt views were not executed anywhere before the pull request. The
+same goes for `database.types.ts`, which was hand-edited to what
+`supabase gen types` should print: `types-drift.test.ts` is the check,
+and it only runs where the stack does. CI's `verify` is the first run of
+all of it.
+
+### Upstream candidates
+
+A screenshot of a signed-in screen needs a local Supabase stack, which a
+cloud thread cannot have. The six `screenshots/profile-fields-*.png` were
+driven against a stand-in: the web export re-pointed at a small Node
+server that serves the bundle and answers the handful of REST, auth and
+photo endpoints these screens call with fixed rows. It is real app code
+at a real 390x844 viewport, and it is NOT the app talking to Postgres —
+nothing behind those rows was exercised, RLS least of all. The harness
+was not kept; if this turns out to be the way threads look at screens,
+`scripts/web-drive.mjs` wants a documented stand-in mode rather than a
+throwaway one.
+
+## 2026-09-21 — what the profile fields' review caught, and what it says about the battery
+
+The review on pull request #9 found seven things in a change the full
+battery had passed twice. Two of them would have shipped as bugs, and
+both are the same kind: a gesture the tests cannot make.
+
+The height drag commits on `onCommit` and drops on `onCancel`, and
+`Track.finish()` reports a cancel when the gesture ends on the stop it
+began from. An earlier fix in the same pull request made the cancel throw
+the value away, on the reading that a page scroll starting on the slider
+arrives there. It does not — `finish()` opens with `if (!d) return;`, so a
+touch the track never read as a drag never reaches either callback. The
+result was that **170 cm, the stop the thumb opens on, was the one height
+the control could not record**: tapping it produced a cancel, and the
+cancel discarded it. The fix is to commit whatever stop the gesture
+produced.
+
+The second: this is the first `Track` outside a `Popup`. `Track` calls
+`useSheetScrollLock()` to stop the sheet's native scroll view stealing a
+drag with a little vertical drift, and the context's default outside a
+sheet is a no-op. `Screen` provides it now, which meant moving the context
+out of `Popup.tsx` into `apps/mobile/lib/scroll-lock.ts` — `ui.tsx`
+importing the popup would be a cycle.
+
+### Battery gaps
+
+Neither of the two is reachable by anything in the battery, and neither
+is reachable by the stand-in screenshot harness either: a native scroll
+view stealing a JS gesture has no web equivalent, and a tap that lands on
+the stop already under the thumb photographs identically whether it saved
+or not. What found them was a reader who followed the gesture through
+`TrackGesture` by hand. A component test over `Track`'s callbacks —
+"a gesture that ends where it started still answers the field" — is the
+thing that would have caught the first; CLAUDE.md keeps component tests
+out of the battery "until a feature needs them", and a slider that
+answers a field may be the feature that does.
+
+### Upstream candidates
+
+The lesson generalises past this repository: a control whose whole
+contract is a gesture gets reviewed by reading the gesture, not by
+looking at a screenshot of it. Worth saying in `CLAUDE.md`'s UI
+verification bullet, which currently offers only a screenshot clause or a
+manual check for anything the app draws.
+
+## 2026-09-21 — `LEGAL_VERSION` does not re-consent anyone, and the tap that answered nothing
+
+Two corrections to what pull request #9 claimed, both found by its second
+review round.
+
+**The consent version is inert for existing members.** `LEGAL_VERSION` has
+one consumer in the app: the `insert` in `createProfile`
+(`apps/mobile/lib/profile.ts`). Nothing reads `consent_version` back and
+nothing compares it to `LEGAL_VERSION`, so moving it changes what new
+accounts record and nothing else — every existing member keeps the version
+they signed up under, is never asked again, and sees the corrected notice
+only if they open the legal screen. `legal.ts` says this in its own comment
+on the constant ("nothing re-asks consent yet"); the pull request body
+contradicted it and told the owner the bump would put a consent step in
+front of everyone. It was corrected in the body before merge.
+
+The bump itself stays: a profile created from now on should record the text
+it actually agreed to. The gap it does not close — existing consents
+pointing at a notice that did not describe the four new fields — is the
+ROADMAP's "KVKK consent and privacy policy" item, which is still unstarted.
+**A re-consent step does not exist.** Whoever takes that item builds it: a
+comparison of the stored `consent_version` against `LEGAL_VERSION` on
+launch, and a screen that records the new one. Until then, changing the
+notice text reaches everyone, and changing the version reaches nobody.
+
+**The tap case was not fixed by the fix that claimed it.** Committing the
+drag on cancel (`if (drag !== null)`) closes only the drag that wanders and
+comes back. A tap on the stop the thumb already occupies reports no
+`onChange` at all — `TrackGesture.place` returns early when the stop has
+not moved — so `drag` is null and the guard does nothing. With the height
+unanswered the thumb sits on 170, which made 170 the one height a tap could
+not record, twice over. The cancel now takes `shown`, the value the track
+is displaying, which is the drag's last stop when there was one.
+
+### Battery gaps
+
+The same gap as the entry before this one, one round later and sharper: the
+first fix was wrong, its replacement was wrong in a second way, and both
+passed the full battery and were visible in no screenshot. Three rounds of
+reading a gesture by hand is what a component test over `Track`'s callbacks
+would have replaced. The mobile workspace has no renderer — `vitest` and
+pure modules only — so adding one is a dependency decision for the owner,
+not a thread's. Named here so the KVKK item or the next slider does not
+rediscover it.
+
 ## 2026-09-23 — port of maya e87bb6f: no preview URL; the Worker versions go
 
 Owner decision two days after they were built, for simplicity: projects
@@ -6736,3 +6868,414 @@ being required when this merges. Owner-side, after the merge: delete the
 `CLOUDFLARE_*` secrets and the `PREVIEW_SUPABASE_*` variables, revoke the
 Cloudflare token. The exception entry above is void with the rule it
 excepted.
+
+## 2026-09-23 — the interest picker moves into a popup; placeholders go
+
+Both from the owner's device test of PR #9. The edit page drew all
+thirty-six interest chips inline, which was most of its height; he asked
+for nothing when nothing is picked, a popup with all of them behind a tap,
+and the search inside that popup. The box stays when empty — drawn like
+the two fields above it — because it is the only way to open the sheet,
+and the tags inside it are the read-only ones the profile draws, not
+chips: the whole box is one target, and a chip inside would promise a tap
+of its own.
+
+The search matches the Turkish word, not the key: `cats` has to be found
+by "kedi". `searchInterests` in `lib/profile-details.ts` takes the word as
+a function, so the pure module stays out of `strings.ts`, and folds with
+`@juno/geo`'s `searchKey` — the city search's own fold — because Turkish
+needs "I"/"İ"/"ı"/"i" to agree in both directions and `toLowerCase` maps
+"I" to "i", never to "ı". Substring, not prefix, so "müzik" also reaches
+"Canlı müzik".
+
+The occupation and university placeholders are gone ("kendimiz çizmeyelim,
+placeholder textleri kaldıralım"). Each field carries an
+`accessibilityLabel` in their place: the `<Text>` label above a field is a
+sibling, not a programmatic label, so removing the placeholder without one
+would leave a screen reader an unnamed box. Onboarding's date boxes keep
+theirs — there the placeholder ("GG", "AA", "YYYY") _is_ the label, and
+removing it leaves empty squares. Removing the placeholder also steps
+around facebook/react-native#42589, the iOS letter-spacing bug he hit,
+without the wrapper View that drawing our own would have needed.
+
+### Upstream candidates
+
+`apps/mobile/scripts/web-drive.mjs` hard-codes macOS's Chrome path and
+runs without `--no-sandbox`, so every cloud thread copies it to scratch
+and patches those two lines before it can shoot anything; each copy also
+re-adds a `scroll` verb, which has to scroll the app's own scroller and
+never `window` (scrolling the window offsets the whole app and
+photographs a half-blank screen). Three lines — `process.env.CHROME ??`,
+the flag, and the verb — would make the repo's own script work in both
+places. Left out of this PR because it is not the feature.
+
+The stand-in backend a cloud thread needs for a signed-in screenshot is
+rebuilt from scratch every time, from the recipe in memory. It is about a
+hundred and fifty lines and it is thrown away with the container. If the
+owner wants cloud screenshots to stay cheap, it belongs in
+`apps/mobile/scripts/` beside the driver, clearly marked as what it is: a
+look at the UI, with no RLS, no constraints and no triggers behind it.
+
+## 2026-09-23 — one line for the occupation and the school; a short school name on the deck
+
+Owner's second device round on the profile fields. "Meslek ve okul asla
+alt satıra taşmasın. Gerekirse yavaşça sağa sola oynayan text olabilir",
+and "keşfette okul ismini kısaltalım — üniversitesi, üniversite,
+university, college gibi terimler yer almasın, sadece ismi yer alsın."
+
+**The travelling line.** `components/Marquee.tsx`. The part worth
+remembering is the measurement: a `<Text numberOfLines={1}>` laid out
+anywhere normal is measured against the box it sits in and reports the
+box's width however long the string is, so there is no way to ask whether
+it overflowed — `flexShrink: 0` does not help, because the text measure
+has already clamped to the available width. A horizontal `ScrollView`
+lays its content out with no width to fit into, so
+`onContentSizeChange` is the width the line wants and `onLayout` is the
+width it has. It is a measuring device, not a scroller:
+`scrollEnabled` is false, so the profile page's own scroll view keeps
+every touch, and the travel is an `Animated` `translateX`.
+
+With Reduce Motion on there is no marquee: a plain one-line `<Text>` that
+ellipsizes. It still never wraps, which is what was asked for, and it
+does not move a page for someone who asked for less movement.
+
+**The short school name.** `shortSchool` in `lib/profile-details.ts`,
+applied on the deck's card line only. The profile page keeps the name in
+full — there it has a card to itself rather than a share of one clipping
+line — and nothing about what is stored changes. Whole words, folded with
+the same `searchKey`, so "UNIVERSITESI" and "Üniversitesi" both go and
+"Üsküdar" is not mistaken for a term inside it. A name that is nothing
+but its kind comes back whole, and "University of Cambridge" loses the
+stranded "of". The term list is six entries and is meant to grow — the
+owner's "gibi" says as much.
+
+### Battery gaps
+
+Neither of these is reachable from the battery. The marquee's whole
+behaviour is layout and motion over time, and the repo still has no
+renderer to write a component test with — the same gap the height
+control left, recorded under "Battery gaps" on 2026-09-21. What is covered is the pure half:
+`shortSchool` has six cases in `profile-details.test.ts`, written red.
+The moving half was checked by driving the web target and photographing
+it at rest and mid-travel, which is a look, not a verification.
+
+## 2026-09-23 — the height column takes its own width; the school kind becomes an initial
+
+Owner's third device round on the profile fields, two points: "profil
+alanlarında 3 eşit parçaya bölmeye gerek yok — boy hep belli bir alan
+kaplayacak, kalan 2 alanı da kalan alana eşit bölüştürelim, böylece kayma
+efektine de gerek kalmaz", and "keşfette üniversitesi, uni, college,
+university gibi alanları atmak yerine kısaltma yazalım: yani Boğaziçi
+Üniversitesi değil Boğaziçi Ü.".
+
+**The columns.** Height is content-sized (`flexGrow: 0, flexShrink: 0`)
+and the other two share what is left (`flex: 1, flexBasis: 0,
+minWidth: 0`). Measured rather than given a width in points: "165 cm" is
+as wide as a height will ever be, and a hard width would be wrong at the
+first text size the owner does not use — which is the class of bug review
+round 4 found on the `Üniversite` label. On a 390 pt screen it gives the
+two text columns about 119 pt each where three equal ones gave 95.
+
+**The marquee is gone**, `components/Marquee.tsx` with it. It was the
+answer to a value that did not fit a third of the card; with the height
+column out of the split most values fit, and the owner's own reading is
+that the travel is no longer needed. The never-wrap rule from his
+previous round still holds: `numberOfLines={1}`, so a value that still
+does not fit ends in an ellipsis rather than going to a second line. The
+measurement trick the marquee was built on is written up in the entry
+above, since it is the part worth keeping.
+
+**`shortSchool` abbreviates rather than drops.** The map is
+üniversitesi/üniversite → "Ü.", university/uni → "U.", koleji/kolej →
+"K.", college → "C.", keyed on the same folded `searchKey` as before, so
+casing and both Turkish i's still match and "Üsküdar" is still not
+mistaken for a term inside it. Each term is shortened where it stands
+rather than moved or dropped, so "University of Cambridge" reads "U. of
+Cambridge" and the stranded-connector rule the previous round needed is
+gone with the dropping. A name that is nothing but its kind
+("Üniversite") still comes back whole: a bare "Ü." would lose the only
+thing it said. Deck-only and display-only, as before.
+
+This also answers a review note from the previous round, that
+"University College London" shortened to "London": it now reads
+"U. C. London".
+
+### Battery gaps
+
+Same gap as the entry above, one item smaller: the column widths are
+layout, and the repo still has no renderer to write a component test
+with. `shortSchool` is the pure half and has seven cases in
+`profile-details.test.ts`, seen red before the change — five of the six
+blocks went red on the rewrite, and the sixth is the one the change does
+not touch. The widths were checked by driving the web target and
+photographing it, which is a look, not a verification.
+
+## 2026-09-23 — the one abbreviation the fold cannot key
+
+Review round 7 on the entry above. `searchKey` drops the diaeresis along
+with the casing, so "Üni" and "Uni" both arrive as the key `uni` and a
+map can answer them only once — it answered "U.", which put the English
+initial next to a Turkish name, and "Üni" is what a member here is
+likelier to type. It is also the only such collision: every other pair
+(üniversitesi/university, koleji/college) differs by more than a
+diacritic.
+
+`kindMark` in `lib/profile-details.ts` now answers that one key off the
+word as it was typed — a leading "ü" or "Ü" gives "Ü.", anything else
+"U." — and the rest still come from the map. Three cases, seen red first.
+
+The general shape is worth remembering: a fold built for _searching_ is
+the wrong key for a lookup whose **answer depends on what the fold threw
+away**. Searching wants "Üni" and "Uni" to be the same word; writing the
+abbreviation needs them told apart.
+
+### Left for the owner
+
+The same round measured the profile card's Okul column at this head:
+120 pt on a 390 pt screen, and 8 of the 13 seeded school names end in an
+ellipsis there, against 2 of 20 occupations. The reason is the word the
+deck now abbreviates — "Üniversitesi" alone is about 90 pt of the 120.
+`shortSchool` on that column would fit every seeded name ("Mimar Sinan
+Ü." is the widest at 102 pt), but the owner scoped the abbreviation to
+"keşfette" and the full name on the profile was a decision taken when
+the deck's rule was to _drop_ the kind rather than shorten it. Put to
+him rather than changed here.
+
+## 2026-09-23 — the profile card shortens the school too
+
+Owner's answer to the question the entry above left him: "profilde de
+kısaltalım". `DetailsCard`'s Okul column draws
+`shortSchool(details.university)`, so both places a school name is read —
+the deck's line and the profile card — go through the same function.
+
+This closes the measurement round 7 made: 8 of the 13 seeded names
+ellipsized in that column at 120 pt, because "Üniversitesi" alone is
+about 90 pt of it. `Boğaziçi Üniversitesi` now reads `Boğaziçi Ü.` at
+73.7 pt and the widest seeded name, `Mimar Sinan Ü.`, at 101.5.
+
+Nothing about storage changes and the editor is untouched: the field
+holds what was typed and the row keeps it, which is the property that
+lets this stay a drawing decision rather than a data one. The earlier
+comments saying the shortening was deck-only are corrected in place
+rather than left to contradict the code.
+
+A long **occupation** can still clip — "Kıdemli ürün tasarımcısı" does
+not fit 120 pt — and that is unchanged and deliberate: there is no
+equivalent of "Üniversitesi" to take out of a job title.
+
+### Battery gaps
+
+Same as the two entries above. `shortSchool` is tested; which columns
+call it is wiring the battery cannot see, so it was checked by driving
+the web target and photographing both screens.
+
+## 2026-09-23 — the three facts move under the name, behind glyphs
+
+Fourth device round on the profile fields. The owner did not like the
+card of labelled columns — "profildeki boy okul ve meslek görüntüsünü
+beğenmedim. çok ayrık duruyorlar" — and then sent a Tinder screenshot
+with "şu şekilde ismin hemen altında olsun. taglerle değil sembollerle
+gösterelim".
+
+So the columns are gone. Height, occupation and school are now three
+stacked rows in the photo scrim, directly under the name and the
+distance line, each a small stroked glyph beside a muted line of text:
+a ruler, a briefcase, a mortarboard. `components/DetailIcon.tsx` draws
+them the way `TabIcon` and `SlidersIcon` already do — `react-native-svg`
+paths, no icon font and no PNG set, for three shapes of a dozen points
+each. The interests keep their own card; nothing else on the page moved.
+
+Two consequences worth writing down, because both reverse something
+decided earlier in this same pull request:
+
+- **An unanswered fact is simply absent now.** Round 1 asked for a dash
+  in its place, so the row read as a row whether or not it was answered.
+  With no columns to hold open there is nothing for a dash to stand in
+  for, and the reference he sent behaves the same way. `detailMissing`
+  and `detailMissingLabel` are out of `strings.ts` with the columns.
+- **The screen-reader text moved into the row.** The glyph says nothing
+  to VoiceOver and "Boğaziçi Ü." alone does not say it is a school, so
+  each row carries `accessibilityLabel` of the old column label plus the
+  value. The label never reaches the screen otherwise.
+
+The never-wrap rule from the second round still holds: one line per row,
+ellipsis past the end. A row has the whole card width now instead of a
+third of it, so only a very long occupation reaches that end —
+"Kıdemli ürün tasarımcısı" fits where it did not before.
+
+Moving the facts out of `DetailsCard` took half of that card's empty-state
+guard with it, and review caught it: the card's sentence names all four
+fields, so on the interests half alone it showed to an owner who had
+answered his height, occupation and school and told him they were empty,
+directly under the rows drawing them. The guard keeps both halves — no
+facts _and_ no tags — which is the behaviour that was there before. The
+general shape: when a component loses one of the things it drew, its
+empty state is about the thing that left as much as about what stayed.
+
+The screen-reader label keeps the **full** school name where the row
+draws the abbreviation. `shortSchool` exists because a line has a width;
+speech has none, and "Ü." is read out as a letter and a period.
+
+### Battery gaps
+
+Unchanged from the entries above: `shortSchool` is tested, and which
+screens draw it, and how the rows lay out, is wiring no test in this
+repo can see. Checked by driving the web target and photographing it.
+
+### Upstream candidates
+
+None this round.
+
+## 2026-09-23 — the deck's card draws the same rows as the profile
+
+Owner, after seeing the glyph rows on his own profile: "kesfette de
+alanlar profil goruntusundeki gibi olsun". So the deck card's one-line
+"11 km · 184 cm · Şef yardımcısı · Boğaziçi Ü." is now the distance on
+its own line with the same three glyph rows under it.
+
+The rows moved out of `ProfileView` into `components/FactRows.tsx` for
+it. Two surfaces that are supposed to be the same card cannot each keep
+their own copy of the block — that is what produced the one-liner and the
+columns drifting apart in the first place.
+
+The card's height is unchanged, which is the constraint that made it a
+one-liner in 2026-09-14 ("the card has to fit one screen with nothing to
+scroll into"): its scrim is painted over the photo rather than laid out
+above it, so extra lines climb the picture instead of pushing the chips
+and the buttons down. `FactRows` takes the deck's `maxFontSizeMultiplier`
+so Dynamic Type cannot climb past the name either.
+
+`cardLine` is `cardSpoken` now: its only caller left is the card button's
+`accessibilityLabel`, so it speaks the school's full name rather than the
+abbreviation, the same rule the profile rows follow.
+
+### Battery gaps
+
+Same as the entries above: which surface draws what is wiring, checked by
+driving the web target and photographing the deck.
+
+### Upstream candidates
+
+None this round.
+
+## 2026-09-23 — the city on your own page, and nobody else's
+
+Owner: "kisinin profilinde isim ve diger alanlar arasinda bosluk yerine
+bulundugu sehir yazsin", then, when asked which profiles he meant, "ben
+zaten sadece kendi profilinde sehir goziksun dedim, baskalarininkinde
+ayni yerde mesafe gozukecek". So the always-drawn caption line under the
+name carries the city on your own page and the distance on everyone
+else's, which is the one it already carried.
+
+**The app knew nobody's city, and still does.** `profiles` has
+`birth_city_id`, immutable and the wrong city for anyone who has moved,
+and a `location` point snapped to a ~1 km grid that never leaves the
+server — what another member gets is `round(st_distance(...)/1000)` and
+nothing else. That is the same decision as the grid snapping and the
+privacy notice's "kimse tam yerini görmez", defended in several places.
+A city visible to other members would have been a column, an append to
+both views, a `grant update` line, three Zod schemas and a KVKK notice
+change. His answer took all of that off the table: the city is worked
+out on the device from the device's own fix, drawn, and never stored or
+sent, so nothing about anybody else changed.
+
+`cityAt(latitude, longitude)` in `packages/geo` is the new piece, with
+`distanceKm` beside it. Two things in it are worth knowing before
+touching it:
+
+- **The most populous city in reach, not the nearest one.** The bundled
+  list holds districts as well as cities, and a district centre is the
+  closer point for someone standing in it: nearest answers "Eminönü" for
+  a point in Sultanahmet, where the İstanbul entry is 1.3 km further
+  away. That case is a test.
+- **A radius, so open country has no answer.** 30 km: wide enough to
+  cover a big city's spread, short enough that Adapazarı cannot answer
+  for İzmit at 39 km or İstanbul for Bursa at 92. Outside it the line is
+  empty, exactly as it looked before.
+
+**Both of those bullets were wrong the same day.** Review found it and
+the entry "what 30 km does not buy" below corrects them; the rule now is
+nearest unless a neighbour is five times its size.
+
+Haversine rather than subtracting the coordinates, because longitudes
+wrap; `distanceKm` is exported for the test that proves it.
+
+### Battery gaps
+
+`cityAt` is tested; the wiring is not, as ever. What no test here can
+reach either: the device fix itself. `useOwnCity` is a hook over
+`deviceLocation()`, and a refused or slow fix, which returns undefined
+after 5 s, leaves the line empty. The web screenshots grant the browser a
+geolocation override to show the filled line — that is the rig, not the
+app.
+
+### Upstream candidates
+
+None this round.
+
+## 2026-09-23 — what 30 km does not buy
+
+Review on #9 stood at real coordinates from the bundled list and the
+city rule above answered with the wrong city eight times: Gebze got
+"Sancaktepe" (an İstanbul district 22 km off), Tarsus got "Mersin",
+Mardin got "Kızıltepe", Burdur got "İsparta", Yalova got "Gebze" across
+the gulf. In every one of them the nearest record was the city itself.
+Sweeping the whole list the same way, 92 Turkish entries were answered
+by something 20 km or more away.
+
+**The radius was never the thing keeping cities apart, and the comment
+saying it was is what made this hard to see.** "30 km stops short of the
+next city along" is true of İstanbul and Bursa at 92 km; it is simply
+false of Türkiye at the scale where people actually live, where Mersin
+is 25 km from Tarsus and İsparta 24 km from Burdur. A comment that
+promises a class of bug is impossible stops the next reader looking for
+it.
+
+What separates the two cases is not distance but size. A district is
+smaller than its city by an order of magnitude — İstanbul is 283 times
+Eminönü, 30 times Üsküdar — while two cities that merely sit near each
+other are within a factor of two: Sancaktepe is 1.7 times Gebze, Mersin
+1.5 times Tarsus, İsparta 1.8 times Burdur. So `cityAt` now takes the
+record a point stands nearest to, unless one in reach is at least five
+times its population, and then the largest such. Five sits above every
+pair of that second kind and below every district that has to keep
+working. Both wrong answers the review named are tests now, red before
+the change: `expected 'Sancaktepe' to be 'Gebze'`.
+
+**Five is a choice, not a measurement, and the next round said so before
+this entry could pretend otherwise.** There is no empty space around it:
+26 Turkish records are answered at under ten times, the lowest at 5.3.
+Several of those are right — Akçaabat at 5.4 and Genç at 5.7 are
+districts of the city they get. Bulancak is what the number costs: it
+answers "Ordu", the next province's city 29 km away, while Giresun, its
+own province's city 13 km away, is 2.9 times it and cannot qualify.
+Nothing between 3 and 5 fixes that without losing the pairs above.
+
+**What the rule leaves, named as a class rather than as one case.** The
+list mixes cities with districts, so where a city's own record falls
+outside 30 km one of its districts can answer for a town that is not in
+it: Belek reads "Muratpaşa" (Antalya is 33 km off), Çatalca and Kavaklı
+read "Esenyurt", Torbalı "Karabağlar", Kazan "Batıkent", Büyükçekmece
+"Esenyurt" (İstanbul is 30.6 km, just past the edge). Six in all, and
+moving the radius trades them for the far pairs the radius exists to
+stop. Gemlik reading "Bursa" (43.6 times, 27.5 km) is the other
+leftover, and that one is right: it is a town on Bursa's own bay.
+
+**A second rule came out of the sweep, which the review did not ask
+for.** The ratio on its own hands a Hong Kong address to Shenzhen (7.8
+times, 27 km) and Johor Bahru to Singapore, and 33 entries crossed a
+border that way. A neighbour now has to be in the same country to
+outrank the nearest record. Chula Vista still answers "San Diego", which
+is the same country and right.
+
+### Battery gaps
+
+None new: the sweep that found this is not in the battery, because it
+would be a test over all 6594 rows asserting a judgement, not a fact.
+The eight named cases are tests instead.
+
+### Upstream candidates
+
+A comment that says what a constant guarantees should be read as a
+claim to check, not as documentation. This one survived nine review
+rounds, and the code it described was wrong for every dense country.

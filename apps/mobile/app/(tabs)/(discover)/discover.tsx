@@ -18,6 +18,7 @@ import {
   fetchCandidates,
   swipe,
   type Candidate,
+  type DiscoverRow,
   type DiscoverState,
   type SwipeResult,
 } from '@/lib/discover';
@@ -26,6 +27,7 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
 import { BandRing } from '@/components/BandRing';
 import { CosmicGround } from '@/components/CosmicGround';
+import { FactRows } from '@/components/FactRows';
 import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
 import { Popup } from '@/components/Popup';
 import { SlidersIcon } from '@/components/SlidersIcon';
@@ -51,6 +53,28 @@ const CLAIM_DISTANCE = 8;
 /** How far away someone is, as the card and the person sheet write it. */
 function distanceLine(km: number): string {
   return km === 0 ? t.discover.under1km : `${km} km`;
+}
+
+/**
+ * The card as VoiceOver hears it, since the name, the distance and the
+ * facts are all drawn on the photo and the button's own label would
+ * otherwise hide them (review, 2026-09-15).
+ *
+ * One string where the card now draws several lines: speech has no
+ * layout, and a reader wants where they are before who they are. The
+ * school is spoken in full — `shortSchool` buys width on a line, and
+ * "Ü." is heard as a letter and a period. The interests are on the
+ * profile sheet a tap away, which is the whole card in full.
+ */
+function cardSpoken(row: DiscoverRow): string {
+  return [
+    distanceLine(row.distance_km),
+    row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
+    row.occupation,
+    row.university,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' · ');
 }
 /** The filters chip, the same size as the profile's settings chip. */
 const CORNER_CHIP = 36;
@@ -410,7 +434,7 @@ export default function Discover() {
             accessibilityLabel={t.discover.openPerson(
               current.row.display_name,
               current.row.age,
-              distanceLine(current.row.distance_km),
+              cardSpoken(current.row),
             )}
             testID="open-person"
           >
@@ -433,10 +457,24 @@ export default function Discover() {
               </Text>
               <Text
                 style={styles.distance}
+                // One line whatever it carries: the card may not grow.
+                numberOfLines={1}
                 maxFontSizeMultiplier={MAX_DECK_SCALE}
+                testID="card-line"
               >
                 {distanceLine(current.row.distance_km)}
               </Text>
+              {/* The same rows as the profile sheet draws under a name
+                  (owner, 2026-09-23: "kesfette de alanlar profil
+                  goruntusundeki gibi olsun"), from the same component, so
+                  the card and the sheet a tap away cannot drift. The
+                  scrim is painted over the photo rather than laid out
+                  above it, so three lines here cost the card no height —
+                  they sit further up the picture. */}
+              <FactRows
+                details={current.row}
+                maxFontSizeMultiplier={MAX_DECK_SCALE}
+              />
             </LinearGradient>
             {/* The verdict as it forms, for sighted eyes only: the round
                 buttons below are the accessible way to the same thing. */}
@@ -474,19 +512,11 @@ export default function Discover() {
               three={current.row.big_three}
               maxFontSizeMultiplier={MAX_DECK_SCALE}
             />
-            {/* Their own words, two lines of them, between the chart and
-                the band (sheet frame 05). The full text is on the person
-                page a tap away. */}
-            {current.row.bio ? (
-              <Text
-                style={styles.bio}
-                numberOfLines={2}
-                maxFontSizeMultiplier={MAX_DECK_SCALE}
-                testID="card-bio"
-              >
-                {current.row.bio}
-              </Text>
-            ) : null}
+            {/* No bio here (owner, 2026-09-23). It used to sit between
+                the chart and the band; the card now says where they are
+                and the three short facts on one line, and their own
+                words are on the person page a tap away, in full rather
+                than in the two lines this had room for. */}
             {/* The reading opens from the thing it explains (owner,
                 2026-09-14). */}
             <Pressable
@@ -597,6 +627,7 @@ export default function Discover() {
             sources={sources}
             three={current.row.big_three}
             bio={current.row.bio}
+            details={current.row}
             reading={theirReading}
             chart={current.row.chart}
             fullChartLabel={t.person.fullChart}
@@ -828,7 +859,6 @@ const styles = StyleSheet.create({
   },
   name: { ...type.title, color: color.text },
   distance: { ...type.bodySmall, color: color.textMuted },
-  bio: { ...type.body, color: color.text },
   // A stamp on the photo's upper corner, on the side the card is heading
   // away from — where the eye is, with the finger on the other side.
   stamp: {

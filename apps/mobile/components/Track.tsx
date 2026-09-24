@@ -5,7 +5,7 @@ import {
   View,
   type PanResponderInstance,
 } from 'react-native';
-import { useSheetScrollLock } from '@/components/Popup';
+import { useSheetScrollLock } from '@/lib/scroll-lock';
 import {
   moveThumb,
   nearerThumb,

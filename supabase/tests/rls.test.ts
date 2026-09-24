@@ -41,6 +41,10 @@ const PublicProfile = {
 const Presentation = {
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  height_cm: z.number().int().nullable(),
+  interests: z.array(z.string()),
+  university: z.string().nullable(),
+  occupation: z.string().nullable(),
 };
 const DiscoverRows = z.array(
   z
@@ -288,6 +292,78 @@ describe('profiles', () => {
     expect(error).toBeNull();
     // ISTANBUL (28.9784, 41.0082) snaps to the 0.01° node (28.98, 41.01).
     expect(data).toBe('POINT(28.98 41.01)');
+  });
+
+  it('takes the four optional fields and gives them back', async () => {
+    const { error } = await alice.client
+      .from('profiles')
+      .update({
+        height_cm: 168,
+        interests: ['music', 'cats', 'travel'],
+        university: 'Boğaziçi Üniversitesi',
+        occupation: 'Mimar',
+      })
+      .eq('id', alice.id);
+    expect(error).toBeNull();
+    const { data } = await alice.client
+      .from('profiles')
+      .select('height_cm, interests, university, occupation')
+      .eq('id', alice.id)
+      .single();
+    expect(data).toEqual({
+      height_cm: 168,
+      interests: ['music', 'cats', 'travel'],
+      university: 'Boğaziçi Üniversitesi',
+      occupation: 'Mimar',
+    });
+    // Put back, so the rest of the suite reads the profile it set up.
+    await alice.client
+      .from('profiles')
+      .update({
+        height_cm: null,
+        interests: [],
+        university: null,
+        occupation: null,
+      })
+      .eq('id', alice.id);
+  });
+
+  it('refuses a detail the app could not have produced', async () => {
+    const refusals = [
+      // Outside the picker's ends: a typo, not a height.
+      { height_cm: 90 },
+      { height_cm: 260 },
+      // A tag the fixed list does not hold, and one held twice.
+      { interests: ['kripto'] },
+      { interests: ['music', 'music'] },
+      // One past the cap of eight.
+      {
+        interests: [
+          'music',
+          'cinema',
+          'books',
+          'travel',
+          'cats',
+          'dogs',
+          'coffee',
+          'yoga',
+          'wine',
+        ],
+      },
+      // One character past the column's limit, on each free-text field.
+      { university: 'ü'.repeat(61) },
+      { occupation: 'a'.repeat(61) },
+      // Empty rather than absent: null is how "not answered" is stored.
+      { university: '' },
+      { occupation: '' },
+    ];
+    for (const patch of refusals) {
+      const { error } = await bob.client
+        .from('profiles')
+        .update(patch)
+        .eq('id', bob.id);
+      expect(error?.code, JSON.stringify(patch)).toBe(CHECK_VIOLATION);
+    }
   });
 
   it('keeps birth data and chart immutable after insert', async () => {

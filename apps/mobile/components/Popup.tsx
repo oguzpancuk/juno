@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { BlurView } from 'expo-blur';
 import {
   Modal,
@@ -23,23 +16,9 @@ import {
   SCREEN_PADDING,
   TopGapContextProvider,
 } from '@/components/ui';
+import { ScrollLock } from '@/lib/scroll-lock';
 import { t } from '@/lib/strings';
 import { color, glass, radius, space, type } from '@/theme/tokens';
-
-/**
- * Lets a control inside a sheet hold the sheet still while it is being
- * dragged. A slider's drag is a JS gesture, and the sheet's scroll view is
- * a native one that takes over any touch that moves far enough — up and
- * down a little is enough — so without this a sideways drag on a thumb
- * turns into the sheet scrolling and the thumb stops. Taken only once a
- * touch has been read as a drag, never on touch-down, so a scroll that
- * starts on a slider still scrolls. Outside a sheet it does nothing.
- */
-const SheetScrollLock = createContext<(locked: boolean) => void>(() => {});
-
-export function useSheetScrollLock(): (locked: boolean) => void {
-  return useContext(SheetScrollLock);
-}
 
 /**
  * The one popup in the product (owner, 2026-09-11): the screen behind it
@@ -183,9 +162,9 @@ export function Popup({
                 `Screen` would otherwise inherit that screen's clearance and a
                 child would cancel a padding this host never applied. */}
             <TopGapContextProvider value={0}>
-              <SheetScrollLock.Provider value={setLocked}>
+              <ScrollLock.Provider value={setLocked}>
                 {children}
-              </SheetScrollLock.Provider>
+              </ScrollLock.Provider>
             </TopGapContextProvider>
           </ScrollView>
           <View style={styles.action}>

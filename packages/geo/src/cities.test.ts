@@ -3,7 +3,9 @@ import { resolveBirth } from './birth';
 import {
   EXONYMS,
   allCities,
+  cityAt,
   cityById,
+  distanceKm,
   exonymCities,
   searchCities,
   searchKey,
@@ -179,5 +181,72 @@ describe('search ranking', () => {
     expect(searchCities('', 5)).toEqual([]);
     expect(searchCities('   ', 5)).toEqual([]);
     expect(searchCities('zzzznotacity', 5)).toEqual([]);
+  });
+});
+
+describe('cityAt', () => {
+  it('names the city a point stands in', () => {
+    // Sultanahmet, a street corner in Ankara, and Konak in İzmir.
+    expect(cityAt(41.0082, 28.9784)?.name).toBe('İstanbul');
+    expect(cityAt(39.9334, 32.8597)?.name).toBe('Ankara');
+    expect(cityAt(38.4237, 27.1428)?.name).toBe('İzmir');
+  });
+
+  it('answers with the city rather than the district it is in', () => {
+    // The bundled list holds districts as well as cities, and a district
+    // centre is the nearer point: Eminönü (55 548) is 1.2 km from
+    // Sultanahmet and the İstanbul entry (15.7 M, 283 times over) is
+    // 2.5 km. Someone there is in İstanbul, so a neighbour that far
+    // outweighs the nearest record takes it.
+    expect(cityAt(41.0082, 28.9784)?.name).not.toBe('Eminönü');
+    // The same from the other shore, where Üsküdar (524 452, 30 times
+    // under İstanbul) is the near entry.
+    expect(cityAt(40.99, 29.03)?.name).toBe('İstanbul');
+  });
+
+  it('keeps a city its own name when a neighbour is merely bigger', () => {
+    // Gebze's own coordinates. Sancaktepe, an İstanbul district 28 km
+    // away, is 489 848 against Gebze's 281 436 — bigger, but nowhere
+    // near enough to speak for it. (Sultanbeyli is the nearer İstanbul
+    // district at 22 km, and loses to the ratio in the same way.)
+    expect(cityAt(40.8028, 29.4307)?.name).toBe('Gebze');
+    // Tarsus, with Mersin (537 842 against 350 732) 25 km down the road.
+    expect(cityAt(36.9177, 34.8928)?.name).toBe('Tarsus');
+    // Yalova, across the gulf from Gebze, and Burdur with İsparta 24 km
+    // off: both were answered by the neighbour before the ratio.
+    expect(cityAt(40.655, 29.2769)?.name).toBe('Yalova');
+    expect(cityAt(37.7203, 30.2908)?.name).toBe('Burdur');
+  });
+
+  it('never answers with a city in another country', () => {
+    // Shenzhen is 17.5 M against Kowloon's 2.2 M and 27 km away, so the
+    // ratio alone would hand a Hong Kong address to mainland China.
+    expect(cityAt(22.3167, 114.1833)?.name).toBe('Kowloon');
+    // Singapore over Johor Bahru is the same shape across the strait.
+    expect(cityAt(1.4655, 103.7578)?.name).toBe('Johor Bahru');
+  });
+
+  it('does not reach past its radius for a bigger neighbour', () => {
+    // İzmit, where Adapazarı is 39 km away and half as populous again.
+    expect(cityAt(40.7654, 29.9408)?.name).toBe('İzmit');
+    // Bursa, 92 km from İstanbul across the water.
+    expect(cityAt(40.1826, 29.0665)?.name).toBe('Bursa');
+  });
+
+  it('says nothing where no city is near', () => {
+    // Mid-Atlantic, and the empty quarter of the Sahara: "the city you
+    // are in" has no answer there, and the nearest one is not it.
+    expect(cityAt(0, -30)).toBeUndefined();
+    expect(cityAt(21.5, 21.5)).toBeUndefined();
+  });
+
+  it('measures the short way round, not through the numbers', () => {
+    // Two points either side of the antimeridian are neighbours. A flat
+    // subtraction of the longitudes puts them most of the planet apart,
+    // and every radius above would then be read off a nonsense distance.
+    expect(distanceKm(0, 179.9, 0, -179.9)).toBeLessThan(30);
+    // A sanity pair with a known answer: İstanbul to Ankara is ~350 km.
+    expect(distanceKm(41.0082, 28.9784, 39.9334, 32.8597)).toBeGreaterThan(330);
+    expect(distanceKm(41.0082, 28.9784, 39.9334, 32.8597)).toBeLessThan(370);
   });
 });

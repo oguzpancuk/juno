@@ -78,6 +78,14 @@ interface Demo {
   /** Where they live now, in Istanbul: [longitude, latitude]. */
   readonly home: readonly [number, number];
   readonly bio: string;
+  /** The four optional fields, so the deck and the profile sheet show
+   *  them from the first launch. Interest keys come from
+   *  `apps/mobile/lib/profile-details.ts`; a key that is not in that list
+   *  is refused by the column's own CHECK. */
+  readonly heightCm: number;
+  readonly interests: readonly string[];
+  readonly occupation: string;
+  readonly university: string | null;
 }
 
 /**
@@ -101,6 +109,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1996, 6, 18, 7, 20],
     home: [29.02, 41.05],
     bio: 'Sahil yürüyüşleri, uzun kahvaltılar ve bitmeyen kitap listesi.',
+    heightCm: 167,
+    interests: ['sea', 'books', 'coffee', 'travel'],
+    occupation: 'Editör',
+    university: 'Ege Üniversitesi',
   },
   {
     slug: 'zeynep',
@@ -110,6 +122,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1998, 2, 3, 15, 45],
     home: [28.97, 41.03],
     bio: 'Üçüncü dalga kahveci avcısı. Pazar sabahları en iyi hâlim.',
+    heightCm: 172,
+    interests: ['coffee', 'brunch', 'music', 'cinema'],
+    occupation: 'Marka yöneticisi',
+    university: 'Boğaziçi Üniversitesi',
   },
   {
     slug: 'defne',
@@ -119,6 +135,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1995, 9, 27, 21, 10],
     home: [29.06, 41.01],
     bio: 'Mimarım. Şehrin yüksek katlarından bakmayı seviyorum.',
+    heightCm: 165,
+    interests: ['art', 'photography', 'travel', 'wine'],
+    occupation: 'Mimar',
+    university: 'İTÜ',
   },
   {
     slug: 'selin',
@@ -128,6 +148,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1994, 4, 11, 5, 5],
     home: [28.9, 41.08],
     bio: 'Hafta sonu dağdayım, hafta içi ekrandayım. Dengeyi arıyorum.',
+    heightCm: 170,
+    interests: ['hiking', 'camping', 'technology', 'yoga'],
+    occupation: 'Ürün tasarımcısı',
+    university: 'ODTÜ',
   },
   {
     slug: 'ece',
@@ -137,6 +161,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1999, 11, 8, 12, 30],
     home: [29.12, 40.99],
     bio: 'Evimde on dört saksı var ve hepsinin adı var.',
+    heightCm: 161,
+    interests: ['plants', 'cooking', 'books', 'cats'],
+    occupation: 'Biyolog',
+    university: 'Ankara Üniversitesi',
   },
   {
     slug: 'nazli',
@@ -146,6 +174,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1997, 1, 22, 18, 55],
     home: [28.94, 41.01],
     bio: 'Kadıköy sokaklarında kaybolmayı seviyorum. Plan yapmayı sevmiyorum.',
+    heightCm: 174,
+    interests: ['street_food', 'dancing', 'live_music'],
+    occupation: 'Şef yardımcısı',
+    university: null,
   },
   {
     slug: 'irem',
@@ -155,6 +187,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1993, 8, 14, 9, 40],
     home: [29.18, 40.97],
     bio: 'Seramikle uğraşıyorum. Elimde çamur varken en sakin hâlimdeyim.',
+    heightCm: 163,
+    interests: ['art', 'meditation', 'plants', 'coffee'],
+    occupation: 'Seramik sanatçısı',
+    university: 'Mimar Sinan Üniversitesi',
   },
   {
     slug: 'melis',
@@ -164,6 +200,10 @@ const DEMOS: readonly Demo[] = [
     birth: [2000, 3, 30, 23, 15],
     home: [29.0, 40.98],
     bio: 'Çevirmenim. İki dilde aynı şakayı anlatmaya çalışıyorum.',
+    heightCm: 168,
+    interests: ['books', 'poetry', 'cinema', 'theatre'],
+    occupation: 'Çevirmen',
+    university: 'Boğaziçi Üniversitesi',
   },
   {
     slug: 'ayse',
@@ -173,6 +213,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1992, 12, 5, 3, 25],
     home: [28.88, 41.04],
     bio: 'Plak biriktiriyorum. Sana bir şey çalmama izin verir misin?',
+    heightCm: 166,
+    interests: ['music', 'live_music', 'dancing', 'wine'],
+    occupation: 'Müzik yapımcısı',
+    university: null,
   },
   {
     slug: 'bengisu',
@@ -182,6 +226,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1995, 5, 19, 11, 0],
     home: [29.09, 41.07],
     bio: 'Sabah koşusu, akşam sessizlik. Arası sana açık.',
+    heightCm: 175,
+    interests: ['running', 'meditation', 'books', 'sea'],
+    occupation: 'Fizyoterapist',
+    university: 'Hacettepe Üniversitesi',
   },
   {
     slug: 'kerem',
@@ -191,6 +239,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1994, 7, 7, 6, 50],
     home: [29.04, 41.02],
     bio: 'Fotoğraf çekiyorum, çoğu zaman aynı köprüyü.',
+    heightCm: 181,
+    interests: ['photography', 'travel', 'cinema', 'coffee'],
+    occupation: 'Fotoğrafçı',
+    university: 'Marmara Üniversitesi',
   },
   {
     slug: 'emre',
@@ -200,6 +252,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1996, 10, 16, 14, 5],
     home: [28.96, 41.06],
     bio: 'Kahve, bisiklet, uzun sohbet. Sıralama değişebilir.',
+    heightCm: 178,
+    interests: ['coffee', 'cycling', 'books', 'brunch'],
+    occupation: 'Kahve kavurucusu',
+    university: null,
   },
   {
     slug: 'berk',
@@ -209,6 +265,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1999, 1, 9, 20, 35],
     home: [29.14, 41.0],
     bio: 'Yazılımcıyım ama akşamları gitar daha çok işe yarıyor.',
+    heightCm: 183,
+    interests: ['technology', 'music', 'video_games', 'coffee'],
+    occupation: 'Yazılım geliştirici',
+    university: 'İTÜ',
   },
   {
     slug: 'onur',
@@ -218,6 +278,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1991, 3, 2, 8, 10],
     home: [28.92, 41.0],
     bio: 'Mutfakta iddialıyım. Sofrada iddiamı kanıtlarım.',
+    heightCm: 176,
+    interests: ['cooking', 'wine', 'street_food', 'cats'],
+    occupation: 'Aşçı',
+    university: null,
   },
   {
     slug: 'deniz',
@@ -227,6 +291,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1997, 6, 25, 16, 20],
     home: [29.2, 41.04],
     bio: 'Yaz boyunca teknede, kış boyunca yazın hikâyelerini anlatırım.',
+    heightCm: 180,
+    interests: ['sea', 'travel', 'photography', 'books'],
+    occupation: 'Tekne kaptanı',
+    university: null,
   },
   {
     slug: 'mert',
@@ -236,6 +304,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1993, 11, 13, 1, 45],
     home: [28.99, 41.09],
     bio: 'Gün batımında şehre yukarıdan bakmak için bahane arıyorum.',
+    heightCm: 185,
+    interests: ['hiking', 'photography', 'cycling', 'sea'],
+    occupation: 'Şehir plancısı',
+    university: 'İTÜ',
   },
   {
     slug: 'kaan',
@@ -245,6 +317,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1998, 9, 4, 10, 30],
     home: [29.07, 40.96],
     bio: 'Vinil, kitap ve eski filmler. Yeni önerilere de açığım.',
+    heightCm: 177,
+    interests: ['music', 'books', 'cinema', 'art'],
+    occupation: 'Plak dükkânı sahibi',
+    university: null,
   },
   {
     slug: 'baran',
@@ -254,6 +330,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1992, 2, 27, 19, 0],
     home: [28.86, 41.02],
     bio: 'Müzik yapıyorum. Çoğu zaman kimse duymadan.',
+    heightCm: 179,
+    interests: ['music', 'live_music', 'poetry', 'cats'],
+    occupation: 'Müzisyen',
+    university: null,
   },
   {
     slug: 'arda',
@@ -263,6 +343,10 @@ const DEMOS: readonly Demo[] = [
     birth: [2000, 8, 21, 4, 15],
     home: [29.16, 41.06],
     bio: 'Kamp, harita, termos. Şehirden çıkmak için sebep gerekmiyor.',
+    heightCm: 182,
+    interests: ['camping', 'hiking', 'skiing', 'dogs'],
+    occupation: 'Doğa rehberi',
+    university: 'Akdeniz Üniversitesi',
   },
   {
     slug: 'umut',
@@ -272,6 +356,10 @@ const DEMOS: readonly Demo[] = [
     birth: [1995, 12, 30, 13, 55],
     home: [29.01, 40.99],
     bio: 'Sabah antrenman, akşam tarif deneme. Arada iş de yapıyorum.',
+    heightCm: 184,
+    interests: ['gym', 'cooking', 'running', 'brunch'],
+    occupation: 'Antrenör',
+    university: 'Marmara Üniversitesi',
   },
 ];
 
@@ -429,6 +517,10 @@ async function main(): Promise<void> {
         .update({
           display_name: demo.name,
           bio: demo.bio,
+          height_cm: demo.heightCm,
+          interests: [...demo.interests],
+          occupation: demo.occupation,
+          university: demo.university,
           photos: [path],
           gender: demo.gender,
           interested_in: 'everyone',
@@ -453,6 +545,10 @@ async function main(): Promise<void> {
         interested_in: 'everyone',
         location,
         bio: demo.bio,
+        height_cm: demo.heightCm,
+        interests: [...demo.interests],
+        occupation: demo.occupation,
+        university: demo.university,
         photos: [path],
         consent_version: CONSENT_VERSION,
         is_demo: true,

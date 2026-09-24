@@ -14,6 +14,7 @@ import {
 } from '@juno/astro';
 import { z } from 'zod';
 import { GENDERS } from './profile';
+import { ProfileDetailColumns } from './profile-details';
 import { parseRows, warnDropped } from './rows';
 import type { SunElement } from './profile';
 import { supabase } from './supabase';
@@ -29,6 +30,7 @@ export const DiscoverRowSchema = z.object({
   distance_km: z.number().int().nonnegative(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  ...ProfileDetailColumns,
 });
 
 export type DiscoverRow = z.infer<typeof DiscoverRowSchema>;
