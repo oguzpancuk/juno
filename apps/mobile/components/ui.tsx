@@ -414,8 +414,11 @@ export function goBack(fallback: Href): void {
  *
  * react-native-web ignores `hitSlop`, so on the web the bare chevron's box
  * grows by the slop in padding and gives it back in negative margin: the
- * same target as on a phone, with nothing around it moved.
+ * same target as on a phone, with nothing around it moved. The chip needs
+ * neither: it is the 44pt target on both.
  */
+const CHEVRON_SLOP = { top: 0, bottom: 0, left: space.lg, right: space.md };
+
 export function BackChevron({
   glyph,
   accessibilityLabel,
@@ -433,7 +436,7 @@ export function BackChevron({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      hitSlop={{ top: 0, bottom: 0, left: space.lg, right: space.md }}
+      {...(onPhoto ? {} : { hitSlop: CHEVRON_SLOP })}
       onPress={'onPress' in way ? way.onPress : () => goBack(way.fallback)}
       style={({ pressed }) => [
         onPhoto ? s.chevronChip : s.chevronHit,
@@ -1045,10 +1048,10 @@ const s = StyleSheet.create({
     paddingRight: space.sm,
     ...(Platform.OS === 'web'
       ? {
-          paddingLeft: space.lg,
-          marginLeft: -space.lg,
-          paddingRight: space.sm + space.md,
-          marginRight: -space.md,
+          paddingLeft: CHEVRON_SLOP.left,
+          marginLeft: -CHEVRON_SLOP.left,
+          paddingRight: space.sm + CHEVRON_SLOP.right,
+          marginRight: -CHEVRON_SLOP.right,
         }
       : null),
   },

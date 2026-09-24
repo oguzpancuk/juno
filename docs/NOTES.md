@@ -8276,11 +8276,21 @@ backend — a look at the UI, not a verification.
 
 ### Battery gaps
 
-None new; the change is layout and wiring, which the battery does not
-see (no component renderer), as the entries above already say.
+**react-native-web ignores `hitSlop`.** The first version of the chevron
+answered only on its 18px glyph on the web: its reach was all `hitSlop`,
+which the web drops, so a target that leans on it is only as big as its
+box there. The battery passed it; evaluator-qa found it on the photo
+chip and review round 1 on every other sheet. `chevronHit` now turns the
+slop into padding and gives it back as negative margin on the web
+(`CHEVRON_SLOP`, one constant for both platforms). The other `hitSlop`
+users are not converted: `BackLink`, the deck's corner chips, the
+profile's settings chip and the chat's reply-cancel. Nothing in the
+battery measures a tap target, so the next one will pass it too.
 
 ### Upstream candidates
 
-The stand-in backend was rebuilt from scratch a third time for this
-thread. It belongs in `apps/mobile/scripts/` beside `web-drive.mjs`,
-already named as a candidate above.
+- A shared helper that turns a `hitSlop` into web padding and margin, for
+  the four controls above.
+- The stand-in backend was rebuilt from scratch a third time for this
+  thread. It belongs in `apps/mobile/scripts/` beside `web-drive.mjs`,
+  already named as a candidate above.

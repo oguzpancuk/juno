@@ -33,7 +33,9 @@ import { color, glass, radius, space, type } from '@/theme/tokens';
  * dönüş olsun, mesajlardaki geri butonu gibi"). It keeps "Kapat" as its
  * spoken name, so VoiceOver and the web still announce what it does. It
  * closes the sheet, unless the host passes `onBack`: a sheet with pages of
- * its own (settings) points it, and the hardware back, at its first page.
+ * its own (settings) points it, and the hardware back, at its first page —
+ * so from an inner page the one-step close is the backdrop, which a screen
+ * reader or keyboard cannot reach; they go back, then close.
  *
  * A native `Modal`, not an in-tree overlay: it sits above the tab bar as
  * well, which is what a dimmed background means on iOS, and react-native-
@@ -166,14 +168,19 @@ export function Popup({
           {/* The chat header's row: the way out, then what this is. A
               bleed sheet has no row — its photo runs to the top — so the
               chevron is drawn over the photo instead. It comes before the
-              scroll view either way, so VoiceOver and the web's tab order
-              reach the way out first; `zIndex` keeps the one over the
-              photo painted above what follows it. */}
+              scroll view either way, so the web's tab order and screen
+              reader reach the way out first (native: see `overPhoto`);
+              `zIndex` keeps the one over the photo painted above what
+              follows it. */}
           {bleed ? null : (
             <View style={styles.header}>
               {back}
               {title === undefined ? null : (
-                <Text style={styles.title}>{title}</Text>
+                // Not a target, and the chevron's reach runs under it:
+                // taps there fall through to the chevron.
+                <Text style={styles.title} pointerEvents="none">
+                  {title}
+                </Text>
               )}
             </View>
           )}
@@ -254,6 +261,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: space.md,
     left: SCREEN_PADDING,
+    // Needed everywhere: it comes before the scroll view, which would
+    // otherwise paint over it. On the web the DOM order still puts it first
+    // for the keyboard and the screen reader. Fabric sorts siblings by
+    // zIndex before mounting, so on Android TalkBack may reach it last;
+    // VoiceOver orders by position on the screen (a device check).
     zIndex: 1,
     elevation: 1,
   },
