@@ -26,6 +26,10 @@ const row = {
   distance_km: 3,
   bio: 'Kitapçılarda kaybolurum.',
   photos: ['a.jpg'],
+  height_cm: null,
+  interests: [],
+  university: null,
+  occupation: null,
 };
 
 const parse = (likes_me: unknown): unknown =>

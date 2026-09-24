@@ -251,6 +251,78 @@ export const t = {
     save: 'Kaydet',
     failed: 'Kaydedilemedi, tekrar dene.',
     photoFailed: 'Fotoğraf yüklenemedi, tekrar dene.',
+    /** The four optional fields (owner, 2026-09-21). */
+    details: 'Seni anlatanlar',
+    height: 'Boy',
+    heightAny: 'Belirtmek istemiyorum',
+    heightValue: (cm: number) => `${cm} cm`,
+    university: 'Üniversite',
+    /**
+     * The same field's label where it is one of three columns across a
+     * card. "Üniversite" is one word and the column is a third of the
+     * card, so on a 375pt phone it breaks mid-word as soon as the system
+     * text size goes up a step — and a kicker that reads "Üniversit / e"
+     * over its value is worse than the shorter word the owner uses for
+     * it himself ("okul da gozukmeli", 2026-09-23).
+     */
+    universityColumn: 'Okul',
+    occupation: 'Meslek',
+    interests: 'İlgi alanların',
+    interestsHint: (max: number) =>
+      `En fazla ${max} tane seçebilirsin. Profilinde görünür.`,
+    interestsFull: (max: number) =>
+      `${max} tanesini seçtin. Başka bir tane için önce birini çıkar.`,
+    /**
+     * The picker's own strings. The tags are not on the edit page any
+     * more (owner, 2026-09-23: "boşken hiçbir şey gözükmesin ama
+     * tıklanınca bir popup açılsın, orada hepsi gözüksün; arama da
+     * popuptan yapılsın") — the box there opens this sheet, and these
+     * name it for a screen reader, which has no border to go by.
+     */
+    interestsChoose: 'İlgi alanlarını seç',
+    interestsNone: 'Hiçbiri seçilmedi',
+    interestSearch: 'Ara',
+    interestSearchEmpty: 'Bu aramayla eşleşen ilgi alanı yok.',
+    detailsEmpty:
+      'Boy, ilgi alanların, üniversite ve meslek isteğe bağlı; boş bırakabilirsin.',
+    interestNames: {
+      music: 'Müzik',
+      live_music: 'Canlı müzik',
+      dancing: 'Dans',
+      cinema: 'Sinema',
+      series: 'Dizi',
+      books: 'Kitap',
+      poetry: 'Şiir',
+      art: 'Sanat',
+      photography: 'Fotoğraf',
+      theatre: 'Tiyatro',
+      travel: 'Seyahat',
+      camping: 'Kamp',
+      hiking: 'Doğa yürüyüşü',
+      sea: 'Deniz',
+      skiing: 'Kayak',
+      cycling: 'Bisiklet',
+      running: 'Koşu',
+      gym: 'Spor salonu',
+      yoga: 'Yoga',
+      pilates: 'Pilates',
+      football: 'Futbol',
+      basketball: 'Basketbol',
+      cooking: 'Yemek yapmak',
+      coffee: 'Kahve',
+      wine: 'Şarap',
+      brunch: 'Brunch',
+      street_food: 'Sokak lezzetleri',
+      cats: 'Kediler',
+      dogs: 'Köpekler',
+      plants: 'Bitkiler',
+      board_games: 'Kutu oyunları',
+      video_games: 'Video oyunları',
+      technology: 'Teknoloji',
+      astrology: 'Astroloji',
+      meditation: 'Meditasyon',
+      volunteering: 'Gönüllülük',
+    },
   },
   safety: {
     title: 'GÜVENLİK',

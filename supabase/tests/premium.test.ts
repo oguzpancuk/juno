@@ -140,6 +140,10 @@ const LikedMeRows = z.array(
       chart: z.record(z.unknown()).nullable(),
       bio: z.string().nullable(),
       photos: z.array(z.string()).nullable(),
+      height_cm: z.number().int().nullable(),
+      interests: z.array(z.string()).nullable(),
+      university: z.string().nullable(),
+      occupation: z.string().nullable(),
       distance_km: z.number().int().nonnegative().nullable(),
       is_super: z.boolean(),
       liked_at: z.string(),
@@ -447,6 +451,12 @@ describe('liked_me', () => {
       expect(row.big_three).toBeNull();
       expect(row.chart).toBeNull();
       expect(row.photos).toBeNull();
+      expect(row.height_cm).toBeNull();
+      // `interests` is never null on a profile (default '{}'), so a null
+      // here is the view withholding it, not an empty list.
+      expect(row.interests).toBeNull();
+      expect(row.university).toBeNull();
+      expect(row.occupation).toBeNull();
       // Withheld with the rest of the person: a distance on its own is
       // still something about somebody a free member may not see.
       expect(row.distance_km).toBeNull();
@@ -466,6 +476,7 @@ describe('liked_me', () => {
     for (const row of rows) {
       expect(row.chart).not.toBeNull();
       expect(row.photos?.length).toBeGreaterThan(0);
+      expect(row.interests).not.toBeNull();
     }
     expect(rows.find((row) => row.display_name === 'Zoe')?.is_super).toBe(true);
 

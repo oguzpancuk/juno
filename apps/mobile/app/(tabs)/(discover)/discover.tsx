@@ -28,6 +28,7 @@ import { BigThreeRow } from '@/components/BigThreeRow';
 import { PairReading } from '@/components/PairReading';
 import { BandRing } from '@/components/BandRing';
 import { CosmicGround } from '@/components/CosmicGround';
+import { FactRows } from '@/components/FactRows';
 import { FiltersPanel, filterWritesAnswered } from '@/components/FiltersPanel';
 import { LikedMePanel } from '@/components/LikedMePanel';
 import { Popup } from '@/components/Popup';
@@ -73,6 +74,28 @@ import {
 /** How far away someone is, as the card and the person sheet write it. */
 function distanceLine(km: number): string {
   return km === 0 ? t.discover.under1km : `${km} km`;
+}
+
+/**
+ * The card as VoiceOver hears it, since the name, the distance and the
+ * facts are all drawn on the photo and the button's own label would
+ * otherwise hide them (review, 2026-09-15).
+ *
+ * One string where the card now draws several lines: speech has no
+ * layout, and a reader wants where they are before who they are. The
+ * school is spoken in full — `shortSchool` buys width on a line, and
+ * "Ü." is heard as a letter and a period. The interests are on the
+ * profile sheet a tap away, which is the whole card in full.
+ */
+function cardSpoken(row: DiscoverRow): string {
+  return [
+    distanceLine(row.distance_km),
+    row.height_cm === null ? null : t.profile.heightValue(row.height_cm),
+    row.occupation,
+    row.university,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' · ');
 }
 /** The filters chip, the same size as the profile's settings chip. */
 const CORNER_CHIP = 36;
@@ -646,7 +669,7 @@ export default function Discover() {
                 accessibilityLabel={t.discover.openPerson(
                   current.row.display_name,
                   current.row.age,
-                  distanceLine(current.row.distance_km),
+                  cardSpoken(current.row),
                   badge === null ? null : badge.spoken,
                 )}
                 testID="open-person"
@@ -700,10 +723,24 @@ export default function Discover() {
                   </Text>
                   <Text
                     style={styles.distance}
+                    // One line whatever it carries: the card may not grow.
+                    numberOfLines={1}
                     maxFontSizeMultiplier={MAX_DECK_SCALE}
+                    testID="card-line"
                   >
                     {distanceLine(current.row.distance_km)}
                   </Text>
+                  {/* The same rows as the profile sheet draws under a name
+                    (owner, 2026-09-23: "kesfette de alanlar profil
+                    goruntusundeki gibi olsun"), from the same component, so
+                    the card and the sheet a tap away cannot drift. The
+                    scrim is painted over the photo rather than laid out
+                    above it, so three lines here cost the card no height —
+                    they sit further up the picture. */}
+                  <FactRows
+                    details={current.row}
+                    maxFontSizeMultiplier={MAX_DECK_SCALE}
+                  />
                 </LinearGradient>
               </Pressable>
               {/* The band on the photo's bottom corner, opposite the name
@@ -909,6 +946,7 @@ export default function Discover() {
             sources={sources}
             three={current.row.big_three}
             bio={current.row.bio}
+            details={current.row}
             reading={theirReading}
             chart={current.row.chart}
             fullChartLabel={t.person.fullChart}
@@ -1059,6 +1097,10 @@ function cardOf(person: Admirer): DiscoverRow {
     distance_km: person.distance_km,
     bio: person.bio,
     photos: [...person.photos],
+    height_cm: person.height_cm,
+    interests: person.interests,
+    university: person.university,
+    occupation: person.occupation,
     // Being on that list is what they did: this person chose this member.
     // Only a premium member can open the list at all, which is the same
     // condition the view puts on `discover.likes_me`.

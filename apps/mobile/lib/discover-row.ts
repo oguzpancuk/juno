@@ -16,6 +16,7 @@ import {
   type PublicChart,
 } from '@juno/astro';
 import { z } from 'zod';
+import { ProfileDetailColumns } from './profile-details';
 import { GENDERS } from './profile-enums';
 
 /** The two ways somebody can already have chosen you. */
@@ -33,6 +34,7 @@ export const DiscoverRowSchema = z.object({
   distance_km: z.number().int().nonnegative(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  ...ProfileDetailColumns,
   // Whether this person has already chosen you, for the badge over the
   // name. Null for a free member — the view withholds it, because who
   // has liked you is what the membership sells.

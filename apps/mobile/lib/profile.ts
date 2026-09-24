@@ -24,6 +24,10 @@ import {
 } from './profile-enums';
 import { LEGAL_VERSION } from './legal';
 import { SORT_ORDERS } from './premium-rules';
+import {
+  PROFILE_DETAIL_COLUMNS,
+  ProfileDetailColumns,
+} from './profile-details';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 
 // One import for a profile's vocabulary, as it has always been; the
@@ -60,6 +64,7 @@ export const OwnProfileSchema = z.object({
   sun_elements: z.array(z.enum(ELEMENTS)).nullable(),
   bio: z.string().nullable(),
   photos: z.array(z.string()),
+  ...ProfileDetailColumns,
   /**
    * Premium membership and what it orders the deck by. Both are the
    * member's own to set while there is no payment step (owner,
@@ -82,7 +87,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos, is_premium, premium_since, sort_by',
+      `id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos, is_premium, premium_since, sort_by, ${PROFILE_DETAIL_COLUMNS}`,
     )
     .eq('id', userId)
     // Bounded for the same reason as `fetchMatch`: several screens show

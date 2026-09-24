@@ -12,6 +12,7 @@ import {
   type Allowance,
   type SortBy,
 } from './premium-rules';
+import { normalizeInterests, ProfileDetailColumns } from './profile-details';
 import { parseRows, warnDropped } from './rows';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 
@@ -103,6 +104,12 @@ export const LikedMeRowSchema = z.object({
   chart: PublicChartSchema.nullable(),
   bio: z.string().nullable(),
   photos: z.array(z.string()).nullable(),
+  // The profile's own readings, so a list row and a deck row agree on
+  // what a stored value is worth; `interests` is null only when withheld.
+  height_cm: ProfileDetailColumns.height_cm,
+  interests: z.array(z.string()).transform(normalizeInterests).nullable(),
+  university: ProfileDetailColumns.university,
+  occupation: ProfileDetailColumns.occupation,
   distance_km: z.number().int().nonnegative().nullable(),
   is_super: z.boolean(),
   liked_at: z.string(),

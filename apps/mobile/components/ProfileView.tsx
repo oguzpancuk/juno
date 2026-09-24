@@ -1,6 +1,6 @@
 import type { BigThree, NatalReading, PublicChart } from '@juno/astro';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
   Image,
   Pressable,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { BigThreeRow } from '@/components/BigThreeRow';
+import { FactRows, factRows } from '@/components/FactRows';
 import {
   ChartDetail,
   PROFILE_PRIMARY_COUNT,
@@ -20,13 +21,32 @@ import { Popup } from '@/components/Popup';
 import {
   Body,
   Card,
+  Chip,
+  Field,
   GradientButton,
   SCREEN_PADDING,
+  SectionLabel,
   useTopGap,
 } from '@/components/ui';
-import { MAX_BIO_LENGTH, MAX_PHOTOS, type PhotoSource } from '@/lib/photos';
+import {
+  MAX_BIO_LENGTH,
+  MAX_PHOTOS,
+  type PhotoSource,
+  type ProfileDraft,
+} from '@/lib/photos';
+import {
+  HEIGHT_STOPS,
+  MAX_DETAIL_LENGTH,
+  MAX_INTERESTS,
+  heightStop,
+  searchInterests,
+  stopHeight,
+  toggleInterest,
+  type ProfileDetails,
+} from '@/lib/profile-details';
+import { Track } from '@/components/Track';
 import { t } from '@/lib/strings';
-import { color, radius, space, type } from '@/theme/tokens';
+import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * What the owner's page needs while the pill reads "Kaydet". Its presence
@@ -40,6 +60,14 @@ export interface ProfileEdit {
   /** The draft, owned by the screen; persisted by "Kaydet", not here. */
   readonly bio: string;
   readonly onBioChange: (text: string) => void;
+  /** The four optional fields as typed; persisted by "Kaydet", not here. */
+  readonly details: ProfileDraft;
+  /**
+   * An updater, not a value: two chips pressed in one batch both read the
+   * draft this render closed over, and the second write would drop the
+   * first.
+   */
+  readonly onDetailsChange: Dispatch<SetStateAction<ProfileDraft>>;
   readonly onMove: (index: number, direction: 'left' | 'right') => void;
   readonly onRemove: (index: number) => void;
   readonly onAdd: () => void;
@@ -70,6 +98,7 @@ export function ProfileView({
   sources,
   three,
   bio,
+  details,
   reading,
   chart,
   photoHeight,
@@ -80,13 +109,22 @@ export function ProfileView({
   name: string;
   /** null when the date could not be read; the name then stands alone. */
   age: number | null;
-  /** A line under the name on the photo — the distance, for a deck member. */
+  /**
+   * The line under the name on the photo: how far away a deck member is,
+   * and the city you are in on your own page (owner, 2026-09-23: "ben
+   * zaten sadece kendi profilinde sehir goziksun dedim, baskalarininkinde
+   * ayni yerde mesafe gozukecek"). One line, two things, because it is
+   * one place — what a reader wants there is where this person is.
+   * Omitted where neither is known, and then it is drawn empty.
+   */
   caption?: string | undefined;
   photos: readonly string[];
   /** From `usePhotoSources(photos)`: aligned with `photos` by index. */
   sources: readonly (PhotoSource | null)[];
   three: BigThree;
   bio: string | null;
+  /** Height, interests, university, occupation — any of them unanswered. */
+  details: ProfileDetails;
   reading: NatalReading;
   chart: PublicChart;
   /**
@@ -110,6 +148,7 @@ export function ProfileView({
         name={name}
         age={age}
         caption={caption}
+        details={details}
         height={photoHeight}
         emptyHint={own ? t.profile.noPhotos : undefined}
       />
@@ -147,6 +186,12 @@ export function ProfileView({
         </Card>
       ) : null}
 
+      {edit?.active ? (
+        <DetailsEditor edit={edit} />
+      ) : (
+        <DetailsCard details={details} own={own} />
+      )}
+
       {reading.placements.slice(0, PROFILE_PRIMARY_COUNT).map((placement) => (
         <PlacementCard
           key={placement.placement}
@@ -173,6 +218,262 @@ export function ProfileView({
   );
 }
 
+/**
+ * The interest tags in a card of their own, and — for an owner who has
+ * answered none of the four — the one line on the page that says the
+ * fields exist at all.
+ *
+ * The three other facts left this card for the rows under the name, but
+ * the empty state did not go with them: its sentence names all four, and
+ * it is still true in the only state that draws it. So the guard keeps
+ * both halves. Dropping the facts half would put "Boy, ilgi alanların,
+ * üniversite ve meslek isteğe bağlı" under the rows that already draw
+ * three of those four, which is the card calling answered fields empty.
+ *
+ * An owner who answered his facts but no tags gets no card, as before:
+ * nothing on the page is missing a word for it, and the tags are one tap
+ * away in the editor.
+ */
+function DetailsCard({
+  details,
+  own,
+}: {
+  details: ProfileDetails;
+  own: boolean;
+}) {
+  if (details.interests.length === 0) {
+    return own && factRows(details).length === 0 ? (
+      <Card testID="details-card">
+        <Body muted>{t.profile.detailsEmpty}</Body>
+      </Card>
+    ) : null;
+  }
+  return (
+    <Card testID="interests-card">
+      <View style={styles.tags} testID="interest-tags">
+        {details.interests.map((tag) => (
+          <View key={tag} style={styles.tag}>
+            <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+/**
+ * The same four in the edit mode: a drag for the height with one chip
+ * that clears it, a line each for the university and the occupation, and
+ * the tag list as chips.
+ *
+ * The height is a drag rather than a number pad, like the radius and the
+ * age in the discovery sheet (owner, 2026-09-15: "daha kolay seçilmeli"),
+ * and it starts at the middle of the range rather than at 120 cm, so the
+ * first touch does not read as a claim the person did not make.
+ */
+const HEIGHT_DEFAULT = 170;
+
+function DetailsEditor({ edit }: { edit: ProfileEdit }) {
+  const draft = edit.details;
+  const set = (patch: Partial<ProfileDraft>) =>
+    edit.onDetailsChange((prev) => ({ ...prev, ...patch }));
+  // What a drag in progress shows above the track; null when no finger is
+  // down, and the draft is then what the label reads.
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? draft.heightCm ?? HEIGHT_DEFAULT;
+  const full = draft.interests.length >= MAX_INTERESTS;
+  const [picking, setPicking] = useState(false);
+  const [query, setQuery] = useState('');
+  const found = searchInterests(query, (tag) => t.profile.interestNames[tag]);
+
+  return (
+    <Card testID="details-editor">
+      <SectionLabel>{t.profile.details}</SectionLabel>
+
+      <View style={styles.detailRow}>
+        <Text style={styles.factLabel}>{t.profile.height}</Text>
+        <Text style={styles.factValue} testID="height-value">
+          {draft.heightCm === null && drag === null
+            ? t.profile.heightAny
+            : t.profile.heightValue(shown)}
+        </Text>
+      </View>
+      <Track
+        testID="height"
+        count={HEIGHT_STOPS}
+        values={[heightStop(shown)]}
+        disabled={edit.busy}
+        labels={[t.profile.height]}
+        describe={(stop) => t.profile.heightValue(stopHeight(stop))}
+        onChange={(values) => setDrag(stopHeight(values[0]))}
+        onCommit={(values) => {
+          setDrag(null);
+          set({ heightCm: stopHeight(values[0]) });
+        }}
+        onCancel={() => {
+          // A gesture that ends on the stop it began from reports a
+          // cancel, not a commit — so with the thumb parked on the
+          // unanswered default, tapping it where it already sits is the
+          // one gesture in the range that would answer nothing, and
+          // 170 cm the one height this control could not record.
+          //
+          // So the cancel answers the field with what the track is
+          // showing, rather than with the drag alone: a tap on the
+          // occupied stop reports no `onChange` either — `place` returns
+          // early when the stop has not moved — so `drag` is still null
+          // here and it is `shown` that holds the value.
+          //
+          // Safe because a scroll never arrives: `Track`'s `finish`
+          // returns before `onCancel` when no drag was begun, and a
+          // touch the track read as the page's scroll begins none. When
+          // a height is already stored and the tap lands on it, this
+          // rewrites the same value.
+          set({ heightCm: shown });
+          setDrag(null);
+        }}
+      />
+      <Chip
+        testID="height-any"
+        label={t.profile.heightAny}
+        selected={draft.heightCm === null}
+        disabled={edit.busy}
+        style={styles.clearChip}
+        onPress={() => set({ heightCm: null })}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.occupation}
+      </Text>
+      {/* No placeholder, by the owner's word (2026-09-23: "kendimiz
+          çizmeyelim, placeholder textleri kaldıralım") — on iOS with the
+          new architecture a placeholder is drawn with a gap between every
+          letter, at random (facebook/react-native#42589), and the label
+          above each field already says what it is. The label is a
+          sibling, not a programmatic one, so a screen reader would be
+          left with an unnamed box; `accessibilityLabel` is what the
+          placeholder used to give it. */}
+      <Field
+        testID="occupation"
+        value={draft.occupation}
+        onChangeText={(text) => set({ occupation: text })}
+        accessibilityLabel={t.profile.occupation}
+        maxLength={MAX_DETAIL_LENGTH}
+        editable={!edit.busy}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.university}
+      </Text>
+      <Field
+        testID="university"
+        value={draft.university}
+        onChangeText={(text) => set({ university: text })}
+        accessibilityLabel={t.profile.university}
+        maxLength={MAX_DETAIL_LENGTH}
+        editable={!edit.busy}
+      />
+
+      <Text style={[styles.factLabel, styles.detailSpacer]}>
+        {t.profile.interests}
+      </Text>
+      {/* What is picked, and nothing else (owner, 2026-09-23: "boşken
+          hiçbir şey gözükmesin ama tıklanınca bir popup açılsın, orada
+          hepsi gözüksün"). The thirty-six chips that used to stand here
+          were most of the edit page. The box itself stays when nothing is
+          picked — drawn like the two fields above it, and empty — because
+          it is the only way to open the picker.
+
+          The tags inside are the read-only ones the profile draws, not
+          chips: the whole box is one target, and a chip inside it would
+          promise a tap of its own that removes it. */}
+      <Pressable
+        testID="interest-open"
+        accessibilityRole="button"
+        accessibilityLabel={t.profile.interestsChoose}
+        accessibilityValue={{
+          text:
+            draft.interests.length === 0
+              ? t.profile.interestsNone
+              : draft.interests
+                  .map((tag) => t.profile.interestNames[tag])
+                  .join(', '),
+        }}
+        accessibilityState={{ disabled: edit.busy }}
+        disabled={edit.busy}
+        onPress={() => setPicking(true)}
+        style={({ pressed }) => [
+          styles.interestBox,
+          (pressed || edit.busy) && styles.dim,
+        ]}
+      >
+        <View style={styles.tags}>
+          {draft.interests.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{t.profile.interestNames[tag]}</Text>
+            </View>
+          ))}
+        </View>
+      </Pressable>
+
+      {/* The list and the search both live in the sheet. `contentKey` is
+          the query, so a new search is read from its first result rather
+          than from wherever the last one was left scrolled. */}
+      <Popup
+        visible={picking}
+        onClose={() => {
+          setPicking(false);
+          setQuery('');
+        }}
+        title={t.profile.interests}
+        contentKey={query}
+        testID="interest-picker"
+      >
+        <View style={styles.searchField}>
+          <Text style={styles.factLabel}>{t.profile.interestSearch}</Text>
+          <Field
+            testID="interest-search"
+            value={query}
+            onChangeText={setQuery}
+            accessibilityLabel={t.profile.interestSearch}
+            autoCorrect={false}
+            autoCapitalize="none"
+            editable={!edit.busy}
+          />
+        </View>
+        <Text style={styles.hint}>
+          {full
+            ? t.profile.interestsFull(MAX_INTERESTS)
+            : t.profile.interestsHint(MAX_INTERESTS)}
+        </Text>
+        {found.length === 0 ? (
+          <Body muted>{t.profile.interestSearchEmpty}</Body>
+        ) : (
+          <View style={styles.tags} testID="interest-options">
+            {found.map((tag) => {
+              const on = draft.interests.includes(tag);
+              return (
+                <Chip
+                  key={tag}
+                  testID={`interest-${tag}`}
+                  label={t.profile.interestNames[tag]}
+                  selected={on}
+                  // At the cap the unpicked ones stop answering, which is
+                  // what the hint above them says. The picked ones still
+                  // do, so the list is never stuck.
+                  disabled={edit.busy || (full && !on)}
+                  onPress={() =>
+                    set({ interests: toggleInterest(draft.interests, tag) })
+                  }
+                />
+              );
+            })}
+          </View>
+        )}
+      </Popup>
+    </Card>
+  );
+}
+
 /** The photo's shape on every page, the same as the picker's crop. */
 const PHOTO_ASPECT = 3 / 4;
 
@@ -188,6 +489,7 @@ function PhotoCarousel({
   name,
   age,
   caption,
+  details,
   height: fixedHeight,
   emptyHint,
 }: {
@@ -196,6 +498,8 @@ function PhotoCarousel({
   name: string;
   age: number | null;
   caption: string | undefined;
+  /** Drawn under the name as iconed rows; nothing drawn for the unanswered. */
+  details: ProfileDetails;
   /** Set by a host that must line up with another screen. */
   height: number | undefined;
   /** What the owner reads in place of a photo; nothing for another person. */
@@ -271,8 +575,10 @@ function PhotoCarousel({
             has a distance line here, and the two are supposed to be the
             same card (owner, 2026-09-14). An empty line keeps the name on
             the same y rather than letting it drop 22pt on the one screen
-            that has no caption. */}
+            that has no caption — the chat header, and your own page
+            before the city is known or where there is none. */}
         <Text style={styles.caption}>{caption ?? ''}</Text>
+        <FactRows details={details} />
       </LinearGradient>
     </View>
   );
@@ -500,6 +806,44 @@ const styles = StyleSheet.create({
   addText: { ...type.caption, color: color.textMuted, textAlign: 'center' },
   dim: { opacity: 0.6 },
   hint: { ...type.caption, color: color.textFaint },
+  factLabel: { ...type.label, color: color.textFaint },
+  factValue: { ...type.body, color: color.text },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  // A tag, not a chip: nothing here takes a touch, so it must not look
+  // like the chips one row up in the edit mode.
+  tag: {
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.surfaceSoft,
+    paddingVertical: space.xs,
+    paddingHorizontal: space.md,
+  },
+  tagText: { ...type.bodySmall, color: color.text },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  detailSpacer: { marginTop: space.lg },
+  // Drawn like the two fields above it, so the three answers on this card
+  // read as three inputs. `minHeight` is about one field's height: with
+  // nothing picked the box has no content at all, and without a floor it
+  // would collapse to a line nobody would aim a thumb at.
+  interestBox: {
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.edge,
+    borderRadius: radius.lg,
+    padding: space.lg,
+    minHeight: 55,
+    justifyContent: 'center',
+  },
+  // The sheet's own gap is `space.md`, which would set the label adrift
+  // from the box it names.
+  searchField: { gap: space.xs },
+  // Alone on its row, so it does not stretch across the card.
+  clearChip: { alignSelf: 'flex-start', marginTop: space.sm },
   bioInput: {
     ...type.body,
     color: color.text,

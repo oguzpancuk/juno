@@ -124,6 +124,10 @@ describe('who liked you', () => {
     } as unknown as LikedMeFields['chart'],
     bio: null,
     photos: ['a/1.png'],
+    height_cm: null,
+    interests: [],
+    university: null,
+    occupation: null,
     distance_km: 4,
     is_super: false,
     liked_at: '2026-09-20T08:00:00.000Z',
@@ -137,6 +141,23 @@ describe('who liked you', () => {
     // The distance comes with them, because the list hands the deck a
     // card and a card says how far away somebody is.
     expect(person?.distance_km).toBe(4);
+  });
+
+  it('carries the four profile details onto the card', () => {
+    // The card a tap opens draws the same rows under the name as the
+    // deck's own, so a person read off this list must bring them along.
+    const person = admirerOf(
+      row({
+        height_cm: 172,
+        interests: ['music', 'cats'],
+        university: 'Boğaziçi Üniversitesi',
+        occupation: 'Mimar',
+      }),
+    );
+    expect(person?.height_cm).toBe(172);
+    expect(person?.interests).toEqual(['music', 'cats']);
+    expect(person?.university).toBe('Boğaziçi Üniversitesi');
+    expect(person?.occupation).toBe('Mimar');
   });
 
   it('withholds the person when the view withheld the columns', () => {
@@ -153,6 +174,10 @@ describe('who liked you', () => {
           chart: null,
           bio: null,
           photos: null,
+          height_cm: null,
+          interests: null,
+          university: null,
+          occupation: null,
           distance_km: null,
         }),
       ),
@@ -160,6 +185,9 @@ describe('who liked you', () => {
     // A row missing one column is withheld too, rather than drawn half.
     expect(admirerOf(row({ photos: null }))).toBeNull();
     expect(admirerOf(row({ distance_km: null }))).toBeNull();
+    // A profile always has a list of interests, if an empty one; null is
+    // the view withholding it.
+    expect(admirerOf(row({ interests: null }))).toBeNull();
   });
 
   it('puts the stars first, then the newest', () => {

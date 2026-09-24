@@ -36,6 +36,9 @@ import {
   saveProfileEdits,
   usePhotoSources,
 } from '@/lib/photos';
+import type { ProfileDraft } from '@/lib/photos';
+import { cleanDetail } from '@/lib/profile-details';
+import { useOwnCity } from '@/lib/own-city';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { RedirectToSignIn, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -43,6 +46,14 @@ import { color, font, radius, space, type } from '@/theme/tokens';
 
 /** Stable identity: a new [] on every render would refetch for ever. */
 const EMPTY: readonly string[] = [];
+
+/** The four optional fields before the row arrives: all unanswered. */
+const NO_DETAILS: ProfileDraft = {
+  heightCm: null,
+  interests: [],
+  university: '',
+  occupation: '',
+};
 
 /**
  * Your own page, laid out exactly as another person's is (`ProfileView`),
@@ -58,6 +69,9 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   // The same height the deck's photo reaches, so the two line up.
   const { height: windowHeight } = useWindowDimensions();
+  // Worked out on the device and kept here; see the hook for why that is
+  // the whole of it.
+  const city = useOwnCity();
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -68,6 +82,9 @@ export default function Profile() {
   const [photos, setPhotos] = useState<readonly string[]>(EMPTY);
   const sources = usePhotoSources(photos);
   const [bio, setBio] = useState('');
+  // Height, interests, university and occupation, as typed. Like the bio,
+  // a draft until "Kaydet" — and, like it, what the page shows afterwards.
+  const [details, setDetails] = useState<ProfileDraft>(NO_DETAILS);
   const [editing, setEditing] = useState(false);
   // Settings is a popup over the profile, not a page (owner, 2026-09-15).
   const [showSettings, setShowSettings] = useState(false);
@@ -107,6 +124,12 @@ export default function Profile() {
       if (next.status === 'ready') {
         setPhotos(next.profile.photos);
         setBio(next.profile.bio ?? '');
+        setDetails({
+          heightCm: next.profile.height_cm,
+          interests: next.profile.interests,
+          university: next.profile.university ?? '',
+          occupation: next.profile.occupation ?? '',
+        });
       }
     });
     return () => {
@@ -171,7 +194,7 @@ export default function Profile() {
     working.current = true;
     setSaving(true);
     setError(null);
-    void saveProfileEdits(userId, { photos, bio }).then((ok) => {
+    void saveProfileEdits(userId, { photos, bio, details }).then((ok) => {
       working.current = false;
       setSaving(false);
       if (!ok) {
@@ -180,6 +203,15 @@ export default function Profile() {
         return;
       }
       setBio(bio.trim());
+      // The same cleaning the row was written with, not just a trim:
+      // `cleanDetail` also collapses inner runs of whitespace, and a page
+      // that kept the untrimmed draft would show a value the row does not
+      // hold until the next read — and re-send it on the next Kaydet.
+      setDetails((draft) => ({
+        ...draft,
+        university: cleanDetail(draft.university) ?? '',
+        occupation: cleanDetail(draft.occupation) ?? '',
+      }));
       setEditing(false);
     });
   };
@@ -274,10 +306,20 @@ export default function Profile() {
         <ProfileView
           name={state.profile.display_name}
           age={ageOn(state.profile.birth_date)}
+          // Where a deck member's card has the distance. Undefined until
+          // it is known, and if it never is the line stays empty, as it
+          // was before this had anything to put there.
+          caption={city ?? undefined}
           photos={photos}
           sources={sources}
           three={state.profile.big_three}
           bio={bio.length > 0 ? bio : null}
+          details={{
+            height_cm: details.heightCm,
+            interests: details.interests,
+            university: details.university.trim() || null,
+            occupation: details.occupation.trim() || null,
+          }}
           reading={reading}
           chart={state.profile.chart}
           photoHeight={Math.round(windowHeight * PHOTO_SCREEN_FRACTION)}
@@ -287,6 +329,8 @@ export default function Profile() {
             active: editing,
             bio,
             onBioChange: setBio,
+            details,
+            onDetailsChange: setDetails,
             onMove: move,
             onRemove: remove,
             onAdd: add,

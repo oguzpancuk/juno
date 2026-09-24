@@ -146,6 +146,119 @@ export function cityById(id: number): City | undefined {
 }
 
 /**
+ * How far a point may be from a record's coordinates and still be
+ * answered with it. A city here is one coordinate pair, so someone
+ * across town is already tens of kilometres from it; 30 km covers the
+ * spread of the largest Turkish cities without reaching a city an hour
+ * away — Bursa is 92 km from İstanbul, Adapazarı 39 km from İzmit.
+ *
+ * It does NOT mean everything inside the circle is the same place.
+ * Türkiye at this size is dense: Tarsus has Mersin 25 km off, Gebze has
+ * İstanbul's outer districts 22 km off, Burdur has İsparta at 24 km.
+ * What keeps those apart is `POPULATION_RATIO`, not the radius.
+ */
+const CITY_RADIUS_KM = 30;
+
+/**
+ * How much bigger a neighbour must be before it answers for the record a
+ * point actually stands nearest to.
+ *
+ * The list holds districts beside cities, and a district's coordinates
+ * are the nearer ones for anyone standing in it, so nearest alone says
+ * "Eminönü" for Sultanahmet. But most populous in reach is worse: it
+ * lets any large neighbour swallow a city whole, which said "Sancaktepe"
+ * for Gebze and "Mersin" for Tarsus.
+ *
+ * A district is smaller than its city by an order of magnitude —
+ * İstanbul is 283 times Eminönü and 30 times Üsküdar — while two cities
+ * that merely sit near each other are within a factor of two: Sancaktepe
+ * is 1.7 times Gebze, Mersin 1.5 times Tarsus, İsparta 1.8 times Burdur.
+ * Five sits above every pair of that second kind and below every district
+ * that has to keep working.
+ *
+ * It is not a threshold with empty space around it, and the next person to
+ * tune it should know that: 26 Turkish records are answered at under ten
+ * times, the lowest at 5.3. Several of those are right (Akçaabat at 5.4
+ * and Genç at 5.7 are districts of the city they get). Bulancak is what
+ * the number costs — it answers "Ordu", the next province's city 29 km
+ * off, while Giresun, its own province's city 13 km away, is 2.9 times it
+ * and cannot qualify. Nothing between 3 and 5 would fix that without
+ * losing the pairs above, so five stands, but as a choice rather than a
+ * measurement.
+ */
+const POPULATION_RATIO = 5;
+
+const EARTH_KM = 6371;
+const RADIAN = Math.PI / 180;
+
+/**
+ * Great-circle distance in kilometres. Haversine rather than a flat
+ * subtraction of the coordinates: longitudes wrap, and two points either
+ * side of the antimeridian are neighbours however far apart their
+ * numbers are.
+ *
+ * Exported for the test that proves that; `cityAt` is the way to use it.
+ */
+export function distanceKm(
+  aLat: number,
+  aLon: number,
+  bLat: number,
+  bLon: number,
+): number {
+  const dLat = (bLat - aLat) * RADIAN;
+  const dLon = (bLon - aLon) * RADIAN;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(aLat * RADIAN) * Math.cos(bLat * RADIAN) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/**
+ * The city a point is in, or undefined when nothing is within
+ * `CITY_RADIUS_KM` — open country has no answer to "which city are you
+ * in", and the nearest town an hour away is not it.
+ *
+ * The record the point stands nearest to, unless one in reach is
+ * `POPULATION_RATIO` times its size and in the same country: then that
+ * one, because only a city outweighs its own district by so much. A
+ * bigger neighbour that is merely bigger does not qualify, which is what
+ * keeps Gebze, Tarsus and Burdur their own names, and the country test
+ * keeps Kowloon out of Shenzhen and Johor Bahru out of Singapore, where
+ * the ratio holds but the border means it is not where you are.
+ *
+ * Populations are compared rather than trusting the list's own order, so
+ * a rebuild that sorted differently cannot change the answer.
+ *
+ * Offline, like everything else here: no reverse-geocoding service sees
+ * the point, which is the whole reason the coordinates can be used for
+ * this at all.
+ */
+export function cityAt(latitude: number, longitude: number): City | undefined {
+  let nearest: City | undefined;
+  let nearestKm = Infinity;
+  const inReach: City[] = [];
+  for (const { city } of load()) {
+    const km = distanceKm(latitude, longitude, city.latitude, city.longitude);
+    if (km > CITY_RADIUS_KM) continue;
+    inReach.push(city);
+    if (km < nearestKm) {
+      nearestKm = km;
+      nearest = city;
+    }
+  }
+  if (nearest === undefined) return undefined;
+  let best = nearest;
+  for (const city of inReach) {
+    if (city.country !== nearest.country) continue;
+    if (city.population < nearest.population * POPULATION_RATIO) continue;
+    // The largest that qualifies, so a district of İstanbul reached from
+    // a town outside it cannot come back instead of İstanbul.
+    if (city.population > best.population) best = city;
+  }
+  return best;
+}
+
+/**
  * Diacritic-insensitive search, best match first: a fully typed Turkish
  * exonym, then a whole-name hit, then a name that starts with the query,
  * then a half-typed exonym, then a name whose later word starts with it

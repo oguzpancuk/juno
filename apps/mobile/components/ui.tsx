@@ -34,6 +34,7 @@ import Svg, {
 } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/a11y';
 import { useTopClearance } from '@/lib/insets';
+import { ScrollLock } from '@/lib/scroll-lock';
 import { useSvgId } from '@/lib/svg-id';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
@@ -130,6 +131,11 @@ export function Screen({
   testID?: string;
 }) {
   const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
+  // A slider on a page needs the same hold the sheet's gives it: the
+  // profile's height track was the first one outside a `Popup`, and
+  // without this the page's own scroll takes any drag with a few points
+  // of vertical drift and the thumb stops under the finger.
+  const [locked, setLocked] = useState(false);
   return (
     <View style={s.screen}>
       {/* The sky under every screen (owner, 2026-09-16); the scroll view
@@ -140,11 +146,14 @@ export function Screen({
         contentContainerStyle={[s.screenContent, { paddingTop: topPadding }]}
         bounces={!bleed}
         overScrollMode={bleed ? 'never' : 'auto'}
+        scrollEnabled={!locked}
         testID={testID}
       >
-        <TopGapContext.Provider value={bleed ? topPadding : 0}>
-          {children}
-        </TopGapContext.Provider>
+        <ScrollLock.Provider value={setLocked}>
+          <TopGapContext.Provider value={bleed ? topPadding : 0}>
+            {children}
+          </TopGapContext.Provider>
+        </ScrollLock.Provider>
       </ScrollView>
     </View>
   );
@@ -815,6 +824,35 @@ export function Halo({
  * `style` is merged over the base, for the two fields that need more than
  * the base gives: the date boxes, which are narrow and centred, and the
  * code box, which is set large and letter-spaced.
+ */
+/**
+ * Known bug in the placeholder, not in this file: on iOS under the New
+ * Architecture the platform sometimes lays a placeholder out with a gap
+ * between every letter, which then runs off the right edge. It is
+ * facebook/react-native#42589, open, closed upstream as "cannot
+ * reproduce" because it strikes at random. The owner hit it on the
+ * university field on 2026-09-23 while the occupation field one line
+ * above — this same component, a shorter string — drew normally; typed
+ * text is unaffected, only the placeholder.
+ *
+ * Nothing here causes it, and no style is known to switch it off.
+ * `letterSpacing` is not the lever it looks like: an iOS placeholder is
+ * built from the field's own default text attributes, kerning included
+ * (`_placeholderTextAttributes` in `RCTUITextField.mm` copies them and
+ * swaps only the colour; on Fabric, which this app runs,
+ * `RCTAttributedTextUtils.mm:192` puts `letterSpacing` in
+ * `NSKernAttributeName`), so a value set here does reach the
+ * placeholder — and an explicit `0` is not the default but kern zero,
+ * which turns the font's kerning pairs off for every field in the app.
+ * A guard like that was tried here and removed (review, 2026-09-23).
+ *
+ * What the owner chose instead is to show no placeholder on the fields
+ * that carry a label above them — the profile's occupation and
+ * university ("placeholder textleri kaldıralım", 2026-09-23), which name
+ * themselves to a screen reader with `accessibilityLabel`. Where the
+ * placeholder *is* the label, as on onboarding's date boxes, it stays;
+ * drawing our own there would need a wrapper `View` around every field,
+ * and that is still nobody's decision to take here.
  */
 export const Field = forwardRef<TextInput, TextInputProps>(function Field(
   { style, ...props },

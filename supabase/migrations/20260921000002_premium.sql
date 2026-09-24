@@ -222,8 +222,11 @@ revoke all on function private.likes_enforce_quota() from public, anon, authenti
  * about. The star stays scarce: nothing that is not a person ever gives
  * one.
  *
- * Everything else about the view is unchanged. The join is on `likes`'
- * own primary key, so this costs one index probe per candidate.
+ * Everything else about the view is unchanged, and the column goes at
+ * the end, after the four profile details 20260921000001 appended:
+ * `create or replace view` may only add columns there, so the list
+ * above has to repeat that migration's in its order. The join is on
+ * `likes`' own primary key, so this costs one index probe per candidate.
  */
 create or replace view public.discover
 with (security_invoker = false)
@@ -239,6 +242,10 @@ select
     as distance_km,
   p.bio,
   p.photos,
+  p.height_cm,
+  p.interests,
+  p.university,
+  p.occupation,
   case
     when not me.is_premium then null
     when p.is_demo then 'like'::text
@@ -355,6 +362,14 @@ select
   p.chart,
   p.bio,
   p.photos,
+  -- The four details the deck's card and the profile sheet draw
+  -- (20260921000001), withheld with the rest of the person like every
+  -- column off `p`: tapping somebody here opens that same card, and a
+  -- card read from this view must say what the deck's would.
+  p.height_cm,
+  p.interests,
+  p.university,
+  p.occupation,
   -- Withheld with the rest of the person, because it comes off `p`. It is
   -- here so that tapping somebody on the list can open their card in the
   -- deck even when this member's filters would never have shown them

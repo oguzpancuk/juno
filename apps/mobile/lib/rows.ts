@@ -15,10 +15,11 @@ import type { z } from 'zod';
  * and event reporting lands (ROADMAP: Metrics).
  */
 export function parseRows<T>(
-  // The input side is `unknown`, not `T`: a schema is allowed to read
-  // something other than what it answers — `discover`'s badge column
-  // falls back to null on a value this build does not know — and
-  // `z.ZodType<T>` alone would refuse exactly those schemas.
+  // The third parameter is the schema's INPUT: rows arrive untyped, and a
+  // schema that normalises or falls back as it parses has an input that
+  // is not its output — `profile-details` tidies the interest tags, and
+  // `discover`'s badge column reads a value this build does not know as
+  // null. `z.ZodType<T>` would demand the two be equal.
   schema: z.ZodType<T, z.ZodTypeDef, unknown>,
   rows: readonly unknown[],
   onDropped: (dropped: number, total: number) => void,

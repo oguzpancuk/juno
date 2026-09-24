@@ -28,6 +28,14 @@
  * same change, not afterwards — pati learned this on 2026-09-10 and juno
  * relearned it on 2026-09-17.
  *
+ * The rule is not only about infrastructure: a column that holds personal
+ * data belongs in "İşlenen veriler", and one that other members can read
+ * belongs in "Kimlerle paylaşılır" as well. On 2026-09-21 four optional
+ * profile fields — height, interest tags, university and occupation —
+ * went into both, in the change that added them; the university and the
+ * occupation are free text a member writes about themselves, which the
+ * whole radius can read.
+ *
  * The same rule covers identity providers, and there is one waiting: the
  * welcome screen draws Apple and Google buttons, but both providers are
  * disabled on the hosted project (checked 2026-09-17: `external.apple` and
@@ -44,7 +52,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '17 Eylül 2026';
+export const LEGAL_UPDATED = '21 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -58,7 +66,7 @@ export const LEGAL_UPDATED = '17 Eylül 2026';
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-17';
+export const LEGAL_VERSION = '2026-09-21';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -87,6 +95,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Konumun. Yaklaşık 1 kilometrelik bir ızgaraya yuvarlanarak saklanır: başkalarına gösterilen mesafe bu yuvarlanmış noktadan hesaplanır, tam konumun veritabanına hiç yazılmaz.',
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
+      '• Doldurursan profilini anlatan alanlar: boyun, seçtiğin ilgi alanları, okuduğun üniversite ve mesleğin. Dördü de isteğe bağlıdır, boş bırakabilirsin ve sonradan istediğin zaman değiştirebilir ya da silebilirsin.',
       '• Onay kaydın: bu metnin hangi sürümünü kabul ettiğin ve kabul anının zamanı. Rızanın kanıtı budur ve hesabınla birlikte silinir.',
       'Kullanım',
       '• Beğenilerin, geçtiklerin ve eşleşmelerin.',
@@ -108,7 +117,7 @@ export const legalSections: readonly LegalSection[] = [
   {
     heading: 'Kimlerle paylaşılır',
     body: [
-      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin ve aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',

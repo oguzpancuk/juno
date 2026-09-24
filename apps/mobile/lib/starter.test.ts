@@ -45,6 +45,10 @@ const rowFor = (
     unread_count: 0,
     bio: null,
     photos: [],
+    height_cm: null,
+    interests: [],
+    university: null,
+    occupation: null,
   };
 };
 

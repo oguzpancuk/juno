@@ -419,17 +419,21 @@ export type Database = {
           created_at: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
+          height_cm: number | null
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
+          interests: string[]
           is_demo: boolean
           is_premium: boolean
           location: unknown
           min_band: string
+          occupation: string | null
           photos: string[]
           premium_since: string | null
           radius_km: number
           sort_by: string
           sun_elements: string[] | null
+          university: string | null
           updated_at: string
         }
         Insert: {
@@ -447,17 +451,21 @@ export type Database = {
           created_at?: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
+          height_cm?: number | null
           id: string
           interested_in: Database["public"]["Enums"]["interest"]
+          interests?: string[]
           is_demo?: boolean
           is_premium?: boolean
           location: unknown
           min_band?: string
+          occupation?: string | null
           photos?: string[]
           premium_since?: string | null
           radius_km?: number
           sort_by?: string
           sun_elements?: string[] | null
+          university?: string | null
           updated_at?: string
         }
         Update: {
@@ -475,17 +483,21 @@ export type Database = {
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"]
+          height_cm?: number | null
           id?: string
           interested_in?: Database["public"]["Enums"]["interest"]
+          interests?: string[]
           is_demo?: boolean
           is_premium?: boolean
           location?: unknown
           min_band?: string
+          occupation?: string | null
           photos?: string[]
           premium_since?: string | null
           radius_km?: number
           sort_by?: string
           sun_elements?: string[] | null
+          university?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -585,9 +597,13 @@ export type Database = {
           display_name: string | null
           distance_km: number | null
           gender: Database["public"]["Enums"]["gender"] | null
+          height_cm: number | null
           id: string | null
+          interests: string[] | null
           likes_me: string | null
+          occupation: string | null
           photos: string[] | null
+          university: string | null
         }
         Relationships: []
       }
@@ -600,10 +616,14 @@ export type Database = {
           display_name: string | null
           distance_km: number | null
           gender: Database["public"]["Enums"]["gender"] | null
+          height_cm: number | null
           id: string | null
+          interests: string[] | null
           is_super: boolean | null
           liked_at: string | null
+          occupation: string | null
           photos: string[] | null
+          university: string | null
         }
         Relationships: []
       }
@@ -615,14 +635,18 @@ export type Database = {
           chart: Json | null
           display_name: string | null
           gender: Database["public"]["Enums"]["gender"] | null
+          height_cm: number | null
           id: string | null
+          interests: string[] | null
           last_at: string | null
           last_body: string | null
           last_sender_id: string | null
           match_id: string | null
           matched_at: string | null
+          occupation: string | null
           photos: string[] | null
           starter_key: string | null
+          university: string | null
           unread_count: number | null
         }
         Relationships: [

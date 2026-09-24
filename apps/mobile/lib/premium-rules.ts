@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { BigThree, PublicChart } from '@juno/astro';
 import type { Gender } from './profile';
+import type { InterestTag, ProfileDetails } from './profile-details';
 
 /**
  * Premium membership's own arithmetic: the quota numbers, the windows
@@ -110,13 +111,21 @@ export interface LikedMeFields {
   readonly chart: PublicChart | null;
   readonly bio: string | null;
   readonly photos: readonly string[] | null;
+  readonly height_cm: number | null;
+  readonly interests: readonly InterestTag[] | null;
+  readonly university: string | null;
+  readonly occupation: string | null;
   readonly distance_km: number | null;
   readonly is_super: boolean;
   readonly liked_at: string;
 }
 
-/** One person who liked you, as a premium member sees them. */
-export interface Admirer {
+/**
+ * One person who liked you, as a premium member sees them — with the
+ * four details, because tapping them opens the deck's card, and that card
+ * draws the same rows under the name as any other.
+ */
+export interface Admirer extends ProfileDetails {
   readonly id: string;
   readonly display_name: string;
   readonly age: number;
@@ -146,6 +155,7 @@ export function admirerOf(row: LikedMeFields): Admirer | null {
     row.big_three === null ||
     row.chart === null ||
     row.photos === null ||
+    row.interests === null ||
     row.distance_km === null
   ) {
     return null;
@@ -159,6 +169,10 @@ export function admirerOf(row: LikedMeFields): Admirer | null {
     chart: row.chart,
     bio: row.bio,
     photos: row.photos,
+    height_cm: row.height_cm,
+    interests: row.interests,
+    university: row.university,
+    occupation: row.occupation,
     distance_km: row.distance_km,
     is_super: row.is_super,
     liked_at: row.liked_at,
