@@ -386,10 +386,14 @@ export function goBack(fallback: Href): void {
  * both (owner, 2026-09-24: "kapat butonları … sol üstte geriye dönüş
  * olsun, mesajlardaki geri butonu gibi").
  *
- * `onPhoto` draws it on a round chip like the deck's corner ones, for a
- * sheet whose photo runs to the top: bare, the muted glyph is lost on a
+ * `onPhoto` draws it on a round chip in the deck's corner chips' look, for
+ * a sheet whose photo runs to the top: bare, the muted glyph is lost on a
  * bright picture. The chip is the pressable itself, so the whole round
- * answers — react-native-web ignores `hitSlop`.
+ * answers.
+ *
+ * react-native-web ignores `hitSlop`, so on the web the bare chevron's box
+ * grows by the slop in padding and gives it back in negative margin: the
+ * same target as on a phone, with nothing around it moved.
  */
 export function BackChevron({
   glyph,
@@ -1018,9 +1022,20 @@ const s = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     paddingRight: space.sm,
+    ...(Platform.OS === 'web'
+      ? {
+          paddingLeft: space.lg,
+          marginLeft: -space.lg,
+          paddingRight: space.sm + space.md,
+          marginRight: -space.md,
+        }
+      : null),
   },
-  // 44pt round; the left padding balances the glyph's own right-hand
-  // bearing, so it sits in the middle of the circle.
+  // The deck's corner chips' look (discover's `filtersButton`, the
+  // profile's `iconChip`) at 44 rather than their 36: those two carry a
+  // `hitSlop`, which the web ignores, and this one is a sheet's only way
+  // out, so it has to be the 44pt minimum by itself. The left padding
+  // balances the glyph's own right-hand bearing, so it sits in the middle.
   chevronChip: {
     width: 44,
     height: 44,

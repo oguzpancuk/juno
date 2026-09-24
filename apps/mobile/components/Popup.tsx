@@ -22,23 +22,25 @@ import { color, glass, radius, space, type } from '@/theme/tokens';
 
 /**
  * The one popup in the product (owner, 2026-09-11): the screen behind it
- * dims, a sheet rises from the bottom, and there is exactly one way out of
- * it, which closes it. Anything else the sheet needs to do it does inside
- * its own content; a second button would turn it into a dialog, and the
- * owner asked for a popup.
+ * dims, a sheet rises from the bottom, and there is exactly one control
+ * that leaves it. Anything else the sheet needs to do it does inside its
+ * own content; a second button would turn it into a dialog, and the owner
+ * asked for a popup.
  *
  * That way out is the chat header's back chevron at the sheet's top left,
  * beside the title, not a full-width "Kapat" under the content (owner,
  * 2026-09-24: "kapat butonları en alttaki full butondan sol üstte geriye
  * dönüş olsun, mesajlardaki geri butonu gibi"). It keeps "Kapat" as its
- * spoken name, so VoiceOver and the web still announce what it does.
+ * spoken name, so VoiceOver and the web still announce what it does. It
+ * closes the sheet, unless the host passes `onBack`: a sheet with pages of
+ * its own (settings) points it, and the hardware back, at its first page.
  *
  * A native `Modal`, not an in-tree overlay: it sits above the tab bar as
  * well, which is what a dimmed background means on iOS, and react-native-
  * web ships `Modal` (unlike `Alert`, which it renders as a no-op —
- * docs/NOTES.md). The backdrop and the hardware back both close it too,
- * because a sheet that can only be dismissed by its button traps anyone
- * whose thumb cannot reach it.
+ * docs/NOTES.md). The backdrop always closes it, and the hardware back
+ * does what the chevron does, because a sheet that can only be left by
+ * its button traps anyone whose thumb cannot reach it.
  */
 export function Popup({
   visible,
@@ -163,7 +165,10 @@ export function Popup({
           <CosmicGround planet={false} horizon={false} />
           {/* The chat header's row: the way out, then what this is. A
               bleed sheet has no row — its photo runs to the top — so the
-              chevron is drawn over the photo instead, below. */}
+              chevron is drawn over the photo instead. It comes before the
+              scroll view either way, so VoiceOver and the web's tab order
+              reach the way out first; `zIndex` keeps the one over the
+              photo painted above what follows it. */}
           {bleed ? null : (
             <View style={styles.header}>
               {back}
@@ -172,6 +177,7 @@ export function Popup({
               )}
             </View>
           )}
+          {bleed ? <View style={styles.overPhoto}>{back}</View> : null}
           {/* The gutter belongs to the scroll view's content, not to the
               sheet: on the sheet it clips, and a child that cancels it to
               run edge to edge (ProfileView's carousel) would lose that
@@ -199,7 +205,6 @@ export function Popup({
               </ScrollLock.Provider>
             </TopGapContextProvider>
           </ScrollView>
-          {bleed ? <View style={styles.overPhoto}>{back}</View> : null}
         </View>
       </View>
     </Modal>
@@ -243,11 +248,14 @@ const styles = StyleSheet.create({
   },
   // `flexShrink` so a long title yields to the chevron, as in the chat.
   title: { ...type.title, color: color.text, flexShrink: 1 },
-  // Over the photo, in the same place the header row would put it.
+  // Over the photo, the chip's edge on the content's gutter, the way the
+  // deck's corner chips sit on theirs.
   overPhoto: {
     position: 'absolute',
     top: space.md,
-    left: SCREEN_PADDING - space.sm,
+    left: SCREEN_PADDING,
+    zIndex: 1,
+    elevation: 1,
   },
   // `flexGrow: 0` so a short sheet is short; `flexShrink: 1` so a long one
   // scrolls inside the sheet instead of running off the screen.

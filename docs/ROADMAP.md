@@ -1317,7 +1317,8 @@ controls that take one gesture instead of a dozen taps.
       their page from the sheet, and "‹ Profil" returned to the profile._
       **Amended the same day.** Blocked people and the privacy text open
       inside the sheet too: the title becomes the page's name, "‹ Ayarlar"
-      goes back to the list, and every opening starts at the list. The
+      goes back to the list (since 2026-09-24 the sheet's own top-left
+      chevron, spoken "Ayarlara dön"), and every opening starts at the list. The
       `/blocked` and `/settings/legal` routes are gone; the root `/legal`
       stays for sign-in, welcome and onboarding. The queued navigation is
       now only the trip to sign-in after sign-out or account deletion.
