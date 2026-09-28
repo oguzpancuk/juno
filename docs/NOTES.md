@@ -8346,9 +8346,12 @@ owner's check on a device.
   screen does not read it.
 - **An abandoned provider account.** Review round 1 found that backing
   out through "Farklı bir hesapla gir" left an auth user nobody could
-  delete; that link now deletes a provider-opened account first. One
-  closed without the link still stays until its owner comes back
-  (ADR-0013, Consequences).
+  delete; that link now deletes a provider-opened account first. Round 2
+  found that the first version would have deleted a member WITH a
+  profile who reached onboarding by URL or deep link: the emptiness is
+  now the server's check (`delete-account` `only_if_empty`, 409), tested
+  in `supabase/tests/delete-account.test.ts`. One closed without the link
+  still stays until its owner comes back (ADR-0013, Consequences).
 - **Apple's token carries no nonce either.** `expo-apple-authentication`
   takes one, and GoTrue would check its SHA-256; hashing it needs a
   SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It

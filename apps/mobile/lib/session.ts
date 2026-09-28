@@ -65,6 +65,24 @@ export function leaveToSignIn(): void {
 }
 
 /**
+ * Sign out, then go to sign-in: settings' sign-out and delete, and
+ * onboarding's "Farklı bir hesapla gir". Best-effort: a failed sign-out
+ * must still leave the screen. supabase-js 2.116 clears the stored
+ * session on every outcome of `signOut()` except an unreadable one — a
+ * refusal (401/403/404, which is what a deleted user's token gets) and a
+ * network failure alike — so the person does not come back signed in.
+ * The server's /logout has a deadline (lib/supabase.ts); a token refresh
+ * auth-js runs first, for a session about to expire, does not — see the
+ * note there.
+ */
+export function signOutAndLeave(): void {
+  void supabase.auth
+    .signOut()
+    .catch(() => undefined)
+    .then(() => leaveToSignIn());
+}
+
+/**
  * The signed-out guard every screen behind the session uses.
  *
  * `<Redirect href="/sign-in" />` is `router.replace`, which is the call

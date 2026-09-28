@@ -7,8 +7,7 @@ import { PremiumPanel } from '@/components/PremiumPanel';
 import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
-import { supabase } from '@/lib/supabase';
-import { leaveToSignIn, useSession } from '@/lib/session';
+import { signOutAndLeave, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { color, font, radius, space, type } from '@/theme/tokens';
 
@@ -22,25 +21,14 @@ export function settingsTitle(view: SettingsView): string {
   return t.settings.title;
 }
 
-/**
- * Sign out, then go to sign-in. Handed to the host through `onLeave`, so it
- * runs once the sheet is gone — never while it is up. Signing out is what
- * turns every screen's session to signed-out: supabase-js tells its
- * listeners before `signOut()` resolves, each signed-in screen answers
- * with `RedirectToSignIn`, and the profile's own guard unmounts this sheet
- * mid-presentation. Its `onDismissed` then never fires, and every one of
- * those navigations lands while iOS is still animating the modal away,
- * which is when iOS drops them (review, 2026-09-15). Best-effort: a failed
- * sign-out must still leave the screen. The server's /logout has a
- * deadline (lib/supabase.ts); a token refresh auth-js runs first, for a
- * session about to expire, does not — see the note there.
- */
-function signOutAndLeave(): void {
-  void supabase.auth
-    .signOut()
-    .catch(() => undefined)
-    .then(() => leaveToSignIn());
-}
+// Sign-out hands `signOutAndLeave` (lib/session.ts) to the host through
+// `onLeave`, so it runs once the sheet is gone — never while it is up.
+// Signing out turns every screen's session to signed-out: supabase-js
+// tells its listeners before `signOut()` resolves, each signed-in screen
+// answers with `RedirectToSignIn`, and the profile's own guard unmounts
+// this sheet mid-presentation. Its `onDismissed` then never fires, and
+// every one of those navigations lands while iOS is still animating the
+// modal away, which is when iOS drops them (review, 2026-09-15).
 
 /**
  * Settings, as the body of a popup opened from the profile (owner,

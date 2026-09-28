@@ -48,6 +48,8 @@
  * address it vouches for, and Google's token also carries a name and a
  * picture URL, which land in the auth user's metadata and nowhere else.
  */
+import { t } from './strings';
+
 export interface LegalSection {
   readonly heading: string;
   /** A line starting with "• " is rendered as a bullet. */
@@ -135,7 +137,9 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       'Verilerin, hesabın açık kaldığı sürece saklanır. Hesabını uygulama içinden sildiğinde profilin, haritan, fotoğrafların, beğenilerin, eşleşmelerin ve mesajların silinir.',
       'İki istisna var. Hakkında yapılmış şikâyet kayıtları, kötüye kullanımın hesap silinerek izinin kaybolmaması için saklanmaya devam eder; bu kayıtta şikâyet edilen kişinin kimliği ve şikâyet metni silinir, yalnızca şikâyetin varlığı, sebebi ve tarihi kalır. Kimlik altyapısının denetim kayıtları da (kayıt olma, giriş, hesap silme olayları) e-posta adresini içerecek şekilde kalır. Bugün bu iki kayıt türü için otomatik bir silme süresi tanımlı değil; bir süre belirlendiğinde bu metin güncellenecek.',
-      'Apple ya da Google ile açılıp doğum bilgileri girilmeden bırakılan bir hesap, doğum bilgileri ekranındaki “Farklı bir hesapla gir” ile silinir. Ekranı kapatıp bırakırsan aynı sağlayıcıyla yeniden girip orada silebilirsin.',
+      // The link's own label, so the notice cannot name a link that was
+      // reworded (lib/strings.ts onboarding.switchAccount).
+      `Apple ya da Google ile açılıp doğum bilgileri girilmeden bırakılan bir hesap, doğum bilgileri ekranındaki “${t.onboarding.switchAccount}” ile silinir. Ekranı kapatıp bırakırsan aynı sağlayıcıyla yeniden girip orada silebilirsin.`,
     ],
   },
   {

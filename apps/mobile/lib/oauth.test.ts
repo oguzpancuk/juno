@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountNote,
+  openedByProvider,
   availability,
   googleClientIdSchema,
   reversedClientId,
@@ -207,6 +208,34 @@ describe('accountNote', () => {
       { email: 'a@gmail.com', appMetadata: meta(['github']) },
     ]) {
       expect(accountNote(input)).toBeNull();
+    }
+  });
+});
+
+describe('openedByProvider', () => {
+  it('is true for an account Apple or Google opened, whatever else is missing', () => {
+    // The delete on leaving onboarding must not depend on the note: an
+    // account with no address to print is still one a provider opened.
+    expect(openedByProvider({ provider: 'apple', providers: ['apple'] })).toBe(
+      true,
+    );
+    expect(openedByProvider({ providers: ['google'] })).toBe(true);
+    expect(openedByProvider({ provider: 'google' })).toBe(true);
+  });
+
+  it('is false for an e-mail account, linked or not', () => {
+    for (const meta of [
+      { provider: 'email', providers: ['email'] },
+      { provider: 'email', providers: ['email', 'apple'] },
+      { provider: 'email' },
+    ]) {
+      expect(openedByProvider(meta)).toBe(false);
+    }
+  });
+
+  it('is false for anything it cannot read', () => {
+    for (const meta of [undefined, null, {}, { providers: 'google' }]) {
+      expect(openedByProvider(meta)).toBe(false);
     }
   });
 });

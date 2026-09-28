@@ -68,11 +68,15 @@ is among them, a provider opened this account, and a sentence under the
 title says which address it was opened with — or that Apple hid it — and
 points at "Farklı bir hesapla gir", which signs out to the e-mail sign-in.
 The decision is `lib/oauth.ts` `accountNote`, held by
-`lib/oauth.test.ts`. For such an account that link also deletes it,
-through `delete-account`, before signing out: it has no profile, holds
-only the provider's identity, and nothing else in the app could ever
-reach it again to delete it. An e-mail account on the same screen is only
-signed out, as before.
+`lib/oauth.test.ts`. For such an account that link also tries to delete
+it before signing out, since it holds only the provider's identity and
+nothing else in the app could ever reach it again. The server decides
+whether it is empty: `delete-account` with `{ "only_if_empty": true }`
+answers 409 and deletes nothing when the caller has a profile, because
+onboarding is reachable by URL and by deep link and the app cannot know.
+Whatever the answer, the person is signed out; a failed delete leaves the
+same orphan that closing the app there does. An e-mail account on the
+same screen is only signed out, as before.
 
 **The consent a linked member gave stays the record.**
 `profiles.consent_version` is the notice accepted at onboarding, where

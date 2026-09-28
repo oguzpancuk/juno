@@ -116,3 +116,29 @@ export async function deleteAccount(): Promise<boolean> {
   if (error) return false;
   return DeletedSchema.safeParse(data).success;
 }
+
+/**
+ * Delete this account only if it never made a profile: onboarding's
+ * "Farklı bir hesapla gir" for an account Apple or Google opened
+ * (ADR-0013). The server checks for the profile and answers 409 when one
+ * exists, so a member who reaches onboarding by URL or deep link is only
+ * signed out. Every outcome ends in a sign-out; this only says which.
+ */
+export type AbandonOutcome = 'deleted' | 'has-profile' | 'failed';
+
+export async function abandonEmptyAccount(): Promise<AbandonOutcome> {
+  const { data, error } = await supabase.functions.invoke('delete-account', {
+    method: 'POST',
+    body: { only_if_empty: true },
+  });
+  if (error) {
+    // supabase-js wraps a non-2xx answer as FunctionsHttpError with the
+    // Response on `context`.
+    const status: unknown =
+      typeof error === 'object' && error !== null && 'context' in error
+        ? (error.context as { status?: unknown } | undefined)?.status
+        : undefined;
+    return status === 409 ? 'has-profile' : 'failed';
+  }
+  return DeletedSchema.safeParse(data).success ? 'deleted' : 'failed';
+}

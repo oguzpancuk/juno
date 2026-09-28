@@ -174,17 +174,39 @@ export type AccountNote =
   | { readonly kind: 'relay' }
   | null;
 
-export function accountNote(input: AccountNoteInput): AccountNote {
-  const parsed = appMetadataSchema.safeParse(input.appMetadata);
-  if (!parsed.success || !input.email) return null;
+/**
+ * Which provider opened this account, or `null` when it was opened with
+ * e-mail (a provider linked onto it since does not count) or the metadata
+ * cannot be read.
+ */
+function providerOpener(appMetadata: unknown): Provider | null {
+  const parsed = appMetadataSchema.safeParse(appMetadata);
+  if (!parsed.success) return null;
   const { provider, providers } = parsed.data;
   const methods = providers ?? (provider ? [provider] : []);
   if (methods.includes('email')) return null;
   // The one it was opened with first, when it says; a later link second.
-  const opener = [provider, ...methods].find((method): method is Provider =>
-    PROVIDERS.some((known) => known === method),
+  return (
+    [provider, ...methods].find((method): method is Provider =>
+      PROVIDERS.some((known) => known === method),
+    ) ?? null
   );
-  if (!opener) return null;
+}
+
+/**
+ * Whether leaving onboarding may try to delete this account: Apple or
+ * Google opened it. Decided apart from `accountNote`, which also needs an
+ * address to print, so an account with none is still cleaned up. The
+ * server refuses the delete if a profile exists (`delete-account`,
+ * `only_if_empty`), which this cannot know.
+ */
+export function openedByProvider(appMetadata: unknown): boolean {
+  return providerOpener(appMetadata) !== null;
+}
+
+export function accountNote(input: AccountNoteInput): AccountNote {
+  const opener = providerOpener(input.appMetadata);
+  if (opener === null || !input.email) return null;
   if (
     opener === 'apple' &&
     input.email.toLowerCase().endsWith(`@${APPLE_RELAY_DOMAIN}`)
