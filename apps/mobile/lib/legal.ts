@@ -135,6 +135,7 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       'Verilerin, hesabın açık kaldığı sürece saklanır. Hesabını uygulama içinden sildiğinde profilin, haritan, fotoğrafların, beğenilerin, eşleşmelerin ve mesajların silinir.',
       'İki istisna var. Hakkında yapılmış şikâyet kayıtları, kötüye kullanımın hesap silinerek izinin kaybolmaması için saklanmaya devam eder; bu kayıtta şikâyet edilen kişinin kimliği ve şikâyet metni silinir, yalnızca şikâyetin varlığı, sebebi ve tarihi kalır. Kimlik altyapısının denetim kayıtları da (kayıt olma, giriş, hesap silme olayları) e-posta adresini içerecek şekilde kalır. Bugün bu iki kayıt türü için otomatik bir silme süresi tanımlı değil; bir süre belirlendiğinde bu metin güncellenecek.',
+      'Apple ya da Google ile açılıp doğum bilgileri girilmeden bırakılan bir hesap, doğum bilgileri ekranındaki “Farklı bir hesapla gir” ile silinir. Ekranı kapatıp bırakırsan aynı sağlayıcıyla yeniden girip orada silebilirsin.',
     ],
   },
   {

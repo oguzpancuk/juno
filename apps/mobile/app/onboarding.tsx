@@ -29,6 +29,7 @@ import {
 } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
 import { accountNote } from '@/lib/oauth';
+import { deleteAccount } from '@/lib/safety';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { CosmicGround } from '@/components/CosmicGround';
@@ -80,23 +81,51 @@ export default function Onboarding() {
   );
 
   // Said once, above the form, when Apple or Google opened this account
-  // rather than being linked onto an e-mail one (lib/oauth.ts).
-  const note =
-    session.status === 'signed-in'
-      ? accountNote({
-          email: session.session.user.email,
-          appMetadata: session.session.user.app_metadata,
-        })
-      : null;
+  // rather than being linked onto an e-mail one (lib/oauth.ts). Keyed on
+  // the user, not the session object: a token refresh changes nothing
+  // here, and a keystroke in any field must not re-run the parse.
+  const user = session.status === 'signed-in' ? session.session.user : null;
+  const note = useMemo(
+    () =>
+      user === null
+        ? null
+        : accountNote({ email: user.email, appMetadata: user.app_metadata }),
+    [user],
+  );
   const noteText =
     note === null
       ? null
       : note.kind === 'relay'
-        ? t.onboarding.accountNote.relay
+        ? t.onboarding.accountNote.relay(t.onboarding.switchAccount)
         : t.onboarding.accountNote.provider(
             t.onboarding.providerNames[note.provider],
             note.email,
+            t.onboarding.switchAccount,
           );
+
+  // Leaving an account a provider opened deletes it: it has no profile
+  // and holds only the provider's identity, and nothing else in the app
+  // could ever delete it (ADR-0013). An e-mail account is only signed out
+  // — it may be a member's own, half-way through onboarding.
+  const [leaving, setLeaving] = useState(false);
+  const leave = async () => {
+    if (leaving) return;
+    setLeaving(true);
+    setError(null);
+    if (note !== null && !(await deleteAccount())) {
+      setLeaving(false);
+      return setError(t.safety.deleteFailed);
+    }
+    try {
+      // A deleted user's sign-out is refused by the server, and
+      // supabase-js clears the stored session on that refusal anyway.
+      await supabase.auth.signOut();
+      leaveToSignIn();
+    } catch {
+      setLeaving(false);
+      setError(t.onboarding.errors.generic);
+    }
+  };
 
   // KVKK: the profile is the point at which birth data and location start
   // being processed, so consent is taken here and stored with the version
@@ -201,14 +230,8 @@ export default function Onboarding() {
         ) : null}
         <Pressable
           testID="sign-out"
-          onPress={() => {
-            void supabase.auth
-              .signOut()
-              .then(() => {
-                leaveToSignIn();
-              })
-              .catch(() => setError(t.onboarding.errors.generic));
-          }}
+          disabled={leaving}
+          onPress={() => void leave()}
         >
           <Text style={styles.switchAccount}>{t.onboarding.switchAccount}</Text>
         </Pressable>

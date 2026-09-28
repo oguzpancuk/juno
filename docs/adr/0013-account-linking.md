@@ -68,16 +68,29 @@ is among them, a provider opened this account, and a sentence under the
 title says which address it was opened with — or that Apple hid it — and
 points at "Farklı bir hesapla gir", which signs out to the e-mail sign-in.
 The decision is `lib/oauth.ts` `accountNote`, held by
-`lib/oauth.test.ts`.
+`lib/oauth.test.ts`. For such an account that link also deletes it,
+through `delete-account`, before signing out: it has no profile, holds
+only the provider's identity, and nothing else in the app could ever
+reach it again to delete it. An e-mail account on the same screen is only
+signed out, as before.
+
+**The consent a linked member gave stays the record.**
+`profiles.consent_version` is the notice accepted at onboarding, where
+birth data and location start being processed; a link does not touch it.
+So a member who signed up under the 2026-09-21 notice and later links
+Apple keeps 2026-09-21, although only the 2026-09-28 text describes
+provider sign-in. Asking existing members to accept a newer notice is the
+re-consent step of the next ROADMAP item ("KVKK consent and privacy
+policy"), which covers every notice change, not only this one.
 
 ## Consequences
 
-**The empty account is left behind.** Someone who backs out of onboarding
-to their e-mail account leaves an auth user with a provider identity and
-no profile. It holds an address and a provider subject id, nothing else;
-signing in with that provider again returns to it. Nothing cleans it up
-today. `metrics_onboarding` counts it as an account that did not finish
-onboarding, which is what it is.
+**An empty account can still be left behind**, by closing the app on
+onboarding instead of tapping the link. It holds an address and a
+provider subject id, nothing else; signing in with that provider again
+returns to it, and the link deletes it then. The notice says so under
+"Saklama süresi". `metrics_onboarding` counts it as an account that did
+not finish onboarding, which is what it is.
 
 **Linking merges metadata.** GoTrue writes the provider's claims into the
 user's `raw_user_meta_data` on link; for Google that includes a name and a

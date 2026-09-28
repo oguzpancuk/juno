@@ -185,7 +185,10 @@ export function accountNote(input: AccountNoteInput): AccountNote {
     PROVIDERS.some((known) => known === method),
   );
   if (!opener) return null;
-  if (input.email.toLowerCase().endsWith(`@${APPLE_RELAY_DOMAIN}`)) {
+  if (
+    opener === 'apple' &&
+    input.email.toLowerCase().endsWith(`@${APPLE_RELAY_DOMAIN}`)
+  ) {
     return { kind: 'relay' };
   }
   return { kind: 'provider', provider: opener, email: input.email };

@@ -8344,9 +8344,11 @@ owner's check on a device.
   the obfuscated user comes back with an empty `identities` array
   (`signup.go`, `sanitizeUser`), which is the documented tell; the sign-up
   screen does not read it.
-- **An abandoned provider account stays.** Backing out of onboarding
-  leaves an auth user with no profile (ADR-0013, Consequences). Nothing
-  deletes it; `delete-account` needs a signed-in member to call it.
+- **An abandoned provider account.** Review round 1 found that backing
+  out through "Farklı bir hesapla gir" left an auth user nobody could
+  delete; that link now deletes a provider-opened account first. One
+  closed without the link still stays until its owner comes back
+  (ADR-0013, Consequences).
 - **Apple's token carries no nonce either.** `expo-apple-authentication`
   takes one, and GoTrue would check its SHA-256; hashing it needs a
   SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It

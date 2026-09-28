@@ -101,10 +101,13 @@ export const t = {
     // reaches instead, when Apple or Google carried a different address
     // (ADR-0013). An account a provider was linked onto hears neither.
     accountNote: {
-      provider: (provider: string, email: string) =>
-        `Bu hesap ${provider} ile, ${email} adresiyle açıldı. Daha önce başka bir adresle kaydolduysan “Farklı bir hesapla gir” bağlantısına dokun ve o adresle giriş yap.`,
-      relay:
-        'Apple e-posta adresini gizlediği için bu yeni bir hesap. Daha önce e-postayla kaydolduysan “Farklı bir hesapla gir” bağlantısına dokun ve o adresle giriş yap.',
+      // `link` is `switchAccount` itself, so the sentence cannot name a
+      // link that has been reworded. Tapping it deletes the account: it
+      // holds a provider's identity and nothing else (ADR-0013).
+      provider: (provider: string, email: string, link: string) =>
+        `Bu hesap ${provider} ile, ${email} adresiyle açıldı. Daha önce başka bir adresle kaydolduysan “${link}” bağlantısına dokun: bu boş hesap silinir ve o adresle giriş yaparsın.`,
+      relay: (link: string) =>
+        `Apple e-posta adresini gizlediği için bu yeni bir hesap. Daha önce e-postayla kaydolduysan “${link}” bağlantısına dokun: bu boş hesap silinir ve o adresle giriş yaparsın.`,
     },
     providerNames: { apple: 'Apple', google: 'Google' },
     locationHint:

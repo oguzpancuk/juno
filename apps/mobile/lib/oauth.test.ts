@@ -168,6 +168,21 @@ describe('accountNote', () => {
     ).toEqual({ kind: 'relay' });
   });
 
+  it("calls a relay address Apple's only when Apple opened the account", () => {
+    // A Google account can be registered on an Apple relay address; telling
+    // that person Apple hid their e-mail would name the wrong provider.
+    expect(
+      accountNote({
+        email: 'x7k2m9q4ab@privaterelay.appleid.com',
+        appMetadata: meta(['google']),
+      }),
+    ).toEqual({
+      kind: 'provider',
+      provider: 'google',
+      email: 'x7k2m9q4ab@privaterelay.appleid.com',
+    });
+  });
+
   it('falls back to the opening provider when the list is missing', () => {
     expect(
       accountNote({

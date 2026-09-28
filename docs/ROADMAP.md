@@ -252,8 +252,8 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       are `docs/auth-setup.md`; this box is ticked by the first real
       sign-in — and that same change must name the provider in
       `apps/mobile/lib/legal.ts`, under "Hesap" and "Kimlerle paylaşılır".
-      The notice says sign-in is by e-mail and password, which is true only
-      while both providers are disabled on the hosted project.
+      Until 2026-09-28 the notice said sign-in was by e-mail and password,
+      true while both providers were disabled on the hosted project.
       2026-09-28: the notice now names both providers (ahead of switching
       them on, which happens after the deploy that carries it); a provider
       sign-in on an e-mail account's verified address lands in that account
