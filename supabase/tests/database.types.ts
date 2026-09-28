@@ -787,6 +787,7 @@ export type Database = {
       }
     }
     Functions: {
+      abandon_empty_account: { Args: never; Returns: boolean }
       birth_instant: {
         Args: { city_id: number; local_time: string }
         Returns: string
