@@ -25,9 +25,9 @@ import { color, space, type } from '@/theme/tokens';
  * group opens sign-up for someone who has no account yet (owner,
  * 2026-09-28, after trying both providers on a device). Between them sit
  * Apple and Google, each drawn as its provider requires
- * (components/ProviderButtons.tsx), and since 2026-09-16 they sign people in rather than stand there
- * — the placeholders the owner asked for on 2026-09-11 ("arkası şimdilik
- * boş kalsın") are gone, and with them the App Store Review 4.8 risk of a
+ * (components/ProviderButtons.tsx), and since 2026-09-16 they sign people
+ * in rather than stand there — the placeholders the owner asked for on
+ * 2026-09-11 ("arkası şimdilik boş kalsın") are gone, and with them the App Store Review 4.8 risk of a
  * Sign in with Apple button a reviewer taps and nothing happens.
  *
  * A provider that cannot work on this build is not drawn at all: Apple

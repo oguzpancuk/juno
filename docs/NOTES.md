@@ -8340,7 +8340,13 @@ the provider buttons carry their logos (`components/ProviderButtons.tsx`).
 Apple is the system `ASAuthorizationAppleIDButton` via
 `expo-apple-authentication` (already a dependency), white on this dark
 screen. It is the only way to be sure of the HIG rules (logo asset,
-approved title, system font), and iOS writes and localises its title.
+approved title, system font). It titles itself in a language the app
+bundle declares, and the bundle declared none (a prebuild makes it
+English-only), so a Turkish phone would have read "Sign in with Apple".
+The evaluator caught this from the config. `app.json` now declares `tr`
+(`CFBundleDevelopmentRegion`, `CFBundleLocalizations`), pinned by
+`lib/app-config.test.ts`. An Info.plist change needs a new native build
+(`npx expo run:ios`); `eas update` cannot carry it.
 Google is drawn to its light-theme branding: white, #747775 hairline, the
 four-colour G. One deviation: Google's spec names Roboto Medium, and the
 title uses the system font instead, because bundling Roboto is a new
