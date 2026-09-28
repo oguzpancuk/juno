@@ -64,39 +64,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // `{ "only_if_empty": true }` is onboarding's call (ADR-0013): it
-  // deletes an account Apple or Google opened and nobody finished, and it
-  // must never reach a member with a profile — onboarding is reachable by
-  // URL and by deep link, so the app cannot be the one to know. Any other
-  // body, or none, is the settings call, which deletes unconditionally
-  // behind its own confirmation. Nothing else in the body is read: the
-  // caller is always the token's user.
-  let onlyIfEmpty = false;
-  try {
-    const body: unknown = JSON.parse(await req.text());
-    onlyIfEmpty =
-      typeof body === 'object' &&
-      body !== null &&
-      (body as Record<string, unknown>).only_if_empty === true;
-  } catch {
-    // No body, or not JSON: the settings call.
-  }
-  if (onlyIfEmpty) {
-    const profile = await admin
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle();
-    if (profile.error) {
-      console.error(
-        'delete-account profile check failed',
-        profile.error.message,
-      );
-      return json(500, { error: 'delete_failed' });
-    }
-    if (profile.data) return json(409, { error: 'has_profile' });
-  }
-
   // Photos live under "<uid>/" in a private bucket. Storage objects are
   // not rows, so nothing cascades: they have to go first, while the user
   // still exists to be listed.

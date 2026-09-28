@@ -8348,14 +8348,23 @@ owner's check on a device.
   out through "Farklı bir hesapla gir" left an auth user nobody could
   delete; that link now deletes a provider-opened account first. Round 2
   found that the first version would have deleted a member WITH a
-  profile who reached onboarding by URL or deep link: the emptiness is
-  now the server's check (`delete-account` `only_if_empty`, 409), tested
-  in `supabase/tests/delete-account.test.ts`. One closed without the link
-  still stays until its owner comes back (ADR-0013, Consequences).
-- **Deploy order matters for `delete-account`.** An old function ignores
-  the body and deletes unconditionally, so the app that sends
-  `only_if_empty` must never meet it: `npx supabase functions deploy`
-  before the web export or any build carrying this change.
+  profile who reached onboarding by URL or deep link. Round 3 found that
+  the server check it got (a body flag on `delete-account`) failed open —
+  a rolled-back function ignores the body — and raced a profile insert.
+  The emptiness is now one database function, `abandon_empty_account()`,
+  which locks the user row, checks and deletes in one transaction, and
+  simply does not exist on an older server. Tested in
+  `supabase/tests/abandon-account.test.ts`; both concurrent orders
+  (insert first, delete first) were also run by hand on a scratch
+  Postgres 16 with stand-in `auth`/`storage` schemas: the insert-first
+  case keeps the account, the delete-first case fails the insert's FK.
+  One closed without the link still stays until its owner comes back
+  (ADR-0013, Consequences).
+- **No deploy order to keep.** The migration can go before or after the
+  app: an app that meets a database without `abandon_empty_account`
+  gets "not found", says the account could not be deleted, and signs out
+  on the next tap. `supabase db push` before the web export is still the
+  order that makes the delete work from the first day.
 - **Apple's token carries no nonce either.** `expo-apple-authentication`
   takes one, and GoTrue would check its SHA-256; hashing it needs a
   SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It

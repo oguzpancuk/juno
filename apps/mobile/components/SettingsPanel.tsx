@@ -21,15 +21,6 @@ export function settingsTitle(view: SettingsView): string {
   return t.settings.title;
 }
 
-// Sign-out hands `signOutAndLeave` (lib/session.ts) to the host through
-// `onLeave`, so it runs once the sheet is gone — never while it is up.
-// Signing out turns every screen's session to signed-out: supabase-js
-// tells its listeners before `signOut()` resolves, each signed-in screen
-// answers with `RedirectToSignIn`, and the profile's own guard unmounts
-// this sheet mid-presentation. Its `onDismissed` then never fires, and
-// every one of those navigations lands while iOS is still animating the
-// modal away, which is when iOS drops them (review, 2026-09-15).
-
 /**
  * Settings, as the body of a popup opened from the profile (owner,
  * 2026-09-15). It was the `/settings` screen; everything it did it still
@@ -183,6 +174,15 @@ export function SettingsPanel({
           label={t.settings.signOut}
           // A deletion in flight signs out on its own when it finishes.
           disabled={deleting}
+          // Handed to the host, which runs it once the sheet is gone —
+          // never while it is up. Signing out turns every screen's session
+          // to signed-out: supabase-js tells its listeners before
+          // `signOut()` resolves, each signed-in screen answers with
+          // `RedirectToSignIn`, and the profile's own guard unmounts this
+          // sheet mid-presentation. Its `onDismissed` then never fires,
+          // and every one of those navigations lands while iOS is still
+          // animating the modal away, which is when iOS drops them
+          // (review, 2026-09-15).
           onPress={() => onLeave(signOutAndLeave)}
           testID="sign-out"
         />

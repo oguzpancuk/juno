@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, supabase } from './supabase';
 import { notifyUnreadChanged } from './unread';
 
 /** Mirrors the `report_reason` enum; the labels are the UI's, in Turkish. */
@@ -118,27 +118,25 @@ export async function deleteAccount(): Promise<boolean> {
 }
 
 /**
- * Delete this account only if it never made a profile: onboarding's
- * "Farklı bir hesapla gir" for an account Apple or Google opened
- * (ADR-0013). The server checks for the profile and answers 409 when one
- * exists, so a member who reaches onboarding by URL or deep link is only
- * signed out. Every outcome ends in a sign-out; this only says which.
+ * Delete this account only while it is empty: onboarding's "Farklı bir
+ * hesapla gir" for an account Apple or Google opened (ADR-0013). The
+ * database decides, in one transaction, and keeps any account with a
+ * profile or a photo — onboarding is reachable by URL and deep link, so
+ * the app cannot be the one to know. A function of its own rather than a
+ * mode of `delete-account`, so a server without it deletes nothing.
+ *
+ * 'failed' is the only outcome the screen acts on: the account may still
+ * be there and the person is told so. Bounded like every read: a stalled
+ * connection must not leave the link spinning with no way out.
  */
-export type AbandonOutcome = 'deleted' | 'has-profile' | 'failed';
+export type AbandonOutcome = 'deleted' | 'not-empty' | 'failed';
 
 export async function abandonEmptyAccount(): Promise<AbandonOutcome> {
-  const { data, error } = await supabase.functions.invoke('delete-account', {
-    method: 'POST',
-    body: { only_if_empty: true },
-  });
-  if (error) {
-    // supabase-js wraps a non-2xx answer as FunctionsHttpError with the
-    // Response on `context`.
-    const status: unknown =
-      typeof error === 'object' && error !== null && 'context' in error
-        ? (error.context as { status?: unknown } | undefined)?.status
-        : undefined;
-    return status === 409 ? 'has-profile' : 'failed';
-  }
-  return DeletedSchema.safeParse(data).success ? 'deleted' : 'failed';
+  const { data, error } = await supabase
+    .rpc('abandon_empty_account')
+    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+  if (error) return 'failed';
+  const parsed = z.boolean().safeParse(data);
+  if (!parsed.success) return 'failed';
+  return parsed.data ? 'deleted' : 'not-empty';
 }

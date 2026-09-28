@@ -110,6 +110,9 @@ export const t = {
         `Apple e-posta adresini gizlediği için bu yeni bir hesap. Daha önce e-postayla kaydolduysan “${link}” bağlantısına dokun: bu boş hesap silinir ve o adresle giriş yaparsın.`,
     },
     providerNames: { apple: 'Apple', google: 'Google' },
+    // The delete could not be done; the next tap on `link` only signs out.
+    abandonFailed: (link: string) =>
+      `Bu boş hesap şu an silinemedi; internet bağlantın kopmuş olabilir. “${link}” bağlantısına yeniden dokunursan yalnızca çıkış yapılır. Hesabı silmek için daha sonra aynı yolla girip buraya yeniden dokunabilirsin.`,
     locationHint:
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },

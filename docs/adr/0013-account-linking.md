@@ -70,13 +70,21 @@ points at "Farklı bir hesapla gir", which signs out to the e-mail sign-in.
 The decision is `lib/oauth.ts` `accountNote`, held by
 `lib/oauth.test.ts`. For such an account that link also tries to delete
 it before signing out, since it holds only the provider's identity and
-nothing else in the app could ever reach it again. The server decides
-whether it is empty: `delete-account` with `{ "only_if_empty": true }`
-answers 409 and deletes nothing when the caller has a profile, because
-onboarding is reachable by URL and by deep link and the app cannot know.
-Whatever the answer, the person is signed out; a failed delete leaves the
-same orphan that closing the app there does. An e-mail account on the
-same screen is only signed out, as before.
+nothing else in the app could ever reach it again. The database decides
+whether it is empty: `public.abandon_empty_account()`
+(`20260928000001_abandon_empty_account.sql`) locks the caller's
+`auth.users` row, and deletes it only if no `profiles` row and no photo
+exists, in one transaction, so a profile insert cannot land between the
+check and the delete. It is a function of its own, not a mode of
+`delete-account`: an older server without it answers "not found" and
+deletes nothing, whatever order the app, the functions and the migrations
+are deployed or rolled back in. (A body flag on `delete-account`, the
+first version, failed open: an older function ignores the body and
+deletes a full member.) Onboarding is reachable by URL and by deep link,
+so the app cannot be the one to know. A member with a profile is only
+signed out. When the call fails, the screen says the account is still
+there and the next tap only signs out, so the link is never a dead end.
+An e-mail account on the same screen is only signed out, as before.
 
 **The consent a linked member gave stays the record.**
 `profiles.consent_version` is the notice accepted at onboarding, where
@@ -90,7 +98,8 @@ policy"), which covers every notice change, not only this one.
 ## Consequences
 
 **An empty account can still be left behind**, by closing the app on
-onboarding instead of tapping the link. It holds an address and a
+onboarding instead of tapping the link, or when the delete fails and the
+person signs out anyway. It holds an address and a
 provider subject id, nothing else; signing in with that provider again
 returns to it, and the link deletes it then. The notice says so under
 "Saklama süresi". `metrics_onboarding` counts it as an account that did

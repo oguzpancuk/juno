@@ -197,8 +197,8 @@ function providerOpener(appMetadata: unknown): Provider | null {
  * Whether leaving onboarding may try to delete this account: Apple or
  * Google opened it. Decided apart from `accountNote`, which also needs an
  * address to print, so an account with none is still cleaned up. The
- * server refuses the delete if a profile exists (`delete-account`,
- * `only_if_empty`), which this cannot know.
+ * database refuses the delete if a profile exists
+ * (`abandon_empty_account`), which this cannot know.
  */
 export function openedByProvider(appMetadata: unknown): boolean {
   return providerOpener(appMetadata) !== null;
