@@ -8352,6 +8352,10 @@ owner's check on a device.
   now the server's check (`delete-account` `only_if_empty`, 409), tested
   in `supabase/tests/delete-account.test.ts`. One closed without the link
   still stays until its owner comes back (ADR-0013, Consequences).
+- **Deploy order matters for `delete-account`.** An old function ignores
+  the body and deletes unconditionally, so the app that sends
+  `only_if_empty` must never meet it: `npx supabase functions deploy`
+  before the web export or any build carrying this change.
 - **Apple's token carries no nonce either.** `expo-apple-authentication`
   takes one, and GoTrue would check its SHA-256; hashing it needs a
   SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It
