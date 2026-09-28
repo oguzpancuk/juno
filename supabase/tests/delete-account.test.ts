@@ -367,3 +367,56 @@ it('deletes the caller and every row that referenced them', async () => {
   const forNur = await nur.client.from('match_profiles').select('match_id');
   expect(forNur.data ?? []).toEqual([]);
 }, 30_000);
+
+/**
+ * Onboarding's "Farklı bir hesapla gir" deletes an account Apple or Google
+ * opened and nobody finished (ADR-0013). The emptiness is the server's
+ * check, not the app's: onboarding is reachable by URL and by deep link, so
+ * the same tap could otherwise reach a member with a profile.
+ */
+async function abandon(u: TestUser): Promise<Response> {
+  return fetch(endpoint(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${await accessToken(u)}`,
+      apikey: localStack().ANON_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ only_if_empty: true }),
+  });
+}
+
+it('with only_if_empty, refuses a caller who has a profile and deletes nothing', async () => {
+  const member = await user('member');
+  await insertProfileRow(
+    member.client,
+    profileRow({
+      id: member.id,
+      display_name: 'Member',
+      gender: 'woman',
+      interested_in: 'everyone',
+      lonLat: ISTANBUL_NEARBY,
+    }),
+  );
+  const response = await abandon(member);
+  expect(response.status).toBe(409);
+  expect(z.object({ error: z.string() }).parse(await response.json())).toEqual({
+    error: 'has_profile',
+  });
+  const profile = await admin.from('profiles').select('id').eq('id', member.id);
+  expect(profile.data ?? []).toHaveLength(1);
+  const account = await admin.auth.admin.getUserById(member.id);
+  expect(account.data.user?.id).toBe(member.id);
+});
+
+it('with only_if_empty, deletes a caller who never made a profile', async () => {
+  const empty = await user('empty');
+  const response = await abandon(empty);
+  expect(response.status).toBe(200);
+  expect(
+    z.object({ deleted: z.string() }).parse(await response.json()),
+  ).toEqual({ deleted: empty.id });
+  deleted.add(empty.id);
+  const account = await admin.auth.admin.getUserById(empty.id);
+  expect(account.data.user ?? null).toBeNull();
+});
