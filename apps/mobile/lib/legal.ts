@@ -125,7 +125,7 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       '• Doğum haritası ve uyum hesabı. Doğum tarihi, saati ve yeri olmadan ürünün temel işlevi çalışmaz; bu veriler açık rızanla işlenir ve rızanı hesabını silerek geri alabilirsin.',
       '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak, seni görebilecek kişilere ve beğendiğin kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
-      '• Üyelik. Premium üyelik bilgin, üyeliğin sağladıklarını sunmak (sınırsız beğeni, süper beğeni, seni beğenenleri görme, uyuma göre sıralama) ve ücretsiz üyelerin günlük beğeni sınırı ile süper beğeni sınırını uygulamak için işlenir; bu sınırlar için son beğenilerinin sayısı ve zamanı kullanılır. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
+      '• Üyelik. Premium üyelik bilgin, üyeliğin sağladıklarını sunmak (sınırsız beğeni, süper beğeni, seni beğenenleri görme, uyuma göre sıralama), ücretsiz üyelerin günlük beğeni sınırını ve premium üyelerin haftalık süper beğeni sınırını uygulamak için işlenir; bu sınırlar için son beğenilerinin (süper beğeniler dahil) sayısı ve zamanı kullanılır. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Eşleşme ve mesajlaşma. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Güvenlik. Engelleme ve şikâyet kayıtları, hizmetin kötüye kullanımını önlemek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
     ],
