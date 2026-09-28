@@ -47,8 +47,10 @@ to the deck; onboarding, and the consent box on it, never appear. The
 consent they gave at sign-up stays the recorded one.
 
 **It rests on e-mail confirmations staying on.** With confirmations on,
-an address counts only if the provider vouches for it — Apple and Google
-both put `email_verified` in the token — and every e-mail account here was
+an address counts only if the provider vouches for it — GoTrue reads
+Google's `email_verified` claim, and takes every Apple address as verified
+(`parseAppleIDToken` sets it unconditionally; Apple hands out only
+addresses it has checked) — and every e-mail account here was
 confirmed with a code before it could hold a profile. With confirmations
 off, GoTrue would link any provider identity onto the account with that
 address, verified or not. `supabase/config.toml` and
@@ -90,3 +92,7 @@ is the owner's check on a device, listed in the pull request.
 **Two dashboard settings matter and nothing checks them**: Confirm email
 on (the safety of this decision), and Google's "Skip nonce checks" on
 (without it no Google sign-in from iOS reaches this decision at all).
+Skipping the nonce check gives up one protection: a captured Google ID
+token for this app's audience can be exchanged again within its lifetime
+(about an hour). Apple's token carries no nonce either, today, for the
+reason `docs/NOTES.md` gives (2026-09-28).

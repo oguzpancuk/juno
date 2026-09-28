@@ -233,6 +233,9 @@ aşağıda.
   veremiyor. Bu kutu kapalıysa Supabase telefondan gelen her Google
   girişini "Passed nonce and nonce in id_token should either both exist
   or not" diye reddeder ve uygulama yalnızca "Giriş tamamlanamadı" der.
+  Bedeli: ele geçirilmiş bir Google token'ı, süresi dolana kadar (yaklaşık
+  bir saat) tekrar kullanılabilir. Bu projede kabul edilen risk bu
+  (`docs/adr/0013-account-linking.md`).
 
 ### 2c. Uygulama
 
