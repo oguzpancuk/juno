@@ -3,10 +3,9 @@ export const t = {
   appName: 'Juno',
   welcome: {
     pitch: 'İki haritanın\narasında\nne var?',
-    withApple: 'Apple ile giriş yap',
+    // No Apple title: Apple's own button draws and localises it.
     withGoogle: 'Google ile giriş yap',
-    haveAccount: 'Zaten hesabın var mı? Giriş yap',
-    withEmail: 'E-posta ile devam et',
+    withEmail: 'E-posta ile giriş yap',
     connecting: 'Bağlanıyor…',
   },
   signIn: {

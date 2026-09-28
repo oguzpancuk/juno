@@ -8332,6 +8332,21 @@ onboarding sentence for a Google-opened account and for an Apple relay
 address, and `/legal`. The link itself, and both native sheets, are the
 owner's check on a device.
 
+**Owner's device test, same day (09:02 UTC):** Google and Apple sign-in
+both work on his phone. From that test, the welcome screen changed in
+this PR: the first button is now "E-posta ile giriş yap" (sign-in mode),
+the link under the group is "Hesabın yok mu? Kaydol" (sign-up mode), and
+the provider buttons carry their logos (`components/ProviderButtons.tsx`).
+Apple is the system `ASAuthorizationAppleIDButton` via
+`expo-apple-authentication` (already a dependency), white on this dark
+screen. It is the only way to be sure of the HIG rules (logo asset,
+approved title, system font), and iOS writes and localises its title.
+Google is drawn to its light-theme branding: white, #747775 hairline, the
+four-colour G. One deviation: Google's spec names Roboto Medium, and the
+title uses the system font instead, because bundling Roboto is a new
+dependency. The web screenshot shows e-mail and Google only; the Apple
+button exists only on iOS and is the owner's to look at.
+
 ### Side findings, not fixed here
 
 - **An account a provider opened has no way to sign in by e-mail, and

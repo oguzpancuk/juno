@@ -8,8 +8,8 @@ import {
   Wordmark,
   LinkText,
   OrbitMark,
-  OutlineButton,
 } from '@/components/ui';
+import { AppleButton, GoogleButton } from '@/components/ProviderButtons';
 import type { Availability, Provider } from '@/lib/oauth';
 import { providerAvailability, signInWithProvider } from '@/lib/providers';
 import { LegalLink } from '@/components/LegalText';
@@ -21,9 +21,11 @@ import { color, space, type } from '@/theme/tokens';
  * thing a new person sees: the mark, what the product is for, and the ways
  * in.
  *
- * The filled button opens sign-up; the link under the group opens sign-in
- * for someone who already has an account. Between them sit Apple and
- * Google, and since 2026-09-16 they sign people in rather than stand there
+ * The filled button, first, opens the e-mail sign-in; the link under the
+ * group opens sign-up for someone who has no account yet (owner,
+ * 2026-09-28, after trying both providers on a device). Between them sit
+ * Apple and Google, each drawn as its provider requires
+ * (components/ProviderButtons.tsx), and since 2026-09-16 they sign people in rather than stand there
  * — the placeholders the owner asked for on 2026-09-11 ("arkası şimdilik
  * boş kalsın") are gone, and with them the App Store Review 4.8 risk of a
  * Sign in with Apple button a reviewer taps and nothing happens.
@@ -95,22 +97,18 @@ export default function WelcomeScreen() {
           testID="continue-email"
           label={t.welcome.withEmail}
           onPress={() =>
-            router.push({ pathname: '/sign-in', params: { mode: 'up' } })
+            router.push({ pathname: '/sign-in', params: { mode: 'in' } })
           }
         />
         {providers.apple ? (
-          <OutlineButton
-            testID="continue-apple"
-            label={
-              busy === 'apple' ? t.welcome.connecting : t.welcome.withApple
-            }
+          <AppleButton
+            busy={busy === 'apple'}
             disabled={busy !== null}
             onPress={() => void startProvider('apple')}
           />
         ) : null}
         {providers.google ? (
-          <OutlineButton
-            testID="continue-google"
+          <GoogleButton
             label={
               busy === 'google' ? t.welcome.connecting : t.welcome.withGoogle
             }
@@ -120,13 +118,13 @@ export default function WelcomeScreen() {
         ) : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <LinkText
-          testID="to-sign-in"
-          style={styles.haveAccount}
+          testID="to-sign-up"
+          style={styles.noAccount}
           onPress={() =>
-            router.push({ pathname: '/sign-in', params: { mode: 'in' } })
+            router.push({ pathname: '/sign-in', params: { mode: 'up' } })
           }
         >
-          {t.welcome.haveAccount}
+          {t.signIn.toSignUp}
         </LinkText>
         <Text style={styles.consent}>{t.signIn.consent}</Text>
         <LegalLink
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
   },
   actions: { gap: space.md },
   error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },
-  haveAccount: { textAlign: 'center' },
+  noAccount: { textAlign: 'center' },
   consent: {
     ...type.bodySmall,
     color: color.textFaint,
