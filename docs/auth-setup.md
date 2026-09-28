@@ -227,6 +227,12 @@ aşağıda.
   ayrı. **Bu alan boş kalırsa telefondaki Google girişi "invalid audience"
   ile reddedilir** — yerel SDK'nın ürettiği token iOS client'ı için
   imzalanmıştır.
+- _Skip nonce checks_: **açık**. Google'ın iOS kütüphanesi, uygulama
+  kendisi bir nonce vermediğinde token'ın içine kendi rastgele nonce'unu
+  koyuyor; kullandığımız ücretsiz `@react-native-google-signin` nonce
+  veremiyor. Bu kutu kapalıysa Supabase telefondan gelen her Google
+  girişini "Passed nonce and nonce in id_token should either both exist
+  or not" diye reddeder ve uygulama yalnızca "Giriş tamamlanamadı" der.
 
 ### 2c. Uygulama
 
@@ -272,6 +278,11 @@ Apple da sunmak zorundasın. TestFlight'a çıkmadan önce bitmeli.
 **Bitti mi:** gerçek bir cihazda (ya da iCloud'a girilmiş bir simülatörde)
 "Apple ile giriş yap" → Face ID → doğum bilgileri ekranı.
 
+Apple ilk girişte "E-postamı Paylaş" ya da "E-postamı Gizle" diye sorar.
+Gizlenirse Supabase'e `…@privaterelay.appleid.com` biçiminde bir adres
+gelir; bu adres hiçbir e-posta hesabıyla aynı olamayacağı için her zaman
+yeni bir hesap açılır ve doğum bilgileri ekranı bunu söyler (aşağıda 5).
+
 ---
 
 ## 4. Web istemcisi
@@ -295,6 +306,32 @@ düğmesi yok.
 
 ---
 
+## 5. Aynı e-postayla gelen üye: hesap bağlama
+
+Panoda açılacak bir şey yok. Supabase, Apple ya da Google ile gelen
+birinin adresi burada e-postayla açılmış bir hesabın adresiyle aynıysa ve
+sağlayıcı o adresi **doğrulanmış** diye işaretlemişse girişi o hesaba
+bağlar: aynı kullanıcı, aynı profil, KVKK onayı yeniden sorulmaz
+(`docs/adr/0013-account-linking.md`).
+
+Güvenliği tek bir ayara dayanıyor: **Authentication → Sign In / Providers
+→ Email → Confirm email açık kalmalı** (1c'de zaten açtın). Kapatılırsa
+Supabase her adresi doğrulanmış sayar ve adresi doğrulanmamış bir Google
+hesabı başkasının hesabına bağlanabilir.
+
+_Allow manual linking_ kapalı kalıyor; uygulama onu kullanmıyor.
+
+Adresler farklıysa (başka bir Google hesabı ya da Apple'da gizlenmiş
+adres) yeni, boş bir hesap açılır. Kişi bunu doğum bilgileri ekranında,
+başlığın altındaki cümleden öğrenir: hangi adresle açıldığı yazar ve
+"Farklı bir hesapla gir" ile eski adresine dönebileceği söylenir.
+
+**Bitti mi:** e-postayla kaydolup profilini doldurduğun adresle Google'a
+(ya da Apple'a) gir; doğum bilgileri ekranı gelmeden doğrudan Keşfet
+açılıyor.
+
+---
+
 ## Sırayla, kısa liste
 
 - [ ] `brew install cocoapods` (gerekiyorsa) ve `npx expo run:ios`
@@ -303,8 +340,11 @@ düğmesi yok.
       `docs/NOTES.md`'ye yaz
 - [ ] Supabase SMTP ayarları + Confirm email açık + kod şablonu
 - [ ] Google Cloud: consent screen + web/iOS client'ları
-- [ ] Supabase Google sağlayıcısı (web ID + secret + Authorized Client IDs)
+- [ ] Supabase Google sağlayıcısı (web ID + secret + Authorized Client IDs + Skip nonce checks açık)
 - [ ] `apps/mobile/.env` içine iki client ID, sonra yeniden build
 - [ ] Apple Developer üyeliği + App ID'de Sign In with Apple
 - [ ] Supabase Apple sağlayıcısı (Authorized Client IDs: bundle ID)
 - [ ] Web yayındaysa Redirect URLs
+- [ ] Sağlayıcıları açmadan önce gizlilik metninin Apple ve Google'ı
+      anan sürümü yayında olmalı (`/legal`, 28 Eylül 2026)
+- [ ] Confirm email açık mı, bir kez daha bak (hesap bağlamanın güvenliği)

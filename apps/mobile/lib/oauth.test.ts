@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountNote,
   availability,
   googleClientIdSchema,
   reversedClientId,
@@ -113,5 +114,84 @@ describe('availability', () => {
         googleConfigured: false,
       }),
     ).toEqual({ apple: false, google: false });
+  });
+});
+
+describe('accountNote', () => {
+  const meta = (providers: string[]) => ({
+    provider: providers[0],
+    providers,
+  });
+
+  it('says nothing to an account opened with e-mail', () => {
+    expect(
+      accountNote({ email: 'a@example.com', appMetadata: meta(['email']) }),
+    ).toBeNull();
+  });
+
+  it('says nothing once Apple or Google was linked onto an e-mail account', () => {
+    // The same-address case: Supabase linked it, so this is the member's
+    // own account and there is nothing to warn about.
+    for (const linked of [
+      ['email', 'apple'],
+      ['email', 'google'],
+      ['email', 'apple', 'google'],
+    ]) {
+      expect(
+        accountNote({ email: 'a@example.com', appMetadata: meta(linked) }),
+      ).toBeNull();
+    }
+  });
+
+  it('names the provider and the address of an account a provider opened', () => {
+    expect(
+      accountNote({ email: 'a@gmail.com', appMetadata: meta(['google']) }),
+    ).toEqual({ kind: 'provider', provider: 'google', email: 'a@gmail.com' });
+    expect(
+      accountNote({ email: 'a@icloud.com', appMetadata: meta(['apple']) }),
+    ).toEqual({ kind: 'provider', provider: 'apple', email: 'a@icloud.com' });
+  });
+
+  it('does not print an Apple relay address as though it were theirs', () => {
+    expect(
+      accountNote({
+        email: 'x7k2m9q4ab@privaterelay.appleid.com',
+        appMetadata: meta(['apple']),
+      }),
+    ).toEqual({ kind: 'relay' });
+    // Addresses are case-insensitive, and so is the check.
+    expect(
+      accountNote({
+        email: 'X7K2@PrivateRelay.AppleID.com',
+        appMetadata: meta(['apple']),
+      }),
+    ).toEqual({ kind: 'relay' });
+  });
+
+  it('falls back to the opening provider when the list is missing', () => {
+    expect(
+      accountNote({
+        email: 'a@gmail.com',
+        appMetadata: { provider: 'google' },
+      }),
+    ).toEqual({ kind: 'provider', provider: 'google', email: 'a@gmail.com' });
+    expect(
+      accountNote({
+        email: 'a@example.com',
+        appMetadata: { provider: 'email' },
+      }),
+    ).toBeNull();
+  });
+
+  it('says nothing it cannot back up', () => {
+    for (const input of [
+      { email: undefined, appMetadata: meta(['google']) },
+      { email: '', appMetadata: meta(['google']) },
+      { email: 'a@gmail.com', appMetadata: undefined },
+      { email: 'a@gmail.com', appMetadata: { providers: 'google' } },
+      { email: 'a@gmail.com', appMetadata: meta(['github']) },
+    ]) {
+      expect(accountNote(input)).toBeNull();
+    }
   });
 });

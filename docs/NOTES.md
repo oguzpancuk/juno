@@ -8294,3 +8294,66 @@ battery measures a tap target, so the next one will pass it too.
 - The stand-in backend was rebuilt from scratch a third time for this
   thread. It belongs in `apps/mobile/scripts/` beside `web-drive.mjs`,
   already named as a candidate above.
+
+## 2026-09-28 — Apple and Google: the same address is the same account
+
+The owner's ask: "google ve apple ile girisi yapalim. daha once mail ile
+kayit olmus bir kullanici eger apple veya google ile devam et derse ve mail
+ayniysa hesabini baglayabilsin". The buttons and the token exchange were
+built on 2026-09-16 (ADR-0011); what this change adds is the linking
+decision, the notice, and one owner step that was missing.
+
+- **Linking is GoTrue's own** (ADR-0013). Read out of `supabase/auth`
+  master on this date: `DetermineAccountLinking` attaches a provider
+  identity to the user with the same address when the provider marks it
+  verified, and `createAccountFromExternalIdentity` strips an unconfirmed
+  account's password first. No app code is in that path; the app's part
+  is that `/` finds the linked member's profile and never shows
+  onboarding, so the consent box is not asked again.
+- **Different address, new account.** `accountNote` in `lib/oauth.ts`
+  tells onboarding when a provider opened the account (no `email` among
+  `app_metadata.providers`), and the screen names the address, or says
+  Apple hid it, and points at "Farklı bir hesapla gir". Test run red first
+  against a stub returning `null`: 3 failed of 19.
+- **Google on iOS needs "Skip nonce checks".** Not in `docs/auth-setup.md`
+  until today. GoogleSignIn-iOS builds its request with AppAuth's
+  convenience initialiser when the app passes no nonce, and that
+  initialiser generates one (`GIDSignIn.m`,
+  `authorizationRequestWithOptions`); the free
+  `@react-native-google-signin` 16.1.5 has no nonce parameter; GoTrue
+  refuses a token carrying a nonce the request did not
+  (`token_oidc.go`). Every iOS Google sign-in would have ended on
+  "Giriş tamamlanamadı".
+- **The notice names both providers**, `LEGAL_VERSION` 2026-09-28. It
+  goes out with the deploy, and the providers are switched on after it.
+
+Checked in the web export only, against a stand-in backend: the
+onboarding sentence for a Google-opened account and for an Apple relay
+address, and `/legal`. The link itself, and both native sheets, are the
+owner's check on a device.
+
+### Side findings, not fixed here
+
+- **An account a provider opened has no way to sign in by e-mail, and
+  nothing says so.** Its user has no password, so the e-mail sign-in
+  answers "E-posta ya da parola yanlış", and signing up again with that
+  address returns GoTrue's obfuscated user (confirmations on) and no mail,
+  so `/verify` waits for a code that never comes. The same is true today
+  of an e-mail account signing up twice. A sentence on the wrong-password
+  error naming Apple and Google would cover the first. For the second,
+  the obfuscated user comes back with an empty `identities` array
+  (`signup.go`, `sanitizeUser`), which is the documented tell; the sign-up
+  screen does not read it.
+- **An abandoned provider account stays.** Backing out of onboarding
+  leaves an auth user with no profile (ADR-0013, Consequences). Nothing
+  deletes it; `delete-account` needs a signed-in member to call it.
+- **Apple's token carries no nonce either.** `expo-apple-authentication`
+  takes one, and GoTrue would check its SHA-256; hashing it needs a
+  SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It
+  narrows the replay window of a stolen ID token, which is already short
+  and bound to this app's audience.
+
+### Upstream candidates
+
+- The stand-in backend was built from scratch a fourth time. Same
+  candidate as 2026-09-24: `apps/mobile/scripts/`.

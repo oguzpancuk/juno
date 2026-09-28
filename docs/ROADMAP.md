@@ -253,7 +253,15 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       sign-in — and that same change must name the provider in
       `apps/mobile/lib/legal.ts`, under "Hesap" and "Kimlerle paylaşılır".
       The notice says sign-in is by e-mail and password, which is true only
-      while both providers are disabled on the hosted project._
+      while both providers are disabled on the hosted project.
+      2026-09-28: the notice now names both providers (ahead of switching
+      them on, which happens after the deploy that carries it); a provider
+      sign-in on an e-mail account's verified address lands in that account
+      (GoTrue's automatic linking, ADR-0013); onboarding tells an account a
+      provider opened which address it was opened with; and Google's
+      "Skip nonce checks", without which no iOS Google sign-in gets
+      through, joined `docs/auth-setup.md`. Still waiting on the
+      credentials and the first real sign-in._
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
       privacy policy hosted at a URL; about/legal screen credits GeoNames

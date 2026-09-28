@@ -36,14 +36,17 @@
  * occupation are free text a member writes about themselves, which the
  * whole radius can read.
  *
- * The same rule covers identity providers, and there is one waiting: the
- * welcome screen draws Apple and Google buttons, but both providers are
- * disabled on the hosted project (checked 2026-09-17: `external.apple` and
- * `external.google` are false), so nobody can sign in through them and
- * "Giriş e-posta ve parola ile yapılır" is true today. The change that
- * enables either one must name it here in the same commit, under both
- * "Hesap" and "Kimlerle paylaşılır" — the ROADMAP item for that work says
- * so in its done-when clause.
+ * The same rule covers identity providers. Apple and Google are named
+ * under "Hesap" and "Kimlerle paylaşılır" since 2026-09-28, in the change
+ * that finished the sign-in item (ADR-0013). On that day both were still
+ * disabled on the hosted project (`external.apple` and `external.google`
+ * false, as checked 2026-09-17): the notice goes out first, with the
+ * deploy, and the providers are switched on in the dashboard after it, so
+ * no moment exists where someone signs in through a provider this text
+ * does not name. What it says about them was read out of GoTrue, not
+ * assumed: a provider sign-in stores the provider's subject id and the
+ * address it vouches for, and Google's token also carries a name and a
+ * picture URL, which land in the auth user's metadata and nowhere else.
  */
 export interface LegalSection {
   readonly heading: string;
@@ -52,7 +55,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '21 Eylül 2026';
+export const LEGAL_UPDATED = '28 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -66,7 +69,7 @@ export const LEGAL_UPDATED = '21 Eylül 2026';
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-21';
+export const LEGAL_VERSION = '2026-09-28';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -84,7 +87,8 @@ export const legalSections: readonly LegalSection[] = [
     body: [
       'Uygulama aşağıdaki verileri saklar.',
       'Hesap',
-      '• E-posta adresin ve parolan. Giriş e-posta ve parola ile yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-posta adresin kayıt sırasında doğrulanır: adresine altı haneli bir kod gönderilir ve hesap ancak o kod girilince açılır.',
+      '• E-posta adresin ve, e-postayla kaydolduysan, parolan. Giriş e-posta ve parola ile ya da Apple veya Google hesabınla yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-postayla kaydolursan adresin kayıt sırasında doğrulanır: adresine altı haneli bir kod gönderilir ve hesap ancak o kod girilince açılır.',
+      "• Apple ya da Google ile girersen: o sağlayıcının seni tanıdığı kimlik numarası ve sağlayıcının doğruladığı e-posta adresin. Google bunlarla birlikte adını ve profil fotoğrafının bağlantısını da iletir; bunlar kimlik altyapısında durur, uygulama onları kullanmaz ve kimseye göstermez. Apple'da e-postanı gizlemeyi seçersen Apple'ın verdiği yönlendirme adresi saklanır, gerçek adresin bize ulaşmaz. Sağlayıcının doğruladığı adres, burada e-postayla açılmış bir hesabın adresiyle aynıysa giriş o hesaba bağlanır ve ikinci bir hesap açılmaz.",
       '• Giriş kayıtları: kimlik altyapısı, her oturum için bağlandığın IP adresini ve kullandığın uygulama/tarayıcı bilgisini tutar. Bunlar güvenlik ve kötüye kullanımı önleme amacıyla saklanır.',
       'Profil',
       '• Görünen adın.',
@@ -118,6 +122,7 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'Kimlerle paylaşılır',
     body: [
       '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      "• Giriş sağlayıcıları. Apple ya da Google ile girersen girişini o sağlayıcı doğrular ve Juno'ya giriş yaptığını o da bilir; bu, onların kendi gizlilik koşullarına tabidir. Uygulama onlara profilinden, haritandan ya da mesajlarından hiçbir şey göndermez.",
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',

@@ -97,6 +97,16 @@ export const t = {
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },
     switchAccount: 'Farklı bir hesapla gir',
+    // Onboarding is the one screen a person who meant their old account
+    // reaches instead, when Apple or Google carried a different address
+    // (ADR-0013). An account a provider was linked onto hears neither.
+    accountNote: {
+      provider: (provider: string, email: string) =>
+        `Bu hesap ${provider} ile, ${email} adresiyle açıldı. Daha önce başka bir adresle kaydolduysan “Farklı bir hesapla gir” bağlantısına dokun ve o adresle giriş yap.`,
+      relay:
+        'Apple e-posta adresini gizlediği için bu yeni bir hesap. Daha önce e-postayla kaydolduysan “Farklı bir hesapla gir” bağlantısına dokun ve o adresle giriş yap.',
+    },
+    providerNames: { apple: 'Apple', google: 'Google' },
     locationHint:
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },

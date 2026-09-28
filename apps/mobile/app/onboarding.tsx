@@ -28,6 +28,7 @@ import {
   SCREEN_TOP_GUTTER,
 } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
+import { accountNote } from '@/lib/oauth';
 import { leaveToSignIn, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { CosmicGround } from '@/components/CosmicGround';
@@ -77,6 +78,25 @@ export default function Onboarding() {
     () => (city ? [] : searchCities(cityQuery, 6)),
     [city, cityQuery],
   );
+
+  // Said once, above the form, when Apple or Google opened this account
+  // rather than being linked onto an e-mail one (lib/oauth.ts).
+  const note =
+    session.status === 'signed-in'
+      ? accountNote({
+          email: session.session.user.email,
+          appMetadata: session.session.user.app_metadata,
+        })
+      : null;
+  const noteText =
+    note === null
+      ? null
+      : note.kind === 'relay'
+        ? t.onboarding.accountNote.relay
+        : t.onboarding.accountNote.provider(
+            t.onboarding.providerNames[note.provider],
+            note.email,
+          );
 
   // KVKK: the profile is the point at which birth data and location start
   // being processed, so consent is taken here and stored with the version
@@ -174,6 +194,11 @@ export default function Onboarding() {
       >
         <Text style={styles.title}>{t.onboarding.title}</Text>
         <Text style={styles.subtitle}>{t.onboarding.subtitle}</Text>
+        {noteText ? (
+          <Text testID="account-note" style={styles.accountNote}>
+            {noteText}
+          </Text>
+        ) : null}
         <Pressable
           testID="sign-out"
           onPress={() => {
@@ -372,6 +397,14 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     color: color.textMuted,
     fontSize: 14,
+    marginBottom: 4,
+  },
+  accountNote: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
     marginBottom: 4,
   },
   switchAccount: {
