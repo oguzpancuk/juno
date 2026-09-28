@@ -60,9 +60,10 @@ export function AppleButton({
  * Google's light button, per its sign-in branding guidelines: white fill,
  * a grey hairline, near-black text, and the standard four-colour "G" at
  * its own colours, never recoloured (`googleBrand` in theme/tokens.ts).
- * The guidelines set the title in Roboto Medium; this app does not bundle Roboto (a new dependency), so
- * the title uses the platform's system font at medium weight, and at 17
- * rather than the spec's 14, to sit beside the 18-point e-mail button.
+ * The guidelines set the title in Roboto Medium 14; this app does not
+ * bundle Roboto (a new dependency), so the title uses the platform's
+ * system font at medium weight, and at 17 rather than 14, to sit beside
+ * the 18-point e-mail button.
  */
 export function GoogleButton({
   label,

@@ -8348,9 +8348,9 @@ The evaluator caught this from the config. `app.json` now declares `tr`
 `lib/app-config.test.ts`. An Info.plist change needs a new native build
 (`npx expo run:ios`); `eas update` cannot carry it.
 Google is drawn to its light-theme branding: white, #747775 hairline, the
-four-colour G. One deviation: Google's spec names Roboto Medium, and the
-title uses the system font instead, because bundling Roboto is a new
-dependency. The web screenshot shows e-mail and Google only; the Apple
+four-colour G. Two deviations: Google's spec names Roboto Medium 14, and
+the title uses the system font instead (bundling Roboto is a new
+dependency), at 17 to sit beside the 18-point e-mail button. The web screenshot shows e-mail and Google only; the Apple
 button exists only on iOS and is the owner's to look at.
 
 ### Side findings, not fixed here
