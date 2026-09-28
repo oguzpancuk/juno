@@ -36,6 +36,14 @@
  * occupation are free text a member writes about themselves, which the
  * whole radius can read.
  *
+ * On 2026-09-28 the premium release (#10, 2026-09-24) caught up here: the
+ * membership columns (`is_premium`, `premium_since`, `sort_by`) under
+ * "Profil", the super like under "Kullanım", and under "Kimlerle
+ * paylaşılır" what `liked_me` and `discover.likes_me` show the person you
+ * liked — to a premium member your whole public card and the distance,
+ * past their radius and filters; to a free member the count, the star and
+ * the day only. It shipped to the hosted project before this text did.
+ *
  * The same rule covers identity providers, and there is one waiting: the
  * welcome screen draws Apple and Google buttons, but both providers are
  * disabled on the hosted project (checked 2026-09-17: `external.apple` and
@@ -52,7 +60,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '21 Eylül 2026';
+export const LEGAL_UPDATED = '28 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -66,7 +74,7 @@ export const LEGAL_UPDATED = '21 Eylül 2026';
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-21';
+export const LEGAL_VERSION = '2026-09-28';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -96,9 +104,10 @@ export const legalSections: readonly LegalSection[] = [
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
       '• Doldurursan profilini anlatan alanlar: boyun, seçtiğin ilgi alanları, okuduğun üniversite ve mesleğin. Dördü de isteğe bağlıdır, boş bırakabilirsin ve sonradan istediğin zaman değiştirebilir ya da silebilirsin.',
+      '• Üyelik bilgin: premium üye olup olmadığın, üyeliğinin başladığı an ve keşfette kişileri mesafeye mi uyuma mı göre sıraladığın.',
       '• Onay kaydın: bu metnin hangi sürümünü kabul ettiğin ve kabul anının zamanı. Rızanın kanıtı budur ve hesabınla birlikte silinir.',
       'Kullanım',
-      '• Beğenilerin, geçtiklerin ve eşleşmelerin.',
+      '• Beğenilerin (süper beğeniler dahil), geçtiklerin ve eşleşmelerin.',
       '• Eşleşmelerinle yazıştığın mesajlar ve okunma bilgileri.',
       '• Engellediğin kişiler.',
       '• Gönderdiğin şikâyetler: kimi, hangi sebeple şikâyet ettiğin ve yazdıysan açıklaman.',
@@ -118,6 +127,7 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'Kimlerle paylaşılır',
     body: [
       '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Beğendiğin kişi. Birini beğendiğinde ve o kişi premium üyeyse, seni "Seni beğenenler" listesinde görür: yukarıda sayılan profil bilgilerin ve aranızdaki mesafe, kendi yarıçapı ya da filtreleri sana ulaşmasa da ona gösterilir; beğeninin süper beğeni olup olmadığı ve ne zaman yapıldığı da görünür. Kartın onun keşfetinde çıkarsa üzerinde "Seni beğendi" yazar. Premium üye değilse yalnızca birinin onu beğendiğini, süper beğeni olup olmadığını ve gününü görür; kim olduğunu görmez. Geçtiğin kişilere hiçbir şey gösterilmez. Beğenin cevaplandığında ya da biriniz diğerini engellediğinde listeden çıkarsın.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',
