@@ -8346,7 +8346,10 @@ English-only), so a Turkish phone would have read "Sign in with Apple".
 The evaluator caught this from the config. `app.json` now declares `tr`
 (`CFBundleDevelopmentRegion`, `CFBundleLocalizations`), pinned by
 `lib/app-config.test.ts`. An Info.plist change needs a new native build
-(`npx expo run:ios`); `eas update` cannot carry it.
+(`npx expo run:ios`); `eas update` cannot carry it. A side effect: with
+Turkish as the bundle's only localisation, iOS system dialogs (permission
+prompts) will likely show in Turkish even on a phone set to English,
+which fits a Turkish-only app.
 Google is drawn to its light-theme branding: white, #747775 hairline, the
 four-colour G. Two deviations: Google's spec names Roboto Medium 14, and
 the title uses the system font instead (bundling Roboto is a new
