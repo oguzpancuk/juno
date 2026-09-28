@@ -42,7 +42,12 @@
  * paylaşılır" what `liked_me` and `discover.likes_me` show the person you
  * liked — to a premium member your whole public card and the distance,
  * past their radius and filters; to a free member the count, the star and
- * the day only. It shipped to the hosted project before this text did.
+ * the moment (`liked_at` is a full timestamp for everyone; only the
+ * screen rounds it to a day). The membership and the quotas also got a
+ * purpose and a legal basis. It shipped to the hosted project before this
+ * text did. The bullet says premium is free and one tap away, because
+ * that is what makes "only premium members see who you are" no promise
+ * at all: when payments land, that sentence changes with them.
  *
  * The same rule covers identity providers, and there is one waiting: the
  * welcome screen draws Apple and Google buttons, but both providers are
@@ -69,8 +74,9 @@ export const LEGAL_UPDATED = '28 Eylül 2026';
  *
  * Moves with `LEGAL_UPDATED`: the value is written once, at onboarding,
  * as the version of the text the person read before agreeing, so a
- * profile created after the 11 Eylül wording must say so. It does not
- * touch existing members — nothing re-asks consent yet, and the DB
+ * profile created under a later wording must say so. `supabase/seed.sql`
+ * carries it too: rerun `supabase/scripts/gen-seed.ts` when it moves. It
+ * does not touch existing members — nothing re-asks consent yet, and the DB
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
@@ -118,7 +124,8 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'İşleme amaçları ve hukuki sebepler',
     body: [
       '• Doğum haritası ve uyum hesabı. Doğum tarihi, saati ve yeri olmadan ürünün temel işlevi çalışmaz; bu veriler açık rızanla işlenir ve rızanı hesabını silerek geri alabilirsin.',
-      '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak ve seni görebilecek kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
+      '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak, seni görebilecek kişilere ve beğendiğin kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
+      '• Üyelik. Premium üyelik bilgin, üyeliğin sağladıklarını sunmak (sınırsız beğeni, süper beğeni, seni beğenenleri görme, uyuma göre sıralama) ve ücretsiz üyelerin günlük beğeni sınırı ile süper beğeni sınırını uygulamak için işlenir; bu sınırlar için son beğenilerinin sayısı ve zamanı kullanılır. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Eşleşme ve mesajlaşma. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Güvenlik. Engelleme ve şikâyet kayıtları, hizmetin kötüye kullanımını önlemek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
     ],
@@ -126,8 +133,8 @@ export const legalSections: readonly LegalSection[] = [
   {
     heading: 'Kimlerle paylaşılır',
     body: [
-      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
-      '• Beğendiğin kişi. Birini beğendiğinde ve o kişi premium üyeyse, seni "Seni beğenenler" listesinde görür: yukarıda sayılan profil bilgilerin ve aranızdaki mesafe, kendi yarıçapı ya da filtreleri sana ulaşmasa da ona gösterilir; beğeninin süper beğeni olup olmadığı ve ne zaman yapıldığı da görünür. Kartın onun keşfetinde çıkarsa üzerinde "Seni beğendi" yazar. Premium üye değilse yalnızca birinin onu beğendiğini, süper beğeni olup olmadığını ve gününü görür; kim olduğunu görmez. Geçtiğin kişilere hiçbir şey gösterilmez. Beğenin cevaplandığında ya da biriniz diğerini engellediğinde listeden çıkarsın.',
+      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir; beğendiğin kişiler ise yarıçapı sana ulaşmasa da görebilir (bir sonraki madde). Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Beğendiğin kişi. Birini beğendiğinde, o kişi premium üyeyse seni "Seni beğenenler" listesinde görür: yukarıda sayılan profil bilgilerin ve aranızdaki mesafe, kendi yarıçapı ya da filtreleri sana ulaşmasa da ona gösterilir; beğeninin süper beğeni olup olmadığı ve ne zaman yapıldığı da görünür. Premium üyelik şu an ücretsizdir ve tek dokunuşla açılır, üyeliği sonradan açan kişi de daha önce gelen beğenileri görür; bu yüzden beğendiğin herkesin bunları görebileceğini varsaymalısın. Üyeliği açık olmayan kişi yalnızca birinin onu beğendiğini, süper beğeni olup olmadığını ve ne zaman yapıldığını görür; kim olduğunu görmez. Kartın premium bir üyenin keşfetinde çıkarsa üzerinde "Seni beğendi", süper beğendiysen "Seni süper beğendi" yazar. Geçtiğin kişilere hiçbir şey gösterilmez. Beğenin cevaplandığında ya da biriniz diğerini engellediğinde listeden çıkarsın.',
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',
