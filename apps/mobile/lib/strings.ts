@@ -3,7 +3,10 @@ export const t = {
   appName: 'Juno',
   welcome: {
     pitch: 'İki haritanın\narasında\nne var?',
-    // No Apple title: Apple's own button draws and localises it.
+    // The web's Apple button only; on iOS the system button titles itself.
+    // Apple's own Turkish name for the feature, capitals included
+    // (apple.com/tr/legal/privacy/data/tr/sign-in-with-apple).
+    withApple: 'Apple ile Giriş Yap',
     withGoogle: 'Google ile giriş yap',
     withEmail: 'E-posta ile giriş yap',
     connecting: 'Bağlanıyor…',

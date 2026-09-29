@@ -262,7 +262,14 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       provider opened which address it was opened with; and Google's
       "Skip nonce checks", without which no iOS Google sign-in gets
       through, joined `docs/auth-setup.md`. Still waiting on the
-      credentials and the first real sign-in._
+      credentials and the first real sign-in.
+      2026-09-29, later: the owner asked for Apple on the web too ("webde
+      apple girisi yok"). The web client draws its own Apple button once
+      the build names a Services ID, and signs in through Supabase's Apple
+      OAuth route; the Services ID, key and six-monthly client secret are
+      `docs/auth-setup.md` 3b. Checked on www.juno-dating.com, not on a
+      device, and not on the local stack (Apple takes no localhost return
+      URL)._
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
       privacy policy hosted at a URL; about/legal screen credits GeoNames

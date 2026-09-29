@@ -41,6 +41,26 @@ export const googleClientIdSchema = z
   .regex(/^[\w-]+\.apps\.googleusercontent\.com$/u);
 
 /**
+ * The Services ID Apple Developer gives the web route to Sign in with
+ * Apple: a reverse-domain identifier of its own, beside the App ID
+ * (`com.oguzpancuk.juno.web` next to `com.oguzpancuk.juno`).
+ *
+ * The browser never sends it anywhere — Supabase's Apple provider holds
+ * it and builds Apple's page from it — so in the app it is only the
+ * answer to "is Apple set up for the web". The shape is still held,
+ * because the values beside it on the same console pages are the ones
+ * that must not be here: the client secret (a signed JWT, which in an
+ * EXPO_PUBLIC_ variable ships to every browser), the key file, the Team
+ * ID and the key ID.
+ */
+export const appleServicesIdSchema = z
+  .string()
+  // Labels as DNS allows them, at most 63 long, which a JWT's parts never are.
+  .regex(/^[A-Za-z0-9-]{1,63}(\.[A-Za-z0-9-]{1,63}){2,}$/u)
+  // And a short JWT still opens with `{"` in base64.
+  .refine((value) => !value.startsWith('eyJ'));
+
+/**
  * The URL scheme iOS must register for Google to come back to the app:
  * the client ID with its two halves swapped, which is what Google Cloud
  * calls the reversed client ID and prints in the downloaded plist.
@@ -98,6 +118,8 @@ export interface AvailabilityInput {
   readonly platform: string;
   /** Whether the device itself offers Sign in with Apple. */
   readonly appleNative: boolean;
+  /** Whether the build carries an Apple Services ID (the web route). */
+  readonly appleWebConfigured: boolean;
   /** Whether the build carries a Google web client ID. */
   readonly googleConfigured: boolean;
 }
@@ -113,15 +135,21 @@ export type Availability = Readonly<Record<Provider, boolean>>;
  * provider that cannot work on this build, on this platform, is not shown
  * at all rather than shown and apologised for.
  *
- * Apple is iOS only, and deliberately: the browser route to it needs an
- * Apple Services ID and a signing key that the App ID alone does not give
- * (docs/auth-setup.md), so until those exist the web and Android clients
- * would show a button that opens a page saying "invalid_client". E-mail
- * and password are the way in there. Google needs a client ID compiled
- * into the build, and works on every platform once it has one.
+ * Apple takes a different road on each platform. On iOS it is the
+ * device's own sheet, and the device says whether it has one. On the web
+ * it is Apple's page, reached through Supabase with a Services ID and a
+ * signing key the App ID alone does not give (docs/auth-setup.md): until
+ * the build names that Services ID, the page would answer
+ * "invalid_client", so there is no button. Android has no route wired
+ * (Android is deferred); e-mail and password are the way in there.
+ * Google needs a client ID compiled into the build, and works on every
+ * platform once it has one.
  */
 export function availability(input: AvailabilityInput): Availability {
-  const apple = input.platform === 'ios' ? input.appleNative : false;
+  const apple =
+    input.platform === 'ios'
+      ? input.appleNative
+      : input.platform === 'web' && input.appleWebConfigured;
   return { apple, google: input.googleConfigured };
 }
 

@@ -55,6 +55,8 @@ export async function providerAvailability(): Promise<Availability> {
   return availability({
     platform: Platform.OS,
     appleNative,
+    // The web's route; a phone never takes it.
+    appleWebConfigured: false,
     googleConfigured: env.googleWebClientId !== undefined,
   });
 }

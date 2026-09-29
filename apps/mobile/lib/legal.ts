@@ -60,6 +60,13 @@
  * assumed: a provider sign-in stores the provider's subject id and the
  * address it vouches for, and Google's token also carries a name and a
  * picture URL, which land in the auth user's metadata and nowhere else.
+ *
+ * Apple on the web (same day, the owner's "webde apple girisi yok") added
+ * one clause to that bullet: GoTrue asks Apple's web page for `email name`
+ * with no way to narrow it, and stores the name Apple posts back on the
+ * first authorisation in the same metadata. The phone asks for the
+ * address only. The date stayed 29 Eylül: the text it replaced had not
+ * been deployed anywhere yet.
  */
 export interface LegalSection {
   readonly heading: string;
@@ -102,7 +109,7 @@ export const legalSections: readonly LegalSection[] = [
       'Uygulama aşağıdaki verileri saklar.',
       'Hesap',
       '• E-posta adresin ve, e-postayla kaydolduysan, parolan. Giriş e-posta ve parola ile ya da Apple veya Google hesabınla yapılır. Parolan yalnızca kimlik altyapısında, geri çevrilemeyen bir özet (hash) olarak saklanır; ne bize ne başkasına gösterilir. E-postayla kaydolursan adresin kayıt sırasında doğrulanır: adresine altı haneli bir kod gönderilir ve hesap ancak o kod girilince açılır.',
-      "• Apple ya da Google ile girersen: o sağlayıcının seni tanıdığı kimlik numarası ve sağlayıcının doğruladığı e-posta adresin. Google bunlarla birlikte adını ve profil fotoğrafının bağlantısını da iletir; bunlar kimlik altyapısında durur, uygulama onları kullanmaz ve kimseye göstermez. Apple'da e-postanı gizlemeyi seçersen Apple'ın verdiği yönlendirme adresi saklanır, gerçek adresin bize ulaşmaz. Sağlayıcının doğruladığı adres, burada e-postayla açılmış bir hesabın adresiyle aynıysa giriş o hesaba bağlanır ve ikinci bir hesap açılmaz.",
+      "• Apple ya da Google ile girersen: o sağlayıcının seni tanıdığı kimlik numarası ve sağlayıcının doğruladığı e-posta adresin. Google bunlarla birlikte adını ve profil fotoğrafının bağlantısını da iletir; web sitesinde Apple ile ilk kez girersen Apple da paylaşmayı seçtiğin adı iletir. Bunlar kimlik altyapısında durur, uygulama onları kullanmaz ve kimseye göstermez. Apple'da e-postanı gizlemeyi seçersen Apple'ın verdiği yönlendirme adresi saklanır, gerçek adresin bize ulaşmaz. Sağlayıcının doğruladığı adres, burada e-postayla açılmış bir hesabın adresiyle aynıysa giriş o hesaba bağlanır ve ikinci bir hesap açılmaz.",
       '• Giriş kayıtları: kimlik altyapısı, her oturum için bağlandığın IP adresini ve kullandığın uygulama/tarayıcı bilgisini tutar. Bunlar güvenlik ve kötüye kullanımı önleme amacıyla saklanır.',
       'Profil',
       '• Görünen adın.',
