@@ -8294,3 +8294,38 @@ battery measures a tap target, so the next one will pass it too.
 - The stand-in backend was rebuilt from scratch a third time for this
   thread. It belongs in `apps/mobile/scripts/` beside `web-drive.mjs`,
   already named as a candidate above.
+
+## 2026-09-28 — the notice catches up with premium
+
+The owner's deploy readiness check (2026-09-26) found that the premium
+release (#10) had put three things in front of members that the privacy
+notice never named: the membership columns, the super like, and above all
+who sees a like. `liked_me` hands a premium member the whole public card
+of everyone who liked them, with the distance, whether or not their own
+radius and filters reach that person, and premium is one free tap away;
+the notice said "your radius decides who you see, not who sees you",
+which was true and is no longer the whole story. A free member sees the
+count, the star and the moment (the screen rounds it to a day;
+`liked_at` is a full timestamp). Review round 1 also found the purposes
+section silent on the membership and the quotas; both have a line now.
+The owner deployed #9, #10 and #12 on 2026-09-28 and said "eklensin" to
+the missing line the same morning, so the text trails the live product
+until his next web deploy.
+
+`LEGAL_VERSION` moves to `2026-09-28` for new sign-ups; existing members
+still are not asked again, the gap the KVKK ROADMAP item closes.
+
+### Battery gaps
+
+**Nothing ties a view other members can read to the notice.** The rule
+in `lib/legal.ts`'s header (a column other members can read belongs in
+"Kimlerle paylaşılır") is kept by whoever remembers it. #9 remembered, #10
+added two readable views and did not, and the battery passed both. A
+check would need to know which columns are personal data, so it stays a
+review item.
+
+**`supabase/seed.sql` drifts from `LEGAL_VERSION`.** `gen-seed.ts` reads
+the constant, but the generated file is committed, and it sat at
+`2026-09-17` through the 2026-09-21 bump and this one until review round 1
+caught it. Nothing compares the committed seed with a fresh run; the
+constant's doc comment now says to rerun it.
