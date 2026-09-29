@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.oguzpancuk.juno"
+      "bundleIdentifier": "com.oguzpancuk.juno",
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleLocalizations": ["tr"]
+      }
     },
     "android": {
       "package": "com.oguzpancuk.juno",

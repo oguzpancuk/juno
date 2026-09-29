@@ -124,6 +124,21 @@ export const element = {
   water: { ink: color.cool, tint: 'rgba(167,139,250,0.24)' },
 } as const;
 
+/**
+ * Colours that belong to someone else's brand, not this palette: Google's
+ * sign-in button (light theme) and its four-colour "G", as its branding
+ * guidelines give them. They are never tinted to match the app.
+ */
+export const googleBrand = {
+  fill: '#FFFFFF',
+  stroke: '#747775',
+  text: '#1F1F1F',
+  red: '#EA4335',
+  blue: '#4285F4',
+  yellow: '#FBBC05',
+  green: '#34A853',
+} as const;
+
 /** Warm → pink → cool. The product's one gradient; do not invent another. */
 export const gradient = [color.warm, color.pink, color.cool] as const;
 export const gradientSoft = ['#2A1E33', '#1B1830', '#15182E'] as const;

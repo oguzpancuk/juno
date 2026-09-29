@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, supabase } from './supabase';
 import { notifyUnreadChanged } from './unread';
 
 /** Mirrors the `report_reason` enum; the labels are the UI's, in Turkish. */
@@ -115,4 +115,28 @@ export async function deleteAccount(): Promise<boolean> {
   });
   if (error) return false;
   return DeletedSchema.safeParse(data).success;
+}
+
+/**
+ * Delete this account only while it is empty: onboarding's "Farklı bir
+ * hesapla gir" for an account Apple or Google opened (ADR-0013). The
+ * database decides, in one transaction, and keeps any account with a
+ * profile or a photo — onboarding is reachable by URL and deep link, so
+ * the app cannot be the one to know. A function of its own rather than a
+ * mode of `delete-account`, so a server without it deletes nothing.
+ *
+ * 'failed' is the only outcome the screen acts on: the account may still
+ * be there and the person is told so. Bounded like every read: a stalled
+ * connection must not leave the link spinning with no way out.
+ */
+export type AbandonOutcome = 'deleted' | 'not-empty' | 'failed';
+
+export async function abandonEmptyAccount(): Promise<AbandonOutcome> {
+  const { data, error } = await supabase
+    .rpc('abandon_empty_account')
+    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+  if (error) return 'failed';
+  const parsed = z.boolean().safeParse(data);
+  if (!parsed.success) return 'failed';
+  return parsed.data ? 'deleted' : 'not-empty';
 }

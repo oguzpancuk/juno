@@ -8329,3 +8329,127 @@ the constant, but the generated file is committed, and it sat at
 `2026-09-17` through the 2026-09-21 bump and this one until review round 1
 caught it. Nothing compares the committed seed with a fresh run; the
 constant's doc comment now says to rerun it.
+
+## 2026-09-28 — Apple and Google: the same address is the same account
+
+The owner's ask: "google ve apple ile girisi yapalim. daha once mail ile
+kayit olmus bir kullanici eger apple veya google ile devam et derse ve mail
+ayniysa hesabini baglayabilsin". The buttons and the token exchange were
+built on 2026-09-16 (ADR-0011); what this change adds is the linking
+decision, the notice, and one owner step that was missing.
+
+- **Linking is GoTrue's own** (ADR-0013). Read out of `supabase/auth`
+  master on this date: `DetermineAccountLinking` attaches a provider
+  identity to the user with the same address when the provider marks it
+  verified, and `createAccountFromExternalIdentity` strips an unconfirmed
+  account's password first. No app code is in that path; the app's part
+  is that `/` finds the linked member's profile and never shows
+  onboarding, so the consent box is not asked again.
+- **Different address, new account.** `accountNote` in `lib/oauth.ts`
+  tells onboarding when a provider opened the account (no `email` among
+  `app_metadata.providers`), and the screen names the address, or says
+  Apple hid it, and points at "Farklı bir hesapla gir". Test run red first
+  against a stub returning `null`: 3 failed of 19.
+- **Google on iOS needs "Skip nonce checks".** Not in `docs/auth-setup.md`
+  until today. GoogleSignIn-iOS builds its request with AppAuth's
+  convenience initialiser when the app passes no nonce, and that
+  initialiser generates one (`GIDSignIn.m`,
+  `authorizationRequestWithOptions`); the free
+  `@react-native-google-signin` 16.1.5 has no nonce parameter; GoTrue
+  refuses a token carrying a nonce the request did not
+  (`token_oidc.go`). Every iOS Google sign-in would have ended on
+  "Giriş tamamlanamadı".
+- **The notice names both providers.** Merged after #14, which had
+  already moved `LEGAL_VERSION` to 2026-09-28 for its premium lines, so
+  this change moves it to **2026-09-29**: one date, one text. It goes out
+  with the deploy, and the providers are switched on after it.
+
+Checked in the web export only, against a stand-in backend: the
+onboarding sentence for a Google-opened account and for an Apple relay
+address, and `/legal`. The link itself, and both native sheets, are the
+owner's check on a device.
+
+**Owner's device test, same day (09:02 UTC):** Google and Apple sign-in
+both work on his phone. From that test, the welcome screen changed in
+this PR: the first button is now "E-posta ile giriş yap" (sign-in mode),
+the link under the group is "Hesabın yok mu? Kaydol" (sign-up mode), and
+the provider buttons carry their logos (`components/ProviderButtons.tsx`).
+Apple is the system `ASAuthorizationAppleIDButton` via
+`expo-apple-authentication` (already a dependency), white on this dark
+screen. It is the only way to be sure of the HIG rules (logo asset,
+approved title, system font). It titles itself in a language the app
+bundle declares, and the bundle declared none (a prebuild makes it
+English-only), so a Turkish phone would have read "Sign in with Apple".
+The evaluator caught this from the config. `app.json` now declares `tr`
+(`CFBundleDevelopmentRegion`, `CFBundleLocalizations`), pinned by
+`lib/app-config.test.ts`. An Info.plist change needs a new native build
+(`npx expo run:ios`); `eas update` cannot carry it. A side effect: with
+Turkish as the bundle's only localisation, iOS system dialogs (permission
+prompts) will likely show in Turkish even on a phone set to English,
+which fits a Turkish-only app.
+Google is drawn to its light-theme branding: white, #747775 hairline, the
+four-colour G. Two deviations: Google's spec names Roboto Medium 14, and
+the title uses the system font instead (bundling Roboto is a new
+dependency), at 17 to sit beside the 18-point e-mail button. The web
+screenshot shows e-mail and Google only; the Apple button exists only on
+iOS and is the owner's to look at.
+
+### Battery gaps
+
+- 2026-09-29 · L1's screenshot run (`scripts/steps/l1-web.json`) · the
+  welcome redesign renamed the buttons the step file clicked by their
+  text, and the battery passed with the step file broken: nothing runs
+  it, since it needs a local stack. Round 6 of #13 caught it by reading.
+  No test added; the step now taps `continue-email` by its test ID, which
+  survives the next rewording.
+- 2026-09-29 · the merge of #14 into #13 · two PRs edited the notice's
+  lists and `LEGAL_VERSION`, merged by hand; a resolution that kept one
+  side only, or moved `LEGAL_VERSION` without `LEGAL_UPDATED`, would have
+  passed. `lib/legal.test.ts` now pins one premium and one provider line
+  on each side, and that the shown date renders the version. The same
+  review found two prose mentions of the old date (the ROADMAP item and
+  the owner's switch-on gate in `docs/auth-setup.md`) that nothing checks.
+
+### Side findings, not fixed here
+
+- **An account a provider opened has no way to sign in by e-mail, and
+  nothing says so.** Its user has no password, so the e-mail sign-in
+  answers "E-posta ya da parola yanlış", and signing up again with that
+  address returns GoTrue's obfuscated user (confirmations on) and no mail,
+  so `/verify` waits for a code that never comes. The same is true today
+  of an e-mail account signing up twice. A sentence on the wrong-password
+  error naming Apple and Google would cover the first. For the second,
+  the obfuscated user comes back with an empty `identities` array
+  (`signup.go`, `sanitizeUser`), which is the documented tell; the sign-up
+  screen does not read it.
+- **An abandoned provider account.** Review round 1 found that backing
+  out through "Farklı bir hesapla gir" left an auth user nobody could
+  delete; that link now deletes a provider-opened account first. Round 2
+  found that the first version would have deleted a member WITH a
+  profile who reached onboarding by URL or deep link. Round 3 found that
+  the server check it got (a body flag on `delete-account`) failed open —
+  a rolled-back function ignores the body — and raced a profile insert.
+  The emptiness is now one database function, `abandon_empty_account()`,
+  which locks the user row, checks and deletes in one transaction, and
+  simply does not exist on an older server. Tested in
+  `supabase/tests/abandon-account.test.ts`; both concurrent orders
+  (insert first, delete first) were also run by hand on a scratch
+  Postgres 16 with stand-in `auth`/`storage` schemas: the insert-first
+  case keeps the account, the delete-first case fails the insert's FK.
+  One closed without the link still stays until its owner comes back
+  (ADR-0013, Consequences).
+- **No deploy order to keep.** The migration can go before or after the
+  app: an app that meets a database without `abandon_empty_account`
+  gets "not found", says the account could not be deleted, and signs out
+  on the next tap. `supabase db push` before the web export is still the
+  order that makes the delete work from the first day.
+- **Apple's token carries no nonce either.** `expo-apple-authentication`
+  takes one, and GoTrue would check its SHA-256; hashing it needs a
+  SHA-256 on the device (`expo-crypto`, a new dependency — ask first). It
+  narrows the replay window of a stolen ID token, which is already short
+  and bound to this app's audience.
+
+### Upstream candidates
+
+- The stand-in backend was built from scratch a fourth time. Same
+  candidate as 2026-09-24: `apps/mobile/scripts/`.

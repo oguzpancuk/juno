@@ -2,7 +2,7 @@ import { isValidCalendarDate, searchCities, type City } from '@juno/geo';
 import { useTopClearance } from '@/lib/insets';
 import { deviceLocation } from '@/lib/location';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -28,8 +28,9 @@ import {
   SCREEN_TOP_GUTTER,
 } from '@/components/ui';
 import { dbErrorText } from '@/lib/errors';
-import { leaveToSignIn, useSession } from '@/lib/session';
-import { supabase } from '@/lib/supabase';
+import { accountNote, openedByProvider } from '@/lib/oauth';
+import { abandonEmptyAccount } from '@/lib/safety';
+import { signOutAndLeave, useSession } from '@/lib/session';
 import { CosmicGround } from '@/components/CosmicGround';
 import { LegalLink } from '@/components/LegalText';
 import { t } from '@/lib/strings';
@@ -78,12 +79,68 @@ export default function Onboarding() {
     [city, cityQuery],
   );
 
+  // Said once, above the form, when Apple or Google opened this account
+  // rather than being linked onto an e-mail one (lib/oauth.ts). Nothing
+  // links an identity on this screen, so for one user and one address the
+  // answer cannot change; keyed on those, a keystroke in any field or a
+  // token refresh's new user object does not re-run the parse.
+  const user = session.status === 'signed-in' ? session.session.user : null;
+  const note = useMemo(
+    () => accountNote({ email: user?.email, appMetadata: user?.app_metadata }),
+    // why: not `user`, which is a new object on every token refresh, and
+    // not its metadata, which nothing on this screen can change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user?.id, user?.email],
+  );
+  const noteText =
+    note === null
+      ? null
+      : note.kind === 'relay'
+        ? t.onboarding.accountNote.relay(t.onboarding.switchAccount)
+        : t.onboarding.accountNote.provider(
+            t.onboarding.providerNames[note.provider],
+            note.email,
+            t.onboarding.switchAccount,
+          );
+
+  // Leaving an account Apple or Google opened deletes it first: it holds
+  // only the provider's identity, and nothing else in the app could ever
+  // reach it again (ADR-0013). The database deletes it only while it is
+  // empty — onboarding is reachable by URL and deep link — and a member
+  // with a profile is only signed out. If the delete cannot be done (no
+  // connection, a server without the function), the person is told the
+  // account is still there, and the next tap only signs out: the link
+  // never becomes a dead end. An e-mail account is only signed out. A
+  // ref, not state, guards re-entry: two taps in one frame both read the
+  // state from before either landed.
+  const leavingNow = useRef(false);
+  const [leaving, setLeaving] = useState(false);
+  const [abandonFailed, setAbandonFailed] = useState(false);
+  const leave = async () => {
+    if (leavingNow.current) return;
+    leavingNow.current = true;
+    setLeaving(true);
+    setError(null);
+    if (!abandonFailed && openedByProvider(user?.app_metadata)) {
+      if ((await abandonEmptyAccount()) === 'failed') {
+        leavingNow.current = false;
+        setLeaving(false);
+        setAbandonFailed(true);
+        return;
+      }
+    }
+    signOutAndLeave();
+  };
+
   // KVKK: the profile is the point at which birth data and location start
   // being processed, so consent is taken here and stored with the version
   // of the notice that was on screen.
   const [consented, setConsented] = useState(false);
 
   const submit = async () => {
+    // The account may be on its way out: a profile written now would race
+    // the delete and the sign-out's navigation.
+    if (leavingNow.current) return;
     setError(null);
     const name = displayName.trim();
     if (name.length === 0 || name.length > 40)
@@ -174,19 +231,23 @@ export default function Onboarding() {
       >
         <Text style={styles.title}>{t.onboarding.title}</Text>
         <Text style={styles.subtitle}>{t.onboarding.subtitle}</Text>
+        {noteText ? (
+          <Text testID="account-note" style={styles.accountNote}>
+            {noteText}
+          </Text>
+        ) : null}
         <Pressable
           testID="sign-out"
-          onPress={() => {
-            void supabase.auth
-              .signOut()
-              .then(() => {
-                leaveToSignIn();
-              })
-              .catch(() => setError(t.onboarding.errors.generic));
-          }}
+          disabled={leaving}
+          onPress={() => void leave()}
         >
           <Text style={styles.switchAccount}>{t.onboarding.switchAccount}</Text>
         </Pressable>
+        {abandonFailed ? (
+          <Text testID="abandon-failed" style={styles.error}>
+            {t.onboarding.abandonFailed(t.onboarding.switchAccount)}
+          </Text>
+        ) : null}
 
         <Text style={styles.label}>{t.onboarding.name}</Text>
         <Field
@@ -325,7 +386,7 @@ export default function Onboarding() {
           <GradientButton
             testID="submit"
             label={busy ? t.onboarding.computing : t.onboarding.submit}
-            disabled={busy}
+            disabled={busy || leaving}
             onPress={() => void submit()}
           />
         </View>
@@ -372,6 +433,14 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     color: color.textMuted,
     fontSize: 14,
+    marginBottom: 4,
+  },
+  accountNote: {
+    fontFamily: font.regular,
+    color: color.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
     marginBottom: 4,
   },
   switchAccount: {

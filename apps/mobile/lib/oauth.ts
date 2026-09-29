@@ -124,3 +124,94 @@ export function availability(input: AvailabilityInput): Availability {
   const apple = input.platform === 'ios' ? input.appleNative : false;
   return { apple, google: input.googleConfigured };
 }
+
+/**
+ * The domain Apple hands out when the person picks "Hide My Email": a
+ * relay address, unique to this app, that forwards to the real one.
+ */
+export const APPLE_RELAY_DOMAIN = 'privaterelay.appleid.com';
+
+/**
+ * What GoTrue writes into the session's `app_metadata` about how the
+ * account signs in: the provider it was opened with, and every one linked
+ * to it since. Read, not trusted to be there — a session restored from an
+ * older build may not carry `providers`.
+ */
+const appMetadataSchema = z.object({
+  provider: z.string().optional(),
+  providers: z.array(z.string()).optional(),
+});
+
+export interface AccountNoteInput {
+  /** `session.user.email`. */
+  readonly email: string | undefined;
+  /** `session.user.app_metadata`, as the session carries it. */
+  readonly appMetadata: unknown;
+}
+
+/**
+ * What onboarding says about the account it is about to fill in.
+ *
+ * Supabase links Apple or Google to an existing e-mail account on its own
+ * when the provider vouches for the same address (ADR-0013). When the
+ * addresses differ — another Google account, or Apple's Hide My Email —
+ * the result is a second, empty account, and the only screen that can
+ * tell the person is this one: it is where a returning member would
+ * otherwise start typing their birth data a second time.
+ *
+ * - `null`: the account was opened with e-mail, or nothing can be said.
+ *   A provider linked onto an e-mail account is that same account.
+ * - `provider`: opened by Apple or Google, with this address.
+ * - `relay`: opened by Apple with a hidden address, which no e-mail
+ *   account here can ever share.
+ */
+export type AccountNote =
+  | {
+      readonly kind: 'provider';
+      readonly provider: Provider;
+      readonly email: string;
+    }
+  | { readonly kind: 'relay' }
+  | null;
+
+/**
+ * Which provider opened this account, or `null` when it was opened with
+ * e-mail (a provider linked onto it since does not count) or the metadata
+ * cannot be read.
+ */
+function providerOpener(appMetadata: unknown): Provider | null {
+  const parsed = appMetadataSchema.safeParse(appMetadata);
+  if (!parsed.success) return null;
+  const { provider, providers } = parsed.data;
+  const methods = providers ?? (provider ? [provider] : []);
+  if (methods.includes('email')) return null;
+  // The one it was opened with first, when it says; a later link second.
+  return (
+    [provider, ...methods].find((method): method is Provider =>
+      PROVIDERS.some((known) => known === method),
+    ) ?? null
+  );
+}
+
+/**
+ * Whether leaving onboarding may try to delete this account: Apple or
+ * Google opened it. Decided apart from `accountNote`, which also needs an
+ * address to print, so an account with none is still cleaned up. The
+ * database refuses the delete if a profile exists
+ * (`abandon_empty_account`), which this cannot know.
+ */
+export function openedByProvider(appMetadata: unknown): boolean {
+  return providerOpener(appMetadata) !== null;
+}
+
+export function accountNote(input: AccountNoteInput): AccountNote {
+  const opener = providerOpener(input.appMetadata);
+  if (opener === null || !input.email) return null;
+  if (
+    opener === 'apple' &&
+    input.email.toLowerCase().endsWith(`@${APPLE_RELAY_DOMAIN}`)
+  ) {
+    return { kind: 'relay' };
+  }
+  return { kind: 'provider', provider: opener, email: input.email };
+}

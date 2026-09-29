@@ -3,10 +3,9 @@ export const t = {
   appName: 'Juno',
   welcome: {
     pitch: 'İki haritanın\narasında\nne var?',
-    withApple: 'Apple ile giriş yap',
+    // No Apple title: Apple's own button draws and localises it.
     withGoogle: 'Google ile giriş yap',
-    haveAccount: 'Zaten hesabın var mı? Giriş yap',
-    withEmail: 'E-posta ile devam et',
+    withEmail: 'E-posta ile giriş yap',
     connecting: 'Bağlanıyor…',
   },
   signIn: {
@@ -97,6 +96,22 @@ export const t = {
       generic: 'Bir şeyler ters gitti, tekrar dene.',
     },
     switchAccount: 'Farklı bir hesapla gir',
+    // Onboarding is the one screen a person who meant their old account
+    // reaches instead, when Apple or Google carried a different address
+    // (ADR-0013). An account a provider was linked onto hears neither.
+    accountNote: {
+      // `link` is `switchAccount` itself, so the sentence cannot name a
+      // link that has been reworded. Tapping it deletes the account: it
+      // holds a provider's identity and nothing else (ADR-0013).
+      provider: (provider: string, email: string, link: string) =>
+        `Bu hesap ${provider} ile, ${email} adresiyle açıldı. Daha önce başka bir adresle kaydolduysan “${link}” bağlantısına dokun: bu boş hesap silinir ve o adresle giriş yaparsın.`,
+      relay: (link: string) =>
+        `Apple e-posta adresini gizlediği için bu yeni bir hesap. Daha önce e-postayla kaydolduysan “${link}” bağlantısına dokun: bu boş hesap silinir ve o adresle giriş yaparsın.`,
+    },
+    providerNames: { apple: 'Apple', google: 'Google' },
+    // The delete could not be done; the next tap on `link` only signs out.
+    abandonFailed: (link: string) =>
+      `Bu boş hesap şu an silinemedi; internet bağlantın kopmuş olabilir. “${link}” bağlantısına yeniden dokunursan yalnızca çıkış yapılır. Hesabı silmek için daha sonra aynı yolla girip buraya yeniden dokunabilirsin.`,
     locationHint:
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },
