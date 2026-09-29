@@ -2,7 +2,7 @@
 export const t = {
   appName: 'Juno',
   welcome: {
-    pitch: 'İki haritanın\narasında\nne var?',
+    pitch: 'İki haritanın arasında\nne var?',
     // The web's Apple button only; on iOS the system button titles itself.
     // Apple's own Turkish name for the feature, capitals included
     // (apple.com/tr/legal/privacy/data/tr/sign-in-with-apple).
