@@ -8486,17 +8486,17 @@ not give.
   stores the name Apple posts back on the first authorisation in the
   auth user's metadata (`external_oauth.go`, `ParseUser`). The phone asks
   for the address only. One clause went into the "Apple ya da Google ile
-  girersen" bullet. `LEGAL_VERSION` stayed 2026-09-29: the text it
-  amends (main 5d20145) had not been deployed yet. **The rule:**
-  two texts must never share a version, because the version is
-  what a member's consent record points at. So if 5d20145, or any build
-  with the earlier 29 Eylül text, is live when this PR merges, the merge
-  moves the date to the merge day in the same commit: `LEGAL_VERSION`
-  and `LEGAL_UPDATED` in `lib/legal.ts` (`lib/legal.test.ts` holds the two
-  together), `supabase/seed.sql` through `supabase/scripts/gen-seed.ts`,
-  the date on the notice line of `docs/auth-setup.md`'s checklist, and a
-  dated line in `docs/ROADMAP.md`. Otherwise the date stays. The PR body
-  opens with this check (review round 1 on #15).
+  girersen" bullet. `LEGAL_VERSION` moved to **2026-09-30**. Two texts
+  must never share a version, because the version is what a member's
+  consent record points at, and the owner deployed main 5d20145 (the 29
+  Eylül text) before this merged ("deploy ettim, mergele", 2026-09-29
+  08:50 UTC). The merge day was the 29th too, and `consent_version` is a
+  `date` column, so the next distinct version is the next day; the
+  database takes it from the 29th on (`profiles_consent_version_not_future`,
+  today plus one). Moved with it: `LEGAL_UPDATED`, `supabase/seed.sql`
+  (gen-seed), the checklist line in `docs/auth-setup.md`, a ROADMAP line.
+  Members who accept before the next web deploy keep 2026-09-29, which is
+  the text they read.
 
 ### For the owner: the client secret expires
 

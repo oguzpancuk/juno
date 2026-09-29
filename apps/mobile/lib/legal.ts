@@ -65,10 +65,12 @@
  * one clause to that bullet: GoTrue asks Apple's web page for `email name`
  * with no way to narrow it, and stores the name Apple posts back on the
  * first authorisation in the same metadata. The phone asks for the
- * address only. The date stayed 29 Eylül because the text it amends had
- * not been deployed when this was written. One version, one text: had the
- * earlier 29 Eylül text gone live first, this change moves the date to
- * the day it merges (the rule is in docs/NOTES.md, "Apple on the web").
+ * address only. One version, one text: the 29 Eylül text went live the
+ * same morning (the owner's deploy of main 5d20145), so this one needed a
+ * date of its own. The version is a `date` column, so a second text on
+ * the merge day could not be told apart from the first; it is dated 30
+ * Eylül, the next day, which the database accepts from the 29th on
+ * (`profiles_consent_version_not_future` allows today plus one).
  */
 export interface LegalSection {
   readonly heading: string;
@@ -77,7 +79,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '29 Eylül 2026';
+export const LEGAL_UPDATED = '30 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -92,7 +94,7 @@ export const LEGAL_UPDATED = '29 Eylül 2026';
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-29';
+export const LEGAL_VERSION = '2026-09-30';
 
 export const legalSections: readonly LegalSection[] = [
   {
