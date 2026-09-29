@@ -123,6 +123,8 @@ describe('the string catalogs', () => {
     // Turkish as it read before there was a second language.
     expect(format('tr')).toBe('10.09.2026');
     expect(format('en')).toBe('Sep 10, 2026');
+    // Day first, as every Spanish-speaking country writes it.
+    expect(format('es')).toBe('10/09/2026');
   });
 });
 

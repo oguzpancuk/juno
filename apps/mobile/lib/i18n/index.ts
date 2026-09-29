@@ -55,4 +55,5 @@ export const SHORT_DATE: Readonly<
 > = {
   tr: { day: '2-digit', month: '2-digit', year: 'numeric' },
   en: { day: 'numeric', month: 'short', year: 'numeric' },
+  es: { day: '2-digit', month: '2-digit', year: 'numeric' },
 };
