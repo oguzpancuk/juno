@@ -8390,8 +8390,25 @@ which fits a Turkish-only app.
 Google is drawn to its light-theme branding: white, #747775 hairline, the
 four-colour G. Two deviations: Google's spec names Roboto Medium 14, and
 the title uses the system font instead (bundling Roboto is a new
-dependency), at 17 to sit beside the 18-point e-mail button. The web screenshot shows e-mail and Google only; the Apple
-button exists only on iOS and is the owner's to look at.
+dependency), at 17 to sit beside the 18-point e-mail button. The web
+screenshot shows e-mail and Google only; the Apple button exists only on
+iOS and is the owner's to look at.
+
+### Battery gaps
+
+- 2026-09-29 · L1's screenshot run (`scripts/steps/l1-web.json`) · the
+  welcome redesign renamed the buttons the step file clicked by their
+  text, and the battery passed with the step file broken: nothing runs
+  it, since it needs a local stack. Round 6 of #13 caught it by reading.
+  No test added; the step now taps `continue-email` by its test ID, which
+  survives the next rewording.
+- 2026-09-29 · the merge of #14 into #13 · two PRs edited the notice's
+  lists and `LEGAL_VERSION`, merged by hand; a resolution that kept one
+  side only, or moved `LEGAL_VERSION` without `LEGAL_UPDATED`, would have
+  passed. `lib/legal.test.ts` now pins one premium and one provider line
+  on each side, and that the shown date renders the version. The same
+  review found two prose mentions of the old date (the ROADMAP item and
+  the owner's switch-on gate in `docs/auth-setup.md`) that nothing checks.
 
 ### Side findings, not fixed here
 

@@ -349,5 +349,5 @@ açılıyor.
 - [ ] Supabase Apple sağlayıcısı (Authorized Client IDs: bundle ID)
 - [ ] Web yayındaysa Redirect URLs
 - [ ] Sağlayıcıları açmadan önce gizlilik metninin Apple ve Google'ı
-      anan sürümü yayında olmalı (`/legal`, 28 Eylül 2026)
+      anan sürümü yayında olmalı (`/legal`, 29 Eylül 2026)
 - [ ] Confirm email açık mı, bir kez daha bak (hesap bağlamanın güvenliği)

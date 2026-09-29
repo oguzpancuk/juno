@@ -6,7 +6,7 @@
   { "expect": "Gizlilik Politikası" },
   { "shot": "l1-web-legal-sheet" },
   { "tap": "legal-popup-close", "settle": 1500 },
-  { "click": "E-posta ile giriş yap", "settle": 2000 },
+  { "tap": "continue-email", "settle": 2000 },
   { "fill": "email", "text": "l1-shots@test.local" },
   { "fill": "password", "text": "juno-drive-password" },
   { "tap": "submit", "settle": 7000 },
