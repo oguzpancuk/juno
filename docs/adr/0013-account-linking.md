@@ -90,7 +90,7 @@ An e-mail account on the same screen is only signed out, as before.
 `profiles.consent_version` is the notice accepted at onboarding, where
 birth data and location start being processed; a link does not touch it.
 So a member who signed up under the 2026-09-21 notice and later links
-Apple keeps 2026-09-21, although only the 2026-09-28 text describes
+Apple keeps 2026-09-21, although only the 2026-09-29 text describes
 provider sign-in. Asking existing members to accept a newer notice is the
 re-consent step of the next ROADMAP item ("KVKK consent and privacy
 policy"), which covers every notice change, not only this one.

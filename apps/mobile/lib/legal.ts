@@ -36,12 +36,25 @@
  * occupation are free text a member writes about themselves, which the
  * whole radius can read.
  *
+ * On 2026-09-28 the premium release (#10, 2026-09-24) caught up here: the
+ * membership columns (`is_premium`, `premium_since`, `sort_by`) under
+ * "Profil", the super like under "Kullanım", and under "Kimlerle
+ * paylaşılır" what `liked_me` and `discover.likes_me` show the person you
+ * liked — to a premium member your whole public card and the distance,
+ * past their radius and filters; to a free member the count, the star and
+ * the moment (`liked_at` is a full timestamp for everyone; only the
+ * screen rounds it to a day). The membership and the quotas also got a
+ * purpose and a legal basis. It shipped to the hosted project before this
+ * text did. The bullet says premium is free and one tap away, because
+ * that is what makes "only premium members see who you are" no promise
+ * at all: when payments land, that sentence changes with them.
+ *
  * The same rule covers identity providers. Apple and Google are named
- * under "Hesap" and "Kimlerle paylaşılır" since 2026-09-28, in the change
- * that finished the sign-in item (ADR-0013). On that day both were still
- * disabled on the hosted project (`external.apple` and `external.google`
- * false, as checked 2026-09-17): the notice goes out first, with the
- * deploy, and the providers are switched on in the dashboard after it, so
+ * under "Hesap" and "Kimlerle paylaşılır" from the 2026-09-29 version,
+ * in the change that finished the sign-in item (ADR-0013); that version
+ * also carries the premium lines above, which were merged first under
+ * 2026-09-28. The notice is meant to go out with
+ * the deploy before the providers are switched on in the dashboard, so
  * no moment exists where someone signs in through a provider this text
  * does not name. What it says about them was read out of GoTrue, not
  * assumed: a provider sign-in stores the provider's subject id and the
@@ -55,7 +68,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '28 Eylül 2026';
+export const LEGAL_UPDATED = '29 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -64,12 +77,13 @@ export const LEGAL_UPDATED = '28 Eylül 2026';
  *
  * Moves with `LEGAL_UPDATED`: the value is written once, at onboarding,
  * as the version of the text the person read before agreeing, so a
- * profile created after the 11 Eylül wording must say so. It does not
- * touch existing members — nothing re-asks consent yet, and the DB
+ * profile created under a later wording must say so. `supabase/seed.sql`
+ * carries it too: rerun `supabase/scripts/gen-seed.ts` when it moves. It
+ * does not touch existing members — nothing re-asks consent yet, and the DB
  * trigger refuses moving a stored version backwards — so a re-consent
  * step, when it exists, starts from an honest record.
  */
-export const LEGAL_VERSION = '2026-09-28';
+export const LEGAL_VERSION = '2026-09-29';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -100,9 +114,10 @@ export const legalSections: readonly LegalSection[] = [
       '• Arama yarıçapın.',
       '• Yüklediğin fotoğraflar ve yazdığın kısa tanıtım metni.',
       '• Doldurursan profilini anlatan alanlar: boyun, seçtiğin ilgi alanları, okuduğun üniversite ve mesleğin. Dördü de isteğe bağlıdır, boş bırakabilirsin ve sonradan istediğin zaman değiştirebilir ya da silebilirsin.',
+      '• Üyelik bilgin: premium üye olup olmadığın, üyeliğinin başladığı an ve keşfette kişileri mesafeye mi uyuma mı göre sıraladığın.',
       '• Onay kaydın: bu metnin hangi sürümünü kabul ettiğin ve kabul anının zamanı. Rızanın kanıtı budur ve hesabınla birlikte silinir.',
       'Kullanım',
-      '• Beğenilerin, geçtiklerin ve eşleşmelerin.',
+      '• Beğenilerin (süper beğeniler dahil), geçtiklerin ve eşleşmelerin.',
       '• Eşleşmelerinle yazıştığın mesajlar ve okunma bilgileri.',
       '• Engellediğin kişiler.',
       '• Gönderdiğin şikâyetler: kimi, hangi sebeple şikâyet ettiğin ve yazdıysan açıklaman.',
@@ -113,7 +128,8 @@ export const legalSections: readonly LegalSection[] = [
     heading: 'İşleme amaçları ve hukuki sebepler',
     body: [
       '• Doğum haritası ve uyum hesabı. Doğum tarihi, saati ve yeri olmadan ürünün temel işlevi çalışmaz; bu veriler açık rızanla işlenir ve rızanı hesabını silerek geri alabilirsin.',
-      '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak ve seni görebilecek kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
+      '• Yakındaki kişileri gösterme. Konumun, senin yarıçapın içindeki profilleri bulmak, seni görebilecek kişilere ve beğendiğin kişilere aradaki mesafeyi göstermek için kullanılır. Açık rızaya dayanır.',
+      '• Üyelik. Premium üyelik bilgin, üyeliğin sağladıklarını sunmak (sınırsız beğeni, süper beğeni, seni beğenenleri görme, uyuma göre sıralama), ücretsiz üyelerin günlük beğeni sınırını ve premium üyelerin haftalık süper beğeni sınırını uygulamak için işlenir; bu sınırlar için son beğenilerinin (süper beğeniler dahil) sayısı ve zamanı kullanılır. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Eşleşme ve mesajlaşma. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Güvenlik. Engelleme ve şikâyet kayıtları, hizmetin kötüye kullanımını önlemek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
     ],
@@ -121,7 +137,8 @@ export const legalSections: readonly LegalSection[] = [
   {
     heading: 'Kimlerle paylaşılır',
     body: [
-      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir. Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Diğer kullanıcılar. Görünen adın, yaşın, cinsiyetin, doğum haritan, fotoğrafların, tanıtım metnin, doldurduysan boyun, ilgi alanların, üniversiten ve mesleğin ile aranızdaki mesafe, seni görebilecek kişilere gösterilir. Önemli bir ayrıntı: kendi arama yarıçapın kimleri göreceğini belirler, seni kimlerin göreceğini değil. Seni, kendi yarıçapı sana ulaşan herkes görebilir; beğendiğin kişiler ise yarıçapı sana ulaşmasa da görebilir (bir sonraki madde). Doğum tarihin, doğum saatin ve doğum şehrin başkalarına gösterilmez; yalnızca bunlardan hesaplanan harita gösterilir. Mesajların yalnızca eşleştiğin kişiye gider.',
+      '• Beğendiğin kişi. Birini beğendiğinde, o kişi premium üyeyse seni "Seni beğenenler" listesinde görür: yukarıda sayılan profil bilgilerin ve aranızdaki mesafe, kendi yarıçapı ya da filtreleri sana ulaşmasa da ona gösterilir; beğeninin süper beğeni olup olmadığı ve ne zaman yapıldığı da görünür. Premium üyelik şu an ücretsizdir ve tek dokunuşla açılır, üyeliği sonradan açan kişi de daha önce gelen beğenileri görür; bu yüzden beğendiğin herkesin bunları görebileceğini varsaymalısın. Üyeliği açık olmayan kişi yalnızca birinin onu beğendiğini, süper beğeni olup olmadığını ve ne zaman yapıldığını görür; kim olduğunu görmez. Kartın premium bir üyenin keşfetinde çıkarsa üzerinde "Seni beğendi", süper beğendiysen "Seni süper beğendi" yazar. Geçtiğin kişilere hiçbir şey gösterilmez. Beğenin cevaplandığında ya da biriniz diğerini engellediğinde listeden çıkarsın.',
       "• Giriş sağlayıcıları. Apple ya da Google ile girersen girişini o sağlayıcı doğrular ve Juno'ya giriş yaptığını o da bilir; bu, onların kendi gizlilik koşullarına tabidir. Uygulama onlara profilinden, haritandan ya da mesajlarından hiçbir şey göndermez.",
       '• Barındırma sağlayıcısı. Veriler, veri işleyen sıfatıyla Supabase altyapısında ve Avrupa Birliği bölgesinde saklanır.',
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
