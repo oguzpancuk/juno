@@ -82,6 +82,7 @@
  */
 import type { Language } from '@juno/astro';
 import { legalSectionsEn } from './legal-en';
+import { legalSectionsEs } from './legal-es';
 
 export interface LegalSection {
   readonly heading: string;
@@ -215,6 +216,7 @@ export const LEGAL_SECTIONS: Readonly<
 > = {
   tr: legalSections,
   en: legalSectionsEn,
+  es: legalSectionsEs,
 };
 
 /**
@@ -225,4 +227,5 @@ export const LEGAL_SECTIONS: Readonly<
 export const LEGAL_UPDATED_IN: Readonly<Record<Language, string>> = {
   tr: LEGAL_UPDATED,
   en: 'September 30, 2026',
+  es: '30 de septiembre de 2026',
 };

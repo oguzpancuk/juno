@@ -12,6 +12,13 @@ describe('which language the app shows', () => {
     expect(resolveLanguage('device', ['tr_TR'])).toBe('tr');
   });
 
+  it('follows any Spanish the device names to the one Spanish catalog', () => {
+    expect(resolveLanguage('device', ['es-MX', 'en-US'])).toBe('es');
+    expect(resolveLanguage('device', ['es-419', 'tr-TR'])).toBe('es');
+    expect(resolveLanguage('device', ['de-DE', 'es_ES'])).toBe('es');
+    expect(parsePreference('es')).toBe('es');
+  });
+
   it('falls back to Turkish when the device names none it has', () => {
     expect(resolveLanguage('device', ['de-DE', 'fr-FR'])).toBe('tr');
     expect(resolveLanguage('device', [])).toBe('tr');

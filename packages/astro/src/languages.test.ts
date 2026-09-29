@@ -15,6 +15,7 @@ import { toPublicChart } from './public';
 import { SIGNS } from './signs';
 import { natalReading, starterFromKey } from './summary';
 import { SIGN_EN } from './en';
+import { SIGN_ES } from './es';
 import { WORDS, describeAspect, natalAspectTitle, signName } from './words';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
@@ -88,6 +89,34 @@ describe('translations of content/', () => {
             hits.push(`${key}: ${SIGN_EN[sign]}`);
     expect(hits).toEqual([]);
   });
+
+  it('Spanish aspect texts name no sign, as the Turkish ones do not', () => {
+    // Case-insensitive: "Leo" and "Libra" are also everyday Spanish words
+    // ("leo", "se libra"), and a text using them would read as the sign.
+    // The synastry file as it is on disk: the question travels with the
+    // meaning, and a starter names no sign either.
+    const synastry = filesOf('es').get('synastry.json') as Record<
+      string,
+      { meaning: string; question: string }
+    >;
+    const hits: string[] = [];
+    const texts = [
+      ...Object.entries(contentFiles('es').natalAspects),
+      ...Object.entries(synastry).flatMap(([key, entry]) => [
+        [key, entry.meaning] as const,
+        [key, entry.question] as const,
+      ]),
+    ];
+    for (const [key, text] of texts)
+      for (const sign of SIGNS)
+        if (
+          new RegExp(`(^|[^\\p{L}])${SIGN_ES[sign]}(?![\\p{L}])`, 'iu').test(
+            text,
+          )
+        )
+          hits.push(`${key}: ${SIGN_ES[sign]}`);
+    expect(hits).toEqual([]);
+  });
 });
 
 describe('the engine speaks the language it is set to', () => {
@@ -136,6 +165,79 @@ describe('the engine speaks the language it is set to', () => {
     expect(en.headline).toBe('Your Sun is trine their Venus.');
     expect(en.question).not.toBe(tr.question);
     expect(en.question.endsWith('?')).toBe(true);
+  });
+});
+
+describe('Spanish words', () => {
+  it('reads Spanish texts and Spanish names once set to Spanish', () => {
+    const chart = toPublicChart(
+      computeChart({
+        utc: new Date(istanbul.input.utc),
+        latitude: istanbul.input.latitude,
+        longitude: istanbul.input.longitude,
+      }),
+    );
+    const tr = natalReading(chart);
+    setLanguage('es');
+    const es = natalReading(chart);
+    expect(es.placements[0]?.technical).toMatch(/^Sol en /);
+    expect(es.risingText).not.toBe(tr.risingText);
+    expect(es.placements.find((p) => p.house !== null)?.technical).toMatch(
+      / · casa \d+$/,
+    );
+  });
+
+  it('describes an aspect from the viewer’s side', () => {
+    setLanguage('es');
+    expect(
+      describeAspect({ planetA: 'moon', aspect: 'square', planetB: 'mars' }),
+    ).toBe('Tu Luna forma una cuadratura con su Marte.');
+    expect(
+      describeAspect({
+        planetA: 'venus',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Tu Venus está en su Descendente.');
+    expect(
+      describeAspect({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'moon',
+      }),
+    ).toBe('Su Luna está en tu Descendente.');
+    expect(
+      describeAspect({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Cada Ascendente está en el Descendente del otro.');
+  });
+
+  it('titles a natal aspect, the Descendant included', () => {
+    setLanguage('es');
+    expect(
+      natalAspectTitle({ planetA: 'venus', aspect: 'square', planetB: 'mars' }),
+    ).toBe('Venus cuadratura Marte');
+    expect(
+      natalAspectTitle({
+        planetA: 'sun',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Sol en el Descendente');
+    expect(signName('scorpio')).toBe('Escorpio');
+  });
+
+  it('gives the starter in Spanish, as a question', () => {
+    setLanguage('es');
+    const starter = starterFromKey(
+      { planetA: 'sun', aspect: 'trine', planetB: 'venus' },
+      true,
+    );
+    expect(starter.headline).toBe('Tu Sol forma un trígono con su Venus.');
+    expect(starter.question).toMatch(/^¿.*\?$/u);
   });
 });
 

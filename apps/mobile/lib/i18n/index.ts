@@ -1,5 +1,6 @@
 import { type Language } from '@juno/astro';
 import { en } from './en';
+import { es } from './es';
 import { tr } from './tr';
 
 /**
@@ -24,12 +25,13 @@ export type Strings = Widen<typeof tr>;
  * `@juno/astro`): the record's type makes a language without a catalog a
  * compile error, so the app and the engine cannot disagree on the list.
  */
-export const CATALOGS: Readonly<Record<Language, Strings>> = { tr, en };
+export const CATALOGS: Readonly<Record<Language, Strings>> = { tr, en, es };
 
 /** Each language in its own name, as a language picker lists it. */
 export const LANGUAGE_NAMES: Readonly<Record<Language, string>> = {
   tr: 'Türkçe',
   en: 'English',
+  es: 'Español',
 };
 
 /**
@@ -39,4 +41,5 @@ export const LANGUAGE_NAMES: Readonly<Record<Language, string>> = {
 export const LOCALE_TAGS: Readonly<Record<Language, string>> = {
   tr: 'tr-TR',
   en: 'en-US',
+  es: 'es-ES',
 };
