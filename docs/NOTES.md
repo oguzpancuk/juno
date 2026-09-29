@@ -8629,6 +8629,11 @@ the owner has now asked for it. Decisions in ADR-0014.
 
 - Whether a translated string fits its box is not tested; English runs
   longer than Turkish in places (the match page's starter pushes its link
-  below the fold). The screenshots are the check.
+  below the fold). The screenshots are the check. evaluator-qa found
+  one the battery passed: the big-three row cuts long English sign
+  names on the web ("Sagittar…", "Caprico…" at 390 and 375 wide), where
+  `adjustsFontSizeToFit` does nothing. The Spanish thread found the same
+  and put two layouts to the owner; the pick lands in #17 for all three
+  languages.
 - The switch's remount and return to the profile is seen in the web
   screenshots only; nothing in the battery drives it.
