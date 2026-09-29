@@ -8487,11 +8487,16 @@ not give.
   auth user's metadata (`external_oauth.go`, `ParseUser`). The phone asks
   for the address only. One clause went into the "Apple ya da Google ile
   girersen" bullet. `LEGAL_VERSION` stayed 2026-09-29: the text it
-  amends had not been deployed yet (main 5d20145 was waiting on the
-  owner's deploy). If 5d20145 is deployed before this merges, two texts
-  share the date; a member who signed up in between accepted the one
-  without the Apple web clause, which does not apply to them unless they
-  later sign in with Apple on the web.
+  amends (main 5d20145) had not been deployed yet. **The rule:**
+  two texts must never share a version, because the version is
+  what a member's consent record points at. So if 5d20145, or any build
+  with the earlier 29 Eylül text, is live when this PR merges, the merge
+  moves the date to the merge day in the same commit: `LEGAL_VERSION`
+  and `LEGAL_UPDATED` in `lib/legal.ts` (`lib/legal.test.ts` holds the two
+  together), `supabase/seed.sql` through `supabase/scripts/gen-seed.ts`,
+  the date on the notice line of `docs/auth-setup.md`'s checklist, and a
+  dated line in `docs/ROADMAP.md`. Otherwise the date stays. The PR body
+  opens with this check (review round 1 on #15).
 
 ### For the owner: the client secret expires
 
@@ -8503,6 +8508,14 @@ it was generated here, and set a reminder for five months after.
 
 ### Battery gaps
 
+- **Back from the provider's page, the buttons stayed on "Bağlanıyor…"**
+  (review round 1 on #15; Google had it since #13). A `redirected`
+  outcome leaves the welcome screen busy, and a browser that restores
+  the page from its back-forward cache restores that state. Now cleared
+  on `pageshow` with `persisted`. Reproduced in headless Chromium, which
+  did restore from the cache (a `window` marker survived `history.back()`):
+  before the fix the page read "Bağlanıyor…", after it the Apple title.
+  Not in the battery: the web target has no component tests.
 - The OAuth round trip is not in the battery and cannot be: Apple takes
   no `http://` or `localhost` return URL, so it does not run against the
   local stack either. Checked: the welcome screen in the web export with

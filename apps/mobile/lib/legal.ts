@@ -65,8 +65,10 @@
  * one clause to that bullet: GoTrue asks Apple's web page for `email name`
  * with no way to narrow it, and stores the name Apple posts back on the
  * first authorisation in the same metadata. The phone asks for the
- * address only. The date stayed 29 Eylül: the text it replaced had not
- * been deployed anywhere yet.
+ * address only. The date stayed 29 Eylül because the text it amends had
+ * not been deployed when this was written. One version, one text: had the
+ * earlier 29 Eylül text gone live first, this change moves the date to
+ * the day it merges (the rule is in docs/NOTES.md, "Apple on the web").
  */
 export interface LegalSection {
   readonly heading: string;
