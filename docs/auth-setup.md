@@ -165,7 +165,7 @@ TestFlight maddesi). Sonra:
    (Resend ücretsiz planı ayda 3.000, günde 100). `config.toml` yerelde 100
    diyor; üretimde kendi rakamını yaz.
 4. **Authentication → Emails → Confirm signup**
-   - Subject: `Juno doğrulama kodun · Your Juno code`
+   - Subject: `Juno doğrulama kodun · Your Juno code · Tu código de Juno`
    - Body: `supabase/templates/verification_code.html` içeriğini yapıştır.
      Şablon `{{ .Token }}` render ediyor — yani link değil, altı haneli kod.
      Mail, uygulamanın konuştuğu her dilde bir bölüm taşır (Türkçe önce);
