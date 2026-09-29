@@ -8632,3 +8632,57 @@ the owner has now asked for it. Decisions in ADR-0014.
   below the fold). The screenshots are the check.
 - The switch's remount and return to the profile is seen in the web
   screenshots only; nothing in the battery drives it.
+
+## 2026-09-29 — Spanish
+
+The owner's "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her şey
+çevrilecek": Spanish on top of the English thread's catalogs (ADR-0014),
+nothing but `es` files and registrations, plus a Spanish part in the
+sign-up mail.
+
+- **Which Spanish.** Neutral international Spanish under `es`, with "tú"
+  as the Turkish says "sen": no vosotros, no voseo, no word only one
+  country uses. Any `es-*` device tag lands on it. `LOCALE_TAGS.es` is
+  `es-ES` because the tag must be `xx-YY`; dates read the same in es-MX
+  ("30 de septiembre de 2026"). "Match", "like" and "superlike" stay as
+  Spanish-language dating apps say them. The glossary the translation was
+  held to is in the PR body.
+- **The notice** is a translation of the 30 Eylül 2026 text, line for
+  line; the Turkish binds and `LEGAL_VERSION` did not move.
+- **Content rules in Spanish.** The Turkish layering tests are
+  lexicon-bound and do not read Spanish. Run by hand on the Spanish texts
+  before committing: no sign or house text of one planet shares a
+  4-word sequence (six sign texts rewritten), no tempo words in house
+  texts, no antonym pair across sign and house. Only "no sign name in an
+  aspect text" became a test, case-insensitive because "leo" and "libra"
+  are also ordinary Spanish words.
+- **Labels that must not say "you".** The placement labels are shown on
+  other people's profiles too; "Tu esencia" read as the viewer's. The
+  Turkish and English ones are neutral; the Spanish now are ("Esencia",
+  "Mundo emocional").
+
+### For the owner
+
+- The hosted project's sign-up mail subject and body are pasted by hand
+  (`docs/auth-setup.md` step 4) — the subject now names Spanish too.
+- iOS needs a fresh native build for the Spanish permission sentence
+  (`locales/es.json`).
+
+### Side findings, not fixed here
+
+- City search knows Turkish exonyms only (`packages/geo` `EXONYMS`): a
+  Spanish speaker finds "London" and "Munich" by their GeoNames names but
+  not "Londres" or "Múnich". A Spanish list is drafted in the project
+  files (`i18n-es/exonyms-es.json`); wiring it is a `geo` change.
+- The big-three row (`BigThreeRow`) cuts "Capricornio" and "Ascendente"
+  to "Caprico…" / "Ascende…" on the web, where `adjustsFontSizeToFit` is
+  a no-op; on iOS it shrinks to 0.8, which is not enough for either. The
+  Turkish and English words are shorter. A layout question for the owner.
+
+### Battery gaps
+
+- Nothing checks that a Spanish string fits its box; Spanish runs longer
+  than Turkish and English. Two fits were only seen in screenshots: the
+  big-three row above, and the filter's band buttons, where "Equilibrada"
+  and "Excepcional" were cut until the band names became "Mixta" and
+  "Insólita".

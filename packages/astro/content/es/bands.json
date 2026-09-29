@@ -4,7 +4,7 @@
     "text": "Sus cartas se encuentran en pocos puntos; describir lo que hay entre ustedes puede depender más de ustedes mismos."
   },
   "even": {
-    "name": "Equilibrada",
+    "name": "Mixta",
     "text": "Los aspectos que apoyan y los que desafían están parejos; las diferencias suelen dar material para conversar."
   },
   "strong": {
@@ -12,7 +12,7 @@
     "text": "Sus cartas se tocan en muchos puntos; de dónde viene el vínculo suele verse pronto."
   },
   "rare": {
-    "name": "Excepcional",
+    "name": "Insólita",
     "text": "No es común que dos cartas se crucen en tantos puntos; quizá convenga no dar por sentado lo que llega fácil."
   }
 }

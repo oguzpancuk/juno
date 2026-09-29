@@ -166,8 +166,10 @@ export const es: Strings = {
       liked: string | null,
     ) =>
       `${liked === null ? '' : `${liked}. `}${name}, ${age}, ${distance}. Ver perfil`,
+    // The band's name is a capitalised label on its own; inside the
+    // sentence it is an adjective and goes lower case.
     openDetail: (band: string) =>
-      `Compatibilidad ${band}. Detalle de compatibilidad`,
+      `Compatibilidad ${String(band).toLocaleLowerCase('es')}. Detalle de compatibilidad`,
     swipeLike: 'ME GUSTA',
     swipePass: 'PASO',
     swipeSuper: 'SUPERLIKE',
