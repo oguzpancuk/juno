@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Platform,
   ScrollView,
@@ -67,6 +67,12 @@ export default function WelcomeScreen() {
   const [page, setPage] = useState(0);
   const [content, setContent] = useState(0);
   const scrolls = page > 0 && content > page + 1;
+  // iOS keeps a scroll indicator hidden until someone scrolls; flashed
+  // once, it says so before they have to guess.
+  const scroller = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (scrolls) scroller.current?.flashScrollIndicators();
+  }, [scrolls]);
   const [providers, setProviders] = useState<Availability>({
     apple: false,
     google: false,
@@ -126,6 +132,7 @@ export default function WelcomeScreen() {
         horizonRise={size.horizonRise}
       />
       <ScrollView
+        ref={scroller}
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
