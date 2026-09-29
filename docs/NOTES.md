@@ -8554,7 +8554,10 @@ first button.
 - **The horizon moves with the bottom edge.** Its rise was tuned to the
   flat 48-point bottom; the compact door's 12 needs a lower curve, so the
   rise is part of the size (0.02 → 0.05) and the curve stays under the
-  legal link at every size measured.
+  legal link wherever the door fits. Where it does not (below about 650
+  with Apple shown, 582 without), the curve is fixed to the page's edge
+  and would cross the consent line at rest (evaluator-qa, 375 × 629), so
+  a door that scrolls drops the horizon and shows the scroll indicator.
 
 Measured in the web export (legal link's bottom / page height, Apple
 shown): 648/664, 649/665, 746/778, 799/844; the scroll container's

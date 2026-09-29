@@ -60,6 +60,13 @@ export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const size = doorSize(height - insets.top - insets.bottom);
   const glow = Math.round(size.mark * GLOW_PER_MARK);
+  // Whether the door is taller than its page, and scrolls. The horizon is
+  // fixed to the page's bottom edge, so on a door that runs past it the
+  // curve would cross whatever text sits there at rest; it goes, and the
+  // scroll indicator says there is more below.
+  const [page, setPage] = useState(0);
+  const [content, setContent] = useState(0);
+  const scrolls = page > 0 && content > page + 1;
   const [providers, setProviders] = useState<Availability>({
     apple: false,
     google: false,
@@ -113,7 +120,11 @@ export default function WelcomeScreen() {
     <View style={styles.screen} testID="welcome-screen">
       {/* Stars and the horizon; no planet, the mark has the top, and the
           curve stays under the legal link rather than through it. */}
-      <CosmicGround planet={false} horizonRise={size.horizonRise} />
+      <CosmicGround
+        planet={false}
+        horizon={!scrolls}
+        horizonRise={size.horizonRise}
+      />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -126,7 +137,9 @@ export default function WelcomeScreen() {
           },
         ]}
         alwaysBounceVertical={false}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={scrolls}
+        onLayout={({ nativeEvent }) => setPage(nativeEvent.layout.height)}
+        onContentSizeChange={(_, height) => setContent(height)}
       >
         <View style={styles.aboveHero} />
         <View style={[styles.hero, { gap: size.gap }]}>
