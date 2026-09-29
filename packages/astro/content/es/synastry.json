@@ -1,0 +1,1022 @@
+{
+  "sun-conjunction-sun": {
+    "meaning": "Sus Soles están en el mismo punto: se reconocen al instante y hablan el mismo idioma. También comparten las mismas sombras; el tiempo dirá quién es el espejo y quién la luz.",
+    "question": "¿Te resulta fácil entenderte con alguien muy parecido a ti, o te parece demasiado familiar?"
+  },
+  "sun-sextile-sun": {
+    "meaning": "Sus identidades se apoyan mutuamente; estar lado a lado es fácil y hay poca rivalidad. Un núcleo tranquilo pero sólido.",
+    "question": "¿Con cuántas personas puedes ser como eres? ¿Me puedo sumar?"
+  },
+  "sun-square-sun": {
+    "meaning": "Dos voluntades fuertes, en direcciones distintas: hay tensión, pero también respeto. Nadie cede; la negociación se vuelve el músculo de la relación.",
+    "question": "¿Qué eliges si tienes que escoger entre tener razón y ser feliz?"
+  },
+  "sun-trine-sun": {
+    "meaning": "Sus Soles se nutren con facilidad; su energía fluye al mismo ritmo y crecen juntos. Una base de amistad sólida que llega sin esfuerzo.",
+    "question": "¿Qué es lo que más energía te da? ¿Es algo que podríamos hacer juntos?"
+  },
+  "sun-opposition-sun": {
+    "meaning": "Sus Soles están frente a frente: la pieza que les falta está en el otro. La atracción es fuerte; el acuerdo es algo que se aprende.",
+    "question": "¿Crees eso de que los polos opuestos se atraen?"
+  },
+  "sun-conjunction-moon": {
+    "meaning": "Un aspecto clásico de compatibilidad: uno es luz, el otro calidez. Uno marca el rumbo y el otro nutre; se complementan de forma natural.",
+    "question": "¿En una relación sueles ser quien marca el rumbo o quien cuida?"
+  },
+  "sun-sextile-moon": {
+    "meaning": "Voluntad y necesidad se apoyan con facilidad; estar juntos es cómodo y reconfortante.",
+    "question": "¿Cómo reconoces a las personas con las que te sientes a gusto?"
+  },
+  "sun-square-moon": {
+    "meaning": "Lo que uno quiere presiona lo que el otro necesita; puede haber malentendidos. Decirlo con claridad lo resuelve todo.",
+    "question": "¿Qué te hace bien? ¿Te resulta fácil decirlo?"
+  },
+  "sun-trine-moon": {
+    "meaning": "Identidad y emoción hablan el mismo idioma; no necesitan esforzarse para entenderse. Se siente como estar en casa.",
+    "question": "¿Te ha pasado entenderte con alguien desde el primer momento?"
+  },
+  "sun-opposition-moon": {
+    "meaning": "Lo que uno quiere, el otro siente lo contrario; hay atracción, pero hace falta traducir las necesidades. La paciencia es la clave de este vínculo.",
+    "question": "¿Crees que los contrastes atraen, o te resultan agotadores?"
+  },
+  "sun-conjunction-mercury": {
+    "meaning": "Identidad y mente se encuentran: uno entiende y expresa al otro al instante. La conversación es el corazón de este vínculo.",
+    "question": "¿Sabes que siento que podría hablar contigo durante horas? ¿Cuál es tu tema de conversación favorito?"
+  },
+  "sun-sextile-mercury": {
+    "meaning": "Ideas e identidad se apoyan; al conversar, se hacen crecer mutuamente.",
+    "question": "¿Sobre qué tema hay que preguntarte para que no pares de hablar?"
+  },
+  "sun-square-mercury": {
+    "meaning": "Lo que se dice y lo que se es chocan; uno puede malinterpretar al otro. Preguntar la intención es mejor que suponerla.",
+    "question": "¿Cuánto te molesta que te malinterpreten?"
+  },
+  "sun-trine-mercury": {
+    "meaning": "Quien cuenta y quien entiende se encuentran con facilidad; hay una comodidad mental.",
+    "question": "¿Qué captas primero cuando te cuento algo: la lógica o el sentimiento?"
+  },
+  "sun-opposition-mercury": {
+    "meaning": "Ideas e identidad frente a frente: mucho debate, y el acuerdo se aprende. Aquí la opinión contraria es un regalo.",
+    "question": "¿Cuándo fue la última vez que alguien te hizo cambiar de opinión?"
+  },
+  "sun-conjunction-venus": {
+    "meaning": "Identidad y amor se encuentran: uno ama al otro tal como es. Es uno de los aspectos clásicos de atracción romántica.",
+    "question": "¿Qué es lo primero que notas en una persona?"
+  },
+  "sun-sextile-venus": {
+    "meaning": "Amor e identidad se apoyan; estar juntos es bonito y fácil.",
+    "question": "¿Cómo eliges las cosas que te parecen bonitas?"
+  },
+  "sun-square-venus": {
+    "meaning": "Gustos y valores no coinciden del todo; a uno le puede costar entender lo que le gusta al otro, y es fácil ponerse a contar quién dio cuánto. Cuando reciben la diferencia con curiosidad y no como un problema, el gusto se convierte en aceptación.",
+    "question": "¿Alguna vez sentiste que tenías que cambiar para que te quisieran?"
+  },
+  "sun-trine-venus": {
+    "meaning": "El amor fluye hacia la identidad con facilidad; gustarse no les cuesta nada.",
+    "question": "¿Cómo reconoces el momento en que decides confiar en alguien?"
+  },
+  "sun-opposition-venus": {
+    "meaning": "Amor e identidad en polos opuestos; la atracción es fuerte, las expectativas son distintas. La expectativa no dicha es el único riesgo de este vínculo.",
+    "question": "¿Qué es lo primero que esperas de una relación?"
+  },
+  "sun-conjunction-mars": {
+    "meaning": "Identidad y acción se encuentran en el mismo punto: atracción física fuerte, energía alta, un vínculo a veces competitivo. Pueden hacer mucho juntos; si no hablan de quién toma la delantera, la chispa puede volverse fricción.",
+    "question": "¿La competencia te enciende o te agota?"
+  },
+  "sun-sextile-mars": {
+    "meaning": "Energía e identidad se apoyan; ponerse en marcha juntos es fácil.",
+    "question": "¿Qué sería lo mejor que podríamos hacer juntos?"
+  },
+  "sun-square-mars": {
+    "meaning": "Voluntad y acción chocan: hay atracción, pero también fricción. Convertir el enojo en pasión es tarea de los dos.",
+    "question": "¿Te resulta fácil reconciliarte después de una discusión?"
+  },
+  "sun-trine-mars": {
+    "meaning": "La energía apoya a la identidad con facilidad: trabajar juntos y avanzar les sale natural.",
+    "question": "¿Qué te acerca más a alguien: hacer algo juntos o conversar?"
+  },
+  "sun-opposition-mars": {
+    "meaning": "Identidad y acción en polos opuestos: lucha de poder o una alianza poderosa. Ser equipo y no rivales es una elección.",
+    "question": "¿En un equipo serías el capitán o el motor?"
+  },
+  "sun-conjunction-ascendant": {
+    "meaning": "Uno toca con su identidad la imagen del otro: es como verse en el otro. Una familiaridad natural; no hace falta presentarse.",
+    "question": "¿Tus primeras impresiones suelen ser acertadas?"
+  },
+  "sun-sextile-ascendant": {
+    "meaning": "Identidad e imagen se apoyan; están a gusto desde el primer momento.",
+    "question": "¿Qué pensaste cuando me viste por primera vez?"
+  },
+  "sun-square-ascendant": {
+    "meaning": "Uno ve al otro distinto de como es; se abre una brecha entre expectativa y realidad. Con tiempo y conversaciones sinceras, esa diferencia se aclara.",
+    "question": "¿Hay algún aspecto tuyo que la gente malinterpreta?"
+  },
+  "sun-trine-ascendant": {
+    "meaning": "Imagen e identidad en armonía; se sienten naturales el uno con el otro.",
+    "question": "¿En qué momentos te sientes más natural?"
+  },
+  "sun-opposition-ascendant": {
+    "meaning": "Uno cae en el Descendente del otro, el punto de la relación: el aspecto clásico de pareja. Sienten que se complementan; el reflejo es fuerte, y también hay que cuidar la propia luz.",
+    "question": "¿Alguna vez sentiste que conociste a alguien que te complementaba?"
+  },
+  "moon-conjunction-moon": {
+    "meaning": "El mismo idioma emocional: se entienden sin decir nada. Vivir las mismas mareas es a la vez comodidad y riesgo.",
+    "question": "¿Qué prefieres en un mal día: hablar o silencio?"
+  },
+  "moon-sextile-moon": {
+    "meaning": "Las necesidades emocionales se apoyan; un vínculo cómodo y tierno.",
+    "question": "¿Tienes algún pequeño hábito que te calme?"
+  },
+  "moon-square-moon": {
+    "meaning": "Las necesidades emocionales tiran en direcciones distintas; uno puede querer cercanía mientras el otro pide espacio. Decir la necesidad con claridad tiende un puente entre ustedes.",
+    "question": "¿Qué te resulta más fácil: decir lo que te hace bien o esperar a que lo adivinen?"
+  },
+  "moon-trine-moon": {
+    "meaning": "Sus Lunas se nutren con facilidad; emocionalmente están en casa y la ternura fluye sin esfuerzo. La comodidad es real; la profundidad hay que buscarla a propósito.",
+    "question": "¿Alguna vez alguien te hizo sentir como en casa?"
+  },
+  "moon-opposition-moon": {
+    "meaning": "Necesidades emocionales opuestas: lo que uno quiere, el otro quiere lo contrario. Hacen falta traducción y paciencia.",
+    "question": "¿Crees que dos personas con necesidades opuestas pueden entenderse?"
+  },
+  "moon-conjunction-mercury": {
+    "meaning": "Emoción y mente se encuentran: uno siente y el otro lo pone en palabras. Hablar es la cura de este vínculo.",
+    "question": "¿Qué te resulta más fácil: expresar tus emociones o escuchar?"
+  },
+  "moon-sextile-mercury": {
+    "meaning": "Emoción y pensamiento se apoyan; se acercan hablando.",
+    "question": "¿De qué tema hablas con más soltura?"
+  },
+  "moon-square-mercury": {
+    "meaning": "Lo que se siente y lo que se dice chocan; los malentendidos pueden resultar conocidos. Mejor hablar despacio que querer entenderse rápido.",
+    "question": "¿Alguna vez dijiste algo y luego te arrepentiste?"
+  },
+  "moon-trine-mercury": {
+    "meaning": "Las emociones se vuelven palabras con facilidad; entenderse no cuesta.",
+    "question": "¿Cuándo fue la última vez que sentiste que alguien te entendía?"
+  },
+  "moon-opposition-mercury": {
+    "meaning": "Corazón y razón en polos opuestos; uno siente, el otro analiza. Los dos tienen razón y hay que hacerles lugar a ambos.",
+    "question": "¿Tú decides con el corazón o con la cabeza?"
+  },
+  "moon-conjunction-venus": {
+    "meaning": "La necesidad emocional y el lenguaje del amor se encuentran en el mismo lugar: lo que uno necesita, el otro se lo da de forma natural. Uno de los aspectos clásicos del amor.",
+    "question": "¿Qué significa para ti cuidar de alguien?"
+  },
+  "moon-sextile-venus": {
+    "meaning": "Necesidad emocional y lenguaje del amor en armonía; se cuidan bien el uno al otro.",
+    "question": "¿Qué es lo que más te nutre?"
+  },
+  "moon-square-venus": {
+    "meaning": "Necesidad y deseo entran en tensión; uno puede buscar seguridad mientras el otro busca disfrutar. Gestos pequeños pero constantes resuelven esa tensión.",
+    "question": "¿Cómo te gusta demostrar el cariño?"
+  },
+  "moon-trine-venus": {
+    "meaning": "Amor y ternura al mismo ritmo; una cercanía sin esfuerzo.",
+    "question": "¿Confías en las relaciones que se dan sin esfuerzo?"
+  },
+  "moon-opposition-venus": {
+    "meaning": "Amor y necesidad en polos opuestos: hay atracción, pero cada uno responde distinto. Hay que decir lo que se quiere.",
+    "question": "¿Cuál es tu lenguaje del amor: palabras, caricias o tiempo?"
+  },
+  "moon-conjunction-mars": {
+    "meaning": "Emoción y deseo se encuentran: intenso, apasionado, protector. La tensión también llega rápido; manejar la llama es cosa de los dos.",
+    "question": "¿Qué es lo que más rápido te enoja, y qué te ablanda?"
+  },
+  "moon-sextile-mars": {
+    "meaning": "Emoción y energía se apoyan; se protegen mutuamente.",
+    "question": "¿Recuerdas algún momento en que sentiste que protegías a alguien?"
+  },
+  "moon-square-mars": {
+    "meaning": "Las reacciones emocionales pueden ser repentinas y duras; la susceptibilidad y el enojo resultan conocidos. Detenerse a respirar antes de reaccionar salva este vínculo.",
+    "question": "¿Cuando te enojas hablas o te quedas en silencio?"
+  },
+  "moon-trine-mars": {
+    "meaning": "Emoción y acción fluyen en armonía; cuando uno siente, el otro actúa. Se forma un vínculo protector y valiente; se cubren las espaldas mutuamente.",
+    "question": "¿Qué te recuerda la valentía?"
+  },
+  "moon-opposition-mars": {
+    "meaning": "Emoción y deseo en polos opuestos: atracción y tensión a la vez; uno puede acercarse mientras el otro se aleja. Cuando encuentran juntos la necesidad que hay debajo del enojo, este vaivén se vuelve intimidad.",
+    "question": "¿Las discusiones te acercan o te alejan?"
+  },
+  "moon-conjunction-ascendant": {
+    "meaning": "Emoción e imagen se encuentran: uno halla paz en el rostro del otro, y la cercanía llega rápida y natural. Cuando la emoción fluye con tanta facilidad, hay que vigilar quién carga con qué y no convertir el cuidado en dependencia.",
+    "question": "¿Qué fue lo primero que viste en mi cara?"
+  },
+  "moon-sextile-ascendant": {
+    "meaning": "Emoción e imagen en armonía; se sienten a gusto desde el primer momento.",
+    "question": "¿Cómo reconoces un ambiente en el que te sientes a gusto?"
+  },
+  "moon-square-ascendant": {
+    "meaning": "Uno puede tomarse la actitud del otro como algo personal; una palabra pequeña puede volverse un gran resentimiento. Decir la necesidad con claridad y frenar la reacción convierte esta sensibilidad en cercanía.",
+    "question": "¿Alguna vez te engañó una primera impresión?"
+  },
+  "moon-trine-ascendant": {
+    "meaning": "Armonía emocional y comodidad natural; la ternura es fácil.",
+    "question": "¿Qué te resulta más fácil: dar ternura o recibirla?"
+  },
+  "moon-opposition-ascendant": {
+    "meaning": "La emoción cae en el Descendente: uno encuentra hogar en el otro, y la cercanía llega rápida y natural. Hay que cuidar juntos la delgada línea entre el cuidado y la dependencia.",
+    "question": "¿En una relación prefieres ser hogar o encontrar hogar?"
+  },
+  "mercury-conjunction-mercury": {
+    "meaning": "El mismo idioma mental: terminan las frases del otro. La conversación no se acaba; hay que sumar la escucha a propósito.",
+    "question": "¿Alguna vez conociste a alguien con quien no querías que la conversación terminara?"
+  },
+  "mercury-sextile-mercury": {
+    "meaning": "Las mentes se apoyan; intercambiar ideas es fácil y placentero.",
+    "question": "¿Cuál fue la última idea que te dejó pensando?"
+  },
+  "mercury-square-mercury": {
+    "meaning": "Distintas formas de pensar chocan; discuten seguido y ponerse de acuerdo cuesta. Una mirada diferente es un regalo.",
+    "question": "¿Te gusta debatir o lo evitas?"
+  },
+  "mercury-trine-mercury": {
+    "meaning": "Armonía mental: piensan a la misma velocidad y se entienden.",
+    "question": "¿Te resulta fácil entenderte con alguien que piensa rápido?"
+  },
+  "mercury-opposition-mercury": {
+    "meaning": "Formas de pensar opuestas: uno ve el detalle, el otro el conjunto. Se complementan, pero primero se sacan de quicio.",
+    "question": "¿Entiendes un tema como un todo o por partes?"
+  },
+  "mercury-conjunction-venus": {
+    "meaning": "Mente y amor se encuentran: conversar es el coqueteo mismo. En este vínculo, las palabras acarician.",
+    "question": "¿Qué es lo más bonito que te han dicho?"
+  },
+  "mercury-sextile-venus": {
+    "meaning": "Ideas y amor se apoyan; una conversación amable y placentera.",
+    "question": "¿Hay alguna frase que te parezca especialmente amable?"
+  },
+  "mercury-square-venus": {
+    "meaning": "Palabra y amor entran en tensión; un halago puede malinterpretarse. La claridad va antes que la elegancia.",
+    "question": "¿Recibir halagos te relaja o te da vergüenza?"
+  },
+  "mercury-trine-venus": {
+    "meaning": "Amor y conversación en armonía; se quieren hablando.",
+    "question": "¿Te acercas más a alguien hablando o en silencio?"
+  },
+  "mercury-opposition-venus": {
+    "meaning": "Ideas y amor en polos opuestos; uno quiere explicar, el otro sentir. Cuando escuchan a ambos, la conversación se convierte en amor.",
+    "question": "¿Qué es más difícil: expresar el amor o sentirlo?"
+  },
+  "mercury-conjunction-mars": {
+    "meaning": "Mente y acción se encuentran: rápido, agudo, polémico. Las ideas sacan chispas; hay que medir la dosis.",
+    "question": "¿Cuando discutes quieres ganar o llegar a un acuerdo?"
+  },
+  "mercury-sextile-mars": {
+    "meaning": "Pensamiento y energía se apoyan; los planes se ponen en marcha rápido.",
+    "question": "¿Se te ocurre algo que podamos planear y hacer juntos?"
+  },
+  "mercury-square-mars": {
+    "meaning": "Palabra y acción chocan; lenguaje duro e impaciencia. El poder de las palabras pide medida.",
+    "question": "¿Cuánto te afecta una palabra dura?"
+  },
+  "mercury-trine-mars": {
+    "meaning": "Ideas y acción en armonía; se impulsan mutuamente a actuar.",
+    "question": "¿Cuál fue la última idea que te hizo pasar a la acción?"
+  },
+  "mercury-opposition-mars": {
+    "meaning": "Las ideas frente a la acción; defensa y ataque. Aquí la opinión contraria es estrategia.",
+    "question": "¿Defender una idea te cansa o te da vida?"
+  },
+  "mercury-conjunction-ascendant": {
+    "meaning": "Mente e imagen se encuentran: uno descifra al otro enseguida. Hablar es fácil y conocerse, rápido.",
+    "question": "¿Me creerías si te digo que me descifraste desde la primera frase?"
+  },
+  "mercury-sextile-ascendant": {
+    "meaning": "Ideas e imagen en armonía; la primera conversación fluye con soltura.",
+    "question": "¿En qué te fijas en una primera conversación?"
+  },
+  "mercury-square-ascendant": {
+    "meaning": "Palabra e impresión chocan; los malentendidos pueden ser habituales en este vínculo. Preguntar la intención en vez de suponerla lo resuelve todo.",
+    "question": "¿Cómo te das cuenta de que te malinterpretaron?"
+  },
+  "mercury-trine-ascendant": {
+    "meaning": "Comodidad mental; hablar entre ustedes es natural.",
+    "question": "¿Crees que escasean las conversaciones que fluyen de forma natural?"
+  },
+  "mercury-opposition-ascendant": {
+    "meaning": "La mente cae en el Descendente: la conversación es la base de este vínculo, y uno abre el pensamiento del otro. Quien mantiene su propio criterio se enriquece con este aspecto.",
+    "question": "¿Confías en las personas que cambian de opinión?"
+  },
+  "venus-conjunction-venus": {
+    "meaning": "El mismo lenguaje del amor: entienden al instante qué aman y cómo aman. La estética y el disfrute son su denominador común.",
+    "question": "¿Alguna vez conociste a alguien que demostraba el cariño igual que tú?"
+  },
+  "venus-sextile-venus": {
+    "meaning": "Sus lenguajes del amor se apoyan; un vínculo elegante y placentero.",
+    "question": "¿Qué sientes al compartir las cosas que te gustan?"
+  },
+  "venus-square-venus": {
+    "meaning": "Lenguajes del amor distintos; uno pide gestos, el otro palabras. Aprender esa diferencia es la relación misma.",
+    "question": "¿Cuál es tu lenguaje del amor: palabras, gestos o tiempo?"
+  },
+  "venus-trine-venus": {
+    "meaning": "La misma frecuencia en el amor: gustarse no les cuesta nada.",
+    "question": "¿La atracción sin esfuerzo te parece sospechosa o bonita?"
+  },
+  "venus-opposition-venus": {
+    "meaning": "Lenguajes del amor opuestos: atracción fuerte, expectativas distintas. Sentir curiosidad por la diferencia ayuda.",
+    "question": "¿Podrías entenderte con alguien que demuestra el amor de forma muy distinta a ti?"
+  },
+  "venus-conjunction-mars": {
+    "meaning": "Amor y deseo se encuentran: el aspecto clásico de atracción. La química es fuerte; avivar la llama es cosa de los dos.",
+    "question": "¿Qué importa más: la química o la compatibilidad?"
+  },
+  "venus-sextile-mars": {
+    "meaning": "Amor y pasión se apoyan; una atracción cálida y equilibrada.",
+    "question": "¿Crees en una atracción cálida y tranquila?"
+  },
+  "venus-square-mars": {
+    "meaning": "Amor y deseo entran en tensión: la atracción es fuerte, pero los tiempos son distintos. Aprender a manejar la pasión es la clave de esta relación.",
+    "question": "¿Qué es más difícil: la pasión o la paciencia?"
+  },
+  "venus-trine-mars": {
+    "meaning": "Amor y deseo al mismo ritmo; ternura y emoción juntas.",
+    "question": "¿Crees que la emoción y la calma pueden convivir en una misma relación?"
+  },
+  "venus-opposition-mars": {
+    "meaning": "Amor y deseo en polos opuestos: se vive un tira y afloja constante. Cuando aprenden este baile, la atracción perdura.",
+    "question": "¿Te gustan los juegos de tira y afloja o te resultan agotadores?"
+  },
+  "venus-conjunction-ascendant": {
+    "meaning": "Amor e imagen se encuentran: uno encuentra atractivo al otro a primera vista. El aspecto clásico del flechazo.",
+    "question": "¿Crees en la atracción a primera vista?"
+  },
+  "venus-sextile-ascendant": {
+    "meaning": "Amor e imagen en armonía; gustarse es fácil.",
+    "question": "¿Cómo sabes que alguien te gusta?"
+  },
+  "venus-square-ascendant": {
+    "meaning": "Gusto e impresión entran en tensión; uno espera que el otro sea distinto de como es. Cuando aman lo que es real, la expectativa deja paso a la aceptación.",
+    "question": "¿Alguna vez tus expectativas chocaron con la realidad?"
+  },
+  "venus-trine-ascendant": {
+    "meaning": "Una atracción elegante y natural; cada uno ve belleza en el otro.",
+    "question": "¿Qué significa la belleza para ti?"
+  },
+  "venus-opposition-ascendant": {
+    "meaning": "El amor cae en el Descendente: el aspecto clásico de atracción y pareja; dejarse amar resulta fácil. Dar sin perderse en el amor es la lección de este vínculo.",
+    "question": "¿Crees que la gente cambia cuando ama?"
+  },
+  "mars-conjunction-mars": {
+    "meaning": "El mismo lenguaje de acción: juntos son rápidos y eficaces. La competencia puede sacar chispas; ser equipo es una elección.",
+    "question": "¿Seríamos rivales o equipo?"
+  },
+  "mars-sextile-mars": {
+    "meaning": "Sus energías se apoyan; moverse juntos es fácil.",
+    "question": "¿Qué te parece la idea de hacer deporte juntos?"
+  },
+  "mars-square-mars": {
+    "meaning": "Las energías chocan; la impaciencia y las luchas de poder surgen con facilidad. Cuando dirigen el enojo hacia una meta común y no hacia el otro, este aspecto da fuerza.",
+    "question": "¿Quién crees que se rendiría primero en una discusión?"
+  },
+  "mars-trine-mars": {
+    "meaning": "Armonía en la energía; se impulsan a actuar sin agotarse.",
+    "question": "¿Quién te sube la energía y quién te la baja?"
+  },
+  "mars-opposition-mars": {
+    "meaning": "Estilos de acción opuestos: uno es rápido, el otro estratégico. Hay que ser socios, no rivales.",
+    "question": "¿Decides rápido o con un plan?"
+  },
+  "mars-conjunction-ascendant": {
+    "meaning": "Energía e imagen se encuentran: la atracción física es fuerte y el encuentro, audaz y directo. Uno pone en marcha al otro; si no hablan del ritmo ni de quién lleva el rumbo, esta energía puede volverse fricción.",
+    "question": "¿Das tú el primer paso o esperas?"
+  },
+  "mars-sextile-ascendant": {
+    "meaning": "Energía e imagen en armonía; ponerse en marcha juntos es fácil.",
+    "question": "¿Has conocido a alguien que te haya impulsado a actuar?"
+  },
+  "mars-square-ascendant": {
+    "meaning": "Voluntad e impresión chocan; uno puede percibir al otro como agresivo. No hay que suavizar la energía, sino encauzarla.",
+    "question": "¿Prefieres la franqueza o la suavidad?"
+  },
+  "mars-trine-ascendant": {
+    "meaning": "Una armonía enérgica y relajada; una valentía natural.",
+    "question": "¿La valentía te resulta atractiva?"
+  },
+  "mars-opposition-ascendant": {
+    "meaning": "La energía cae en el Descendente: una atracción y una alianza fuertes; uno impulsa al otro a actuar. Cuando son equipo y no rivales, este aspecto se vuelve el motor de la relación.",
+    "question": "¿Te resulta fácil estar al lado de alguien que te pone en movimiento?"
+  },
+  "ascendant-conjunction-ascendant": {
+    "meaning": "El mismo lenguaje de imagen: se reconocen al primer instante. Caras parecidas, máscaras parecidas.",
+    "question": "¿Te atraen las personas parecidas a ti o las diferentes?"
+  },
+  "ascendant-sextile-ascendant": {
+    "meaning": "Sus imágenes se apoyan; la primera impresión es positiva para ambos.",
+    "question": "¿Qué tan importante crees que es la primera impresión?"
+  },
+  "ascendant-square-ascendant": {
+    "meaning": "Sus imágenes chocan; la primera impresión puede engañar. El tiempo y la paciencia muestran la verdad.",
+    "question": "¿Alguna vez corregiste la primera impresión que tenías de alguien?"
+  },
+  "ascendant-trine-ascendant": {
+    "meaning": "Una armonía natural; llegan a cualquier lugar con el mismo ritmo.",
+    "question": "¿Hay alguien con quien sientas que van al mismo ritmo?"
+  },
+  "ascendant-opposition-ascendant": {
+    "meaning": "Sus Ascendentes caen en el Descendente del otro: el eje clásico de pareja; la pieza que les falta está en el otro. Uno llena de forma natural el espacio que deja el otro; cuando construyen el equilibrio de manera consciente, este aspecto da una de las alianzas más sólidas.",
+    "question": "¿Encontrar en alguien tu pieza faltante te parece romántico o peligroso?"
+  },
+  "sun-conjunction-jupiter": {
+    "meaning": "Identidad y abundancia se encuentran: uno hace crecer al otro, lo anima y le abre horizontes. Juntos, la vida se ve más amplia; lo único a cuidar es no perder el realismo.",
+    "question": "¿Quién fue la última persona que te hizo crecer? ¿Te diste cuenta en ese momento?"
+  },
+  "sun-sextile-jupiter": {
+    "meaning": "El optimismo apoya a la identidad; los planes que hacen juntos crecen y se cumplen. Estar lado a lado les trae suerte a los dos.",
+    "question": "¿Tienes un gran sueño? ¿Me lo cuentas?"
+  },
+  "sun-square-jupiter": {
+    "meaning": "Hay riesgo de prometer de más y exagerar: uno puede ver o mostrar al otro más grande de lo que es. Cuando encuentran juntos la medida, este aspecto se convierte en crecimiento.",
+    "question": "¿Alguna vez te arrepentiste de exagerar algo?"
+  },
+  "sun-trine-jupiter": {
+    "meaning": "Suerte e identidad fluyen en armonía; a su lado la vida se facilita y se abren puertas. Se hacen bien de verdad.",
+    "question": "¿Has tenido rachas de suerte? ¿Quién estaba contigo entonces?"
+  },
+  "sun-opposition-jupiter": {
+    "meaning": "Uno puede prometer de más para complacer al otro; abundan los elogios y el disfrute, y los detalles y la medida se escapan con facilidad. Cuando equilibran la generosidad con una medida realista, este aspecto solo hace bien.",
+    "question": "¿Cuál sería tu filosofía de vida en una sola frase?"
+  },
+  "sun-conjunction-saturn": {
+    "meaning": "Identidad y estructura se encuentran: uno aporta seriedad y constancia, el otro luz. Un vínculo pesado pero duradero; pide paciencia y la recompensa.",
+    "question": "¿Las relaciones largas te dan seguridad o te pesan?"
+  },
+  "sun-sextile-saturn": {
+    "meaning": "La responsabilidad apoya a la identidad; se forma una alianza confiable y sólida. Pueden apoyarse el uno en el otro también en los días difíciles.",
+    "question": "¿Qué cosas te parecen dignas de confianza?"
+  },
+  "sun-square-saturn": {
+    "meaning": "Uno puede sentir que el otro le pone límites o lo juzga; este aspecto trae una prueba. Cuando el respeto es la base de la relación, la prueba se vuelve madurez.",
+    "question": "¿Qué haces cuando te critican: te defiendes o escuchas?"
+  },
+  "sun-trine-saturn": {
+    "meaning": "Estructura e identidad en armonía; pueden apoyarse el uno en el otro y construir juntos. En este vínculo la confianza no llega con el tiempo: está desde el principio.",
+    "question": "¿Cómo eliges a las personas en las que puedes apoyarte?"
+  },
+  "sun-opposition-saturn": {
+    "meaning": "Identidad y autoridad frente a frente; puede haber un tira y afloja por el poder y la responsabilidad. Cuando construyen una alianza entre iguales, este aspecto da uno de los vínculos más sólidos.",
+    "question": "¿Qué significa para ti la igualdad en una relación?"
+  },
+  "sun-conjunction-uranus": {
+    "meaning": "Uno sacude las costumbres del otro; juntos, los dos se vuelven más libres y menos predecibles. La emoción está servida; el ritmo lo eligen juntos.",
+    "question": "¿Te gustan más las sorpresas o los planes?"
+  },
+  "sun-sextile-uranus": {
+    "meaning": "Lo nuevo apoya a la identidad; se liberan mutuamente y se abren a ideas nuevas. Juntos se atreven a más.",
+    "question": "¿Qué fue lo último que te sorprendió?"
+  },
+  "sun-square-uranus": {
+    "meaning": "Hay riesgo de rupturas repentinas e inquietud; la libertad y el compromiso se disputan. Si se dan espacio, este aspecto mantiene vivo el vínculo; si no, lo rompe.",
+    "question": "¿Qué tan importante es para ti tu espacio personal?"
+  },
+  "sun-trine-uranus": {
+    "meaning": "Originalidad e identidad en armonía; ser diferentes es su idioma común. No se encasillan: se dejan libres.",
+    "question": "¿Ser diferente te resulta atractivo?"
+  },
+  "sun-opposition-uranus": {
+    "meaning": "Identidad y libertad frente a frente: uno puede querer vínculo mientras el otro quiere espacio. Si acuerdan la distancia hablando, no tendrán que romper.",
+    "question": "¿Crees que el compromiso y la libertad pueden ir de la mano?"
+  },
+  "sun-conjunction-neptune": {
+    "meaning": "Identidad y sueño se encuentran: uno idealiza al otro y se forma un vínculo mágico pero difuso. Cuando eligen ver la realidad, la magia se queda y la ilusión se va.",
+    "question": "¿Alguna vez te diste cuenta de que estabas idealizando a alguien?"
+  },
+  "sun-sextile-neptune": {
+    "meaning": "La inspiración apoya a la identidad; el arte, la compasión y la intuición se vuelven su idioma común. A su lado, la gente se ablanda y se abre.",
+    "question": "¿Qué fue lo último que te inspiró?"
+  },
+  "sun-square-neptune": {
+    "meaning": "Hay riesgo de ilusión y desengaño; uno puede ver al otro distinto de como es. Cuando la claridad va antes que la compasión, este aspecto no hace daño.",
+    "question": "¿Qué es más fácil: escuchar la verdad o decirla?"
+  },
+  "sun-trine-neptune": {
+    "meaning": "Intuición e identidad en armonía; no necesitan hablar para entenderse. Entre ustedes hay un lenguaje sin palabras.",
+    "question": "¿Que te entiendan sin decir nada te tranquiliza o te inquieta?"
+  },
+  "sun-opposition-neptune": {
+    "meaning": "Identidad e ideal frente a frente; uno puede perderse en el otro o verlo como un salvador. Quien protege sus propios límites se enriquece con este vínculo.",
+    "question": "¿Alguna vez sentiste que te perdías en una relación?"
+  },
+  "sun-conjunction-pluto": {
+    "meaning": "Identidad y poder se encuentran: un vínculo intenso, transformador, difícil de soltar. Uno puede sentir ganas de controlar al otro; si comparten el poder, esta relación hace crecer a los dos, y si no, los desgasta.",
+    "question": "¿Alguna vez una relación te cambió?"
+  },
+  "sun-sextile-pluto": {
+    "meaning": "La transformación apoya a la identidad; se fortalecen mutuamente y salen juntos de las crisis. La profundidad no los asusta: los atrae.",
+    "question": "¿En qué momentos te sientes fuerte?"
+  },
+  "sun-square-pluto": {
+    "meaning": "Hay riesgo de lucha de poder y de control; uno puede querer dirigir al otro. Cuando aprenden a compartir el poder, este aspecto hace renacer la relación.",
+    "question": "¿El control es para ti seguridad o peligro?"
+  },
+  "sun-trine-pluto": {
+    "meaning": "Poder e identidad en armonía; un vínculo profundo, leal y transformador. A su lado, cualquiera se siente real.",
+    "question": "¿La profundidad te atrae o te asusta?"
+  },
+  "sun-opposition-pluto": {
+    "meaning": "Identidad y poder frente a frente; manipulación o transformación, las dos son posibles. La honestidad es el único camino seguro de este aspecto.",
+    "question": "¿En qué parte de una relación te importa más la honestidad?"
+  },
+  "moon-conjunction-jupiter": {
+    "meaning": "La emoción se encuentra con la abundancia: uno le ensancha el corazón al otro. Un vínculo cálido, generoso y seguro; a su lado se respira.",
+    "question": "¿Cuál fue el momento en que más generosidad sentiste?"
+  },
+  "moon-sextile-jupiter": {
+    "meaning": "El optimismo sostiene la emoción; sentirse bien en compañía resulta fácil. Hasta los días malos se aligeran en este vínculo.",
+    "question": "¿Cómo reconoces a la gente que te hace sentir bien?"
+  },
+  "moon-square-jupiter": {
+    "meaning": "Hay riesgo de exagerar las emociones y de esperar demasiado; la decepción acecha a la sombra de las grandes esperanzas. La esperanza medida dura más y hiere menos.",
+    "question": "¿Alguna vez te rompió el corazón esperar demasiado?"
+  },
+  "moon-trine-jupiter": {
+    "meaning": "Confianza emocional y abundancia a la vez; el uno con el otro encuentran comodidad y paz. Sentirse en casa resulta fácil.",
+    "question": "¿Qué iría primero en una lista de cosas que te hacen sentir a gusto?"
+  },
+  "moon-opposition-jupiter": {
+    "meaning": "Al querer hacerle bien al otro, uno puede agrandar la emoción y la promesa; la esperanza abunda y la medida se pierde fácil. Cuando eligen prometer poco y cumplirlo, este aspecto sigue siendo cálido y de apoyo.",
+    "question": "¿Qué significa para ti la paz?"
+  },
+  "moon-conjunction-saturn": {
+    "meaning": "Emoción y estructura se superponen: un aspecto que une, pero pesa. Uno puede vivir las necesidades del otro como un deber, y el otro la ternura como una carga; la paciencia y la franqueza convierten ese peso en lealtad.",
+    "question": "¿Qué te cuesta más: mostrar amor o decir lo que necesitas?"
+  },
+  "moon-sextile-saturn": {
+    "meaning": "La responsabilidad sostiene la emoción; nace un cariño confiable. Pueden confiarse el uno al otro con el corazón tranquilo.",
+    "question": "¿Qué te recuerda un cariño en el que se puede confiar?"
+  },
+  "moon-square-saturn": {
+    "meaning": "Hay riesgo de distancia emocional y de sentir frialdad; puede aparecer la sensación de que uno juzga al otro. Cuando el cariño se da a propósito y con palabras, este aspecto se vuelve una confianza profunda.",
+    "question": "¿Qué haces cuando sientes que te tratan con frialdad?"
+  },
+  "moon-trine-saturn": {
+    "meaning": "Estabilidad emocional compartida; se apoyan el uno en el otro y resisten la tormenta en compañía. Una calidez silenciosa pero inquebrantable.",
+    "question": "¿La estabilidad te da calma o te aburre?"
+  },
+  "moon-opposition-saturn": {
+    "meaning": "Emoción y responsabilidad frente a frente; uno puede ver una necesidad donde el otro ve un deber. Cuando construyen el equilibrio hablando, necesidad y deber se vuelven lo mismo.",
+    "question": "¿Te cuesta decir lo que necesitas?"
+  },
+  "moon-conjunction-uranus": {
+    "meaning": "Uno sacude los hábitos emocionales del otro: un vínculo emocionante, pero fuera de lo de siempre. Para sentirse a salvo, necesitan crear en común un ritmo nuevo.",
+    "question": "¿Prefieres emoción o calma?"
+  },
+  "moon-sextile-uranus": {
+    "meaning": "La originalidad sostiene la emoción; comparten un lenguaje emocional distinto. En este vínculo es imposible aburrirse.",
+    "question": "¿Alguien te ha dicho que tus emociones son poco comunes?"
+  },
+  "moon-square-uranus": {
+    "meaning": "Hay riesgo de altibajos emocionales y rupturas repentinas; uno puede inquietar al otro. Con espacio, este aspecto da vitalidad; sin él, inseguridad.",
+    "question": "¿Los cambios repentinos te emocionan o te inquietan?"
+  },
+  "moon-trine-uranus": {
+    "meaning": "Libertad y soltura emocional a la vez; no se agobian ni se asfixian. Aquí la cercanía respira.",
+    "question": "¿Qué tan importante es para ti no aburrirte en una relación?"
+  },
+  "moon-opposition-uranus": {
+    "meaning": "Emoción y libertad frente a frente; la cercanía y la distancia tiran cada una por su lado. Cuando encuentran el ritmo en común, las dos son posibles.",
+    "question": "¿Alguna vez huiste de la cercanía?"
+  },
+  "moon-conjunction-neptune": {
+    "meaning": "La emoción se encuentra con el sueño: un vínculo intuitivo, tierno y sin límites. La única tarea de este aspecto es distinguir qué emoción es de quién.",
+    "question": "¿Te pasa que cargas con las emociones de otras personas?"
+  },
+  "moon-sextile-neptune": {
+    "meaning": "La ternura sostiene la emoción; nace una cercanía del alma. No necesitan hablar para entenderse.",
+    "question": "¿Qué significa para ti una cercanía del alma?"
+  },
+  "moon-square-neptune": {
+    "meaning": "Hay riesgo de ilusión emocional y de evasión; uno puede querer rescatar al otro. Cuando se habla de la necesidad real, este aspecto se vuelve sanación.",
+    "question": "¿Alguna vez intentaste rescatar a alguien?"
+  },
+  "moon-trine-neptune": {
+    "meaning": "Una empatía profunda compartida; entenderse no cuesta y la ternura es natural. A su lado, cualquiera siente que sana.",
+    "question": "¿Cuándo sentiste que te entendían de verdad?"
+  },
+  "moon-opposition-neptune": {
+    "meaning": "Emoción e ideal frente a frente; hay riesgo de desilusión. Cuando ponen límites, la ternura no les resta: les suma.",
+    "question": "¿Cómo te recuperas de una desilusión?"
+  },
+  "moon-conjunction-pluto": {
+    "meaning": "La emoción se encuentra con el poder: un vínculo intenso, posesivo y transformador. Celos y profundidad van de la mano; hay que hacerse cargo de ambos.",
+    "question": "¿Los celos son parte del amor o su enemigo?"
+  },
+  "moon-sextile-pluto": {
+    "meaning": "La transformación sostiene la emoción; la profundidad emocional es su lenguaje común. Quedarse en la superficie es imposible.",
+    "question": "¿Cómo sabes que creaste un vínculo profundo?"
+  },
+  "moon-square-pluto": {
+    "meaning": "Hay riesgo de lucha de poder emocional y de obsesión; el afán de control puede asfixiar el vínculo. Cuando aprenden a soltar, este aspecto regala uno de los amores más profundos.",
+    "question": "¿Te cuesta soltar?"
+  },
+  "moon-trine-pluto": {
+    "meaning": "Un vínculo emocional profundo y leal; en las crisis se tienen el uno al otro. Pueden contarse todo.",
+    "question": "¿A quién quieres a tu lado en los momentos difíciles?"
+  },
+  "moon-opposition-pluto": {
+    "meaning": "Emoción y poder frente a frente; hay riesgo de manipulación. Cuando protegen su autonomía emocional, este aspecto transforma en vez de destruir.",
+    "question": "¿Qué significa para ti la libertad emocional?"
+  },
+  "mercury-conjunction-jupiter": {
+    "meaning": "La mente se encuentra con la sabiduría: uno hace crecer las ideas del otro y le abre horizontes. Las charlas largas, amplias y placenteras son el corazón de este vínculo.",
+    "question": "¿De qué trató tu conversación más larga?"
+  },
+  "mercury-sextile-jupiter": {
+    "meaning": "Aprendizaje y optimismo a la vez; las ideas crecen y los planes se amplían. Se enseñan cosas el uno al otro.",
+    "question": "¿Hay algo que podrías enseñarme?"
+  },
+  "mercury-square-jupiter": {
+    "meaning": "Hay riesgo de prometer de más y de exagerar las ideas; los detalles pueden escaparse. Si se mantienen en lo concreto, las grandes ideas se hacen realidad.",
+    "question": "¿Qué importa más: el detalle o el conjunto?"
+  },
+  "mercury-trine-jupiter": {
+    "meaning": "Amplitud mental compartida; enseñar y aprender resulta fácil. Su conversación les abre horizontes a los dos.",
+    "question": "¿Cuál es el tema que más te gusta aprender?"
+  },
+  "mercury-opposition-jupiter": {
+    "meaning": "Idea y creencia frente a frente; cada quien trae verdades distintas. Cuando sienten curiosidad por la opinión contraria, la discusión se vuelve sabiduría.",
+    "question": "¿Alguna vez se tambaleó lo que creías?"
+  },
+  "mercury-conjunction-saturn": {
+    "meaning": "La mente se encuentra con la estructura: un lenguaje serio, medido, de palabra cumplida. Junto al otro, uno puede pensarlo mucho antes de hablar; si esa distancia se abre con respeto, es profundidad; si no, frialdad.",
+    "question": "¿Confías en la gente que habla poco?"
+  },
+  "mercury-sextile-saturn": {
+    "meaning": "Pensamiento disciplinado compartido; los planes se construyen con firmeza. Pensar en equipo es productivo y tranquilo.",
+    "question": "¿Te gusta hacer planes?"
+  },
+  "mercury-square-saturn": {
+    "meaning": "Hay riesgo de inhibición mental y de sentirse bajo juicio; las palabras pueden pesar. Quien encuentra su propia voz sale de este aspecto con más madurez.",
+    "question": "¿Alguna vez te frenaste antes de decir lo que pensabas?"
+  },
+  "mercury-trine-saturn": {
+    "meaning": "Una armonía mental con estructura; palabras confiables, planes que se cumplen. Hasta los temas serios se hablan con soltura.",
+    "question": "¿Qué tan importante es para ti que se cumpla la palabra dada?"
+  },
+  "mercury-opposition-saturn": {
+    "meaning": "Idea y autoridad frente a frente; aquí aparece el tema de la crítica. Escuchada con respeto, la crítica es lección, no herida.",
+    "question": "¿Cómo recibes una crítica?"
+  },
+  "mercury-conjunction-uranus": {
+    "meaning": "La mente se encuentra con la originalidad: ideas eléctricas, brillantes, repentinas. La charla nunca aburre; uno sorprende al otro todo el tiempo.",
+    "question": "¿Cuál fue la última idea que te sorprendió?"
+  },
+  "mercury-sextile-uranus": {
+    "meaning": "Pensamiento innovador compartido; las ideas vuelan. Hacer lluvias de ideas en equipo es un placer.",
+    "question": "¿A quién le cuentas primero una idea nueva?"
+  },
+  "mercury-square-uranus": {
+    "meaning": "Hay riesgo de charlas dispersas e irritables; puede haber cortes bruscos. Cuando se enfocan, el brillo se convierte en ideas duraderas.",
+    "question": "¿Te gustan las conversaciones dispersas?"
+  },
+  "mercury-trine-uranus": {
+    "meaning": "Libertad y brillo mental a la vez; se estimulan y se hacen crecer mutuamente. En este vínculo no cabe una charla común.",
+    "question": "¿Qué es lo que más estimula tu mente?"
+  },
+  "mercury-opposition-uranus": {
+    "meaning": "Idea y libertad frente a frente; puede chocar una originalidad terca. Cuando abrazan la idea distinta, la discusión se vuelve descubrimiento.",
+    "question": "¿Las ideas distintas te entusiasman?"
+  },
+  "mercury-conjunction-neptune": {
+    "meaning": "La mente se encuentra con el sueño: un lenguaje poético e intuitivo. Hay riesgo de malentendidos; si aclaran las cosas, la magia no se rompe.",
+    "question": "¿Te gusta la poesía?"
+  },
+  "mercury-sextile-neptune": {
+    "meaning": "Pensamiento inspirado compartido; nacen ideas creativas. Soñar despiertos es su lenguaje común.",
+    "question": "¿En qué momentos te sientes con más creatividad?"
+  },
+  "mercury-square-neptune": {
+    "meaning": "Hay riesgo de comunicación borrosa y de ilusiones; lo que se dice y lo que se entiende pueden no coincidir. Aclarar por escrito es el remedio de este aspecto.",
+    "question": "¿Qué te resulta más fácil: escribir o hablar?"
+  },
+  "mercury-trine-neptune": {
+    "meaning": "Entendimiento intuitivo compartido; las palabras sobran. Se sienten antes de hablar.",
+    "question": "¿Puedes entenderte con alguien sin palabras?"
+  },
+  "mercury-opposition-neptune": {
+    "meaning": "Idea y sueño frente a frente; hay riesgo de engaño. Verificar la información protege este vínculo.",
+    "question": "¿Cómo sabes que algo es verdad?"
+  },
+  "mercury-conjunction-pluto": {
+    "meaning": "La mente se encuentra con el poder: surgen charlas profundas, penetrantes y transformadoras, y salen a la luz secretos. Uno puede tender a dirigir la conversación o a guardarse algo; la franqueza convierte esa profundidad en confianza.",
+    "question": "¿Cómo eliges a quién contarle tus secretos?"
+  },
+  "mercury-sextile-pluto": {
+    "meaning": "Mentes investigadoras en sintonía; los temas profundos surgen solos. La charla superficial no es para ustedes.",
+    "question": "¿Te resulta fácil entrar en temas profundos?"
+  },
+  "mercury-square-pluto": {
+    "meaning": "Hay riesgo de lucha de poder verbal y de sospecha; puede surgir la sensación de manipulación. Cuando hablan con franqueza, la profundidad se vuelve confianza.",
+    "question": "¿Alguna vez sentiste que te manipulaban en una conversación?"
+  },
+  "mercury-trine-pluto": {
+    "meaning": "Intuición psicológica compartida; se leen el uno al otro. Hasta lo no dicho se conversa entre ustedes.",
+    "question": "¿Que te lean te da calma o inquietud?"
+  },
+  "mercury-opposition-pluto": {
+    "meaning": "Idea y poder frente a frente; puede darse una guerra de persuasión. Quien dice la verdad sale de este aspecto con más fuerza.",
+    "question": "¿Qué importa más: la verdad o la paz?"
+  },
+  "venus-conjunction-jupiter": {
+    "meaning": "El amor se encuentra con la abundancia: un vínculo generoso, placentero y optimista. El único riesgo es el exceso; el mayor premio, compartir el disfrute.",
+    "question": "¿Cuál sería nuestro plan más divertido?"
+  },
+  "venus-sextile-jupiter": {
+    "meaning": "Amor y suerte a la vez; compartir tiempo se siente bonito y fácil. En este vínculo, los pequeños momentos se sienten enormes.",
+    "question": "¿Cómo guardas los momentos que te hacen sentir bien?"
+  },
+  "venus-square-jupiter": {
+    "meaning": "Uno muestra el amor con grandes gestos, el otro con mesura; la diferencia de expectativas puede volverse decepción. Cuando encuentran una medida común, la generosidad se vuelve confianza.",
+    "question": "¿Demuestras el amor con grandes gestos o con pequeños detalles?"
+  },
+  "venus-trine-jupiter": {
+    "meaning": "Amor y abundancia en armonía; se consienten y se embellecen la vida mutuamente. Nace un vínculo generoso y lleno de entrega.",
+    "question": "¿Cómo te sienta que te consientan?"
+  },
+  "venus-opposition-jupiter": {
+    "meaning": "Aquí el amor es generoso y placentero, pero las expectativas crecen con facilidad; uno puede esperar del otro más de lo que hay en realidad. Cuando llevan las expectativas a su tamaño real, la generosidad trae abundancia, no decepción.",
+    "question": "¿Qué significa para ti disfrutar?"
+  },
+  "venus-conjunction-saturn": {
+    "meaning": "El amor y el límite se superponen: un aspecto que une, pero que puede volverse frío. Uno mide y pesa el amor, y el otro puede sentir que no recibe nada a cambio; cuando el amor se muestra a propósito y con palabras, ese peso se vuelve permanencia.",
+    "question": "¿Cómo sabes que te quieren: por las palabras o por los actos?"
+  },
+  "venus-sextile-saturn": {
+    "meaning": "Confiabilidad en el amor; nace un vínculo duradero. En esta relación, la palabra se cumple de verdad.",
+    "question": "¿Qué crees que sostiene una relación duradera?"
+  },
+  "venus-square-saturn": {
+    "meaning": "Hay riesgo de distancia y miedo al rechazo en el amor; uno puede percibir frialdad en el otro. Cuando el cariño se da a propósito, la seriedad se vuelve seguridad.",
+    "question": "¿La distancia es para ti protección o frialdad?"
+  },
+  "venus-trine-saturn": {
+    "meaning": "Solidez en el amor; confían el uno en el otro y el vínculo se profundiza con el tiempo. Un amor sin adornos, pero real.",
+    "question": "¿Te resulta fácil confiar?"
+  },
+  "venus-opposition-saturn": {
+    "meaning": "Amor y responsabilidad frente a frente; puede aparecer la sensación de carga. Cuando hablan del equilibrio, la responsabilidad se vuelve parte del amor, no su enemiga.",
+    "question": "¿Crees que responsabilidad y amor son lo mismo?"
+  },
+  "venus-conjunction-uranus": {
+    "meaning": "Uno sacude los patrones amorosos del otro: una atracción repentina, emocionante y fuera de lo común. Empezar es fácil; sostenerlo es otro arte.",
+    "question": "¿Crees en las relaciones que empiezan de golpe?"
+  },
+  "venus-sextile-uranus": {
+    "meaning": "Originalidad en el amor; nace un amor con aire de amistad que da libertad. Ningún molde puede con ustedes.",
+    "question": "¿Crees que la amistad y el amor empiezan en el mismo lugar?"
+  },
+  "venus-square-uranus": {
+    "meaning": "Hay riesgo de rupturas repentinas y miedo al compromiso; la estabilidad puede costar. Con espacio, este aspecto mantiene viva la emoción.",
+    "question": "¿Alguna vez te dio miedo comprometerte?"
+  },
+  "venus-trine-uranus": {
+    "meaning": "Libertad y emoción en el amor; no se aburren ni se encasillan. Descubren cosas nuevas en compañía.",
+    "question": "¿Es posible una relación que no aburra?"
+  },
+  "venus-opposition-uranus": {
+    "meaning": "Amor y libertad frente a frente; la cercanía y la distancia tiran cada una por su lado. Cuando encuentran el ritmo en común, las dos se quedan.",
+    "question": "¿Cuánta cercanía es demasiada para ti?"
+  },
+  "venus-conjunction-neptune": {
+    "meaning": "El amor se encuentra con el sueño: un vínculo romántico, mágico e idealizado. Ver la realidad no rompe la magia: la vuelve duradera.",
+    "question": "¿Crees que el romanticismo choca con la realidad?"
+  },
+  "venus-sextile-neptune": {
+    "meaning": "Ternura y arte en el amor; hay una atracción del alma. Se embellecen el uno al otro con la mirada y con las palabras.",
+    "question": "¿El arte te conmueve?"
+  },
+  "venus-square-neptune": {
+    "meaning": "Hay riesgo de ilusión y decepción; uno puede idealizar al otro. Quien ama lo que ve sale de este aspecto con más riqueza.",
+    "question": "¿Es difícil amar a alguien tal como es?"
+  },
+  "venus-trine-neptune": {
+    "meaning": "Intuición y ternura en el amor; nace una armonía elegante y suave. En este vínculo el amor no agota: sana.",
+    "question": "¿Qué cosas te parecen elegantes?"
+  },
+  "venus-opposition-neptune": {
+    "meaning": "Uno puede ver al otro más bello de lo que es, y el otro sentir la presión de estar a la altura de ese ideal; ir y venir entre el sueño y la realidad se vuelve familiar. Cuando se ven tal como son, el amor pisa firme.",
+    "question": "¿Qué es más bello: la realidad o el sueño?"
+  },
+  "venus-conjunction-pluto": {
+    "meaning": "El amor se encuentra con el poder: una atracción magnética, intensa y transformadora. La sombra, los celos; el regalo, la profundidad.",
+    "question": "¿Te asusta una atracción intensa?"
+  },
+  "venus-sextile-pluto": {
+    "meaning": "Profundidad en el amor; nace un vínculo transformador. Quedarse en la superficie es imposible.",
+    "question": "¿Algún amor te ha transformado?"
+  },
+  "venus-square-pluto": {
+    "meaning": "Hay riesgo de lucha de poder y obsesión en el amor; el afán de control puede asfixiar el vínculo. Cuando aprenden a soltar, la pasión se vuelve confianza.",
+    "question": "¿Cómo ves la diferencia entre poseer y amar?"
+  },
+  "venus-trine-pluto": {
+    "meaning": "Un amor profundo y leal; pasión y confianza conviven. Cambian y crecen el uno con el otro.",
+    "question": "¿Pueden la pasión y la confianza estar en la misma relación?"
+  },
+  "venus-opposition-pluto": {
+    "meaning": "Amor y poder en polos opuestos: la atracción es intensa, y el miedo a perder y el tira y afloja resultan familiares. Cuando buscan entenderse en lugar de retenerse, este aspecto transforma en vez de consumir.",
+    "question": "¿Crees que en el amor hay que hablar del equilibrio de poder?"
+  },
+  "mars-conjunction-jupiter": {
+    "meaning": "La acción se encuentra con la abundancia: un vínculo valiente, emprendedor y optimista. La única sombra, el riesgo excesivo; el mayor placer, emprender cosas en compañía.",
+    "question": "¿Te gusta arriesgarte?"
+  },
+  "mars-sextile-jupiter": {
+    "meaning": "Suerte en la energía; emprender algo en común resulta fácil. Lado a lado, se atreven a más.",
+    "question": "¿Qué pasaría si empezáramos algo tú y yo?"
+  },
+  "mars-square-jupiter": {
+    "meaning": "Hay riesgo de ambición excesiva y descuido; pueden abarcar demasiado y agotarse. Con medida, el valor da frutos.",
+    "question": "¿Alguna vez te agotaste por abarcar demasiado?"
+  },
+  "mars-trine-jupiter": {
+    "meaning": "Energía y fe en armonía; comparten una valentía natural. Pasar a la acción es fácil cuando están en compañía.",
+    "question": "¿Qué reto que pida valor te gustaría hacer conmigo primero?"
+  },
+  "mars-opposition-jupiter": {
+    "meaning": "Acción y creencia frente a frente; pueden chocar metas distintas. Quien elige su propio camino gana fuerza con este aspecto.",
+    "question": "¿Qué haces cuando tus metas chocan entre sí?"
+  },
+  "mars-conjunction-saturn": {
+    "meaning": "La acción y el freno se superponen: uno quiere moverse mientras el otro frena. La fricción y la sensación de bloqueo resultan familiares; cuando marcan el ritmo en común, ese peso se vuelve resistencia.",
+    "question": "¿Qué haces cuando sientes que te frenan: presionas o te detienes?"
+  },
+  "mars-sextile-saturn": {
+    "meaning": "Acción disciplinada compartida; nace una alianza de largo aliento. Construir en equipo es natural.",
+    "question": "¿Los proyectos de largo aliento te entusiasman?"
+  },
+  "mars-square-saturn": {
+    "meaning": "Hay riesgo de bloqueo y enojo; uno puede vivir al otro como un freno. Cuando se actúa con paciencia, el freno se vuelve fuerza.",
+    "question": "¿Qué haces cuando sientes que te frenan?"
+  },
+  "mars-trine-saturn": {
+    "meaning": "Acción controlada y eficaz a la vez; comparten una fuerza constructiva. Saben cuándo detenerse y cuándo avanzar.",
+    "question": "¿Qué importa más: hacer algo de forma constructiva o hacerlo rápido?"
+  },
+  "mars-opposition-saturn": {
+    "meaning": "Acción y reglas frente a frente; puede haber choques con la autoridad. Cuando ponen los límites en común, nadie siente un freno.",
+    "question": "¿Las reglas te dan calma o te agobian?"
+  },
+  "mars-conjunction-uranus": {
+    "meaning": "Uno sacude la forma de actuar del otro: una energía repentina, audaz e inusual. Las decisiones apresuradas son la sombra; el premio, explorar en compañía.",
+    "question": "¿Tomas decisiones de golpe?"
+  },
+  "mars-sextile-uranus": {
+    "meaning": "Acción innovadora compartida; ponen en marcha cambios audaces. Abrir caminos nuevos es su lenguaje común.",
+    "question": "¿El cambio te entusiasma?"
+  },
+  "mars-square-uranus": {
+    "meaning": "Hay riesgo de enojos repentinos e impaciencia; la energía rebelde puede descontrolarse. Si respiran antes de actuar, la fuerza se vuelve constructiva.",
+    "question": "¿A dónde te lleva la impaciencia?"
+  },
+  "mars-trine-uranus": {
+    "meaning": "Acción original y audaz a la vez; comparten una fuerza innovadora. Las metas comunes y corrientes no les alcanzan.",
+    "question": "¿Innovar te sale natural?"
+  },
+  "mars-opposition-uranus": {
+    "meaning": "Acción y libertad frente a frente; puede haber rupturas repentinas. Cuando la energía se canaliza, la rebeldía se vuelve innovación.",
+    "question": "¿Cómo vives las rupturas?"
+  },
+  "mars-conjunction-neptune": {
+    "meaning": "La acción se encuentra con el sueño: un vínculo intuitivo, cambiante e inspirado. La dispersión es la sombra; la creatividad, el premio.",
+    "question": "¿Te mueves por inspiración o con un plan?"
+  },
+  "mars-sextile-neptune": {
+    "meaning": "Acción intuitiva compartida; el arte y la sanación son su terreno común. Cuando llega la inspiración, fluyen en sintonía.",
+    "question": "¿Qué significa para ti sanar?"
+  },
+  "mars-square-neptune": {
+    "meaning": "Hay riesgo de incertidumbre y evasión; la motivación puede subir y bajar. Cuando eligen un paso concreto, la energía no se desperdicia.",
+    "question": "¿Qué haces cuando se te cae la motivación?"
+  },
+  "mars-trine-neptune": {
+    "meaning": "Acción inspirada y compasiva a la vez; comparten una fuerza creativa. Se mueven con elegancia y precisión.",
+    "question": "¿Qué despierta más tu creatividad?"
+  },
+  "mars-opposition-neptune": {
+    "meaning": "Acción e ideal frente a frente; hay riesgo de luchar por una ilusión. Cuando eligen una meta real, este aspecto inspira.",
+    "question": "¿Cuál es la diferencia entre una meta real y un sueño?"
+  },
+  "mars-conjunction-pluto": {
+    "meaning": "La acción se encuentra con el poder: un vínculo intenso, decidido y transformador. El deseo de poder es la sombra; la determinación, el premio.",
+    "question": "¿Te atrae el poder?"
+  },
+  "mars-sextile-pluto": {
+    "meaning": "Acción profunda y decidida compartida; en las crisis sacan su fuerza. La dificultad no divide: une.",
+    "question": "¿Cómo eres en una crisis?"
+  },
+  "mars-square-pluto": {
+    "meaning": "Hay riesgo de lucha de poder y enojo; el afán de control puede crear conflictos. Cuando el poder se usa para construir, este aspecto transforma en vez de destruir.",
+    "question": "¿Cómo manejas tu enojo?"
+  },
+  "mars-trine-pluto": {
+    "meaning": "Acción potente y estratégica a la vez; comparten una fuerza transformadora. Van hacia la meta en silencio y con todo.",
+    "question": "¿Piensas con estrategia o por instinto?"
+  },
+  "mars-opposition-pluto": {
+    "meaning": "Acción y poder frente a frente; guerra o alianza, las dos son posibles. Cuando comparten el poder, hacen alianza en vez de rivalizar.",
+    "question": "¿Qué prefieres entre tú y yo: rivalidad o alianza?"
+  },
+  "jupiter-conjunction-ascendant": {
+    "meaning": "La abundancia se encuentra con la apariencia: uno le da optimismo y amplitud al otro. Un encuentro cálido y generoso; crecer es su lenguaje común.",
+    "question": "¿Te atraen las personas optimistas?"
+  },
+  "jupiter-sextile-ascendant": {
+    "meaning": "El optimismo sostiene la apariencia; la primera impresión es cálida y abierta. A su lado, la gente se expande y se relaja.",
+    "question": "¿Qué tan importante es para ti una primera impresión cálida?"
+  },
+  "jupiter-square-ascendant": {
+    "meaning": "Hay riesgo de expectativas exageradas; uno engrandece al otro, pero quizá sin realismo. Con medida, el optimismo se vuelve confianza.",
+    "question": "¿Qué tan realistas crees que son tus expectativas?"
+  },
+  "jupiter-trine-ascendant": {
+    "meaning": "Optimismo y abundancia naturales a la vez; las puertas se abren y los caminos se acortan. En este vínculo, la suerte camina a su lado.",
+    "question": "¿Cómo reconoces a la gente que te abre puertas?"
+  },
+  "jupiter-opposition-ascendant": {
+    "meaning": "La abundancia cae en el Descendente: la relación hace crecer, uno le abre horizontes al otro. La generosidad es fuerte; la medida hay que construirla en común.",
+    "question": "¿Alguna vez una relación te hizo crecer?"
+  },
+  "saturn-conjunction-ascendant": {
+    "meaning": "La estructura se encuentra con la apariencia: un encuentro serio, confiable y con cierta distancia. Entra en calor con el tiempo; y cuando lo hace, se queda.",
+    "question": "¿Tienes paciencia con las personas que tardan en entrar en confianza?"
+  },
+  "saturn-sextile-ascendant": {
+    "meaning": "La responsabilidad sostiene la apariencia; dejan una primera impresión confiable. Los temas serios se hablan con soltura.",
+    "question": "¿Qué es lo primero que te hace ver a alguien como confiable?"
+  },
+  "saturn-square-ascendant": {
+    "meaning": "Hay riesgo de sentir restricciones y juicio; puede percibirse frialdad. Cuando la base es el respeto, la seriedad se vuelve seguridad.",
+    "question": "¿Qué haces cuando sientes que te juzgan?"
+  },
+  "saturn-trine-ascendant": {
+    "meaning": "Una armonía sólida compartida; nace un vínculo maduro y resistente. Resisten la tormenta en compañía y no se sueltan.",
+    "question": "¿Qué significa para ti la madurez?"
+  },
+  "saturn-opposition-ascendant": {
+    "meaning": "La estructura cae en el Descendente: una alianza seria, duradera y con responsabilidades. Uno puede tender a corregir o dirigir al otro; cuando se habla de igualdad, este vínculo que tarda en entrar en calor se vuelve inquebrantable.",
+    "question": "¿Valoras las cosas que llegan tarde?"
+  },
+  "uranus-conjunction-ascendant": {
+    "meaning": "La libertad se encuentra con la apariencia: un encuentro fuera de lo común, emocionante y repentino. No será aburrido; encontrar el ritmo lleva tiempo.",
+    "question": "¿Has vivido encuentros fuera de lo común?"
+  },
+  "uranus-sextile-ascendant": {
+    "meaning": "La originalidad sostiene la apariencia; dejan una primera impresión distinta e interesante. No se encasillan el uno al otro en ningún molde.",
+    "question": "¿Has conocido a alguien que te pareció fuera de lo común?"
+  },
+  "uranus-square-ascendant": {
+    "meaning": "Hay riesgo de un vínculo inquieto e impredecible; puede haber rupturas. Cuando se encuentra el ritmo, la originalidad se vuelve confiable.",
+    "question": "¿Te entusiasma la gente impredecible?"
+  },
+  "uranus-trine-ascendant": {
+    "meaning": "Originalidad natural compartida; lo nuevo es cómodo y la diferencia, lenguaje común. Ser del montón es imposible.",
+    "question": "¿Cómo recibes lo nuevo?"
+  },
+  "uranus-opposition-ascendant": {
+    "meaning": "La libertad cae en el Descendente: una alianza de pareja fuera de lo común, que despierta; uno cambia la vida del otro. Cuando equilibran en común cercanía y espacio, el vínculo sigue vivo.",
+    "question": "¿Te abres a una relación que te cambie?"
+  },
+  "neptune-conjunction-ascendant": {
+    "meaning": "El sueño se encuentra con la apariencia: un encuentro mágico, misterioso e idealizado. Cuando hace falta claridad, la magia no se rompe: se vuelve real.",
+    "question": "¿Te atraen las personas misteriosas?"
+  },
+  "neptune-sextile-ascendant": {
+    "meaning": "La intuición sostiene la apariencia; se forma una primera impresión tierna y suave. A su lado, la gente se siente a gusto.",
+    "question": "¿Notas la ternura a primera vista?"
+  },
+  "neptune-square-ascendant": {
+    "meaning": "Hay riesgo de percepciones erróneas y evasión; puede surgir la ilusión. Cuando se aclaran las cosas, la intuición se vuelve fuerza.",
+    "question": "¿Cómo distingues la ilusión de la realidad?"
+  },
+  "neptune-trine-ascendant": {
+    "meaning": "Intuición y elegancia naturales a la vez; nace una armonía artística. A menudo se entienden sin decir nada.",
+    "question": "¿Tienes alma de artista?"
+  },
+  "neptune-opposition-ascendant": {
+    "meaning": "El sueño cae en el Descendente: una alianza romántica, intuitiva e idealizada. Cuando ven la realidad, la magia no se rompe: perdura.",
+    "question": "¿Qué crees que cambia cuando empiezas a ver a alguien tal como es?"
+  },
+  "pluto-conjunction-ascendant": {
+    "meaning": "El poder se encuentra con la apariencia: un encuentro intenso, transformador e inolvidable. El control es la sombra; la profundidad, el premio.",
+    "question": "¿Hay algún encuentro que no puedas olvidar?"
+  },
+  "pluto-sextile-ascendant": {
+    "meaning": "El poder sostiene la apariencia; una primera impresión impactante. Se notan el uno al otro de inmediato.",
+    "question": "¿Qué es lo primero que te impacta de alguien?"
+  },
+  "pluto-square-ascendant": {
+    "meaning": "Hay riesgo de lucha de poder e intensidad; puede intimidar. Cuando el poder se suaviza, el impacto crece.",
+    "question": "¿La intensidad te atrae o te aleja?"
+  },
+  "pluto-trine-ascendant": {
+    "meaning": "Poder y profundidad naturales a la vez; nace un vínculo transformador. A su lado, la gente cambia sin darse cuenta.",
+    "question": "¿Qué significa para ti la transformación?"
+  },
+  "pluto-opposition-ascendant": {
+    "meaning": "El poder cae en el Descendente: una alianza profunda, intensa y transformadora. Cuando comparten el poder, la relación no es una guerra, sino un renacer.",
+    "question": "¿Cómo crees que debería compartirse el poder?"
+  }
+}
