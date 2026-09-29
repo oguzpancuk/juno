@@ -43,3 +43,16 @@ export const LOCALE_TAGS: Readonly<Record<Language, string>> = {
   en: 'en-US',
   es: 'es-ES',
 };
+
+/**
+ * How a short date is written: in digits where the order of day and
+ * month is the one every reader of the language expects, with the month's
+ * name where it is not ("9/10/2026" is September to one English reader
+ * and October to another).
+ */
+export const SHORT_DATE: Readonly<
+  Record<Language, Intl.DateTimeFormatOptions>
+> = {
+  tr: { day: '2-digit', month: '2-digit', year: 'numeric' },
+  en: { day: 'numeric', month: 'short', year: 'numeric' },
+};

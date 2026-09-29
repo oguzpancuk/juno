@@ -3,7 +3,7 @@ import { setLanguage as setEngineLanguage, type Language } from '@juno/astro';
 import type { Href } from 'expo-router';
 import { useSyncExternalStore } from 'react';
 import { Platform, Settings } from 'react-native';
-import { LOCALE_TAGS } from './i18n';
+import { LOCALE_TAGS, SHORT_DATE } from './i18n';
 import {
   parsePreference,
   resolveLanguage,
@@ -135,7 +135,10 @@ export function formatDate(date: Date): string {
   }).format(date);
 }
 
-/** A date in digits as the current language writes them: "29.09.2026", "9/29/2026". */
+/** A short date as the current language writes it: "29.09.2026", "Sep 29, 2026". */
 export function formatShortDate(date: Date): string {
-  return date.toLocaleDateString(LOCALE_TAGS[state.language]);
+  return date.toLocaleDateString(
+    LOCALE_TAGS[state.language],
+    SHORT_DATE[state.language],
+  );
 }
