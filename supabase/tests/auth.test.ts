@@ -54,11 +54,17 @@ describe('sign-up', () => {
 
     const [mail] = await waitForMail(email);
     if (!mail) throw new Error('waitForMail returned nothing');
-    expect(mail.Subject).toBe('Juno doğrulama kodun');
+    expect(mail.Subject).toBe('Juno doğrulama kodun · Your Juno code');
     // Sender and subject are what a person scans for in a crowded inbox,
     // and both come from config rather than from the template.
     expect(mail.From.Name).toBe('Juno');
     expect(codeIn(mail)).toMatch(/^\d{6}$/u);
+    // One part per language the app speaks (Turkish, English), each with
+    // the same code: a template that changed one part only would send two
+    // different numbers to someone who can read both.
+    const codes = mail.Text.match(/\b\d{6}\b/gu) ?? [];
+    expect(codes).toHaveLength(2);
+    expect(new Set(codes).size).toBe(1);
   });
 
   it('refuses a sign-in until the code is spent', async () => {
