@@ -1,6 +1,6 @@
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
 import { describe, expect, it } from 'vitest';
-import { CATALOGS, LANGUAGE_NAMES, LOCALE_TAGS } from './index';
+import { CATALOGS, LANGUAGE_NAMES, LOCALE_TAGS, SHORT_DATE } from './index';
 
 /**
  * What the compiler cannot see about a translation: a list one line short,
@@ -112,6 +112,17 @@ describe('the string catalogs', () => {
       expect(LANGUAGE_NAMES[l].length).toBeGreaterThan(0);
       expect(LOCALE_TAGS[l]).toMatch(/^[a-z]{2}-[A-Z]{2}$/);
     }
+  });
+
+  it('writes a short date no reader can take for another day', () => {
+    const format = (l: (typeof LANGUAGES)[number]): string =>
+      new Date(Date.UTC(2026, 8, 10, 12)).toLocaleDateString(LOCALE_TAGS[l], {
+        ...SHORT_DATE[l],
+        timeZone: 'UTC',
+      });
+    // Turkish as it read before there was a second language.
+    expect(format('tr')).toBe('10.09.2026');
+    expect(format('en')).toBe('Sep 10, 2026');
   });
 });
 
