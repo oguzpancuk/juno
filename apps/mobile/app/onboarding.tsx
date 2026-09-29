@@ -319,7 +319,7 @@ export default function Onboarding() {
             onChangeText={setDay}
             keyboardType="number-pad"
             maxLength={2}
-            placeholder="GG"
+            placeholder={t.onboarding.datePlaceholders.day}
           />
           <Field
             testID="month"
@@ -328,7 +328,7 @@ export default function Onboarding() {
             onChangeText={setMonth}
             keyboardType="number-pad"
             maxLength={2}
-            placeholder="AA"
+            placeholder={t.onboarding.datePlaceholders.month}
           />
           <Field
             testID="year"
@@ -337,7 +337,7 @@ export default function Onboarding() {
             onChangeText={setYear}
             keyboardType="number-pad"
             maxLength={4}
-            placeholder="YYYY"
+            placeholder={t.onboarding.datePlaceholders.year}
           />
         </View>
 
@@ -350,7 +350,7 @@ export default function Onboarding() {
             onChangeText={setHour}
             keyboardType="number-pad"
             maxLength={2}
-            placeholder="SS"
+            placeholder={t.onboarding.datePlaceholders.hour}
           />
           <Field
             testID="minute"
@@ -359,7 +359,7 @@ export default function Onboarding() {
             onChangeText={setMinute}
             keyboardType="number-pad"
             maxLength={2}
-            placeholder="DD"
+            placeholder={t.onboarding.datePlaceholders.minute}
           />
         </View>
 

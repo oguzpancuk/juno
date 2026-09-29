@@ -155,3 +155,4 @@ export {
   type Words,
 } from './words';
 export { contentFiles } from './content';
+export { ordinalEn } from './en';

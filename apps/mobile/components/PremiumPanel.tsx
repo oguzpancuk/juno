@@ -6,6 +6,7 @@ import {
   SUPER_LIKES_PER_WEEK,
   becomePremium,
 } from '@/lib/premium';
+import { formatShortDate } from '@/lib/language';
 import { fetchOwnProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -130,7 +131,7 @@ export function PremiumPanel({ onBought }: { onBought?: () => void }) {
           <Text style={styles.ok}>{t.premium.active}</Text>
           {since ? (
             <Text style={styles.hint}>
-              {t.premium.since(new Date(since).toLocaleDateString('tr-TR'))}
+              {t.premium.since(formatShortDate(new Date(since)))}
             </Text>
           ) : null}
         </View>

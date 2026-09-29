@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Juno",
+    "NSLocationWhenInUseUsageDescription": "Juno, yakınındaki kişileri göstermek için konumunu bir kez okur. Konum sadece mesafe olarak paylaşılır, koordinatın kimseye gösterilmez."
+  }
+}

@@ -8,16 +8,22 @@ import { updateLocation } from '@/lib/discover';
 import { deviceLocation } from '@/lib/location';
 import { deleteAccount } from '@/lib/safety';
 import { signOutAndLeave, useSession } from '@/lib/session';
+import { LANGUAGES } from '@juno/astro';
+import { LANGUAGE_NAMES } from '@/lib/i18n';
+import { chooseLanguage, useLanguage } from '@/lib/language';
+import type { LanguagePreference } from '@/lib/language-choice';
 import { t } from '@/lib/strings';
 import { color, font, radius, space, type } from '@/theme/tokens';
 
-export type SettingsView = 'menu' | 'blocked' | 'legal' | 'premium';
+export type SettingsView =
+  'menu' | 'blocked' | 'legal' | 'premium' | 'language';
 
 /** The sheet's title for each view. */
 export function settingsTitle(view: SettingsView): string {
   if (view === 'blocked') return t.blocked.title;
   if (view === 'legal') return t.legal.open;
   if (view === 'premium') return t.premium.title;
+  if (view === 'language') return t.settings.language;
   return t.settings.title;
 }
 
@@ -48,6 +54,7 @@ export function SettingsPanel({
   onLeave: (navigate: () => void) => void;
 }) {
   const session = useSession();
+  const { preference } = useLanguage();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
 
@@ -101,6 +108,25 @@ export function SettingsPanel({
 
   // The way back to the list is the sheet's own chevron (the host passes
   // `onBack`), not a link of its own under the title.
+  if (view === 'language') {
+    return (
+      <View style={styles.panel} testID="language-screen">
+        <Card style={styles.group}>
+          {(['device', ...LANGUAGES] as const).map((option) => (
+            <Choice
+              key={option}
+              label={nameOf(option)}
+              selected={option === preference}
+              onPress={() => void chooseLanguage(option, '/profile')}
+              testID={`language-${option}`}
+            />
+          ))}
+        </Card>
+        <Text style={styles.hint}>{t.settings.languageHint}</Text>
+      </View>
+    );
+  }
+
   if (view !== 'menu') {
     return (
       <View style={styles.panel}>
@@ -144,6 +170,13 @@ export function SettingsPanel({
           chevron
           onPress={() => onView('legal')}
           testID="open-legal"
+        />
+        <Row
+          label={t.settings.language}
+          value={nameOf(preference)}
+          chevron
+          onPress={() => onView('language')}
+          testID="open-language"
         />
         <Row
           label={
@@ -226,9 +259,21 @@ export function SettingsPanel({
   );
 }
 
+/**
+ * A language as the picker names it: each in its own name, so someone who
+ * switched to a language they cannot read can still find their own, and
+ * following the device in the language showing now.
+ */
+function nameOf(option: LanguagePreference): string {
+  return option === 'device'
+    ? t.settings.languageDevice
+    : LANGUAGE_NAMES[option];
+}
+
 /** One line of a group: a label, and a chevron where it opens a page. */
 function Row({
   label,
+  value,
   chevron = false,
   danger = false,
   disabled = false,
@@ -236,6 +281,8 @@ function Row({
   testID,
 }: {
   label: string;
+  /** What the page it opens is set to, drawn before the chevron. */
+  value?: string;
   chevron?: boolean;
   danger?: boolean;
   disabled?: boolean;
@@ -245,15 +292,49 @@ function Row({
   return (
     <Pressable
       role="button"
-      // The label alone: the chevron is drawn, not said.
-      aria-label={label}
+      // The label and the value: the chevron is drawn, not said, and a
+      // label replaces everything drawn inside the button, so a value
+      // left out of it is one VoiceOver never reads.
+      aria-label={value === undefined ? label : `${label}, ${value}`}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.row, (pressed || disabled) && styles.dim]}
       {...(testID === undefined ? {} : { testID })}
     >
       <Text style={[styles.rowLabel, danger && styles.danger]}>{label}</Text>
-      {chevron ? <Text style={styles.chevron}>›</Text> : null}
+      <View style={styles.rowEnd}>
+        {value === undefined ? null : (
+          <Text style={styles.rowValue}>{value}</Text>
+        )}
+        {chevron ? <Text style={styles.chevron}>›</Text> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+/** One option of a single choice: its name, and a tick on the chosen one. */
+function Choice({
+  label,
+  selected,
+  onPress,
+  testID,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  testID: string;
+}) {
+  return (
+    <Pressable
+      role="radio"
+      aria-label={label}
+      aria-checked={selected}
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, pressed && styles.dim]}
+      testID={testID}
+    >
+      <Text style={styles.rowLabel}>{label}</Text>
+      {selected ? <Text style={styles.tick}>✓</Text> : null}
     </Pressable>
   );
 }
@@ -274,7 +355,10 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   rowLabel: { ...type.body, color: color.text },
+  rowEnd: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  rowValue: { ...type.body, color: color.textFaint },
   chevron: { fontSize: 22, lineHeight: 24, color: color.textFaint },
+  tick: { ...type.body, color: color.coolLight },
   hint: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
   error: { fontFamily: font.regular, color: color.danger },
   ok: { fontFamily: font.regular, color: color.ok, fontSize: 13 },
