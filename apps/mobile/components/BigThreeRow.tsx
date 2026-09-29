@@ -1,4 +1,4 @@
-import { SIGN_GLYPH, SIGN_TR, elementOf, type BigThree } from '@juno/astro';
+import { SIGN_GLYPH, signName, elementOf, type BigThree } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
 import { t } from '@/lib/strings';
 import { color, element, font, radius, space, type } from '@/theme/tokens';
@@ -46,7 +46,7 @@ export function BigThreeRow({
             testID={`big-three-${key}`}
             accessible
             role="listitem"
-            aria-label={`${label()} ${SIGN_TR[sign]}`}
+            aria-label={`${label()} ${signName(sign)}`}
           >
             <View style={[styles.badge, { backgroundColor: tone.tint }]}>
               <Text
@@ -64,7 +64,7 @@ export function BigThreeRow({
                 minimumFontScale={0.8}
                 maxFontSizeMultiplier={maxFontSizeMultiplier}
               >
-                {SIGN_TR[sign]}
+                {signName(sign)}
               </Text>
               {/* Fits itself like the sign: "Yükselen" at a large text
                   size is wider than a third of a small phone (review,

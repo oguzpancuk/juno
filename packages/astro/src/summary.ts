@@ -47,12 +47,8 @@ import {
 import { houseOf, type Cusps, type HouseNumber } from './houses';
 import type { PublicChart } from './public';
 import { degreeInSign, roundLongitude, signOf, type Sign } from './signs';
-import {
-  BODY_TR,
-  SIGN_TR_LOCATIVE,
-  describeAspectTr,
-  formatDegree,
-} from './tr';
+import { formatDegree } from './tr';
+import { describeAspect, placementName } from './words';
 
 /**
  * Screen-ready interpretation of one chart: what to say for each body and
@@ -143,10 +139,7 @@ export function natalReading(chart: PublicChart, limit = 8): NatalReading {
       placement,
       sign,
       label: placementLabel(placement),
-      technical:
-        house === null
-          ? `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]}`
-          : `${BODY_TR[placement]} ${SIGN_TR_LOCATIVE[sign]} · ${house}. ev`,
+      technical: placementName(placement, sign, house),
       degree: formatDegree(degree),
       text: signText(placement, sign),
       // The sign says how; the house says where in a life it shows up.
@@ -292,7 +285,7 @@ function readAspect(
       `${aspect.planetA}-${aspect.aspect}-${aspect.planetB}`,
       taken,
     ),
-    headline: describeAspectTr(aspect),
+    headline: describeAspect(aspect),
     meaning,
     question,
   };
@@ -315,7 +308,7 @@ export function starterFromKey(
     key.planetB,
   );
   return {
-    headline: describeAspectTr({
+    headline: describeAspect({
       planetA: mine,
       aspect: key.aspect,
       planetB: theirs,

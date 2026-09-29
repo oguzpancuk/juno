@@ -1,6 +1,14 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
   Glow,
@@ -17,6 +25,7 @@ import {
 import type { Availability, Provider } from '@/lib/oauth';
 import { providerAvailability, signInWithProvider } from '@/lib/providers';
 import { LegalLink } from '@/components/LegalText';
+import { doorSize } from '@/lib/door-layout';
 import { t } from '@/lib/strings';
 import { color, space, type } from '@/theme/tokens';
 
@@ -43,11 +52,27 @@ import { color, space, type } from '@/theme/tokens';
  * call on mount — neither is shown, so no button appears and then
  * vanishes under a thumb already on its way down.
  */
-/** The mark, and the light behind it — centred on it, so offset by half the difference. */
-const MARK = 132;
-const GLOW = 300;
+/** The light behind the mark, in proportion to it: 300 behind 132. */
+const GLOW_PER_MARK = 300 / 132;
 
 export default function WelcomeScreen() {
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const size = doorSize(height - insets.top - insets.bottom);
+  const glow = Math.round(size.mark * GLOW_PER_MARK);
+  // Whether the door is taller than its page, and scrolls. The horizon is
+  // fixed to the page's bottom edge, so on a door that runs past it the
+  // curve would cross whatever text sits there at rest; it goes, and the
+  // scroll indicator says there is more below.
+  const [page, setPage] = useState(0);
+  const [content, setContent] = useState(0);
+  const scrolls = page > 0 && content > page + 1;
+  // iOS keeps a scroll indicator hidden until someone scrolls; flashed
+  // once, it says so before they have to guess.
+  const scroller = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (scrolls) scroller.current?.flashScrollIndicators();
+  }, [scrolls]);
   const [providers, setProviders] = useState<Availability>({
     apple: false,
     google: false,
@@ -101,90 +126,114 @@ export default function WelcomeScreen() {
     <View style={styles.screen} testID="welcome-screen">
       {/* Stars and the horizon; no planet, the mark has the top, and the
           curve stays under the legal link rather than through it. */}
-      <CosmicGround planet={false} horizonRise={0.05} />
-      <View style={styles.hero}>
-        <View>
-          <Glow size={GLOW} style={styles.glow} />
-          <OrbitMark size={MARK} />
+      <CosmicGround
+        planet={false}
+        horizon={!scrolls}
+        horizonRise={size.horizonRise}
+      />
+      <ScrollView
+        ref={scroller}
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top + size.top,
+            // On the phone the home indicator's strip already holds part
+            // of the clearance; in a browser the inset is zero.
+            paddingBottom: Math.max(insets.bottom + space.lg, size.bottom),
+          },
+        ]}
+        alwaysBounceVertical={false}
+        showsVerticalScrollIndicator={scrolls}
+        onLayout={({ nativeEvent }) => setPage(nativeEvent.layout.height)}
+        onContentSizeChange={(_, height) => setContent(height)}
+      >
+        <View style={styles.aboveHero} />
+        <View style={[styles.hero, { gap: size.gap }]}>
+          <View>
+            <Glow
+              size={glow}
+              style={{
+                top: -(glow - size.mark) / 2,
+                left: -(glow - size.mark) / 2,
+              }}
+            />
+            <OrbitMark size={size.mark} />
+          </View>
+          <Wordmark size={size.wordmark} />
+          <Text style={styles.tagline}>{t.signIn.tagline}</Text>
         </View>
-        <Wordmark />
-        <Text style={styles.tagline}>{t.signIn.tagline}</Text>
-      </View>
+        <View style={styles.between} />
+        <Text style={[styles.pitch, { lineHeight: size.leading }]}>
+          {t.welcome.pitch}
+        </Text>
+        <View style={styles.between} />
 
-      <Text style={styles.pitch}>{t.welcome.pitch}</Text>
-
-      <View style={styles.actions}>
-        <GradientButton
-          testID="continue-email"
-          label={t.welcome.withEmail}
-          onPress={() =>
-            router.push({ pathname: '/sign-in', params: { mode: 'in' } })
-          }
-        />
-        {providers.apple && Platform.OS === 'web' ? (
-          <AppleWebButton
-            label={
-              busy === 'apple' ? t.welcome.connecting : t.welcome.withApple
+        <View style={styles.actions}>
+          <GradientButton
+            testID="continue-email"
+            label={t.welcome.withEmail}
+            onPress={() =>
+              router.push({ pathname: '/sign-in', params: { mode: 'in' } })
             }
-            disabled={busy !== null}
-            onPress={() => void startProvider('apple')}
           />
-        ) : providers.apple ? (
-          <AppleButton
-            busy={busy === 'apple'}
-            disabled={busy !== null}
-            onPress={() => void startProvider('apple')}
-          />
-        ) : null}
-        {providers.google ? (
-          <GoogleButton
-            label={
-              busy === 'google' ? t.welcome.connecting : t.welcome.withGoogle
+          {providers.apple && Platform.OS === 'web' ? (
+            <AppleWebButton
+              label={
+                busy === 'apple' ? t.welcome.connecting : t.welcome.withApple
+              }
+              disabled={busy !== null}
+              onPress={() => void startProvider('apple')}
+            />
+          ) : providers.apple ? (
+            <AppleButton
+              busy={busy === 'apple'}
+              disabled={busy !== null}
+              onPress={() => void startProvider('apple')}
+            />
+          ) : null}
+          {providers.google ? (
+            <GoogleButton
+              label={
+                busy === 'google' ? t.welcome.connecting : t.welcome.withGoogle
+              }
+              disabled={busy !== null}
+              onPress={() => void startProvider('google')}
+            />
+          ) : null}
+        </View>
+        <View style={[styles.after, { gap: size.gap }]}>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <LinkText
+            testID="to-sign-up"
+            style={styles.noAccount}
+            onPress={() =>
+              router.push({ pathname: '/sign-in', params: { mode: 'up' } })
             }
-            disabled={busy !== null}
-            onPress={() => void startProvider('google')}
+          >
+            {t.signIn.toSignUp}
+          </LinkText>
+          <Text style={styles.consent}>{t.signIn.consent}</Text>
+          <LegalLink
+            label={t.onboarding.consentLink}
+            style={styles.consentLink}
           />
-        ) : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        <LinkText
-          testID="to-sign-up"
-          style={styles.noAccount}
-          onPress={() =>
-            router.push({ pathname: '/sign-in', params: { mode: 'up' } })
-          }
-        >
-          {t.signIn.toSignUp}
-        </LinkText>
-        <Text style={styles.consent}>{t.signIn.consent}</Text>
-        <LegalLink
-          label={t.onboarding.consentLink}
-          style={styles.consentLink}
-        />
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: color.bg,
-    padding: space.xl,
-    paddingBottom: 48,
-    justifyContent: 'space-between',
-  },
-  // A flat drop, unlike every other screen's clearance.
-  //
-  // It was briefly `useTopClearance(76)` and that was scope creep: the
-  // owner never listed this screen, and a review found the cost. The
-  // drop is in flow in a plain `space-between` View with no scroll — the
-  // doors have no scroll either, but their clearance goes to an absolutely
-  // positioned back link and takes no room — so on a device the extra
-  // inset comes straight out of the bottom, where the consent line and the
-  // legal link are, with nothing to recover them at a large text size.
-  // Left alone until there is a reason to touch it.
-  hero: { alignItems: 'center', marginTop: 96, gap: space.md },
-  glow: { top: -(GLOW - MARK) / 2, left: -(GLOW - MARK) / 2 },
+  screen: { flex: 1, backgroundColor: color.bg },
+  scroll: { flex: 1 },
+  // A column the height of the screen when the door fits, taller when it
+  // does not; the spacers share what is left over, the drop above the
+  // mark taking twice what each gap below takes.
+  content: { flexGrow: 1, paddingHorizontal: space.xl },
+  aboveHero: { flexGrow: 2, minHeight: space.sm },
+  between: { flexGrow: 1, minHeight: space.lg },
+  hero: { alignItems: 'center' },
   tagline: { ...type.label, color: color.textMuted },
   pitch: {
     ...type.title,
@@ -194,6 +243,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
   },
   actions: { gap: space.md },
+  after: { marginTop: space.md },
   error: { ...type.bodySmall, color: color.danger, textAlign: 'center' },
   noAccount: { textAlign: 'center' },
   consent: {

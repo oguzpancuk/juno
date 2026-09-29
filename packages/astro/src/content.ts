@@ -26,25 +26,54 @@ const IMPOSSIBLE = new Set<string>([
 ]);
 import { SIGNS, type Sign } from './signs';
 import type { HouseNumber } from './houses';
-import bandsRaw from '../content/tr/bands.json';
-import dimensionsRaw from '../content/tr/dimensions.json';
 import calibrationRaw from '../content/calibration.json';
-import placementsRaw from '../content/tr/placements.json';
-import titlesRaw from '../content/tr/titles.json';
-import overlaysRaw from '../content/tr/overlays.json';
-import overlayHousesRaw from '../content/tr/overlay-houses.json';
-import elementsRaw from '../content/tr/elements.json';
-import housesRaw from '../content/tr/houses.json';
-import natalAspectsRaw from '../content/tr/natal-aspects.json';
-import retrogradeRaw from '../content/tr/retrograde.json';
-import signsRaw from '../content/tr/signs.json';
-import synastryRaw from '../content/tr/synastry.json';
+import trBands from '../content/tr/bands.json';
+import trDimensions from '../content/tr/dimensions.json';
+import trElements from '../content/tr/elements.json';
+import trHouses from '../content/tr/houses.json';
+import trNatalAspects from '../content/tr/natal-aspects.json';
+import trOverlayHouses from '../content/tr/overlay-houses.json';
+import trOverlays from '../content/tr/overlays.json';
+import trPlacements from '../content/tr/placements.json';
+import trRetrograde from '../content/tr/retrograde.json';
+import trSigns from '../content/tr/signs.json';
+import trSynastry from '../content/tr/synastry.json';
+import trTitles from '../content/tr/titles.json';
+import enBands from '../content/en/bands.json';
+import enDimensions from '../content/en/dimensions.json';
+import enElements from '../content/en/elements.json';
+import enHouses from '../content/en/houses.json';
+import enNatalAspects from '../content/en/natal-aspects.json';
+import enOverlayHouses from '../content/en/overlay-houses.json';
+import enOverlays from '../content/en/overlays.json';
+import enPlacements from '../content/en/placements.json';
+import enRetrograde from '../content/en/retrograde.json';
+import enSigns from '../content/en/signs.json';
+import enSynastry from '../content/en/synastry.json';
+import enTitles from '../content/en/titles.json';
+import esBands from '../content/es/bands.json';
+import esDimensions from '../content/es/dimensions.json';
+import esElements from '../content/es/elements.json';
+import esHouses from '../content/es/houses.json';
+import esNatalAspects from '../content/es/natal-aspects.json';
+import esOverlayHouses from '../content/es/overlay-houses.json';
+import esOverlays from '../content/es/overlays.json';
+import esPlacements from '../content/es/placements.json';
+import esRetrograde from '../content/es/retrograde.json';
+import esSigns from '../content/es/signs.json';
+import esSynastry from '../content/es/synastry.json';
+import esTitles from '../content/es/titles.json';
+import { currentLanguage, type Language } from './language';
 
 /**
- * Turkish interpretation texts. Every key the engine can emit must have a
- * non-empty entry; `content.test.ts` enumerates the key spaces below and
- * fails when one is missing, so a content gap can never reach a screen.
- * Texts are data, not astrology logic: the engine decides which keys apply.
+ * Interpretation texts, one directory per language under `content/`:
+ * Turkish is the source, every other language a translation of it with
+ * the same files and the same keys. Every key the engine can emit must
+ * have a non-empty entry in every language; `content.test.ts` enumerates
+ * the key spaces below per language and fails when one is missing, so a
+ * content gap can never reach a screen. Texts are data, not astrology
+ * logic: the engine decides which keys apply, the language only which
+ * words are read for them (`language.ts`).
  */
 const Snippet = z.string().trim().min(20).max(320);
 const SnippetMap = z.record(z.string(), Snippet);
@@ -79,12 +108,6 @@ export type Band = (typeof BANDS)[number];
 export const LEVELS = ['low', 'mid', 'high'] as const;
 export type Level = (typeof LEVELS)[number];
 
-const signs = SnippetMap.parse(signsRaw);
-const houses = SnippetMap.parse(housesRaw);
-const retrograde = SnippetMap.parse(retrogradeRaw);
-const natalAspects = SnippetMap.parse(natalAspectsRaw);
-const synastry = z.record(z.string(), SynastryEntry).parse(synastryRaw);
-const elements = SnippetMap.parse(elementsRaw);
 const Label = z.string().trim().min(3).max(40);
 const BandEntry = z.object({ name: Label, text: Snippet });
 const DimensionEntry = z.object({
@@ -93,7 +116,6 @@ const DimensionEntry = z.object({
   mid: Label,
   high: Label,
 });
-const bands = z.record(z.string(), BandEntry).parse(bandsRaw);
 /**
  * Every body a chart card is written for, in the order the profile reads
  * them: the three the page opens with, then the rest as the "tüm
@@ -116,9 +138,6 @@ export const PLACEMENTS: readonly Body[] = [
   'neptune',
   'pluto',
 ] as const;
-const placements = z.record(z.string(), Label).parse(placementsRaw);
-const overlays = SnippetMap.parse(overlaysRaw);
-const overlayHouses = z.record(z.string(), Label).parse(overlayHousesRaw);
 
 /**
  * The planets whose house overlay is worth a card, and the houses worth
@@ -148,7 +167,7 @@ export function overlayKey(
 
 /** What the house means for dating: "Ortaklık", "Yakınlık ve yoğunluk". */
 export function overlayHouseTheme(house: OverlayHouse): string {
-  return must(overlayHouses, String(house), 'overlay-houses.json');
+  return must((b) => b.overlayHouses, String(house), 'overlay-houses.json');
 }
 
 export function overlayText(
@@ -156,17 +175,17 @@ export function overlayText(
   house: OverlayHouse,
   direction: OverlayDirection,
 ): string {
-  return must(overlays, overlayKey(planet, house, direction), 'overlays.json');
+  return must(
+    (b) => b.overlays,
+    overlayKey(planet, house, direction),
+    'overlays.json',
+  );
 }
 /**
  * Aspect card titles, keyed by dimension and valence rather than by pairing:
  * one table of thirty instead of a title on each of the 255 texts, and the
  * dimension table decides which applies (ADR-0009 §1).
  */
-const titles = z.record(z.string(), z.array(Label).length(3)).parse(titlesRaw);
-const dimensionLabels = z
-  .record(z.string(), DimensionEntry)
-  .parse(dimensionsRaw);
 
 /**
  * The calibrated surface, generated by `scripts/score-distribution.ts` and
@@ -181,6 +200,111 @@ const Calibration = z.object({
   labels: z.record(z.string(), z.array(z.number()).length(2)),
 });
 export const CALIBRATION = Calibration.parse(calibrationRaw);
+
+/** One language's texts, as the files under `content/<language>/` hold them. */
+const RAW: Readonly<Record<Language, Readonly<Record<ContentFile, unknown>>>> =
+  {
+    tr: {
+      'bands.json': trBands,
+      'dimensions.json': trDimensions,
+      'elements.json': trElements,
+      'houses.json': trHouses,
+      'natal-aspects.json': trNatalAspects,
+      'overlay-houses.json': trOverlayHouses,
+      'overlays.json': trOverlays,
+      'placements.json': trPlacements,
+      'retrograde.json': trRetrograde,
+      'signs.json': trSigns,
+      'synastry.json': trSynastry,
+      'titles.json': trTitles,
+    },
+    en: {
+      'bands.json': enBands,
+      'dimensions.json': enDimensions,
+      'elements.json': enElements,
+      'houses.json': enHouses,
+      'natal-aspects.json': enNatalAspects,
+      'overlay-houses.json': enOverlayHouses,
+      'overlays.json': enOverlays,
+      'placements.json': enPlacements,
+      'retrograde.json': enRetrograde,
+      'signs.json': enSigns,
+      'synastry.json': enSynastry,
+      'titles.json': enTitles,
+    },
+    es: {
+      'bands.json': esBands,
+      'dimensions.json': esDimensions,
+      'elements.json': esElements,
+      'houses.json': esHouses,
+      'natal-aspects.json': esNatalAspects,
+      'overlay-houses.json': esOverlayHouses,
+      'overlays.json': esOverlays,
+      'placements.json': esPlacements,
+      'retrograde.json': esRetrograde,
+      'signs.json': esSigns,
+      'synastry.json': esSynastry,
+      'titles.json': esTitles,
+    },
+  };
+
+type ContentFile =
+  | 'bands.json'
+  | 'dimensions.json'
+  | 'elements.json'
+  | 'houses.json'
+  | 'natal-aspects.json'
+  | 'overlay-houses.json'
+  | 'overlays.json'
+  | 'placements.json'
+  | 'retrograde.json'
+  | 'signs.json'
+  | 'synastry.json'
+  | 'titles.json';
+
+function parseBundle(language: Language) {
+  const raw = RAW[language];
+  return {
+    language,
+    signs: SnippetMap.parse(raw['signs.json']),
+    houses: SnippetMap.parse(raw['houses.json']),
+    retrograde: SnippetMap.parse(raw['retrograde.json']),
+    natalAspects: SnippetMap.parse(raw['natal-aspects.json']),
+    synastry: z.record(z.string(), SynastryEntry).parse(raw['synastry.json']),
+    elements: SnippetMap.parse(raw['elements.json']),
+    bands: z.record(z.string(), BandEntry).parse(raw['bands.json']),
+    placements: z.record(z.string(), Label).parse(raw['placements.json']),
+    overlays: SnippetMap.parse(raw['overlays.json']),
+    overlayHouses: z
+      .record(z.string(), Label)
+      .parse(raw['overlay-houses.json']),
+    titles: z
+      .record(z.string(), z.array(Label).length(3))
+      .parse(raw['titles.json']),
+    dimensionLabels: z
+      .record(z.string(), DimensionEntry)
+      .parse(raw['dimensions.json']),
+  };
+}
+type Bundle = ReturnType<typeof parseBundle>;
+
+/**
+ * Each language's files are validated on first use rather than at import:
+ * a member reads one language, and parsing the others would only cost
+ * start-up time. Turkish is parsed at import, as it always was, so a
+ * broken source file still fails the moment anything loads the engine.
+ */
+const bundles = new Map<Language, Bundle>([['tr', parseBundle('tr')]]);
+
+/** The texts of `language`, the current one unless named. */
+function bundle(language: Language = currentLanguage()): Bundle {
+  let found = bundles.get(language);
+  if (found === undefined) {
+    found = parseBundle(language);
+    bundles.set(language, found);
+  }
+  return found;
+}
 
 const bodyIndex = (b: Body): number => BODIES.indexOf(b);
 
@@ -203,27 +327,36 @@ export const elementKey = (
   return `${luminary}:${x}-${y}`;
 };
 
-function must(map: Record<string, string>, key: string, file: string): string {
-  const text = map[key];
+function must(
+  select: (b: Bundle) => Record<string, string>,
+  key: string,
+  file: ContentFile,
+): string {
+  const b = bundle();
+  const text = select(b)[key];
   if (text === undefined)
-    throw new Error(`content/tr/${file}: missing "${key}"`);
+    throw new Error(`content/${b.language}/${file}: missing "${key}"`);
   return text;
 }
 
 export function signText(body: Planet | 'ascendant', sign: Sign): string {
-  return must(signs, signKey(body, sign), 'signs.json');
+  return must((b) => b.signs, signKey(body, sign), 'signs.json');
 }
 
 export function houseText(planet: Planet, house: HouseNumber): string {
-  return must(houses, houseKey(planet, house), 'houses.json');
+  return must((b) => b.houses, houseKey(planet, house), 'houses.json');
 }
 
 export function retrogradeText(planet: RetroPlanet): string {
-  return must(retrograde, planet, 'retrograde.json');
+  return must((b) => b.retrograde, planet, 'retrograde.json');
 }
 
 export function natalAspectText(a: Body, aspect: Aspect, b: Body): string {
-  return must(natalAspects, pairKey(a, aspect, b), 'natal-aspects.json');
+  return must(
+    (content) => content.natalAspects,
+    pairKey(a, aspect, b),
+    'natal-aspects.json',
+  );
 }
 
 /**
@@ -236,7 +369,7 @@ export function natalAspectText(a: Body, aspect: Aspect, b: Body): string {
  * rather than throwing on a screen that was only trying to render a row.
  */
 export function hasSynastryText(a: Body, aspect: Aspect, b: Body): boolean {
-  return synastry[pairKey(a, aspect, b)] !== undefined;
+  return bundle().synastry[pairKey(a, aspect, b)] !== undefined;
 }
 
 export function synastryText(
@@ -244,10 +377,11 @@ export function synastryText(
   aspect: Aspect,
   b: Body,
 ): { meaning: string; question: string } {
-  const entry = synastry[pairKey(a, aspect, b)];
+  const content = bundle();
+  const entry = content.synastry[pairKey(a, aspect, b)];
   if (!entry)
     throw new Error(
-      `content/tr/synastry.json: missing "${pairKey(a, aspect, b)}"`,
+      `content/${content.language}/synastry.json: missing "${pairKey(a, aspect, b)}"`,
     );
   return entry;
 }
@@ -257,7 +391,7 @@ export function elementText(
   a: Element,
   b: Element,
 ): string {
-  return must(elements, elementKey(luminary, a, b), 'elements.json');
+  return must((b) => b.elements, elementKey(luminary, a, b), 'elements.json');
 }
 
 /** Score band per ADR-0003 damping: 50 is "no aspects". */
@@ -286,7 +420,7 @@ export function bandText(score: number): string {
 }
 
 function mustBand(band: Band): { name: string; text: string } {
-  const entry = bands[band];
+  const entry = bundle().bands[band];
   if (entry === undefined) throw new Error(`bands.json has no "${band}"`);
   return entry;
 }
@@ -337,7 +471,7 @@ export function dimensionLabelText(dimension: string, level: Level): string {
 }
 
 function mustDimension(dimension: string): z.infer<typeof DimensionEntry> {
-  const entry = dimensionLabels[dimension];
+  const entry = bundle().dimensionLabels[dimension];
   if (entry === undefined)
     throw new Error(`dimensions.json has no "${dimension}"`);
   return entry;
@@ -408,22 +542,31 @@ export const KEY_SPACES = {
 
 export const IMPOSSIBLE_KEYS: ReadonlySet<string> = IMPOSSIBLE;
 
-export const CONTENT_FILES = {
-  signs,
-  houses,
-  retrograde,
-  natalAspects,
-  synastry: Object.fromEntries(
-    Object.entries(synastry).map(([k, v]) => [k, v.meaning]),
-  ),
-  elements,
-  overlays,
-  bands: Object.fromEntries(Object.entries(bands).map(([k, v]) => [k, v.text])),
-} as const;
+/** One language's snippet texts per file, flattened for the content tests. */
+export function contentFiles(language: Language) {
+  const b = bundle(language);
+  return {
+    signs: b.signs,
+    houses: b.houses,
+    retrograde: b.retrograde,
+    natalAspects: b.natalAspects,
+    synastry: Object.fromEntries(
+      Object.entries(b.synastry).map(([k, v]) => [k, v.meaning]),
+    ),
+    elements: b.elements,
+    overlays: b.overlays,
+    bands: Object.fromEntries(
+      Object.entries(b.bands).map(([k, v]) => [k, v.text]),
+    ),
+  } as const;
+}
+
+/** The Turkish source's files, which the layering rules are written against. */
+export const CONTENT_FILES = contentFiles('tr');
 
 /** "Nasıl seversin" for Venus — the product-language title of a placement. */
 export function placementLabel(placement: Body): string {
-  return must(placements, placement, 'placements.json');
+  return must((b) => b.placements, placement, 'placements.json');
 }
 
 /**
@@ -450,7 +593,7 @@ export function aspectTitle(
   taken: ReadonlySet<string> = new Set(),
 ): string {
   const valence = term >= 0 ? 'soft' : 'hard';
-  const entry = titles[`${dimension}-${valence}`];
+  const entry = bundle().titles[`${dimension}-${valence}`];
   if (entry === undefined)
     throw new Error(`titles.json has no "${dimension}-${valence}"`);
   // Start at the stable variant, then step on if that title is already on

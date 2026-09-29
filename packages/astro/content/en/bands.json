@@ -1,0 +1,18 @@
+{
+  "quiet": {
+    "name": "At its own pace",
+    "text": "Your charts meet at only a few points; putting into words what's between you may be more up to the two of you."
+  },
+  "even": {
+    "name": "Balanced",
+    "text": "Supportive and challenging aspects are close in number; your differences tend to give you plenty to talk about."
+  },
+  "strong": {
+    "name": "Distinct",
+    "text": "Your charts touch at many points; where the bond comes from usually shows early on."
+  },
+  "rare": {
+    "name": "Rare",
+    "text": "Two charts crossing at this many points isn't something you see often; it may be worth not taking what comes easily for granted."
+  }
+}

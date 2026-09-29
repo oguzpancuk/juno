@@ -2,17 +2,20 @@ import { z } from 'zod';
 import { READ_TIMEOUT_MS, supabase } from './supabase';
 import { notifyUnreadChanged } from './unread';
 
-/** Mirrors the `report_reason` enum; the labels are the UI's, in Turkish. */
+/**
+ * Mirrors the `report_reason` enum, in the order the sheet lists it; the
+ * labels are in the catalog (`t.safety.reasons`).
+ */
 export const REPORT_REASONS = [
-  { value: 'harassment', label: 'Taciz veya hakaret' },
-  { value: 'spam', label: 'Spam veya reklam' },
-  { value: 'fake_profile', label: 'Sahte profil' },
-  { value: 'nudity', label: 'Uygunsuz içerik' },
-  { value: 'underage', label: '18 yaşından küçük' },
-  { value: 'other', label: 'Diğer' },
+  'harassment',
+  'spam',
+  'fake_profile',
+  'nudity',
+  'underage',
+  'other',
 ] as const;
 
-export type ReportReason = (typeof REPORT_REASONS)[number]['value'];
+export type ReportReason = (typeof REPORT_REASONS)[number];
 
 /**
  * Block someone. The row is one-directional; the server closes discovery,

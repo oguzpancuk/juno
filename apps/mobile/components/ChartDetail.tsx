@@ -1,14 +1,14 @@
 import {
   BODY_GLYPH,
-  BODY_TR,
+  bodyName,
   PLANETS,
   SIGN_GLYPH,
-  SIGN_TR,
+  signName,
   degreeInSign,
   elementOf,
   signOf,
   formatDegree,
-  natalAspectTitleTr,
+  natalAspectTitle,
   type NatalReading,
   type PlacementReading,
   type PublicChart,
@@ -77,7 +77,7 @@ export function PlacementCard({
           tint={tone.tint}
         />
         <View style={styles.cardHeadText}>
-          <Text style={styles.cardTitle}>{SIGN_TR[sign]}</Text>
+          <Text style={styles.cardTitle}>{signName(sign)}</Text>
           <Text style={styles.cardLabel}>
             {label}
             {house === null || degree ? '' : ` · ${t.chart.house(house)}`}
@@ -183,7 +183,7 @@ export function ChartDetail({
           >
             <AspectGlyphs aspect={aspect} />
             <Text style={styles.planetName}>
-              {natalAspectTitleTr(aspect)}
+              {natalAspectTitle(aspect)}
               <Text style={styles.orb}>
                 {' '}
                 · {t.chart.orb(formatDegree(aspect.orb))}
@@ -238,9 +238,9 @@ function ChartTables({ chart }: { chart: PublicChart }) {
                     ink={planet[body]}
                     tint={glass.fillHigh}
                   />
-                  <Text style={styles.rowName}>{BODY_TR[body]}</Text>
+                  <Text style={styles.rowName}>{bodyName(body)}</Text>
                   <Text style={styles.rowSign}>
-                    {SIGN_GLYPH[p.sign]} {SIGN_TR[p.sign]}
+                    {SIGN_GLYPH[p.sign]} {signName(p.sign)}
                   </Text>
                   <Text style={styles.rowDegree}>
                     {formatDegree(p.degree)}
@@ -265,7 +265,7 @@ function ChartTables({ chart }: { chart: PublicChart }) {
                     tint={tone.tint}
                   />
                   <Text style={styles.rowName}>{t.chart.house(index + 1)}</Text>
-                  <Text style={styles.rowSign}>{SIGN_TR[sign]}</Text>
+                  <Text style={styles.rowSign}>{signName(sign)}</Text>
                   <Text style={styles.rowDegree}>
                     {formatDegree(degreeInSign(cusp))}
                   </Text>

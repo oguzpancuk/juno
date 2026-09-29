@@ -14,8 +14,9 @@ import {
 import { toPublicChart } from './public';
 import { signOf } from './signs';
 import istanbul from './__fixtures__/istanbul-1995.json';
+import { LANGUAGES } from './language';
 import {
-  CONTENT_FILES,
+  contentFiles,
   IMPOSSIBLE_KEYS,
   KEY_SPACES,
   bandOf,
@@ -31,43 +32,47 @@ import {
 } from './content';
 
 // The completeness contract: every key the engine can emit has a snippet,
-// and no file carries a key the engine can never emit (typos surface).
-describe.each(Object.keys(KEY_SPACES) as (keyof typeof KEY_SPACES)[])(
-  'content/tr · %s',
-  (file) => {
-    const expected = KEY_SPACES[file]();
-    const actual = CONTENT_FILES[file];
+// and no file carries a key the engine can never emit (typos surface) —
+// in every language, so a translation cannot leave a screen blank.
+describe.each(
+  LANGUAGES.flatMap((language) =>
+    (Object.keys(KEY_SPACES) as (keyof typeof KEY_SPACES)[]).map(
+      (file) => [language, file] as const,
+    ),
+  ),
+)('content/%s · %s', (language, file) => {
+  const expected = KEY_SPACES[file]();
+  const actual = contentFiles(language)[file];
 
-    it(`has all ${expected.length} keys`, () => {
-      const missing = expected.filter((k) => !(k in actual));
-      expect(missing).toEqual([]);
-    });
+  it(`has all ${expected.length} keys`, () => {
+    const missing = expected.filter((k) => !(k in actual));
+    expect(missing).toEqual([]);
+  });
 
-    it('has no unknown keys', () => {
-      const known = new Set(expected);
-      expect(Object.keys(actual).filter((k) => !known.has(k))).toEqual([]);
-    });
+  it('has no unknown keys', () => {
+    const known = new Set(expected);
+    expect(Object.keys(actual).filter((k) => !known.has(k))).toEqual([]);
+  });
 
-    it('every sentence has at least four words (no telegraphic fragments)', () => {
-      const offenders: string[] = [];
-      for (const [key, text] of Object.entries(actual)) {
-        const sentences = text
-          .split(/(?<=[.!?…])\s+/)
-          .filter((x) => x.trim().length > 0);
-        if (sentences.some((x) => x.trim().split(/\s+/).length < 4))
-          offenders.push(key);
-      }
-      expect(offenders).toEqual([]);
-    });
+  it('every sentence has at least four words (no telegraphic fragments)', () => {
+    const offenders: string[] = [];
+    for (const [key, text] of Object.entries(actual)) {
+      const sentences = text
+        .split(/(?<=[.!?…])\s+/)
+        .filter((x) => x.trim().length > 0);
+      if (sentences.some((x) => x.trim().split(/\s+/).length < 4))
+        offenders.push(key);
+    }
+    expect(offenders).toEqual([]);
+  });
 
-    it('every text is 1–2 sentences (≤ 320 chars) and ends with punctuation', () => {
-      for (const [key, text] of Object.entries(actual)) {
-        expect(text.length, key).toBeLessThanOrEqual(320);
-        expect(/[.!?…]$/.test(text), key).toBe(true);
-      }
-    });
-  },
-);
+  it('every text is 1–2 sentences (≤ 320 chars) and ends with punctuation', () => {
+    for (const [key, text] of Object.entries(actual)) {
+      expect(text.length, key).toBeLessThanOrEqual(320);
+      expect(/[.!?…]$/.test(text), key).toBe(true);
+    }
+  });
+});
 
 describe('keys', () => {
   it('canonicalises pair order by BODIES index', () => {

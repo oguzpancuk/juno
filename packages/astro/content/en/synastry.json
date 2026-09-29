@@ -1,0 +1,1022 @@
+{
+  "sun-conjunction-sun": {
+    "meaning": "Your Suns sit on the same spot: you recognize each other instantly and speak the same language. You share the same shadows too; time will tell who's the mirror and who's the light.",
+    "question": "Is it easy to get along with someone a lot like you, or does it feel too familiar?"
+  },
+  "sun-sextile-sun": {
+    "meaning": "Your identities back each other up; standing side by side is easy and competition is low. A calm but solid core.",
+    "question": "How many people can you just be yourself around? Could I join that list?"
+  },
+  "sun-square-sun": {
+    "meaning": "Two strong wills pulling in different directions: there's tension, but respect too. Neither of you backs down; negotiation becomes the muscle of the relationship.",
+    "question": "If you had to choose between being right and being happy, which would you pick?"
+  },
+  "sun-trine-sun": {
+    "meaning": "Your Suns feed each other with ease; your energy flows in the same rhythm and you grow together. An easy, solid foundation for friendship.",
+    "question": "What gives you the most energy, and is it something we could do together?"
+  },
+  "sun-opposition-sun": {
+    "meaning": "Your Suns face each other: the missing piece of each of you is in the other. The pull is strong; compromise is the thing to learn.",
+    "question": "They say opposites attract. Do you believe that?"
+  },
+  "sun-conjunction-moon": {
+    "meaning": "A classic compatibility aspect: one brings the light, the other the warmth. One of you gives direction, the other nurtures; you complete each other naturally.",
+    "question": "In a relationship, are you more the one who steers or the one who nurtures?"
+  },
+  "sun-sextile-moon": {
+    "meaning": "Will and need support each other easily; being together feels comfortable and nourishing.",
+    "question": "How can you tell when you feel comfortable with someone?"
+  },
+  "sun-square-moon": {
+    "meaning": "What one of you wants pushes against what the other needs; misunderstandings can happen. Saying things plainly clears it all up.",
+    "question": "What makes you feel good, and is it easy for you to say so?"
+  },
+  "sun-trine-moon": {
+    "meaning": "Identity and feeling speak the same language; you don't have to work to be understood. It feels like home.",
+    "question": "Have you ever clicked with someone right from the first moment?"
+  },
+  "sun-opposition-moon": {
+    "meaning": "Whatever one of you wants, the other feels the opposite; there's attraction, but needs have to be translated. Patience is the key to this bond.",
+    "question": "Do you think opposites are attractive, or do you find them exhausting?"
+  },
+  "sun-conjunction-mercury": {
+    "meaning": "Identity meets mind: one of you gets the other instantly and can put them into words. Conversation is the heart of this bond.",
+    "question": "I feel like I could talk to you for hours. What's your favorite thing to talk about?"
+  },
+  "sun-sextile-mercury": {
+    "meaning": "Ideas and identity support each other; you make each other bigger just by talking.",
+    "question": "What's the topic that really gets you talking?"
+  },
+  "sun-square-mercury": {
+    "meaning": "Words and essence clash; one of you may misread the other. Asking about intent beats assuming it.",
+    "question": "How much does it bother you to be misunderstood?"
+  },
+  "sun-trine-mercury": {
+    "meaning": "The one who explains and the one who understands meet easily; there's a mental ease between you.",
+    "question": "When I tell you something, what do you notice first: the logic or the feeling?"
+  },
+  "sun-opposition-mercury": {
+    "meaning": "Ideas and identity face off: lots of debate, and compromise to learn. Here, an opposing view is a gift.",
+    "question": "When was the last time someone changed your mind?"
+  },
+  "sun-conjunction-venus": {
+    "meaning": "Identity meets love: one of you loves the other just as they are. This is one of the classic aspects of romantic attraction.",
+    "question": "What's the first thing you notice about a person?"
+  },
+  "sun-sextile-venus": {
+    "meaning": "Love and identity support each other; being together is lovely and easy.",
+    "question": "How do you choose the things you find beautiful?"
+  },
+  "sun-square-venus": {
+    "meaning": "Your tastes and values don't fully line up; one of you may struggle to get the other's taste, and keeping score of who gave how much comes easily. When you meet the difference with curiosity instead of as a problem, liking turns into acceptance.",
+    "question": "Have you ever felt you had to change to be loved?"
+  },
+  "sun-trine-venus": {
+    "meaning": "Love flows easily into identity; liking each other takes no effort.",
+    "question": "How do you know the moment you've decided to trust someone?"
+  },
+  "sun-opposition-venus": {
+    "meaning": "Love and identity sit at opposite poles; the pull is strong, the expectations differ. Unspoken expectations are this bond's only risk.",
+    "question": "What's the first thing you expect from a relationship?"
+  },
+  "sun-conjunction-mars": {
+    "meaning": "Identity and action meet on the same spot: strong physical attraction, high energy, a sometimes competitive bond. You can get a lot done together; if who takes the lead goes unspoken, the spark can turn into friction.",
+    "question": "Does competition fire you up or wear you out?"
+  },
+  "sun-sextile-mars": {
+    "meaning": "Energy and identity support each other; it's easy to get moving together.",
+    "question": "What do you think would be the best thing to do together?"
+  },
+  "sun-square-mars": {
+    "meaning": "Will and action clash: there's attraction, but friction too. Turning anger into passion is up to both of you.",
+    "question": "Is making up after an argument easy for you?"
+  },
+  "sun-trine-mars": {
+    "meaning": "Energy supports identity with ease: working together and making progress come naturally.",
+    "question": "What brings you closer to someone: doing something together or talking together?"
+  },
+  "sun-opposition-mars": {
+    "meaning": "Identity and action at opposite poles: a power struggle or a powerful partnership. Being a team instead of rivals is a choice.",
+    "question": "On a team, are you the captain or the engine?"
+  },
+  "sun-conjunction-ascendant": {
+    "meaning": "One of you touches the other's outward self with who they are: like seeing yourself in them. A natural familiarity; no introductions needed.",
+    "question": "Do your first impressions usually turn out to be right?"
+  },
+  "sun-sextile-ascendant": {
+    "meaning": "Identity and outward self support each other; you're at ease from the first moment.",
+    "question": "What did you think when you first saw me?"
+  },
+  "sun-square-ascendant": {
+    "meaning": "One of you sees the other differently than they are; a gap opens between expectation and reality. With time and honest conversation, that gap comes into focus.",
+    "question": "Is there a side of you that people tend to misread?"
+  },
+  "sun-trine-ascendant": {
+    "meaning": "Outward self and identity are in harmony; you find each other natural.",
+    "question": "When do you feel most like your natural self?"
+  },
+  "sun-opposition-ascendant": {
+    "meaning": "One of you falls on the other's Descendant, the relationship point: a classic partner aspect. You feel like you complete each other; the mirroring is strong, so each of you has to protect your own light too.",
+    "question": "Have you ever felt like you met someone who completes you?"
+  },
+  "moon-conjunction-moon": {
+    "meaning": "The same emotional language: you understand each other without saying a word. Riding the same ups and downs is both a comfort and a risk.",
+    "question": "On a bad day, what do you want: to talk, or some quiet?"
+  },
+  "moon-sextile-moon": {
+    "meaning": "Your emotional needs support each other; a comfortable, caring bond.",
+    "question": "Do you have a small habit that helps you unwind?"
+  },
+  "moon-square-moon": {
+    "meaning": "Your emotional needs pull in different directions; one of you may want closeness while the other wants space. Saying what you need out loud becomes the bridge between you.",
+    "question": "Is it easier to say what's good for you, or to wait for someone to guess?"
+  },
+  "moon-trine-moon": {
+    "meaning": "Your Moons nourish each other easily; emotionally you're at home, and tenderness flows without effort. The comfort is real; depth is something you invite on purpose.",
+    "question": "Have you ever had someone who felt like home?"
+  },
+  "moon-opposition-moon": {
+    "meaning": "Opposite emotional needs: whatever one of you wants, the other wants the reverse. It takes translation and patience.",
+    "question": "Do you believe two people with opposite needs can make it work?"
+  },
+  "moon-conjunction-mercury": {
+    "meaning": "Feeling meets mind: one of you feels, the other puts it into words. Talking is this bond's medicine.",
+    "question": "Which is easier for you: talking about your feelings or listening?"
+  },
+  "moon-sextile-mercury": {
+    "meaning": "Feeling and thought support each other; you grow closer by talking.",
+    "question": "What's the topic you're most comfortable talking about?"
+  },
+  "moon-square-mercury": {
+    "meaning": "What's felt and what's said don't match; misunderstandings may feel familiar. Talking slowly beats agreeing quickly.",
+    "question": "Have you ever said something and then regretted it?"
+  },
+  "moon-trine-mercury": {
+    "meaning": "Feelings turn into words with ease; being understood takes no effort.",
+    "question": "When was the last time you really felt understood?"
+  },
+  "moon-opposition-mercury": {
+    "meaning": "Heart and head at opposite poles; one of you feels, the other analyzes. Both are right, and both need room.",
+    "question": "Do you make decisions with your heart or your head?"
+  },
+  "moon-conjunction-venus": {
+    "meaning": "Emotional need and love language meet in the same place: whatever one of you needs, the other gives naturally. One of the classic love aspects.",
+    "question": "What does taking care of someone feel like for you?"
+  },
+  "moon-sextile-venus": {
+    "meaning": "Emotional needs and love language are in harmony; you take good care of each other.",
+    "question": "What nourishes you the most?"
+  },
+  "moon-square-venus": {
+    "meaning": "Need and desire pull against each other; one of you may want security while the other wants fun. Small but regular gestures ease this tension.",
+    "question": "How do you like to show love?"
+  },
+  "moon-trine-venus": {
+    "meaning": "Love and tenderness move in the same rhythm; an effortless closeness.",
+    "question": "Do you trust relationships that come easily?"
+  },
+  "moon-opposition-venus": {
+    "meaning": "Love and need at opposite poles: there's attraction, but the response differs. Each of you has to say what you want.",
+    "question": "What's your love language: words, touch, or time?"
+  },
+  "moon-conjunction-mars": {
+    "meaning": "Feeling meets desire: intense, passionate, protective. Tension arrives quickly too; managing the heat is up to both of you.",
+    "question": "What makes you angry fastest, and what softens you?"
+  },
+  "moon-sextile-mars": {
+    "meaning": "Feeling and energy support each other; you look out for one another.",
+    "question": "Is there a moment you felt you were protecting someone?"
+  },
+  "moon-square-mars": {
+    "meaning": "Emotional reactions can be sudden and sharp; touchiness and anger may feel familiar. Pausing to breathe before reacting is what saves this bond.",
+    "question": "When you're angry, do you talk it out or go quiet?"
+  },
+  "moon-trine-mars": {
+    "meaning": "Feeling and action flow in harmony; when one of you feels something, the other acts. A protective, brave bond forms, and you have each other's backs.",
+    "question": "What does courage remind you of?"
+  },
+  "moon-opposition-mars": {
+    "meaning": "Feeling and desire at opposite poles: attraction and tension together; one of you may pull back as the other leans in. When you find the need under the anger together, the ups and downs turn into closeness.",
+    "question": "Do arguments bring you closer to someone or push you apart?"
+  },
+  "moon-conjunction-ascendant": {
+    "meaning": "Feeling meets outward self: one of you finds peace in the other's face, and closeness comes quickly and naturally. When feeling flows this easily, keep an eye on who's carrying what, so care doesn't turn into dependence.",
+    "question": "What was the first thing you saw in my face?"
+  },
+  "moon-sextile-ascendant": {
+    "meaning": "Feeling and outward self are in harmony; you feel at ease from the first moment.",
+    "question": "How can you tell when you're somewhere you feel comfortable?"
+  },
+  "moon-square-ascendant": {
+    "meaning": "One of you may easily take the other's manner personally; a small remark can turn into a big hurt. Saying what you need plainly and slowing your reactions turns this sensitivity into closeness.",
+    "question": "Has a first impression ever fooled you?"
+  },
+  "moon-trine-ascendant": {
+    "meaning": "Emotional harmony and a natural ease; tenderness comes easily.",
+    "question": "Is it easier for you to show tenderness or to receive it?"
+  },
+  "moon-opposition-ascendant": {
+    "meaning": "Feeling falls on the Descendant: one of you finds a home in the other, and closeness comes quickly and naturally. Together you need to watch the fine line between care and dependence.",
+    "question": "In a relationship, do you want to be the home or to find one?"
+  },
+  "mercury-conjunction-mercury": {
+    "meaning": "The same mental language: you finish each other's sentences. The conversation never ends; listening is something to add on purpose.",
+    "question": "Have you ever had someone you never wanted to stop talking to?"
+  },
+  "mercury-sextile-mercury": {
+    "meaning": "Your minds support each other; trading ideas is easy and fun.",
+    "question": "What's the last idea that really got you thinking?"
+  },
+  "mercury-square-mercury": {
+    "meaning": "Different ways of thinking clash; debates are frequent and agreement is hard. A different view is a gift.",
+    "question": "Do you enjoy a good debate, or do you avoid them?"
+  },
+  "mercury-trine-mercury": {
+    "meaning": "Mental harmony: you think at the same speed and understand each other.",
+    "question": "Is it easy for you to get along with someone who thinks quickly?"
+  },
+  "mercury-opposition-mercury": {
+    "meaning": "Opposite ways of thinking: one of you sees the details, the other the big picture. You complete each other, but first you drive each other a little crazy.",
+    "question": "Do you understand things as a whole, or piece by piece?"
+  },
+  "mercury-conjunction-venus": {
+    "meaning": "Mind meets love: talking is the flirting. In this bond, words are a caress.",
+    "question": "What's the loveliest thing anyone has ever said to you?"
+  },
+  "mercury-sextile-venus": {
+    "meaning": "Ideas and affection support each other; a kind, enjoyable conversation.",
+    "question": "Is there something someone said to you that you found really kind?"
+  },
+  "mercury-square-venus": {
+    "meaning": "Words and affection pull against each other; a compliment can be misread. Clarity comes before charm.",
+    "question": "Do compliments put you at ease or make you blush?"
+  },
+  "mercury-trine-venus": {
+    "meaning": "Love and conversation are in harmony; you fall for each other by talking.",
+    "question": "Do you get closer to someone by talking, or by sharing a silence?"
+  },
+  "mercury-opposition-venus": {
+    "meaning": "Ideas and love at opposite poles; one of you wants to explain, the other wants to feel. When you listen to both, conversation turns into love.",
+    "question": "What's harder for you: putting love into words or feeling it?"
+  },
+  "mercury-conjunction-mars": {
+    "meaning": "Mind meets action: quick, sharp, argumentative. Ideas throw sparks; you'll need to get the dose right.",
+    "question": "In an argument, do you want to win or to reach an understanding?"
+  },
+  "mercury-sextile-mars": {
+    "meaning": "Thought and energy support each other; plans quickly turn into action.",
+    "question": "Can you think of something we could plan and actually do together?"
+  },
+  "mercury-square-mars": {
+    "meaning": "Words and action clash; sharp language and a short fuse. The power of words needs the right dose.",
+    "question": "How much does a harsh word get to you?"
+  },
+  "mercury-trine-mars": {
+    "meaning": "Ideas and action are in harmony; you get each other moving.",
+    "question": "What's the last idea that actually got you off the couch?"
+  },
+  "mercury-opposition-mars": {
+    "meaning": "Ideas face off against action; defense and attack. Here, an opposing view is strategy.",
+    "question": "Does defending an idea tire you out or energize you?"
+  },
+  "mercury-conjunction-ascendant": {
+    "meaning": "Mind meets outward self: one of you figures the other out right away. Talking is easy, and getting to know each other happens quickly.",
+    "question": "Would you believe me if I said I figured you out from your first sentence?"
+  },
+  "mercury-sextile-ascendant": {
+    "meaning": "Ideas and outward self are in harmony; the first conversation flows easily.",
+    "question": "What do you pay attention to in a first conversation?"
+  },
+  "mercury-square-ascendant": {
+    "meaning": "Words and impressions don't match; being misunderstood may feel familiar in this bond. Asking about intent instead of assuming it clears everything up.",
+    "question": "How do you notice when you've been misunderstood?"
+  },
+  "mercury-trine-ascendant": {
+    "meaning": "Mental ease; talking to each other comes naturally.",
+    "question": "Do you think conversations that flow naturally are rare?"
+  },
+  "mercury-opposition-ascendant": {
+    "meaning": "Mind falls on the Descendant: conversation is the ground of this bond, and one of you opens up the other's thinking. Whoever holds on to their own view grows richer from this aspect.",
+    "question": "Do you trust people who change their minds?"
+  },
+  "venus-conjunction-venus": {
+    "meaning": "The same love language: you instantly get what you each love and how you love. Beauty and pleasure are your common ground.",
+    "question": "Have you ever met someone whose way of showing love felt a lot like yours?"
+  },
+  "venus-sextile-venus": {
+    "meaning": "Your love languages support each other; a graceful, enjoyable bond.",
+    "question": "How does it feel to share the things you love?"
+  },
+  "venus-square-venus": {
+    "meaning": "Your love languages differ; one of you wants gestures, the other wants words. Learning the difference is the relationship itself.",
+    "question": "What's your love language: words, gestures, or time?"
+  },
+  "venus-trine-venus": {
+    "meaning": "On the same wavelength in love: liking each other takes no effort.",
+    "question": "When attraction comes effortlessly, does it feel suspicious or lovely?"
+  },
+  "venus-opposition-venus": {
+    "meaning": "Opposite love languages: strong attraction, different expectations. Being curious about the difference helps.",
+    "question": "Could you get along with someone who shows love very differently than you do?"
+  },
+  "venus-conjunction-mars": {
+    "meaning": "Love meets desire: a classic attraction aspect. The chemistry is strong; keeping the flame alive is up to both of you.",
+    "question": "What matters more: chemistry or compatibility?"
+  },
+  "venus-sextile-mars": {
+    "meaning": "Love and passion support each other; a warm, balanced attraction.",
+    "question": "Do you believe in an attraction that's warm and calm at the same time?"
+  },
+  "venus-square-mars": {
+    "meaning": "Love and desire pull against each other: the attraction is strong but the timing differs. Learning to handle passion is the key to this relationship.",
+    "question": "What's harder for you: passion or patience?"
+  },
+  "venus-trine-mars": {
+    "meaning": "Love and desire in the same rhythm; tenderness and excitement together.",
+    "question": "Do you think excitement and peace can live in the same relationship?"
+  },
+  "venus-opposition-mars": {
+    "meaning": "Love and desire at opposite poles: push and pull live side by side. Once you learn this dance, the attraction lasts.",
+    "question": "Do you enjoy a little push and pull, or do you find it exhausting?"
+  },
+  "venus-conjunction-ascendant": {
+    "meaning": "Love meets outward self: one of you finds the other attractive at first glance. The classic love-at-first-sight aspect.",
+    "question": "Do you believe in attraction at first sight?"
+  },
+  "venus-sextile-ascendant": {
+    "meaning": "Love and outward self are in harmony; liking each other is easy.",
+    "question": "How do you know when you like someone?"
+  },
+  "venus-square-ascendant": {
+    "meaning": "Admiration and impression pull against each other; one of you expects the other to be different than they are. When you love what's real, expectation gives way to acceptance.",
+    "question": "Have you had a moment when what you expected clashed with what was real?"
+  },
+  "venus-trine-ascendant": {
+    "meaning": "A graceful, natural attraction; you find each other beautiful.",
+    "question": "What does beauty mean to you?"
+  },
+  "venus-opposition-ascendant": {
+    "meaning": "Love falls on the Descendant: a classic aspect of attraction and partnership, where being loved comes easily. Giving without losing yourself in love is this bond's lesson.",
+    "question": "Do you think people change when they fall in love?"
+  },
+  "mars-conjunction-mars": {
+    "meaning": "The same way of taking action: together you're quick and effective. Competition can throw sparks; being a team is a choice.",
+    "question": "Would we be rivals or a team?"
+  },
+  "mars-sextile-mars": {
+    "meaning": "Your energies support each other; it's easy to get moving together.",
+    "question": "How does the idea of working out together sound to you?"
+  },
+  "mars-square-mars": {
+    "meaning": "Your energies clash; restlessness and power struggles come up easily. When you aim the anger at a shared goal instead of at each other, this aspect gives you strength.",
+    "question": "When we argue, who do you think would give in first?"
+  },
+  "mars-trine-mars": {
+    "meaning": "Harmony in energy; you get each other moving without wearing each other out.",
+    "question": "Who lifts your energy, and who drains it?"
+  },
+  "mars-opposition-mars": {
+    "meaning": "Opposite ways of taking action: one of you moves quickly, the other strategically. You need to be partners, not rivals.",
+    "question": "Do you make decisions on the spot, or do you plan them out?"
+  },
+  "mars-conjunction-ascendant": {
+    "meaning": "Energy meets outward self: strong physical attraction, and meeting is bold and direct. One of you gets the other moving; if pace and who leads go unspoken, this energy can turn into friction.",
+    "question": "Do you make the first move, or do you wait?"
+  },
+  "mars-sextile-ascendant": {
+    "meaning": "Energy and outward self are in harmony; it's easy to get moving together.",
+    "question": "Have you ever met someone who got you moving?"
+  },
+  "mars-square-ascendant": {
+    "meaning": "Will and impression clash; one of you may read the other as aggressive. The energy doesn't need softening, it needs direction.",
+    "question": "Do you prefer directness or gentleness?"
+  },
+  "mars-trine-ascendant": {
+    "meaning": "An energetic, easy harmony; a natural courage.",
+    "question": "Do you find courage attractive?"
+  },
+  "mars-opposition-ascendant": {
+    "meaning": "Energy falls on the Descendant: a strong attraction and partnership, where one of you gets the other moving. When you're a team rather than rivals, this aspect becomes the relationship's engine.",
+    "question": "Is it easy for you to stay close to someone who pushes you into action?"
+  },
+  "ascendant-conjunction-ascendant": {
+    "meaning": "The same outward style: you recognize each other from the first moment. Similar faces, similar masks.",
+    "question": "Are you drawn to people like you, or to people who are different?"
+  },
+  "ascendant-sextile-ascendant": {
+    "meaning": "Your outward selves support each other; the first impression is good on both sides.",
+    "question": "How much do you think first impressions matter?"
+  },
+  "ascendant-square-ascendant": {
+    "meaning": "Your outward selves clash; first impressions can be misleading. Time and patience show what's true.",
+    "question": "Has anyone ever changed your first impression of them?"
+  },
+  "ascendant-trine-ascendant": {
+    "meaning": "A natural harmony; you walk into a room in the same rhythm.",
+    "question": "Is there someone you feel totally in sync with?"
+  },
+  "ascendant-opposition-ascendant": {
+    "meaning": "Your Ascendants sit on each other's Descendant: the classic partner axis, where each of you holds the other's missing piece. One naturally fills the space the other leaves; when you build the balance consciously, this aspect makes for one of the sturdiest partnerships.",
+    "question": "Finding your missing piece in someone: does that sound romantic or risky?"
+  },
+  "sun-conjunction-jupiter": {
+    "meaning": "Identity meets abundance: one of you helps the other grow, encourages them, widens their horizons. Together, life looks bigger; the one thing to watch is staying realistic.",
+    "question": "Who last helped you grow, and did you notice it at the time?"
+  },
+  "sun-sextile-jupiter": {
+    "meaning": "Optimism supports identity; the plans you make together grow and come true. Being side by side brings you both luck.",
+    "question": "Do you have a big dream? Will you tell me about it?"
+  },
+  "sun-square-jupiter": {
+    "meaning": "There's a risk of overpromising and exaggeration: one of you may see or present the other as bigger than they are. When you set the measure together, this aspect turns into growth.",
+    "question": "Have you ever regretted overdoing something?"
+  },
+  "sun-trine-jupiter": {
+    "meaning": "Luck and identity flow in harmony; around each other life gets easier and doors open. You're genuinely good for each other.",
+    "question": "Have you had stretches where you felt lucky? Who was with you then?"
+  },
+  "sun-opposition-jupiter": {
+    "meaning": "One of you may promise too much to please the other; praise and fun are plentiful, while details and limits slip away easily. When you balance generosity with a realistic measure, this aspect only does you good.",
+    "question": "If you had to sum up your philosophy of life in one sentence, what would it be?"
+  },
+  "sun-conjunction-saturn": {
+    "meaning": "Identity meets structure: one of you brings seriousness and staying power, the other brings light. A weighty but lasting bond; it takes patience, and it pays off.",
+    "question": "Do long relationships make you feel secure, or weighed down?"
+  },
+  "sun-sextile-saturn": {
+    "meaning": "Responsibility supports identity; a reliable, solid partnership forms. You can lean on each other on hard days too.",
+    "question": "What's the thing you think makes you reliable?"
+  },
+  "sun-square-saturn": {
+    "meaning": "One of you may feel restricted or judged by the other; this aspect carries a test. When respect is the ground of the relationship, the test turns into maturity.",
+    "question": "What do you do when you're criticized: defend yourself or listen?"
+  },
+  "sun-trine-saturn": {
+    "meaning": "Structure and identity are in harmony; you can lean on each other and build together. In this bond, trust is there from the start, not earned over time.",
+    "question": "How do you choose the people you can lean on?"
+  },
+  "sun-opposition-saturn": {
+    "meaning": "Identity faces authority; there can be a tug-of-war over power and responsibility. When you build an equal partnership, this aspect makes for one of the sturdiest bonds.",
+    "question": "What does equality in a relationship mean to you?"
+  },
+  "sun-conjunction-uranus": {
+    "meaning": "One of you shakes up the other's habits; side by side, you both become freer and less predictable. The excitement is built in; you choose the rhythm together.",
+    "question": "Do you prefer surprises or plans?"
+  },
+  "sun-sextile-uranus": {
+    "meaning": "Novelty supports identity; you free each other up and open each other to new ideas. Side by side, you're both bolder.",
+    "question": "What's the last thing that surprised you?"
+  },
+  "sun-square-uranus": {
+    "meaning": "There's a risk of sudden breaks and restlessness; freedom and commitment tug at each other. With room to breathe, this aspect keeps the bond alive; without it, the bond snaps.",
+    "question": "How important is personal space to you?"
+  },
+  "sun-trine-uranus": {
+    "meaning": "Originality and identity are in harmony; being different is your shared language. You don't box each other in; you let each other be free.",
+    "question": "Do you find being different attractive?"
+  },
+  "sun-opposition-uranus": {
+    "meaning": "Identity faces freedom: one of you may want closeness while the other wants space. When you talk through the distance, you don't have to break apart.",
+    "question": "Do you think commitment and freedom can exist at the same time?"
+  },
+  "sun-conjunction-neptune": {
+    "meaning": "Identity meets dreams: one of you idealizes the other, and a magical but hazy bond forms. When you choose to see what's real, the magic stays and the illusion goes.",
+    "question": "Have you ever caught yourself idealizing someone?"
+  },
+  "sun-sextile-neptune": {
+    "meaning": "Inspiration supports identity; art, compassion and intuition become your shared language. Around you two, people soften and open up.",
+    "question": "What's the last thing that inspired you?"
+  },
+  "sun-square-neptune": {
+    "meaning": "There's a risk of illusion and disappointment; one of you may see the other differently than they are. When clarity comes before compassion, this aspect does no harm.",
+    "question": "Which is easier for you: hearing the truth or telling it?"
+  },
+  "sun-trine-neptune": {
+    "meaning": "Intuition and identity are in harmony; you don't need to talk to be understood. There's a wordless language between you.",
+    "question": "Does being understood without saying anything feel comforting or unsettling?"
+  },
+  "sun-opposition-neptune": {
+    "meaning": "Identity faces the ideal; one of you may get lost in the other or see them as a savior. Whoever keeps their own boundaries grows richer from this bond.",
+    "question": "Have you ever lost yourself in a relationship?"
+  },
+  "sun-conjunction-pluto": {
+    "meaning": "Identity meets power: an intense, transformative bond that's hard to let go of. One of you may feel the urge to control the other; when you share the power, this relationship grows you both, and when you don't, it wears you down.",
+    "question": "Has a relationship ever changed you?"
+  },
+  "sun-sextile-pluto": {
+    "meaning": "Transformation supports identity; you make each other stronger and come through crises together. Depth doesn't scare you; it draws you in.",
+    "question": "When do you feel strongest?"
+  },
+  "sun-square-pluto": {
+    "meaning": "There's a risk of power struggles and control; one of you may want to run the other. Once you learn to share power, this aspect gives the relationship a rebirth.",
+    "question": "Does control feel like safety to you, or danger?"
+  },
+  "sun-trine-pluto": {
+    "meaning": "Power and identity are in sync; a deep, loyal, transformative bond. Around the two of you, people feel real.",
+    "question": "Does depth draw you in, or scare you off?"
+  },
+  "sun-opposition-pluto": {
+    "meaning": "Identity faces power; manipulation or transformation, both are possible. Honesty is the only safe path through this aspect.",
+    "question": "What do you most want someone to be honest about in a relationship?"
+  },
+  "moon-conjunction-jupiter": {
+    "meaning": "Feeling meets abundance: one of you opens up the other's heart. A warm, generous, safe bond; around you two, people can breathe.",
+    "question": "When did you last feel your most generous?"
+  },
+  "moon-sextile-jupiter": {
+    "meaning": "Optimism supports feeling; feeling good together comes easily. Even bad days get lighter in this bond.",
+    "question": "How can you tell someone is good for you?"
+  },
+  "moon-square-jupiter": {
+    "meaning": "There's a risk of emotional overstatement and too-high expectations; disappointment waits in the shadow of big hopes. Measured hope lasts longer and hurts less.",
+    "question": "Have you ever been hurt because you hoped for too much?"
+  },
+  "moon-trine-jupiter": {
+    "meaning": "Emotional security and abundance together; you're easy and at peace with each other. Feeling at home comes naturally.",
+    "question": "If we made a list of things that make you feel at ease, what would be first?"
+  },
+  "moon-opposition-jupiter": {
+    "meaning": "Wanting to be good for the other, one of you may inflate feelings and promises; hope is plentiful and proportion slips easily. When you choose to keep promises small and actually keep them, this aspect stays warm and supportive.",
+    "question": "What does peace of mind mean to you?"
+  },
+  "moon-conjunction-saturn": {
+    "meaning": "Feeling and structure overlap: a binding but heavy aspect. One of you may feel the other's needs as a duty, the other may feel care as a burden; patience and plain talk turn that weight into loyalty.",
+    "question": "What's harder for you: showing love, or saying what you need?"
+  },
+  "moon-sextile-saturn": {
+    "meaning": "Responsibility supports feeling; a dependable kind of care takes root. You can trust each other with an easy heart.",
+    "question": "What does dependable care remind you of?"
+  },
+  "moon-square-saturn": {
+    "meaning": "There's a risk of emotional distance and a feeling of coldness; one of you may feel judged by the other. When care is given on purpose and put into words, this aspect turns into deep trust.",
+    "question": "What do you do when someone treats you coldly?"
+  },
+  "moon-trine-saturn": {
+    "meaning": "Emotional stability together; you lean on each other and stand together through the storm. A quiet but unshakable warmth.",
+    "question": "Does stability put you at ease, or bore you?"
+  },
+  "moon-opposition-saturn": {
+    "meaning": "Feeling faces responsibility; one of you may see a need where the other sees a duty. When you talk your way to balance, need and duty become the same thing.",
+    "question": "Is it hard for you to say what you need?"
+  },
+  "moon-conjunction-uranus": {
+    "meaning": "One of you shakes up the other's emotional habits: an exciting bond that runs outside the usual order. To feel safe, you two need to build a new rhythm together.",
+    "question": "Do you want excitement, or peace?"
+  },
+  "moon-sextile-uranus": {
+    "meaning": "Originality supports feeling; you share an unusual emotional language. Getting bored isn't possible in this bond.",
+    "question": "Has anyone ever found your feelings unusual?"
+  },
+  "moon-square-uranus": {
+    "meaning": "There's a risk of emotional swings and sudden breaks; one of you may unsettle the other. With room to breathe this aspect brings aliveness; without it, insecurity.",
+    "question": "Do sudden changes excite you, or unsettle you?"
+  },
+  "moon-trine-uranus": {
+    "meaning": "Emotional freedom and ease together; you don't smother or crowd each other. Closeness gets to breathe here.",
+    "question": "How big a part of a relationship is not getting bored, for you?"
+  },
+  "moon-opposition-uranus": {
+    "meaning": "Feeling faces freedom; closeness and distance pull against each other. When you find the rhythm together, both become possible.",
+    "question": "Have you ever run from closeness?"
+  },
+  "moon-conjunction-neptune": {
+    "meaning": "Feeling meets dream: an intuitive, tender, boundless bond. Telling whose feelings belong to whom is this aspect's one task.",
+    "question": "Do you ever take on other people's feelings?"
+  },
+  "moon-sextile-neptune": {
+    "meaning": "Compassion supports feeling; a soul-level closeness forms. You don't need to talk to be understood.",
+    "question": "What does soul-level closeness mean to you?"
+  },
+  "moon-square-neptune": {
+    "meaning": "There's a risk of emotional illusion and escape; one of you may want to rescue the other. When the real need gets talked about, this aspect turns into healing.",
+    "question": "Have you ever tried to rescue someone?"
+  },
+  "moon-trine-neptune": {
+    "meaning": "Deep empathy together; being understood is effortless and compassion comes naturally. Around you two, people feel healed.",
+    "question": "When have you felt most understood?"
+  },
+  "moon-opposition-neptune": {
+    "meaning": "Feeling faces the ideal; it carries a risk of disappointment. When you set boundaries, compassion nourishes you instead of draining you.",
+    "question": "How do you bounce back from disappointment?"
+  },
+  "moon-conjunction-pluto": {
+    "meaning": "Feeling meets power: an intense, possessive, transformative bond. Jealousy and depth come together; both need to be owned.",
+    "question": "Is jealousy part of love for you, or its enemy?"
+  },
+  "moon-sextile-pluto": {
+    "meaning": "Transformation supports feeling; emotional depth is your shared language. Staying on the surface isn't an option.",
+    "question": "How do you know you've made a deep connection?"
+  },
+  "moon-square-pluto": {
+    "meaning": "There's a risk of emotional power struggles and obsession; the urge to control can smother the bond. Once you learn to let go, this aspect gives one of the deepest loves there is.",
+    "question": "Is letting go hard for you?"
+  },
+  "moon-trine-pluto": {
+    "meaning": "A deep, loyal emotional bond; in a crisis, you're in it together. You can tell each other anything.",
+    "question": "Who do you want by your side when things get hard?"
+  },
+  "moon-opposition-pluto": {
+    "meaning": "Feeling faces power; it carries a risk of manipulation. When you protect your emotional independence, this aspect becomes transformative, not destructive.",
+    "question": "What does emotional freedom mean to you?"
+  },
+  "mercury-conjunction-jupiter": {
+    "meaning": "Mind meets wisdom: one of you expands the other's ideas and widens their horizons. Long, wide-ranging, enjoyable conversations are the heart of this bond.",
+    "question": "What was your longest conversation about?"
+  },
+  "mercury-sextile-jupiter": {
+    "meaning": "Learning and optimism together; ideas grow, plans expand. You teach each other things.",
+    "question": "Is there something you could teach me?"
+  },
+  "mercury-square-jupiter": {
+    "meaning": "There's a risk of overpromising and inflated ideas; details can slip through. When you stay concrete, big ideas become real.",
+    "question": "What matters more to you: the details, or the big picture?"
+  },
+  "mercury-trine-jupiter": {
+    "meaning": "Mental breadth together; teaching and learning come easily. Your conversations open new horizons for both of you.",
+    "question": "What's your favorite thing to learn about?"
+  },
+  "mercury-opposition-jupiter": {
+    "meaning": "Idea faces belief; you each carry different truths. When you get curious about the opposing view, debate turns into wisdom.",
+    "question": "Has there been a moment when your beliefs were shaken?"
+  },
+  "mercury-conjunction-saturn": {
+    "meaning": "Mind meets structure: a serious, measured way of talking where words are kept. One of you may weigh things before speaking around the other; opened with respect this distance becomes depth, left closed it becomes coldness.",
+    "question": "Do you trust people who don't talk much?"
+  },
+  "mercury-sextile-saturn": {
+    "meaning": "Disciplined thinking together; plans are built on solid ground. Thinking things through together is productive and calm.",
+    "question": "Do you like making plans?"
+  },
+  "mercury-square-saturn": {
+    "meaning": "There's a risk of holding back and feeling judged; words can feel heavy. Whoever finds their own voice comes out of this aspect more mature.",
+    "question": "Have you ever held back from speaking up?"
+  },
+  "mercury-trine-saturn": {
+    "meaning": "A structured mental harmony; words you can trust, plans that get kept. Even serious topics are easy to talk about.",
+    "question": "How much does it matter to you that people keep their word?"
+  },
+  "mercury-opposition-saturn": {
+    "meaning": "Idea faces authority; there's a theme of criticism. Listened to with respect, criticism becomes a lesson, not a wound.",
+    "question": "How do you take criticism?"
+  },
+  "mercury-conjunction-uranus": {
+    "meaning": "Mind meets originality: electric, brilliant, sudden ideas. The conversation never gets dull; one of you keeps surprising the other.",
+    "question": "What's the last idea that surprised you?"
+  },
+  "mercury-sextile-uranus": {
+    "meaning": "Innovative thinking together; ideas fly. Brainstorming together is a joy.",
+    "question": "When you come up with a new idea, who's the first person you tell?"
+  },
+  "mercury-square-uranus": {
+    "meaning": "There's a risk of scattered, edgy conversations; things can cut off suddenly. When you focus, the sparks turn into ideas that last.",
+    "question": "Do you like conversations that jump all over the place?"
+  },
+  "mercury-trine-uranus": {
+    "meaning": "Mental freedom and brilliance together; you stimulate each other and help each other grow. Ordinary small talk isn't possible in this bond.",
+    "question": "What stimulates your mind the most?"
+  },
+  "mercury-opposition-uranus": {
+    "meaning": "Idea faces freedom; a stubborn streak of originality can clash. When you embrace the different idea, debate turns into discovery.",
+    "question": "Do different opinions excite you?"
+  },
+  "mercury-conjunction-neptune": {
+    "meaning": "Mind meets dream: a poetic, intuitive way of talking. There's a risk of misunderstanding; getting clear doesn't break the spell.",
+    "question": "Do you like poetry?"
+  },
+  "mercury-sextile-neptune": {
+    "meaning": "Inspired thinking together; creative ideas are born. Daydreaming is your shared language.",
+    "question": "When do you feel most creative?"
+  },
+  "mercury-square-neptune": {
+    "meaning": "There's a risk of foggy communication and illusion; what's said and what's heard may differ. Clearing things up in writing is this aspect's remedy.",
+    "question": "What's easier for you: writing, or talking?"
+  },
+  "mercury-trine-neptune": {
+    "meaning": "Intuitive understanding together; words become unnecessary. You sense each other before anything is said.",
+    "question": "Are you comfortable understanding each other without words?"
+  },
+  "mercury-opposition-neptune": {
+    "meaning": "Idea faces dream; it carries a risk of being misled. Double-checking the facts protects this bond.",
+    "question": "How do you know when something is true?"
+  },
+  "mercury-conjunction-pluto": {
+    "meaning": "Mind meets power: deep, piercing, transformative conversations happen and secrets come out. One of you may tend to steer the conversation or hold something back; openness turns that depth into trust.",
+    "question": "How do you choose the people you'd tell a secret to?"
+  },
+  "mercury-sextile-pluto": {
+    "meaning": "An investigative mind together; deep topics come naturally. Surface-level chat bores you both.",
+    "question": "Is it easy for you to get into deep topics?"
+  },
+  "mercury-square-pluto": {
+    "meaning": "There's a risk of verbal power struggles and suspicion; a sense of manipulation can creep in. When you speak openly, depth turns into trust.",
+    "question": "Have you ever felt manipulated in a conversation?"
+  },
+  "mercury-trine-pluto": {
+    "meaning": "Psychological insight together; you read each other. Even what goes unsaid gets talked about between you.",
+    "question": "Does being read by someone feel comforting to you, or unsettling?"
+  },
+  "mercury-opposition-pluto": {
+    "meaning": "Idea faces power; a battle of persuasion can play out. Whoever speaks the truth comes out of this aspect stronger.",
+    "question": "What matters more: the truth, or peace?"
+  },
+  "venus-conjunction-jupiter": {
+    "meaning": "Love meets abundance: a generous, joyful, optimistic bond. Going overboard is the only risk; sharing the fun is the biggest reward.",
+    "question": "What would be the most fun thing for us to do together?"
+  },
+  "venus-sextile-jupiter": {
+    "meaning": "Love and luck together; being together feels good and easy. In this bond, small moments feel big.",
+    "question": "How do you hold on to the moments that feel good?"
+  },
+  "venus-square-jupiter": {
+    "meaning": "One of you shows love with big gestures, the other in measured ways; the gap in expectations can turn into disappointment. When you find the right measure together, generosity turns into trust.",
+    "question": "Do you show love with big gestures, or small details?"
+  },
+  "venus-trine-jupiter": {
+    "meaning": "Love and abundance in sync; you spoil each other and make life more beautiful together. A giving, generous bond takes shape.",
+    "question": "How do you feel about being spoiled?"
+  },
+  "venus-opposition-jupiter": {
+    "meaning": "Love here is generous and fun, but expectations grow easily; one of you may hope for more from the other than is really there. When you bring expectations down to their true size, generosity brings abundance, not disappointment.",
+    "question": "What does a good time mean to you?"
+  },
+  "venus-conjunction-saturn": {
+    "meaning": "Love and limits overlap: a binding aspect that can come across as cold. One of you measures out love, the other may feel it isn't returned; when love is shown on purpose and put into words, that weight turns into staying power.",
+    "question": "How do you know you're loved: through words, or actions?"
+  },
+  "venus-sextile-saturn": {
+    "meaning": "Reliability in love together; a long-lasting bond takes shape. In this relationship, promises really are kept.",
+    "question": "What do you think keeps a long relationship going?"
+  },
+  "venus-square-saturn": {
+    "meaning": "There's a risk of distance and fear of rejection in love; one of you may find the other cold. When affection is given on purpose, seriousness turns into security.",
+    "question": "Is distance a form of protection for you, or coldness?"
+  },
+  "venus-trine-saturn": {
+    "meaning": "Solid love together; you trust each other and grow deeper over time. An unshowy but real love.",
+    "question": "Does trusting people come easily to you?"
+  },
+  "venus-opposition-saturn": {
+    "meaning": "Love faces responsibility; a sense of burden can come up. When you talk through the balance, responsibility becomes part of love, not its enemy.",
+    "question": "Do you think responsibility and love are the same thing?"
+  },
+  "venus-conjunction-uranus": {
+    "meaning": "One of you shakes up the other's patterns in love: a sudden, thrilling, unusual attraction. Starting is easy; keeping it going is an art of its own.",
+    "question": "Do you believe in relationships that start out of nowhere?"
+  },
+  "venus-sextile-uranus": {
+    "meaning": "Originality in love together; a friendly love that sets you free is born. No mold can hold you two.",
+    "question": "Do you think friendship and love start from the same place?"
+  },
+  "venus-square-uranus": {
+    "meaning": "There's a risk of sudden breaks and fear of commitment; stability may be hard to come by. With room to breathe, this aspect keeps the excitement alive.",
+    "question": "Have you ever been scared of commitment?"
+  },
+  "venus-trine-uranus": {
+    "meaning": "Freedom and excitement in love together; you don't get bored or box each other in. New things get discovered together.",
+    "question": "Is a relationship that never gets boring possible?"
+  },
+  "venus-opposition-uranus": {
+    "meaning": "Love faces freedom; closeness and distance pull against each other. When you find the rhythm together, both get to stay.",
+    "question": "How much closeness is too much for you?"
+  },
+  "venus-conjunction-neptune": {
+    "meaning": "Love meets dream: a romantic, enchanted, idealized bond. Seeing what's real doesn't break the spell; it makes it last.",
+    "question": "Do you think romance clashes with reality?"
+  },
+  "venus-sextile-neptune": {
+    "meaning": "Tenderness and art in love together; there's a soulful attraction. You make each other more beautiful, in your eyes and in your words.",
+    "question": "Does art move you?"
+  },
+  "venus-square-neptune": {
+    "meaning": "There's a risk of illusion and disappointment; one of you may idealize the other. Whoever loves what they actually see comes out of this aspect richer.",
+    "question": "Is it hard to love someone just as they are?"
+  },
+  "venus-trine-neptune": {
+    "meaning": "Intuition and tenderness in love together; a graceful, gentle harmony takes shape. Love doesn't wear you out in this bond; it heals.",
+    "question": "What do you find graceful?"
+  },
+  "venus-opposition-neptune": {
+    "meaning": "One of you may see the other as more beautiful than they are, and the other may feel pressure to live up to that ideal; swinging between dream and reality feels familiar. When you see each other as you really are, love gets its feet on the ground.",
+    "question": "What's more beautiful: reality, or the dream?"
+  },
+  "venus-conjunction-pluto": {
+    "meaning": "Love meets power: a magnetic, intense, transformative attraction. Jealousy is the shadow, depth is the gift.",
+    "question": "Does an intense attraction scare you?"
+  },
+  "venus-sextile-pluto": {
+    "meaning": "Depth in love together; a transformative bond takes shape. Staying on the surface isn't an option.",
+    "question": "Has a love ever changed you?"
+  },
+  "venus-square-pluto": {
+    "meaning": "There's a risk of power struggles and obsession in love; the urge to control can smother the bond. Once you learn to let go, passion turns into trust.",
+    "question": "How do you see the difference between possessing someone and loving them?"
+  },
+  "venus-trine-pluto": {
+    "meaning": "A deep, loyal love; passion and trust stand side by side. You change and grow together.",
+    "question": "Can passion and trust exist in the same relationship?"
+  },
+  "venus-opposition-pluto": {
+    "meaning": "Love and power on opposite poles: the pull is intense, and fear of loss and push-and-pull feel familiar. When you try to understand each other rather than hold on to each other, this aspect transforms instead of consuming.",
+    "question": "Do you think the balance of power in love should be talked about?"
+  },
+  "mars-conjunction-jupiter": {
+    "meaning": "Action meets abundance: a bold, enterprising, optimistic bond. Too much risk is the only shadow; starting things together is the biggest thrill.",
+    "question": "Do you like taking risks?"
+  },
+  "mars-sextile-jupiter": {
+    "meaning": "Luck in your energy together; joint ventures come easily. Side by side, you're both braver.",
+    "question": "If we started something together, what would it be?"
+  },
+  "mars-square-jupiter": {
+    "meaning": "There's a risk of overreaching ambition and carelessness; you can take on too much and burn out. Once you find the right measure, courage pays off.",
+    "question": "Have you ever worn yourself out by taking on too much?"
+  },
+  "mars-trine-jupiter": {
+    "meaning": "Energy and belief in sync; you share a natural courage. Taking action comes easily when you're together.",
+    "question": "If we did something brave together, what's the first thing that comes to mind?"
+  },
+  "mars-opposition-jupiter": {
+    "meaning": "Action faces belief; different goals can clash. Whoever chooses their own path grows stronger through this aspect.",
+    "question": "What do you do when your goals conflict?"
+  },
+  "mars-conjunction-saturn": {
+    "meaning": "Action and brakes overlap: one of you wants to move while the other holds back. Friction and a feeling of being blocked are familiar; when you set the pace together, that weight turns into endurance.",
+    "question": "When you feel held back, what do you do: push harder, or stop?"
+  },
+  "mars-sextile-saturn": {
+    "meaning": "Disciplined action together; a long-haul partnership takes shape. Building things together comes naturally.",
+    "question": "Do long-term projects excite you?"
+  },
+  "mars-square-saturn": {
+    "meaning": "There's a risk of frustration and anger; one of you may feel the other is holding them back. When you move with steady care, the brakes turn into strength.",
+    "question": "What do you do when you feel held back?"
+  },
+  "mars-trine-saturn": {
+    "meaning": "Controlled, effective action together; you share a constructive strength. You know when to stop and when to push forward.",
+    "question": "What matters more: doing something well, or doing it quickly?"
+  },
+  "mars-opposition-saturn": {
+    "meaning": "Action faces rules; clashes over authority can happen. When you set the limits together, no one feels held back.",
+    "question": "Do rules put you at ease, or box you in?"
+  },
+  "mars-conjunction-uranus": {
+    "meaning": "One of you shakes up the other's way of acting: a sudden, bold, unconventional energy. Rushed decisions are the shadow; exploring together is the reward.",
+    "question": "Do you make snap decisions?"
+  },
+  "mars-sextile-uranus": {
+    "meaning": "Innovative action together; you set bold changes in motion. Opening new paths is your shared language.",
+    "question": "Does change excite you?"
+  },
+  "mars-square-uranus": {
+    "meaning": "There's a risk of sudden anger and restlessness; rebellious energy can spin out of control. When you take a breath and then act, the force becomes constructive.",
+    "question": "Where does your restlessness take you?"
+  },
+  "mars-trine-uranus": {
+    "meaning": "Original, bold action together; you share an inventive drive. Ordinary goals can't hold you two.",
+    "question": "Does doing things in new ways come naturally to you?"
+  },
+  "mars-opposition-uranus": {
+    "meaning": "Action faces freedom; sudden breaks can happen. When the energy is channeled, rebellion turns into innovation.",
+    "question": "How do you handle breakups and sudden endings?"
+  },
+  "mars-conjunction-neptune": {
+    "meaning": "Action meets dream: an intuitive, ebb-and-flow, inspired bond. Scatteredness is the shadow; creativity is the reward.",
+    "question": "Do you act on inspiration, or on a plan?"
+  },
+  "mars-sextile-neptune": {
+    "meaning": "Intuitive action together; art and healing are your shared ground. When inspiration strikes, you flow with it together.",
+    "question": "What does healing mean to you?"
+  },
+  "mars-square-neptune": {
+    "meaning": "There's a risk of uncertainty and escape; motivation can come and go. When you pick one concrete step, the energy doesn't go to waste.",
+    "question": "What do you do when your motivation drops?"
+  },
+  "mars-trine-neptune": {
+    "meaning": "Inspired, compassionate action together; you share a creative drive. The way you move is graceful and right on target.",
+    "question": "What sparks your creativity the most?"
+  },
+  "mars-opposition-neptune": {
+    "meaning": "Action faces the ideal; there's a risk of fighting for an illusion. When a real goal is chosen, this aspect is inspiring.",
+    "question": "What's the difference between a real goal and a daydream?"
+  },
+  "mars-conjunction-pluto": {
+    "meaning": "Action meets power: an intense, determined, transformative bond. The hunger for power is the shadow; determination is the reward.",
+    "question": "Are you drawn to power?"
+  },
+  "mars-sextile-pluto": {
+    "meaning": "Deep, determined action together; you're strong in a crisis. Hard times don't pull you apart; they bring you together.",
+    "question": "What are you like in a crisis?"
+  },
+  "mars-square-pluto": {
+    "meaning": "There's a risk of power struggles and anger; the urge to control can create conflict. When power is used constructively, this aspect transforms rather than destroys.",
+    "question": "How do you handle your anger?"
+  },
+  "mars-trine-pluto": {
+    "meaning": "Strong, strategic action together; you share a transformative drive. You go after a goal quietly and at full strength.",
+    "question": "Are you more strategic, or more instinctive?"
+  },
+  "mars-opposition-pluto": {
+    "meaning": "Action faces power; war or alliance, both are possible. When you share power, you become allies, not rivals.",
+    "question": "Should we be rivals, or allies?"
+  },
+  "jupiter-conjunction-ascendant": {
+    "meaning": "Abundance meets presence: one of you brings the other optimism and room to grow. A generous, warm first meeting; growth is your shared language.",
+    "question": "Are you drawn to optimistic people?"
+  },
+  "jupiter-sextile-ascendant": {
+    "meaning": "Optimism supports presence; the first impression is warm and open. Around you two, people open up and relax.",
+    "question": "How much does a warm first impression matter to you?"
+  },
+  "jupiter-square-ascendant": {
+    "meaning": "There's a risk of inflated expectations; one of you may build the other up in ways that aren't realistic. Once you find the right measure, optimism turns into trust.",
+    "question": "How realistic do you think your expectations are?"
+  },
+  "jupiter-trine-ascendant": {
+    "meaning": "A natural optimism and abundance together; doors open and roads get shorter. Luck walks alongside this bond.",
+    "question": "How do you recognize the people who open doors for you?"
+  },
+  "jupiter-opposition-ascendant": {
+    "meaning": "Abundance falls on the Descendant: the relationship helps you grow, and one of you widens the other's horizons. Generosity runs strong; finding the right measure is something to build together.",
+    "question": "Has a relationship ever helped you grow?"
+  },
+  "saturn-conjunction-ascendant": {
+    "meaning": "Structure meets presence: a serious, dependable, somewhat guarded first meeting. It warms up over time, and once it does, it lasts.",
+    "question": "Do you give people time to warm up?"
+  },
+  "saturn-sextile-ascendant": {
+    "meaning": "Responsibility supports presence; you leave a dependable first impression. Serious topics are easy to talk about.",
+    "question": "What's the first thing that makes someone seem trustworthy to you?"
+  },
+  "saturn-square-ascendant": {
+    "meaning": "There's a risk of feeling restricted and judged; coldness may be perceived. When respect is the foundation, seriousness turns into security.",
+    "question": "What do you do when you feel judged?"
+  },
+  "saturn-trine-ascendant": {
+    "meaning": "A solid harmony together; a mature, enduring bond takes shape. You stand together through the storm and don't let go of each other.",
+    "question": "What does maturity mean to you?"
+  },
+  "saturn-opposition-ascendant": {
+    "meaning": "Structure falls on the Descendant: a serious, lasting partnership that carries responsibility. One of you may tend to correct or manage the other; when equality is talked about, this slow-to-warm bond becomes unshakable.",
+    "question": "Do you value things that take their time to arrive?"
+  },
+  "uranus-conjunction-ascendant": {
+    "meaning": "Freedom meets presence: an unusual, exciting, sudden first meeting. It won't be boring; finding your rhythm takes time.",
+    "question": "Have you ever met someone in an unusual way?"
+  },
+  "uranus-sextile-ascendant": {
+    "meaning": "Originality supports presence; you leave a different, intriguing first impression. You don't box each other into any mold.",
+    "question": "Have you ever met someone who made you feel different?"
+  },
+  "uranus-square-ascendant": {
+    "meaning": "There's a risk of a restless, unpredictable bond; breaks can happen. Once a rhythm is found, originality becomes something you can rely on.",
+    "question": "Do unpredictable people excite you?"
+  },
+  "uranus-trine-ascendant": {
+    "meaning": "A natural originality together; newness feels easy and being different is your shared language. Being ordinary isn't an option.",
+    "question": "How do you react to something new?"
+  },
+  "uranus-opposition-ascendant": {
+    "meaning": "Freedom falls on the Descendant: an unusual, eye-opening partnership; one of you changes the other's life. When you set the balance between closeness and space together, the bond stays alive.",
+    "question": "Are you open to a relationship that changes you?"
+  },
+  "neptune-conjunction-ascendant": {
+    "meaning": "Dream meets presence: an enchanted, mysterious, idealized first meeting. When clarity is needed, the spell doesn't break; it becomes real.",
+    "question": "Are you drawn to mysterious people?"
+  },
+  "neptune-sextile-ascendant": {
+    "meaning": "Intuition supports presence; a kind, gentle first impression forms. Around you two, people feel at ease.",
+    "question": "Do you notice kindness at first glance?"
+  },
+  "neptune-square-ascendant": {
+    "meaning": "There's a risk of misperception and escape; illusions can form. Once things are made clear, intuition turns into strength.",
+    "question": "How do you tell illusion from reality?"
+  },
+  "neptune-trine-ascendant": {
+    "meaning": "A natural intuition and grace together; an artistic harmony takes shape. Most of the time you understand each other without saying a word.",
+    "question": "Do you have an artistic soul?"
+  },
+  "neptune-opposition-ascendant": {
+    "meaning": "Dream falls on the Descendant: a romantic, intuitive, idealized partnership. When you see what's real, the spell doesn't break; it lasts.",
+    "question": "What do you think changes when you start seeing someone as they really are?"
+  },
+  "pluto-conjunction-ascendant": {
+    "meaning": "Power meets presence: an intense, transformative, unforgettable first meeting. Control is the shadow; depth is the reward.",
+    "question": "Is there a first meeting you've never forgotten?"
+  },
+  "pluto-sextile-ascendant": {
+    "meaning": "Power supports presence; a striking first impression. You notice each other right away.",
+    "question": "What's the first thing that impresses you about someone?"
+  },
+  "pluto-square-ascendant": {
+    "meaning": "There's a risk of power struggles and intensity; it can feel intimidating. When the power is softened, its impact grows.",
+    "question": "Does intensity pull you in, or push you away?"
+  },
+  "pluto-trine-ascendant": {
+    "meaning": "A natural power and depth together; a transformative bond takes shape. Around you two, people change without even noticing.",
+    "question": "What does transformation mean to you?"
+  },
+  "pluto-opposition-ascendant": {
+    "meaning": "Power falls on the Descendant: a deep, intense, transformative partnership. When you share power, the relationship becomes a rebirth, not a battle.",
+    "question": "How do you think power should be shared in a relationship?"
+  }
+}

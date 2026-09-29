@@ -10,7 +10,7 @@
 import {
   BigThreeSchema,
   compatibility,
-  describeAspectTr,
+  describeAspect,
   PublicChartSchema,
   type Compatibility,
   type PublicChart,
@@ -67,6 +67,6 @@ export function candidateOf(myChart: PublicChart, row: DiscoverRow): Candidate {
   return {
     row,
     match,
-    why: match.strongest ? describeAspectTr(match.strongest) : null,
+    why: match.strongest ? describeAspect(match.strongest) : null,
   };
 }
