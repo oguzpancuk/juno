@@ -1,6 +1,7 @@
 import type { Planet } from './bodies';
 import type { Aspect, Body, InterAspect } from './compatibility';
 import type { Sign } from './signs';
+import type { Words } from './words';
 
 /** Turkish display names. UI strings live with the data they name. */
 export const PLANET_TR: Readonly<Record<Planet, string>> = {
@@ -219,4 +220,17 @@ export const SIGN_GLYPH: Readonly<Record<Sign, string>> = {
   capricorn: '♑\uFE0E',
   aquarius: '♒\uFE0E',
   pisces: '♓\uFE0E',
+};
+
+export const TR_WORDS: Words = {
+  planet: PLANET_TR,
+  sign: SIGN_TR,
+  body: BODY_TR,
+  aspect: ASPECT_TR,
+  placement: (body, sign, house) =>
+    house === null
+      ? `${BODY_TR[body]} ${SIGN_TR_LOCATIVE[sign]}`
+      : `${BODY_TR[body]} ${SIGN_TR_LOCATIVE[sign]} · ${house}. ev`,
+  describeAspect: describeAspectTr,
+  natalAspectTitle: natalAspectTitleTr,
 };

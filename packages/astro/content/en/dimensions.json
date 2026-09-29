@@ -1,0 +1,32 @@
+{
+  "emotional": {
+    "name": "Closeness",
+    "low": "Slow to warm",
+    "mid": "Warmth is there",
+    "high": "Easy closeness"
+  },
+  "chemistry": {
+    "name": "Attraction",
+    "low": "Slow burn",
+    "mid": "There's a pull",
+    "high": "Magnetic"
+  },
+  "communication": {
+    "name": "Communication",
+    "low": "Different languages",
+    "mid": "Easy to follow",
+    "high": "Same wavelength"
+  },
+  "stability": {
+    "name": "Stability",
+    "low": "Free-form",
+    "mid": "Ground to stand on",
+    "high": "Solid"
+  },
+  "growth": {
+    "name": "Growth",
+    "low": "Calm waters",
+    "mid": "Stirring",
+    "high": "Transformative"
+  }
+}
