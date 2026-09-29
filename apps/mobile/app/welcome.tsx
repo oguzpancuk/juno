@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { CosmicGround } from '@/components/CosmicGround';
 import {
   Glow,
@@ -9,7 +9,11 @@ import {
   LinkText,
   OrbitMark,
 } from '@/components/ui';
-import { AppleButton, GoogleButton } from '@/components/ProviderButtons';
+import {
+  AppleButton,
+  AppleWebButton,
+  GoogleButton,
+} from '@/components/ProviderButtons';
 import type { Availability, Provider } from '@/lib/oauth';
 import { providerAvailability, signInWithProvider } from '@/lib/providers';
 import { LegalLink } from '@/components/LegalText';
@@ -32,10 +36,12 @@ import { color, space, type } from '@/theme/tokens';
  * taps and nothing happens.
  *
  * A provider that cannot work on this build is not drawn at all: Apple
- * where the device does not offer it, Google where no client ID was
- * compiled in (`lib/oauth.ts` `availability`). Until that answer arrives —
- * one async call on mount — neither is shown, so no button appears and
- * then vanishes under a thumb already on its way down.
+ * where the device does not offer it or, on the web, where no Services ID
+ * was compiled in (the web draws its own Apple button, Apple's system one
+ * being iOS only), Google where no client ID was compiled in
+ * (`lib/oauth.ts` `availability`). Until that answer arrives — one async
+ * call on mount — neither is shown, so no button appears and then
+ * vanishes under a thumb already on its way down.
  */
 /** The mark, and the light behind it — centred on it, so offset by half the difference. */
 const MARK = 132;
@@ -48,6 +54,20 @@ export default function WelcomeScreen() {
   });
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // On the web a provider button leaves the page busy, because the tab is
+  // on its way to the provider. Back from Apple's or Google's page, a
+  // browser that restores this page from its back-forward cache (Safari
+  // on iOS does readily) restores that state too, and both buttons would
+  // sit dimmed on "Bağlanıyor…" until a reload.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setBusy(null);
+    };
+    globalThis.addEventListener('pageshow', restored);
+    return () => globalThis.removeEventListener('pageshow', restored);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +121,15 @@ export default function WelcomeScreen() {
             router.push({ pathname: '/sign-in', params: { mode: 'in' } })
           }
         />
-        {providers.apple ? (
+        {providers.apple && Platform.OS === 'web' ? (
+          <AppleWebButton
+            label={
+              busy === 'apple' ? t.welcome.connecting : t.welcome.withApple
+            }
+            disabled={busy !== null}
+            onPress={() => void startProvider('apple')}
+          />
+        ) : providers.apple ? (
           <AppleButton
             busy={busy === 'apple'}
             disabled={busy !== null}

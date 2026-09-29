@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { googleClientIdSchema } from './oauth';
+import { appleServicesIdSchema, googleClientIdSchema } from './oauth';
 
 /**
  * Build-time public config. Expo inlines EXPO_PUBLIC_* variables; they are
@@ -11,16 +11,22 @@ import { googleClientIdSchema } from './oauth';
  * `availability`). What is not optional is their shape — a client ID with
  * a typo fails silently inside Google's own sheet, and a client SECRET
  * pasted into either of these would ship a credential to every phone, so
- * both are held to the exact form Google Cloud prints.
+ * both are held to the exact form Google Cloud prints. The Apple Services
+ * ID is the same kind of value for the web's Apple button, held the same
+ * way (`lib/oauth.ts` `appleServicesIdSchema`).
  */
 
 /** An unset EXPO_PUBLIC_* is an empty string as often as it is undefined. */
+const unsetIsUndefined = (value: unknown) =>
+  value === '' || value === undefined ? undefined : value;
+
 const optionalClientId = z
-  .preprocess(
-    (value) => (value === '' || value === undefined ? undefined : value),
-    googleClientIdSchema.optional(),
-  )
+  .preprocess(unsetIsUndefined, googleClientIdSchema.optional())
   .describe('Google OAuth client ID');
+
+const optionalServicesId = z
+  .preprocess(unsetIsUndefined, appleServicesIdSchema.optional())
+  .describe('Apple Services ID');
 
 const EnvSchema = z.object({
   supabaseUrl: z.string().url(),
@@ -34,6 +40,12 @@ const EnvSchema = z.object({
   googleWebClientId: optionalClientId,
   /** The iOS client. `app.config.ts` turns it into the URL scheme too. */
   googleIosClientId: optionalClientId,
+  /**
+   * The Services ID of Sign in with Apple's web route. Read by the web
+   * client only, to decide whether it draws the Apple button; Supabase's
+   * Apple provider carries the same value as its first client ID.
+   */
+  appleServicesId: optionalServicesId,
 });
 
 export const env = EnvSchema.parse({
@@ -41,4 +53,5 @@ export const env = EnvSchema.parse({
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  appleServicesId: process.env.EXPO_PUBLIC_APPLE_SERVICES_ID,
 });

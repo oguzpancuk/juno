@@ -262,6 +262,12 @@ giriyorsun.
 App Store Review 4.8: üçüncü taraf girişi (Google) sunuyorsan Sign in with
 Apple da sunmak zorundasın. TestFlight'a çıkmadan önce bitmeli.
 
+İki ayrı yol var: telefonda Apple'ın kendi sayfası (3a), web sitesinde
+Apple'ın web sayfası (3b). Telefonunki tek başına çalışır; web'inki onun
+üstüne bir Services ID ve bir anahtar ister.
+
+### 3a. iPhone
+
 1. **Apple Developer Program üyeliği** (yıllık $99) — yoksa önce o.
 2. [developer.apple.com](https://developer.apple.com) → **Certificates,
    Identifiers & Profiles → Identifiers** → `com.oguzpancuk.juno` App ID'sini
@@ -269,10 +275,10 @@ Apple da sunmak zorundasın. TestFlight'a çıkmadan önce bitmeli.
    (Entitlement uygulama tarafında zaten var: `app.config.ts`
    `usesAppleSignIn`.)
 3. Supabase panosu → **Authentication → Sign In / Providers → Apple**: aç.
-   - _Authorized Client IDs_: `com.oguzpancuk.juno`
+   - _Client IDs_: `com.oguzpancuk.juno`
    - Telefondaki yerel giriş için **Services ID, Team ID ve key dosyasına
-     gerek yok**; onlar yalnız tarayıcı akışı için gerekir ve bu üründe
-     tarayıcı akışı Apple için kapalı (`lib/oauth.ts`).
+     gerek yok**; onlar yalnız web için gerekir (3b). 3b'yi yaparsan bu
+     alan değişir: Services ID başa gelir.
 4. Dev build'i yeniden al — entitlement derlemeye giriyor.
 5. Simülatörde denemek için simülatörün **Settings → Sign in to your
    iPhone** adımından bir Apple hesabına giriş yapmış olması gerekiyor;
@@ -286,6 +292,100 @@ Gizlenirse Supabase'e `…@privaterelay.appleid.com` biçiminde bir adres
 gelir; bu adres hiçbir e-posta hesabıyla aynı olamayacağı için her zaman
 yeni bir hesap açılır ve doğum bilgileri ekranı bunu söyler (aşağıda 5).
 
+### 3b. Web sitesi
+
+<!-- Added 2026-09-29, owner: "webde apple girisi yok". -->
+
+Web'de Apple'ın telefon düğmesi yok; site, tarayıcıyı Supabase üzerinden
+Apple'ın giriş sayfasına gönderir. Bunun için Apple'da web'e ait ayrı bir
+kimlik (Services ID) ve Supabase'in Apple'a kendini tanıtacağı bir anahtar
+gerekiyor. 3a bitmiş olmalı.
+
+**Yerelde denenemez.** Apple dönüş adresi olarak yalnızca gerçek bir alan
+adında `https://` kabul ediyor; `127.0.0.1` ya da `localhost` giremez. Bu
+yol yalnızca canlı Supabase projesiyle (`jkxuhbuuhsumyjmlskls`) ve
+yayındaki siteyle çalışır.
+
+1. [developer.apple.com](https://developer.apple.com) → **Certificates,
+   Identifiers & Profiles → Identifiers → +** → **Services IDs** →
+   Continue.
+   - _Description_: `Juno Web`
+   - _Identifier_: `com.oguzpancuk.juno.web` (App ID'den farklı olmalı;
+     App ID'nin kendisini yazarsan Apple sayfası `invalid_client` der)
+   - Continue → Register.
+2. Listede yeni Services ID'ye tıkla → **Sign In with Apple** kutusunu
+   işaretle → yanındaki **Configure**.
+   - _Primary App ID_: `com.oguzpancuk.juno`
+   - _Domains and Subdomains_: `jkxuhbuuhsumyjmlskls.supabase.co`
+   - _Return URLs_:
+     `https://jkxuhbuuhsumyjmlskls.supabase.co/auth/v1/callback`
+   - Next → Done → Continue → **Save**.
+
+   Buraya `www.juno-dating.com` yazılmıyor: Apple cevabını siteye değil
+   Supabase'e gönderir, site oturumu Supabase'ten alır.
+
+3. **Keys → +**
+   - _Key Name_: `Juno Sign in with Apple`
+   - **Sign in with Apple** kutusunu işaretle → yanındaki **Configure** →
+     _Primary App ID_: `com.oguzpancuk.juno` → Save.
+   - Continue → Register → **Download**. İnen dosya
+     `AuthKey_XXXXXXXXXX.p8` (**gizli**). **Yalnızca bir kez indirilir**;
+     parola yöneticine ya da güvenli bir yere koy, depoya asla. Kaybolursa
+     ya da açığa çıkarsa aynı sayfadan _Revoke_ edip yenisini aç.
+   - Sayfadaki _Key ID_'yi (10 karakter) not al.
+4. **Team ID**: sağ üstte adının altında, ya da **Membership details**
+   sayfasında (10 karakter).
+5. **İstemci sırrı (client secret)**: Apple doğrudan bir sır vermiyor;
+   `.p8` dosyasıyla imzalanmış bir JWT'yi senin üretmen gerekiyor.
+   Supabase'in belgesindeki üretici bunu tarayıcında yapar, anahtar
+   bilgisayarından çıkmaz: [supabase.com/docs/guides/auth/social-login/auth-apple](https://supabase.com/docs/guides/auth/social-login/auth-apple)
+   → sayfanın "Generate a client secret" kısmı. **Safari'de çalışmıyor**;
+   Chrome ya da Firefox kullan. İstediği dört şey: Team ID, Key ID,
+   Services ID (`com.oguzpancuk.juno.web`) ve `.p8` dosyası. Çıkan uzun
+   metin (`eyJ…` ile başlar) **gizli**.
+
+   **Altı ayda bir yenilenir.** Apple bu sırrın en çok altı ay geçerli
+   olmasına izin veriyor; süresi dolunca web'deki Apple girişi sessizce
+   durur (telefondaki etkilenmez). Takvimine şimdiden beş ay sonrası için
+   bir hatırlatma koy: aynı sayfada aynı `.p8` ile yenisini üretip
+   Supabase'e yapıştırmak yeter. Ürettiğin günü `docs/NOTES.md`'ye yaz.
+
+6. Supabase panosu → **Authentication → Sign In / Providers → Apple**:
+   - _Client IDs_: `com.oguzpancuk.juno.web,com.oguzpancuk.juno` —
+     **sıra önemli.** Supabase web akışında listedeki **ilk** kimliği
+     kullanıyor; telefondaki giriş sıraya bakmıyor. App ID başta kalırsa
+     telefon çalışmaya devam eder ama web'de Apple sayfası `invalid_client`
+     der.
+   - _Secret Key (for OAuth)_: 5'te ürettiğin JWT.
+   - Save.
+7. Supabase → **Authentication → URL Configuration → Redirect URLs**: 4'te
+   Google için eklediğin iki adres Apple için de geçerli; ayrıca bir şey
+   eklemiyorsun. Eklemediysen şimdi ekle.
+8. Web build'i alınırken ortamda:
+
+   ```
+   EXPO_PUBLIC_APPLE_SERVICES_ID=com.oguzpancuk.juno.web
+   ```
+
+   `.env.example`'da bu satır yorum olarak duruyor; `.env`'inde başındaki
+   `#` işaretini ancak 1–7 bitince kaldır. Site bu değeri Apple'a
+   göndermiyor (Supabase gönderiyor); yalnızca "Apple düğmesini göster"
+   kararını ona bakarak veriyor. Değişken yokken
+   web'de Apple düğmesi hiç çıkmaz — Google'daki kuralın aynısı. Buraya
+   yanlışlıkla 5'teki sırrı yapıştırırsan uygulama açılmaz (biçimi
+   kontrol ediliyor), çünkü `EXPO_PUBLIC_` ile başlayan her şey sitenin
+   koduna gömülür ve herkes görür.
+
+**Bitti mi:** www.juno-dating.com'da karşılama ekranında Google'ın
+üstünde beyaz "Apple ile Giriş Yap" düğmesi var; dokununca Apple'ın
+sayfası açılıyor, Apple hesabınla girip siteye dönüyorsun ve doğum
+bilgileri ekranı geliyor (ya da o adresle profilin varsa Keşfet).
+
+Web'de Apple ilk girişte adını da sorar (Apple'ın web sayfası adı ve
+e-postayı birlikte istiyor, Supabase bunu daraltmaya izin vermiyor);
+paylaşmayı seçersen ad kimlik altyapısında durur, uygulama kullanmaz.
+Gizlilik metni bunu söylüyor.
+
 ---
 
 ## 4. Web istemcisi
@@ -294,8 +394,8 @@ Yayında: **https://www.juno-dating.com** ve **https://juno-dating.com**
 (2026-09-17). Cloudflare Workers'ta statik varlık olarak duruyor; dağıtım
 tek komut, `npm run deploy -w @juno/mobile`.
 
-Web'de Apple yok, Google tarayıcı yönlendirmesiyle çalışıyor. Google
-girişini açtığında:
+Web'de Google da Apple da tarayıcı yönlendirmesiyle çalışıyor (Apple'ın
+kurulumu 3b'de). İkisinden birini açtığında:
 
 **Authentication → URL Configuration → Redirect URLs** listesine her iki
 adresi de ekle (`https://www.juno-dating.com`, `https://juno-dating.com`).
@@ -346,8 +446,13 @@ açılıyor.
 - [ ] Supabase Google sağlayıcısı (web ID + secret + Authorized Client IDs + Skip nonce checks açık)
 - [ ] `apps/mobile/.env` içine iki client ID, sonra yeniden build
 - [ ] Apple Developer üyeliği + App ID'de Sign In with Apple
-- [ ] Supabase Apple sağlayıcısı (Authorized Client IDs: bundle ID)
+- [ ] Supabase Apple sağlayıcısı (Client IDs: bundle ID)
+- [ ] Web'de Apple: Services ID + key + client secret, Supabase'te Client
+      IDs'in başına Services ID, web build'inde
+      `EXPO_PUBLIC_APPLE_SERVICES_ID` (3b); client secret için altı aylık
+      takvim hatırlatması
 - [ ] Web yayındaysa Redirect URLs
 - [ ] Sağlayıcıları açmadan önce gizlilik metninin Apple ve Google'ı
-      anan sürümü yayında olmalı (`/legal`, 29 Eylül 2026)
+      anan sürümü yayında olmalı (`/legal`, 30 Eylül 2026; web'deki Apple
+      için bu sürüm şart, adın iletilmesini o söylüyor)
 - [ ] Confirm email açık mı, bir kez daha bak (hesap bağlamanın güvenliği)

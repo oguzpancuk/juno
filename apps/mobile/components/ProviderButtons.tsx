@@ -2,7 +2,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { MAX_LABEL_SCALE } from '@/components/ui';
-import { googleBrand, space } from '@/theme/tokens';
+import { appleBrand, googleBrand, space } from '@/theme/tokens';
 
 /**
  * The Apple and Google buttons on the welcome screen, drawn the way each
@@ -28,7 +28,8 @@ export const PROVIDER_BUTTON_HEIGHT = 56;
  * the style the guidelines give for a dark background. Its title cannot
  * be changed, so while a sign-in runs it dims and stops taking taps
  * instead of saying "Bağlanıyor…". It is drawn only where
- * `AppleAuthentication.isAvailableAsync()` said yes — iOS.
+ * `AppleAuthentication.isAvailableAsync()` said yes — iOS. The web
+ * draws `AppleWebButton` in its place.
  */
 export function AppleButton({
   busy,
@@ -53,6 +54,61 @@ export function AppleButton({
         onPress={onPress}
       />
     </View>
+  );
+}
+
+/**
+ * Sign in with Apple on the web, where the system button does not exist.
+ *
+ * Apple's guidelines allow a button drawn by the app when it keeps to
+ * three things, and this keeps to all of them: the Apple logo as Apple
+ * publishes it (left of the title, the height of its capitals), a title
+ * Apple approves in the platform's font — "Apple ile Giriş Yap", Apple's
+ * own Turkish name for the feature — and one of the approved colour
+ * sets, white with black for this dark screen, the same one the iPhone
+ * button uses. Same height and corners as the buttons around it. Being
+ * the app's own drawing, it can say "Bağlanıyor…" while the tab leaves
+ * for Apple's page, as Google's does.
+ */
+export function AppleWebButton({
+  label,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      testID="continue-apple"
+      role="button"
+      // The label alone: the logo is drawn, not said.
+      aria-label={label}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.appleWeb,
+        (pressed || disabled) && styles.dim,
+      ]}
+    >
+      <AppleLogo />
+      <Text style={styles.appleText} maxFontSizeMultiplier={MAX_LABEL_SCALE}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/** The Apple logo, solid, in a 24-unit box. */
+function AppleLogo() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24">
+      <Path
+        fill={appleBrand.ink}
+        d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
+      />
+    </Svg>
   );
 }
 
@@ -122,6 +178,22 @@ function GoogleLogo() {
 const styles = StyleSheet.create({
   dim: { opacity: 0.6 },
   apple: { width: '100%', height: PROVIDER_BUTTON_HEIGHT },
+  appleWeb: {
+    minHeight: PROVIDER_BUTTON_HEIGHT,
+    borderRadius: PROVIDER_BUTTON_HEIGHT / 2,
+    backgroundColor: appleBrand.fill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm,
+  },
+  appleText: {
+    color: appleBrand.ink,
+    fontSize: 17,
+    fontWeight: '500',
+  },
   google: {
     minHeight: PROVIDER_BUTTON_HEIGHT,
     borderRadius: PROVIDER_BUTTON_HEIGHT / 2,

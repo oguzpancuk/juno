@@ -139,6 +139,16 @@ export const googleBrand = {
   green: '#34A853',
 } as const;
 
+/**
+ * Sign in with Apple's white button, as Apple's Human Interface
+ * Guidelines give it for a dark background: white fill, black logo and
+ * black title. Only the web draws it; on iOS the system button is used.
+ */
+export const appleBrand = {
+  fill: '#FFFFFF',
+  ink: '#000000',
+} as const;
+
 /** Warm → pink → cool. The product's one gradient; do not invent another. */
 export const gradient = [color.warm, color.pink, color.cool] as const;
 export const gradientSoft = ['#2A1E33', '#1B1830', '#15182E'] as const;

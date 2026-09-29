@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   accountNote,
   openedByProvider,
+  appleServicesIdSchema,
   availability,
   googleClientIdSchema,
   reversedClientId,
@@ -25,6 +26,40 @@ describe('googleClientIdSchema', () => {
       // never reach the app at all
     ]) {
       expect(googleClientIdSchema.safeParse(wrong).success).toBe(false);
+    }
+  });
+});
+
+// The shape of the client secret Supabase's generator prints: ES256 header
+// with the key ID, Team ID as issuer, the Services ID as subject.
+const APPLE_SECRET = [
+  'eyJhbGciOiJFUzI1NiIsImtpZCI6IkFCQ0RFMTIzNDUifQ',
+  'eyJpc3MiOiJURUFNMTIzNDU2IiwiaWF0IjoxNzkwMDAwMDAwLCJleHAiOjE4MDUwMDAwMDAsImF1ZCI6Imh0dHBzOi8vYXBwbGVpZC5hcHBsZS5jb20iLCJzdWIiOiJjb20ub2d1enBhbmN1ay5qdW5vLndlYiJ9',
+  'x'.repeat(86),
+].join('.');
+
+describe('appleServicesIdSchema', () => {
+  it('takes a Services ID as Apple Developer writes it', () => {
+    expect(
+      appleServicesIdSchema.safeParse('com.oguzpancuk.juno.web').success,
+    ).toBe(true);
+  });
+
+  it('refuses the things that get pasted instead', () => {
+    for (const wrong of [
+      '', // nothing set
+      'ABCDE12345', // the Team ID, or the key ID beside it
+      'com.oguzpancuk.juno.web ', // a trailing space
+      'https://www.juno-dating.com', // the domain the page asks for
+      // The client SECRET: a JWT signed with the .p8 key. It belongs in
+      // the Supabase dashboard only; in an EXPO_PUBLIC_ variable it would
+      // ship to every browser that loads the site. A real one, and a short
+      // one whose three parts would each pass for a label.
+      APPLE_SECRET,
+      'eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJ0In0.c2ln',
+      '-----BEGIN PRIVATE KEY-----', // the key file itself
+    ]) {
+      expect(appleServicesIdSchema.safeParse(wrong).success).toBe(false);
     }
   });
 });
@@ -78,7 +113,11 @@ describe('tokenOutcome', () => {
 });
 
 describe('availability', () => {
-  const base = { appleNative: true, googleConfigured: true };
+  const base = {
+    appleNative: true,
+    appleWebConfigured: true,
+    googleConfigured: true,
+  };
 
   it('shows both on an iOS device that has them', () => {
     expect(availability({ ...base, platform: 'ios' })).toEqual({
@@ -93,10 +132,33 @@ describe('availability', () => {
     ).toEqual({ apple: false, google: true });
   });
 
-  it('hides Apple off iOS, where no route to it is wired yet', () => {
-    for (const platform of ['android', 'web']) {
-      expect(availability({ ...base, platform }).apple).toBe(false);
-    }
+  it('leaves the iPhone to the device, whatever the web build carries', () => {
+    // The Services ID is the browser's route; the phone never uses it.
+    expect(
+      availability({ ...base, platform: 'ios', appleWebConfigured: false })
+        .apple,
+    ).toBe(true);
+  });
+
+  it('shows Apple on the web once the build names a Services ID', () => {
+    // Owner, 2026-09-29: "webde apple girisi yok".
+    expect(availability({ ...base, platform: 'web' })).toEqual({
+      apple: true,
+      google: true,
+    });
+  });
+
+  it('hides Apple on the web in a build with no Services ID', () => {
+    // A button whose page answers "invalid_client" is the state
+    // `availability` exists to prevent.
+    expect(
+      availability({ ...base, platform: 'web', appleWebConfigured: false })
+        .apple,
+    ).toBe(false);
+  });
+
+  it('hides Apple on Android, where no route to it is wired yet', () => {
+    expect(availability({ ...base, platform: 'android' }).apple).toBe(false);
   });
 
   it('hides Google in a build with no client ID', () => {
@@ -112,6 +174,7 @@ describe('availability', () => {
       availability({
         platform: 'web',
         appleNative: false,
+        appleWebConfigured: false,
         googleConfigured: false,
       }),
     ).toEqual({ apple: false, google: false });
