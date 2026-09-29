@@ -8580,3 +8580,55 @@ stood in for it.
   or visual tests, so a screen whose content outgrows a short page passes
   every step. `doorSize` is tested; that the door fits is the screenshots'
   measurement above.
+
+## 2026-09-29 — English, and room for more languages
+
+The owner's ask: "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her
+şey çevrilecek. 2 ayrı threadde yapabilirsin." This thread: the
+structure, the Turkish source catalog and English. A second thread adds
+Spanish on this branch. English UI was on the ROADMAP's deferred list;
+the owner has now asked for it. Decisions in ADR-0014.
+
+- **Where the words were.** `lib/strings.ts` held almost every UI string;
+  outside it were the report reasons (`lib/safety.ts`), the date field
+  placeholders (`app/onboarding.tsx`), the planet themes
+  (`lib/chartText.ts`), a `tr-TR` date format (`PremiumPanel`), the
+  notice, and in the engine the names, the placement line
+  ("Güneş Koç'ta · 5. ev"), the swipe card's aspect sentence and natal
+  aspect titles, plus 1,139 interpretation texts (~107k characters).
+  All of it now reads from the language showing.
+- **Translation.** The engine texts and the notice were translated by
+  sub-agents against a written brief (glossary, voice, the content
+  rules), each file checked by a script for keys, lengths, question
+  marks, sign names in aspect texts and tempo words in house texts; the
+  UI catalog by hand. The content tests, now run per language, caught
+  one English fragment (`mars-trine-jupiter`, "People follow you.").
+- **Web screenshots** at 390x844 against a stand-in backend, both
+  locales, and the switch from Turkish to English, which lands on the
+  profile: `screenshots/i18n-*.png`. They show the UI only.
+
+### For the owner
+
+- The hosted project's sign-up mail template and subject are pasted by
+  hand (`docs/auth-setup.md` step 4); until then the hosted mail stays
+  Turkish only.
+- The App Store listing, and anything else outside the repo, is not
+  translated here.
+- iOS needs a fresh native build for the permission sentence and the
+  Apple button to follow the phone's language (`app.json` locales).
+
+### Side findings, not fixed here
+
+- `lib/chartText.ts` is imported by nothing since the v1 content landed;
+  it was translated rather than deleted, to keep this change about
+  language.
+- `lib/tab-a11y.ts` rebuilds React Navigation's iOS tab label in English
+  ("tab, 1 of 3") for every language, as it did for Turkish.
+
+### Battery gaps
+
+- Whether a translated string fits its box is not tested; English runs
+  longer than Turkish in places (the match page's starter pushes its link
+  below the fold). The screenshots are the check.
+- The switch's remount and return to the profile is seen in the web
+  screenshots only; nothing in the battery drives it.
