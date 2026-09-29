@@ -1,0 +1,36 @@
+{
+  "emotional-soft": [
+    "Cercanía fácil",
+    "Calidez tranquila",
+    "Se sienten entendidos"
+  ],
+  "emotional-hard": [
+    "Necesidades distintas",
+    "Cercanía cargada",
+    "Calidez en oleadas"
+  ],
+  "chemistry-soft": ["Química natural", "Atracción fácil", "Mismo ritmo"],
+  "chemistry-hard": [
+    "Química cargada",
+    "Ritmos distintos",
+    "Atracción que resiste"
+  ],
+  "communication-soft": [
+    "Misma frecuencia",
+    "Conversación fácil",
+    "Mentes que se entienden"
+  ],
+  "communication-hard": [
+    "Mentes distintas",
+    "Pide traducción",
+    "Por caminos distintos"
+  ],
+  "stability-soft": [
+    "Una base sólida",
+    "Lo que sostiene",
+    "Con los pies en la tierra"
+  ],
+  "stability-hard": ["Una base que pesa", "Como una prueba", "Lo que frena"],
+  "growth-soft": ["Lo que expande", "Estimulante", "Lo que abre"],
+  "growth-hard": ["Lo que sacude", "Transformadora", "Difícil de ignorar"]
+}
