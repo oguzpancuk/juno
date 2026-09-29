@@ -267,9 +267,9 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       apple girisi yok"). The web client draws its own Apple button once
       the build names a Services ID, and signs in through Supabase's Apple
       OAuth route; the Services ID, key and six-monthly client secret are
-      `docs/auth-setup.md` 3b. Checked on www.juno-dating.com, not on a
-      device, and not on the local stack (Apple takes no localhost return
-      URL)._
+      `docs/auth-setup.md` 3b. Not checked yet: it is the owner's check on
+      www.juno-dating.com after 3b, since it cannot run on the local stack
+      (Apple takes no localhost return URL)._
 - [ ] **KVKK consent + privacy policy (Apple).** Consent checkbox with
       text at sign-up (covers birth data and location), stored `consent_at`;
       privacy policy hosted at a URL; about/legal screen credits GeoNames

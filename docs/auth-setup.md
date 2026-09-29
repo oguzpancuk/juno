@@ -367,8 +367,10 @@ yayındaki siteyle çalışır.
    EXPO_PUBLIC_APPLE_SERVICES_ID=com.oguzpancuk.juno.web
    ```
 
-   Site bu değeri Apple'a göndermiyor (Supabase gönderiyor); yalnızca
-   "Apple düğmesini göster" kararını ona bakarak veriyor. Değişken yokken
+   `.env.example`'da bu satır yorum olarak duruyor; `.env`'inde başındaki
+   `#` işaretini ancak 1–7 bitince kaldır. Site bu değeri Apple'a
+   göndermiyor (Supabase gönderiyor); yalnızca "Apple düğmesini göster"
+   kararını ona bakarak veriyor. Değişken yokken
    web'de Apple düğmesi hiç çıkmaz — Google'daki kuralın aynısı. Buraya
    yanlışlıkla 5'teki sırrı yapıştırırsan uygulama açılmaz (biçimi
    kontrol ediliyor), çünkü `EXPO_PUBLIC_` ile başlayan her şey sitenin
