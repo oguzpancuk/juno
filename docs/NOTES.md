@@ -8523,3 +8523,50 @@ it was generated here, and set a reminder for five months after.
   `/auth/v1/authorize?provider=apple` with `redirect_to` the site's
   origin, against a stand-in backend. The rest is the owner's check on
   www.juno-dating.com.
+
+## 2026-09-29 — The door fits the page Safari gives it
+
+Owner, from Safari on the iPhone after #15 went live: the welcome screen
+is cramped, the headline sits on the first button, the consent line runs
+under the toolbar; "web de ios da aynı gözükmeli". The door had one size,
+drawn for a tall phone: about 840 points of content in a
+`space-between` column with no scroll. The page Safari gives is 665 (the
+2026-09-21 entry above), so the gaps closed to nothing and the rest
+overflowed past the page's edge, where the `overflow: clip` overhang
+shows it under the toolbar. Reproduced at 402 × 665 in headless Chromium:
+the legal link's bottom at 792 of 665; the headline 2 points above the
+first button.
+
+- **One rule for both targets.** `lib/door-layout.ts` `doorSize(room)`
+  scales the mark (80 → 132), the wordmark, the headline's leading, the
+  hero's gaps and the top and bottom edges with the room left once the
+  safe-area insets are off: compact at 680 and under, as drawn at 860 and
+  over. In a browser the insets are zero and the room is the page; in the
+  app it is the screen between the status bar and the home indicator
+  (about 780 on the owner's phone), so the phone gets a door between the
+  two sizes, not a different design. Order, buttons and texts unchanged.
+- **Flexible gaps, and a scroll behind them.** The flat 96-point drop
+  above the mark is a spacer now, sharing what is left with the two gaps
+  around the headline (2 : 1 : 1, each with a floor). The column sits in
+  a `ScrollView` that only scrolls when even the compact door does not
+  fit (a small phone at a large text size): at 375 × 560 it scrolls,
+  at 664 and up it does not.
+- **The horizon moves with the bottom edge.** Its rise was tuned to the
+  flat 48-point bottom; the compact door's 12 needs a lower curve, so the
+  rise is part of the size (0.02 → 0.05) and the curve stays under the
+  legal link at every size measured.
+
+Measured in the web export (legal link's bottom / page height, Apple
+shown): 648/664, 649/665, 746/778, 799/844; the scroll container's
+`scrollHeight` equals its height at each. Screenshots
+`screenshots/welcome-fit-{before,after}-{apple,noapple}-390x{844,664}.png`.
+Not seen: the native app (no simulator here); the room there is computed
+from `useWindowDimensions` minus the insets, and a 402 × 778 web viewport
+stood in for it.
+
+### Battery gaps
+
+- Layout overflow is not in the battery: the web target has no component
+  or visual tests, so a screen whose content outgrows a short page passes
+  every step. `doorSize` is tested; that the door fits is the screenshots'
+  measurement above.
