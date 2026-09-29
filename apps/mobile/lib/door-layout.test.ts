@@ -5,7 +5,7 @@ describe('doorSize', () => {
   it("is the compact door on the owner's Safari page, 665 points tall", () => {
     // docs/NOTES.md, 2026-09-21: innerHeight 665 on a 402 x 874 iPhone.
     const size = doorSize(665);
-    expect(size.mark).toBeLessThanOrEqual(80);
+    expect(size.mark).toBeLessThanOrEqual(104);
     expect(size.bottom).toBe(12);
   });
 
@@ -32,12 +32,12 @@ describe('doorSize', () => {
       was = now;
     }
     const middle = doorSize(760);
-    expect(middle.mark).toBeGreaterThan(80);
+    expect(middle.mark).toBeGreaterThan(104);
     expect(middle.mark).toBeLessThan(132);
   });
 
   it('takes a room it cannot read as the compact door, not a broken one', () => {
     expect(doorSize(Number.NaN)).toEqual(doorSize(0));
-    expect(doorSize(0).mark).toBe(80);
+    expect(doorSize(0).mark).toBe(104);
   });
 });

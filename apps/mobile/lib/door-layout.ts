@@ -37,8 +37,8 @@ type DoorSize = {
 };
 
 const COMPACT: DoorSize = {
-  mark: 80,
-  wordmark: 38,
+  mark: 104,
+  wordmark: 42,
   gap: space.sm,
   leading: 30,
   top: space.md,

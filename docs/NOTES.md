@@ -8537,25 +8537,32 @@ shows it under the toolbar. Reproduced at 402 × 665 in headless Chromium:
 the legal link's bottom at 792 of 665; the headline 2 points above the
 first button.
 
+- **The owner picked option 2 of three** (screenshots in the thread):
+  the headline on two lines, "İki haritanın arasında / ne var?", which
+  frees the room for a larger mark on a short page. The others were the
+  same scaling with the three-line headline and a smaller mark, and the
+  drawn size unchanged with the page scrolling.
 - **One rule for both targets.** `lib/door-layout.ts` `doorSize(room)`
-  scales the mark (80 → 132), the wordmark, the headline's leading, the
+  scales the mark (104 → 132), the wordmark, the headline's leading, the
   hero's gaps and the top and bottom edges with the room left once the
   safe-area insets are off: compact at 680 and under, as drawn at 860 and
   over. In a browser the insets are zero and the room is the page; in the
   app it is the screen between the status bar and the home indicator
   (about 780 on the owner's phone), so the phone gets a door between the
-  two sizes, not a different design. Order, buttons and texts unchanged.
+  two sizes, not a different design. Order and buttons unchanged; the
+  headline's line break is the one text change.
 - **Flexible gaps, and a scroll behind them.** The flat 96-point drop
   above the mark is a spacer now, sharing what is left with the two gaps
   around the headline (2 : 1 : 1, each with a floor). The column sits in
   a `ScrollView` that only scrolls when even the compact door does not
-  fit (a small phone at a large text size): at 375 × 560 it scrolls,
-  at 664 and up it does not.
+  fit (a small phone at a large text size): the compact door is 649
+  tall with Apple shown, 581 without, so at 375 × 629 it scrolls with
+  Apple, and at 664 and up it does not.
 - **The horizon moves with the bottom edge.** Its rise was tuned to the
   flat 48-point bottom; the compact door's 12 needs a lower curve, so the
   rise is part of the size (0.02 → 0.05) and the curve stays under the
-  legal link wherever the door fits. Where it does not (below about 650
-  with Apple shown, 582 without), the curve is fixed to the page's edge
+  legal link wherever the door fits. Where it does not (below 649
+  with Apple shown, 581 without), the curve is fixed to the page's edge
   and would cross the consent line at rest (evaluator-qa, 375 × 629), so
   a door that scrolls drops the horizon and shows the scroll indicator.
 
