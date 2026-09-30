@@ -14,8 +14,6 @@ import {
 import { toPublicChart } from './public';
 import { SIGNS } from './signs';
 import { natalReading, starterFromKey } from './summary';
-import { SIGN_EN } from './en';
-import { SIGN_ES } from './es';
 import { WORDS, describeAspect, natalAspectTitle, signName } from './words';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
@@ -79,42 +77,77 @@ describe('translations of content/', () => {
     },
   );
 
-  it('English aspect texts name no sign, as the Turkish ones do not', () => {
-    const files = contentFiles('en');
-    const hits: string[] = [];
-    for (const map of [files.natalAspects, files.synastry])
-      for (const [key, text] of Object.entries(map))
-        for (const sign of SIGNS)
-          if (new RegExp(`\\b${SIGN_EN[sign]}\\b`, 'u').test(text))
-            hits.push(`${key}: ${SIGN_EN[sign]}`);
-    expect(hits).toEqual([]);
-  });
-
-  it('Spanish aspect texts name no sign, as the Turkish ones do not', () => {
-    // Case-insensitive: "Leo" and "Libra" are also everyday Spanish words
-    // ("leo", "se libra"), and a text using them would read as the sign.
-    // The synastry file as it is on disk: the question travels with the
-    // meaning, and a starter names no sign either.
-    const synastry = filesOf('es').get('synastry.json') as Record<
-      string,
-      { meaning: string; question: string }
-    >;
-    const hits: string[] = [];
-    const texts = [
-      ...Object.entries(contentFiles('es').natalAspects),
-      ...Object.entries(synastry).flatMap(([key, entry]) => [
-        [key, entry.meaning] as const,
-        [key, entry.question] as const,
-      ]),
-    ];
-    for (const [key, text] of texts)
-      for (const sign of SIGNS)
-        if (
-          new RegExp(`(^|[^\\p{L}])${SIGN_ES[sign]}(?![\\p{L}])`, 'iu').test(
-            text,
+  // Case- and accent-insensitive, singular or plural: "Leo" and "Libra"
+  // are also everyday Spanish words ("leo", "se libra") that would read
+  // as the sign, and "Geminis" or "los Escorpios" name a sign as surely
+  // as "Géminis". Overlay texts sit beside the aspects on the same page.
+  it.each(LANGUAGES.filter((l) => l !== SOURCE_LANGUAGE))(
+    '%s aspect, starter and overlay texts name no sign, as the Turkish ones do not',
+    (language) => {
+      const fold = (text: string): string =>
+        text
+          .normalize('NFD')
+          .replace(/\p{M}/gu, '')
+          .toLocaleLowerCase(language);
+      const synastry = filesOf(language).get('synastry.json') as Record<
+        string,
+        { meaning: string; question: string }
+      >;
+      const files = contentFiles(language);
+      const texts = [
+        ...Object.entries(files.natalAspects),
+        ...Object.entries(files.overlays),
+        ...Object.entries(synastry).flatMap(([key, entry]) => [
+          [key, entry.meaning] as const,
+          [key, entry.question] as const,
+        ]),
+      ];
+      const hits: string[] = [];
+      for (const [key, text] of texts)
+        for (const sign of SIGNS) {
+          const name = fold(WORDS[language].sign[sign]);
+          if (
+            new RegExp(`(^|[^\\p{L}])${name}(e?s)?(?![\\p{L}])`, 'u').test(
+              fold(text),
+            )
           )
-        )
-          hits.push(`${key}: ${SIGN_ES[sign]}`);
+            hits.push(`${key}: ${WORDS[language].sign[sign]}`);
+        }
+      expect(hits).toEqual([]);
+    },
+  );
+});
+
+describe("Spanish marks nobody's gender", () => {
+  // Turkish has no grammatical gender and the app matches women with
+  // women and men with men, so a Spanish text that agrees with "tú", the
+  // other person or the pair picks a gender the source never did; in a
+  // starter the member says it in their own voice. These are the forms
+  // that are about people wherever they appear. Adjectives that agree
+  // with a thing ("un vínculo generoso") are fine and not listed.
+  const PERSON_FORMS = [
+    /\bjunt[oa]s\b/iu,
+    /\b(el uno|la una)\b/iu,
+    /\b(al|el) otro\b(?! (lado|extremo|polo))/iu,
+    /\bnosotr[oa]s\b/iu,
+    /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
+    /\bcada uno\b/iu,
+    /\b(te sientes|sentirte|se sienten|sentirse|te vuelves|volverte) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
+    /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
+  ];
+
+  it('in any content text, including every starter', () => {
+    const hits: string[] = [];
+    const walk = (value: unknown, path: string): void => {
+      if (typeof value === 'string') {
+        for (const form of PERSON_FORMS) {
+          const found = form.exec(value);
+          if (found) hits.push(`${path}: ${found[0]}`);
+        }
+      } else if (value !== null && typeof value === 'object')
+        for (const [k, v] of Object.entries(value)) walk(v, `${path}.${k}`);
+    };
+    for (const [name, data] of filesOf('es')) walk(data, name);
     expect(hits).toEqual([]);
   });
 });

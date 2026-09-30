@@ -8669,10 +8669,20 @@ sign-up mail.
   texts, no antonym pair across sign and house. Only "no sign name in an
   aspect text" became a test, case-insensitive because "leo" and "libra"
   are also ordinary Spanish words.
-- **Labels that must not say "you".** The placement labels are shown on
+- **Labels that must not say "your".** The placement labels are shown on
   other people's profiles too; "Tu esencia" read as the viewer's. The
-  Turkish and English ones are neutral; the Spanish now are ("Esencia",
-  "Mundo emocional").
+  Turkish and English Sun, Moon and Ascendant labels are nouns, and the
+  Spanish now are too ("Esencia", "Mundo emocional"). Mercury to Pluto
+  use a generic "you" in all three languages ("Nasıl seversin", "How you
+  love", "Cómo amas"), as the Turkish source does; the Spanish follows
+  it. Making them neutral is a choice for every language at once.
+- **No gender.** Turkish marks none, and the app matches women with
+  women and men with men, so the Spanish marks nobody's gender either:
+  not the reader's ("sentir que no te entienden", not "sentirte
+  malinterpretado"), not the pair's ("mutuamente", "en pareja", not
+  "juntos", "el uno al otro"), and least of all in a starter, which the
+  member sends as their own words. A test holds the unambiguous forms;
+  adjectives that agree with a thing ("un vínculo generoso") stay.
 
 ### For the owner
 

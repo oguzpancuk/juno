@@ -166,10 +166,10 @@ export const es: Strings = {
       liked: string | null,
     ) =>
       `${liked === null ? '' : `${liked}. `}${name}, ${age}, ${distance}. Ver perfil`,
-    // The band's name is a capitalised label on its own; inside the
-    // sentence it is an adjective and goes lower case.
+    // The band's name is a label, not always an adjective ("A su propio
+    // ritmo"), so it stands after a colon as it is written.
     openDetail: (band: string) =>
-      `Compatibilidad ${String(band).toLocaleLowerCase('es')}. Detalle de compatibilidad`,
+      `Compatibilidad: ${band}. Detalle de compatibilidad`,
     swipeLike: 'ME GUSTA',
     swipePass: 'PASO',
     swipeSuper: 'SUPERLIKE',
@@ -319,7 +319,7 @@ export const es: Strings = {
     block: 'Bloquear',
     blockConfirmTitle: 'Sí, bloquear',
     blockConfirm: (name: string) =>
-      `${name} ya no podrá verte, y su match y su chat se cerrarán para ambos.`,
+      `${name} ya no podrá verte, y el match y el chat se cerrarán para las dos partes.`,
     report: 'Denunciar',
     reportTitle: '¿Por qué lo denuncias?',
     reasons: {
@@ -461,7 +461,7 @@ export const es: Strings = {
   blocked: {
     open: 'Personas bloqueadas',
     title: 'Personas bloqueadas',
-    hint: 'Si desbloqueas a alguien, su match y sus mensajes anteriores vuelven para ambos.',
+    hint: 'Si desbloqueas a alguien, el match y los mensajes anteriores vuelven para las dos partes.',
     empty: 'No bloqueaste a nadie.',
     undo: 'Desbloquear',
   },
