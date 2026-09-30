@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import { TabIcon } from '@/components/TabIcon';
@@ -42,9 +42,12 @@ export default function TabLayout() {
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
-  const unread = useUnreadTotal(userId);
-  // Every tab stands behind the current privacy notice (lib/consent.ts).
-  useConsentGate(userId);
+  // Every tab stands behind the current privacy notice (lib/consent.ts):
+  // nothing inside mounts, and so nothing reads or writes, until the
+  // member's record is known to be current.
+  const consent = useConsentGate(userId);
+  // The badge's count is a read inside the gate too.
+  const unread = useUnreadTotal(consent === 'current' ? userId : null);
   const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it
   // rather than stopping above the home indicator, and the items are
@@ -99,6 +102,20 @@ export default function TabLayout() {
         // Keşfet is the middle tab and the one the app opens on; the order
         // is you, then them, then the ones who answered.
         initialRouteName="(discover)"
+        // Behind the notice gate (lib/consent.ts), no screen mounts: the
+        // navigator does, so a URL into a tab keeps its place, but each
+        // screen is replaced by a spinner until the member's record is
+        // known to be current. Holding back the whole navigator instead
+        // lost the URL — it mounted later, on its initial route.
+        screenLayout={({ children }) =>
+          consent === 'current' ? (
+            <>{children}</>
+          ) : (
+            <View style={[styles.host, styles.waiting]} testID="consent-gate">
+              <ActivityIndicator color={color.textMuted} />
+            </View>
+          )
+        }
         // Not the default `firstRoute`, which is `profile` by declaration
         // order: Android back from the tab the app opens on would switch to
         // a tab nobody had visited instead of leaving the app.
@@ -231,4 +248,5 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   host: { flex: 1, backgroundColor: color.bg },
+  waiting: { alignItems: 'center', justifyContent: 'center' },
 });

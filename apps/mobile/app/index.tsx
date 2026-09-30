@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { markConsentCurrent } from '@/lib/consent';
 import { needsConsent } from '@/lib/consent-rules';
 import { LEGAL_VERSION } from '@/lib/legal';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
@@ -43,11 +44,11 @@ export default function Index() {
   if (session.status === 'signed-in' && profile.status === 'ready') {
     // A member whose record names an older notice accepts the current one
     // before anything else (KVKK re-consent, lib/consent.ts).
-    return needsConsent(profile.profile.consent_version, LEGAL_VERSION) ? (
-      <Redirect href="/consent" />
-    ) : (
-      <Redirect href="/discover" />
-    );
+    if (needsConsent(profile.profile.consent_version, LEGAL_VERSION))
+      return <Redirect href="/consent" />;
+    // Known current: the tabs' own gate need not ask again.
+    markConsentCurrent(profile.profile.id);
+    return <Redirect href="/discover" />;
   }
   if (profile.status === 'error') {
     return (

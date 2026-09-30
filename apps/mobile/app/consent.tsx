@@ -139,7 +139,7 @@ export default function Consent() {
         </Pressable>
 
         {error ? (
-          <Text style={styles.error} testID="consent-error">
+          <Text style={styles.error} testID="consent-error" role="alert">
             {error}
           </Text>
         ) : null}

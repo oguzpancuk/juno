@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { ConsentVersionSchema, needsConsent } from './consent-rules';
 import { LEGAL_VERSION } from './legal';
@@ -15,6 +15,19 @@ import { READ_TIMEOUT_MS, supabase } from './supabase';
  */
 
 const ConsentRow = z.object({ consent_version: ConsentVersionSchema });
+
+/**
+ * Who this build already knows to be on the current notice: the entry
+ * screen read their row, or they just accepted it here. Module state, so
+ * it lives exactly as long as this bundle — a deploy that brings a new
+ * `LEGAL_VERSION` brings a new bundle and an empty set.
+ */
+const current = new Set<string>();
+
+/** The entry screen read a current record: the tabs need not ask again. */
+export function markConsentCurrent(userId: string): void {
+  current.add(userId);
+}
 
 /**
  * Record that the member accepted the notice this build carries. The
@@ -33,23 +46,39 @@ export async function acceptCurrentNotice(userId: string): Promise<boolean> {
     .maybeSingle();
   if (error || !data) return false;
   const row = ConsentRow.safeParse(data);
-  return row.success && !needsConsent(row.data.consent_version, LEGAL_VERSION);
+  const ok =
+    row.success && !needsConsent(row.data.consent_version, LEGAL_VERSION);
+  if (ok) current.add(userId);
+  return ok;
 }
+
+export type ConsentGate = 'checking' | 'current' | 'ask';
 
 /**
  * The gate for everything inside the tab bar. The entry screen already
  * sends a member with an older record to `/consent`; this covers the
- * ways past it — a web address typed or bookmarked straight into a tab,
- * and an app left open across a deploy that brought a new text.
+ * ways past it — a web address typed or restored straight into a tab,
+ * and an app reopened across a deploy that brought a new text.
  *
- * Asks once per signed-in user per mount of the tabs. Anything short of
- * a readable row answers nothing: no profile is the screens' own
- * business (they send it to onboarding), and a failed read is not a
- * reason to lock someone out — the next launch asks again.
+ * The tabs render nothing until this answers (`(tabs)/_layout.tsx`).
+ * Rendering them meanwhile and redirecting on the answer was not enough:
+ * a tab screen starts its own requests on mount, and the chat's is a
+ * write — it marks the other member's messages read (evaluator-qa,
+ * 2026-09-30) — before the member has accepted anything.
+ *
+ * `ask` also sends the member to `/consent`. Anything short of a readable
+ * row answers `current`: no profile is the screens' own business (they
+ * send it to onboarding), and a failed read is not a reason to lock
+ * someone out — the next launch asks again.
  */
-export function useConsentGate(userId: string | null): void {
+export function useConsentGate(userId: string | null): ConsentGate {
+  const known = userId !== null && current.has(userId);
+  const [answer, setAnswer] = useState<{
+    userId: string;
+    gate: ConsentGate;
+  } | null>(null);
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || current.has(userId)) return;
     let cancelled = false;
     void (async () => {
       const { data, error } = await supabase
@@ -58,13 +87,28 @@ export function useConsentGate(userId: string | null): void {
         .eq('id', userId)
         .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS))
         .maybeSingle();
-      if (cancelled || error || !data) return;
+      if (cancelled) return;
       const row = ConsentRow.safeParse(data);
-      if (row.success && needsConsent(row.data.consent_version, LEGAL_VERSION))
-        router.replace('/consent');
-    })();
+      const ask =
+        !error &&
+        row.success &&
+        needsConsent(row.data.consent_version, LEGAL_VERSION);
+      // Remembered only when the row said so; a failed read lets this
+      // mount through and the next one asks again.
+      if (!error && row.success && !ask) current.add(userId);
+      setAnswer({ userId, gate: ask ? 'ask' : 'current' });
+      if (ask) router.replace('/consent');
+    })().catch(() => {
+      // A read that throws (a timeout) fails open, like one that errors.
+      if (cancelled) return;
+      setAnswer({ userId, gate: 'current' });
+    });
     return () => {
       cancelled = true;
     };
   }, [userId]);
+  // Signed out or still reading the session: the screens' own guards
+  // decide, and they send a signed-out person to sign-in.
+  if (userId === null || known) return 'current';
+  return answer?.userId === userId ? answer.gate : 'checking';
 }

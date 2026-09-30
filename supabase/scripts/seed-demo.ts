@@ -49,8 +49,9 @@ const EnvSchema = z.object({
  * on stamping the old date and nothing would fail.
  *
  * A demo account has not consented to anything — there is nobody there to
- * consent — but the column is NOT NULL, because a member's profile must
- * never exist without a record of which notice they accepted. What it
+ * consent — but the version is required (`profiles_consent_recorded`),
+ * because a member's profile must never exist without a record of which
+ * notice they accepted. What it
  * means on these rows is narrower: the version in force when the account
  * was made.
  */

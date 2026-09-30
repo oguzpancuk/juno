@@ -8643,8 +8643,29 @@ current)`: older asks, equal or newer does not (a phone on an older
   sign-in and from `/matches` typed in; an unticked box says so; a
   failed save says so and stays; accepting sends `consent_version
 2026-09-30` and lands on the deck; a current record goes straight in.
-  A deep link into a tab draws that tab for one round trip before the
-  gate replaces it.
+  A URL straight into a tab shows the tab bar with a spinner where the
+  screen would be, one round trip, then `/consent`.
+- **Found by evaluator-qa, fixed before the PR opened.** The first gate
+  let `<Tabs>` render and redirected when its read answered. Tab screens
+  start their own requests on mount, and the chat's is a write: a
+  member with an older record who opened `/chat/<id>` marked the other
+  member's messages read before the gate stopped them (reproduced with
+  300 ms of latency on the stand-in: the `PATCH messages … read_at`
+  left in the same millisecond as the gate's read). Now each tab screen
+  is replaced by a spinner (`screenLayout` on the tabs) until the record
+  is known current; after the fix the same run sends only the gate's
+  read. Holding back the whole `<Tabs>` was tried first and lost the
+  URL (`/matches` landed on the deck), because the navigator mounted
+  later, on its initial route. The unread badge's count waits for the
+  gate too. A record the entry screen already read as current is
+  remembered for the life of the bundle, so the usual launch does not
+  wait twice.
+
+- Side finding, not fixed here (evaluator-qa): on the web, `LinkText`
+  (`components/ui.tsx`) renders a div with no role and no tabindex, so
+  "Gizlilik metnini oku" is neither reachable by keyboard nor announced
+  as a link, and `GradientButton` has no button role. Both predate this
+  change and are on every door.
 
 ### Upstream candidates
 
