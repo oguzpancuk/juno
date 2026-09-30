@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import { z } from 'zod';
 import { ConsentVersionSchema, needsConsent } from './consent-rules';
 import { LEGAL_VERSION } from './legal';
@@ -55,16 +55,26 @@ export async function acceptCurrentNotice(userId: string): Promise<boolean> {
 export type ConsentGate = 'checking' | 'current' | 'ask';
 
 /**
+ * The tabs' answer, for the stacks inside them (`components/TabStack.tsx`).
+ * Outside the tabs there is no gate, hence the default.
+ */
+export const ConsentGateContext = createContext<ConsentGate>('current');
+
+/**
  * The gate for everything inside the tab bar. The entry screen already
  * sends a member with an older record to `/consent`; this covers the
  * ways past it — a web address typed or restored straight into a tab,
  * and an app reopened across a deploy that brought a new text.
  *
- * The tabs render nothing until this answers (`(tabs)/_layout.tsx`).
- * Rendering them meanwhile and redirecting on the answer was not enough:
- * a tab screen starts its own requests on mount, and the chat's is a
- * write — it marks the other member's messages read (evaluator-qa,
- * 2026-09-30) — before the member has accepted anything.
+ * No screen inside the tabs mounts until this answers: `TabStack` puts a
+ * spinner where each screen would be. Rendering them meanwhile and
+ * redirecting on the answer was not enough: a tab screen starts its own
+ * requests on mount, and the chat's is a write — it marks the other
+ * member's messages read (evaluator-qa, 2026-09-30) — before the member
+ * has accepted anything. It is the screens that wait, not the
+ * navigators: a navigator that mounts late mounts on its initial route
+ * and drops the rest of the URL (`/chat/<id>` landing on the list —
+ * evaluator-qa again, when the wait was put one level too high).
  *
  * `ask` also sends the member to `/consent`. Anything short of a readable
  * row answers `current`: no profile is the screens' own business (they

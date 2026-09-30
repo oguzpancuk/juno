@@ -1,10 +1,10 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import { TabIcon } from '@/components/TabIcon';
-import { useConsentGate } from '@/lib/consent';
+import { ConsentGateContext, useConsentGate } from '@/lib/consent';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
@@ -43,8 +43,9 @@ export default function TabLayout() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   // Every tab stands behind the current privacy notice (lib/consent.ts):
-  // nothing inside mounts, and so nothing reads or writes, until the
-  // member's record is known to be current.
+  // no screen inside mounts, and so nothing reads or writes, until the
+  // member's record is known to be current. The answer reaches the stacks
+  // through context; `TabStack` holds back each screen, not the stack.
   const consent = useConsentGate(userId);
   // The badge's count is a read inside the gate too.
   const unread = useUnreadTotal(consent === 'current' ? userId : null);
@@ -98,155 +99,144 @@ export default function TabLayout() {
   return (
     <View style={styles.host}>
       {underBar}
-      <Tabs
-        // Keşfet is the middle tab and the one the app opens on; the order
-        // is you, then them, then the ones who answered.
-        initialRouteName="(discover)"
-        // Behind the notice gate (lib/consent.ts), no screen mounts: the
-        // navigator does, so a URL into a tab keeps its place, but each
-        // screen is replaced by a spinner until the member's record is
-        // known to be current. Holding back the whole navigator instead
-        // lost the URL — it mounted later, on its initial route.
-        screenLayout={({ children }) =>
-          consent === 'current' ? (
-            <>{children}</>
-          ) : (
-            <View style={[styles.host, styles.waiting]} testID="consent-gate">
-              <ActivityIndicator color={color.textMuted} />
-            </View>
-          )
-        }
-        // Not the default `firstRoute`, which is `profile` by declaration
-        // order: Android back from the tab the app opens on would switch to
-        // a tab nobody had visited instead of leaving the app.
-        backBehavior="initialRoute"
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: color.text,
-          tabBarInactiveTintColor: color.textFaint,
-          // The popup's tint and hairline (owner, 2026-09-18: "alt tabin de
-          // biraz saydam olmasını istiyorum, bütünlüğü bozmasın").
-          //
-          // What shows through it is the sky under the whole navigator
-          // (`underBar`, above), not the screen's own. The library clips its
-          // scenes above the bar (`styles.screens`, `overflow: 'hidden'`,
-          // not an option), so a screen's sky stops at the bar's top edge
-          // whatever it does; the one behind the navigator does not, and
-          // runs on under the bar and past the page's bottom edge, into the
-          // strip a phone's browser keeps for its toolbar. See OVERHANG in
-          // `CosmicGround`.
-          //
-          // In flow, deliberately. Taking the bar out of flow — `position:
-          // 'absolute'`, the usual way to let content run under a
-          // translucent bar — removes its height from the layout, and three
-          // things here are built on the bar being in it: `lib/insets.ts`
-          // (a tab screen must not add `insets.bottom`, because the bar
-          // already sits below it), the deck's 13pt footer, and the chat
-          // composer's keyboard lift, which subtracts the bar's height.
-          // Absolute, the deck's ✕ and ♥ land under the bar and it takes
-          // their touches — the app's primary action — and the composer goes
-          // back under the keyboard, the bug of 2026-09-16. A sky behind the
-          // navigator gets the look without any of that: it is paint, it
-          // takes no touches and no space.
-          tabBarStyle: {
-            backgroundColor: glass.sheet,
-            borderTopColor: glass.edge,
-            borderTopWidth: 1,
-            height: barHeight,
-            paddingBottom: centred ? 0 : bottomInset,
-          },
-          tabBarBackground: () => (
-            <BlurView
-              intensity={40}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-          ),
-          tabBarLabelStyle: {
-            ...type.caption,
-            fontSize: 11,
-            // why: on the web react-navigation's label box collapses to the
-            // font's content area — 10pt under an 11pt face — and its own
-            // `overflow: hidden` then cut the cedilla off "Keşfet" and
-            // "Eşleşmeler" (measured in the browser, 2026-09-16). Showing
-            // the box is what fixes it, at the price of the ellipsis RNW
-            // would have drawn: the three labels are single Turkish words
-            // that fit a third of the narrowest bar, and this app ships one
-            // locale (PRD). Web only, so the metrics ITEM_CENTRE was
-            // measured against are untouched.
-            ...(Platform.OS === 'web' ? { overflow: 'visible' as const } : {}),
-          },
-          tabBarItemStyle: { paddingTop: itemOffset },
-          sceneStyle: { backgroundColor: color.bg },
-        }}
-      >
-        <Tabs.Screen
-          name="(profile)"
-          options={{
-            title: t.tabs.profile,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="profile" focused={focused} />
+      <ConsentGateContext.Provider value={consent}>
+        <Tabs
+          // Keşfet is the middle tab and the one the app opens on; the order
+          // is you, then them, then the ones who answered.
+          initialRouteName="(discover)"
+          // Not the default `firstRoute`, which is `profile` by declaration
+          // order: Android back from the tab the app opens on would switch to
+          // a tab nobody had visited instead of leaving the app.
+          backBehavior="initialRoute"
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: color.text,
+            tabBarInactiveTintColor: color.textFaint,
+            // The popup's tint and hairline (owner, 2026-09-18: "alt tabin de
+            // biraz saydam olmasını istiyorum, bütünlüğü bozmasın").
+            //
+            // What shows through it is the sky under the whole navigator
+            // (`underBar`, above), not the screen's own. The library clips its
+            // scenes above the bar (`styles.screens`, `overflow: 'hidden'`,
+            // not an option), so a screen's sky stops at the bar's top edge
+            // whatever it does; the one behind the navigator does not, and
+            // runs on under the bar and past the page's bottom edge, into the
+            // strip a phone's browser keeps for its toolbar. See OVERHANG in
+            // `CosmicGround`.
+            //
+            // In flow, deliberately. Taking the bar out of flow — `position:
+            // 'absolute'`, the usual way to let content run under a
+            // translucent bar — removes its height from the layout, and three
+            // things here are built on the bar being in it: `lib/insets.ts`
+            // (a tab screen must not add `insets.bottom`, because the bar
+            // already sits below it), the deck's 13pt footer, and the chat
+            // composer's keyboard lift, which subtracts the bar's height.
+            // Absolute, the deck's ✕ and ♥ land under the bar and it takes
+            // their touches — the app's primary action — and the composer goes
+            // back under the keyboard, the bug of 2026-09-16. A sky behind the
+            // navigator gets the look without any of that: it is paint, it
+            // takes no touches and no space.
+            tabBarStyle: {
+              backgroundColor: glass.sheet,
+              borderTopColor: glass.edge,
+              borderTopWidth: 1,
+              height: barHeight,
+              paddingBottom: centred ? 0 : bottomInset,
+            },
+            tabBarBackground: () => (
+              <BlurView
+                intensity={40}
+                tint="dark"
+                style={StyleSheet.absoluteFill}
+              />
             ),
+            tabBarLabelStyle: {
+              ...type.caption,
+              fontSize: 11,
+              // why: on the web react-navigation's label box collapses to the
+              // font's content area — 10pt under an 11pt face — and its own
+              // `overflow: hidden` then cut the cedilla off "Keşfet" and
+              // "Eşleşmeler" (measured in the browser, 2026-09-16). Showing
+              // the box is what fixes it, at the price of the ellipsis RNW
+              // would have drawn: the three labels are single Turkish words
+              // that fit a third of the narrowest bar, and this app ships one
+              // locale (PRD). Web only, so the metrics ITEM_CENTRE was
+              // measured against are untouched.
+              ...(Platform.OS === 'web'
+                ? { overflow: 'visible' as const }
+                : {}),
+            },
+            tabBarItemStyle: { paddingTop: itemOffset },
+            sceneStyle: { backgroundColor: color.bg },
           }}
-        />
-        <Tabs.Screen
-          name="(discover)"
-          options={{
-            title: t.tabs.discover,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="discover" focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="(matches)"
-          options={({ route, navigation }) => {
-            // why: expo-router types the navigation handed to a screen's
-            // options as `any`; its state here is the tab navigator's, the
-            // same route list the bar numbers its tabs from.
-            const { routes } = (
-              navigation as {
-                getState(): { routes: readonly { key: string }[] };
-              }
-            ).getState();
-            return {
-              title: t.tabs.matches,
+        >
+          <Tabs.Screen
+            name="(profile)"
+            options={{
+              title: t.tabs.profile,
               tabBarIcon: ({ focused }) => (
-                <TabIcon name="matches" focused={focused} />
+                <TabIcon name="profile" focused={focused} />
               ),
-              // Unread messages across every thread, on the icon's top-right
-              // corner (owner, 2026-09-15). The list's per-thread badge
-              // colours, so the two read as the same count.
-              tabBarBadgeStyle: {
-                backgroundColor: color.cool,
-                color: color.onBright,
-                fontFamily: font.semibold,
-              },
-              // Spread rather than set to undefined: the option types are
-              // exact. The badge itself is not announced, so with a count the
-              // tab's label says it, after the role and position the library
-              // would have said (see `tabAccessibilityLabel`).
-              ...(badge === undefined
-                ? {}
-                : {
-                    tabBarBadge: badge,
-                    tabBarAccessibilityLabel: tabAccessibilityLabel(
-                      Platform.OS,
-                      t.tabs.matches,
-                      routes.findIndex((r) => r.key === route.key),
-                      routes.length,
-                      t.tabs.unread(unread),
-                    ),
-                  }),
-            };
-          }}
-        />
-      </Tabs>
+            }}
+          />
+          <Tabs.Screen
+            name="(discover)"
+            options={{
+              title: t.tabs.discover,
+              tabBarIcon: ({ focused }) => (
+                <TabIcon name="discover" focused={focused} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="(matches)"
+            options={({ route, navigation }) => {
+              // why: expo-router types the navigation handed to a screen's
+              // options as `any`; its state here is the tab navigator's, the
+              // same route list the bar numbers its tabs from.
+              const { routes } = (
+                navigation as {
+                  getState(): { routes: readonly { key: string }[] };
+                }
+              ).getState();
+              return {
+                title: t.tabs.matches,
+                tabBarIcon: ({ focused }) => (
+                  <TabIcon name="matches" focused={focused} />
+                ),
+                // Unread messages across every thread, on the icon's top-right
+                // corner (owner, 2026-09-15). The list's per-thread badge
+                // colours, so the two read as the same count.
+                tabBarBadgeStyle: {
+                  backgroundColor: color.cool,
+                  color: color.onBright,
+                  fontFamily: font.semibold,
+                },
+                // Spread rather than set to undefined: the option types are
+                // exact. The badge itself is not announced, so with a count the
+                // tab's label says it, after the role and position the library
+                // would have said (see `tabAccessibilityLabel`).
+                ...(badge === undefined
+                  ? {}
+                  : {
+                      tabBarBadge: badge,
+                      tabBarAccessibilityLabel: tabAccessibilityLabel(
+                        Platform.OS,
+                        t.tabs.matches,
+                        routes.findIndex((r) => r.key === route.key),
+                        routes.length,
+                        t.tabs.unread(unread),
+                      ),
+                    }),
+              };
+            }}
+          />
+        </Tabs>
+      </ConsentGateContext.Provider>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   host: { flex: 1, backgroundColor: color.bg },
-  waiting: { alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,4 +1,7 @@
 import { Stack } from 'expo-router';
+import { useContext } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ConsentGateContext } from '@/lib/consent';
 import { color } from '@/theme/tokens';
 
 /**
@@ -14,14 +17,38 @@ import { color } from '@/theme/tokens';
  * One component rather than three copies, because a nested native stack
  * with no `contentStyle` flashes white between pushes and the omission
  * would be silent.
+ *
+ * It is also where the notice gate holds (lib/consent.ts): while the
+ * tabs have not yet heard that the member's record is current, every
+ * screen of the stack is a spinner. The stack itself mounts at once, so
+ * it takes the URL's route; only the screen waits.
  */
 export function TabStack() {
+  const gate = useContext(ConsentGateContext);
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: color.bg },
       }}
+      screenLayout={({ children }) =>
+        gate === 'current' ? (
+          <>{children}</>
+        ) : (
+          <View style={styles.waiting} testID="consent-gate">
+            <ActivityIndicator color={color.textMuted} />
+          </View>
+        )
+      }
     />
   );
 }
+
+const styles = StyleSheet.create({
+  waiting: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.bg,
+  },
+});

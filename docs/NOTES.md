@@ -8652,11 +8652,15 @@ current)`: older asks, equal or newer does not (a phone on an older
   member's messages read before the gate stopped them (reproduced with
   300 ms of latency on the stand-in: the `PATCH messages … read_at`
   left in the same millisecond as the gate's read). Now each tab screen
-  is replaced by a spinner (`screenLayout` on the tabs) until the record
-  is known current; after the fix the same run sends only the gate's
-  read. Holding back the whole `<Tabs>` was tried first and lost the
-  URL (`/matches` landed on the deck), because the navigator mounted
-  later, on its initial route. The unread badge's count waits for the
+  is replaced by a spinner until the record is known current; after the
+  fix the same run sends only the gate's read. Where the wait sits
+  matters, and evaluator-qa caught it twice: holding back the whole
+  `<Tabs>` lost the URL (`/matches` landed on the deck), and a
+  `screenLayout` on the tabs held back each tab's stack, which then
+  mounted on its initial route (`/chat/<id>` landed on the list). The
+  wait is now a `screenLayout` in `TabStack`, around each leaf screen;
+  the navigators mount at once and keep the URL. Checked for a current
+  record: `/chat/abc`, `/match/abc`, `/starter/abc` keep their target. The unread badge's count waits for the
   gate too. A record the entry screen already read as current is
   remembered for the life of the bundle, so the usual launch does not
   wait twice.
