@@ -8687,10 +8687,10 @@ sign-up mail.
   Spanish speaker finds "London" and "Munich" by their GeoNames names but
   not "Londres" or "Múnich". A Spanish list is drafted in the project
   files (`i18n-es/exonyms-es.json`); wiring it is a `geo` change.
-- The big-three row (`BigThreeRow`) cuts "Capricornio" and "Ascendente"
+- The big-three row (`BigThreeRow`) cut "Capricornio" and "Ascendente"
   to "Caprico…" / "Ascende…" on the web, where `adjustsFontSizeToFit` is
-  a no-op; on iOS it shrinks to 0.8, which is not enough for either. The
-  Turkish and English words are shorter. A layout question for the owner.
+  a no-op. Put to the owner as two layouts; he picked "küçük"
+  (2026-09-30) and the English change carries it, merged in here.
 
 ### Battery gaps
 
@@ -8699,3 +8699,10 @@ sign-up mail.
   big-three row above, and the filter's band buttons, where "Equilibrada"
   and "Excepcional" were cut until the band names became "Mixta" and
   "Insólita".
+- With the smaller big-three row, measured with a DOM Range on the web
+  (2026-09-30): the Spanish words fit at 414, 390 and 375 wide. At 360
+  "Capricornio" is about 3 px too wide and ends in "…"; at 320
+  "Capricornio" and "Ascendente" are cut. iPhones are 375 and up, where
+  it fits, and iOS can shrink the text to 0.8 of its size, which is
+  enough at 360. On the web at 360, a common Android width, it is still
+  cut.
