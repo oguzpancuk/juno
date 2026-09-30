@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { LEGAL_VERSION } from './legal';
-import { ConsentVersionSchema, needsConsent } from './consent-rules';
+import {
+  ConsentVersionSchema,
+  needsConsent,
+  returnPath,
+} from './consent-rules';
 
 describe('re-consent', () => {
   it('asks a member whose accepted version is older than the current one', () => {
@@ -33,5 +37,32 @@ describe('re-consent', () => {
     expect(ConsentVersionSchema.parse('2026-09-30')).toBe('2026-09-30');
     for (const bad of ['30.09.2026', '2026-9-30', '', 'kabul'])
       expect(ConsentVersionSchema.safeParse(bad).success, bad).toBe(false);
+  });
+});
+
+describe('where accepting returns to', () => {
+  it('returns to a path inside the app', () => {
+    expect(returnPath('/chat/abc')).toBe('/chat/abc');
+    expect(returnPath('/profile')).toBe('/profile');
+  });
+
+  it('falls back to the deck for anything else', () => {
+    // The param arrives in a URL anyone can type: it must not become a
+    // way off the site, or a loop back to the consent screen itself.
+    for (const raw of [
+      undefined,
+      '',
+      'chat/abc',
+      '//evil.example/x',
+      '/\\evil.example',
+      'https://evil.example',
+      '/consent',
+      '/consent?next=/x',
+      '/sign-in',
+      '/onboarding',
+      '/',
+      ['/chat/a', '/chat/b'],
+    ])
+      expect(returnPath(raw), JSON.stringify(raw)).toBe('/discover');
   });
 });

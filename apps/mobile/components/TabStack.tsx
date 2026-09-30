@@ -1,8 +1,15 @@
 import { Stack } from 'expo-router';
 import { useContext } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ConsentGateContext } from '@/lib/consent';
-import { color } from '@/theme/tokens';
+import { t } from '@/lib/strings';
+import { color, font } from '@/theme/tokens';
 
 /**
  * The stack inside each tab. Every signed-in screen is pushed onto one of
@@ -20,11 +27,12 @@ import { color } from '@/theme/tokens';
  *
  * It is also where the notice gate holds (lib/consent.ts): while the
  * tabs have not yet heard that the member's record is current, every
- * screen of the stack is a spinner. The stack itself mounts at once, so
+ * screen of the stack is a spinner, or the entry screen's error and
+ * retry when the record could not be read. The stack itself mounts at once, so
  * it takes the URL's route; only the screen waits.
  */
 export function TabStack() {
-  const gate = useContext(ConsentGateContext);
+  const { gate, retry } = useContext(ConsentGateContext);
   return (
     <Stack
       screenOptions={{
@@ -34,6 +42,17 @@ export function TabStack() {
       screenLayout={({ children }) =>
         gate === 'current' ? (
           <>{children}</>
+        ) : gate === 'error' ? (
+          <View style={styles.waiting} testID="consent-gate-error">
+            <Text style={styles.text}>{t.errors.generic}</Text>
+            <Pressable
+              testID="consent-gate-retry"
+              role="button"
+              onPress={retry}
+            >
+              <Text style={styles.link}>{t.common.retry}</Text>
+            </Pressable>
+          </View>
         ) : (
           <View style={styles.waiting} testID="consent-gate">
             <ActivityIndicator color={color.textMuted} />
@@ -49,6 +68,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
     backgroundColor: color.bg,
   },
+  // The entry screen's error and retry, so the two doors read the same.
+  text: { fontFamily: font.regular, color: color.textMuted },
+  link: { fontFamily: font.regular, color: color.textMuted, padding: 12 },
 });

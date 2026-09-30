@@ -33,3 +33,18 @@ export function needsConsent(accepted: string, current: string): boolean {
 export const ConsentVersionSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'consent_version is not YYYY-MM-DD');
+
+/** The tab screens a member can be stopped on the way into. */
+const TAB_PATH =
+  /^\/(?:discover|matches|profile|(?:chat|match|starter)\/[A-Za-z0-9-]+)$/;
+
+/**
+ * Where accepting the notice returns to: the tab screen the gate stopped
+ * the member on the way into (`/consent?next=…`), so a chat opened from a
+ * link opens once they accept. The param is part of a URL anyone can
+ * type, so only the app's own tab paths are taken — never another host,
+ * never `/consent` itself — and anything else is the deck.
+ */
+export function returnPath(raw: string | string[] | undefined): string {
+  return typeof raw === 'string' && TAB_PATH.test(raw) ? raw : '/discover';
+}

@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
@@ -46,9 +46,9 @@ export default function TabLayout() {
   // no screen inside mounts, and so nothing reads or writes, until the
   // member's record is known to be current. The answer reaches the stacks
   // through context; `TabStack` holds back each screen, not the stack.
-  const consent = useConsentGate(userId);
+  const consent = useConsentGate(session, usePathname());
   // The badge's count is a read inside the gate too.
-  const unread = useUnreadTotal(consent === 'current' ? userId : null);
+  const unread = useUnreadTotal(consent.gate === 'current' ? userId : null);
   const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it
   // rather than stopping above the home indicator, and the items are

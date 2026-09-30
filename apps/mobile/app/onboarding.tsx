@@ -21,12 +21,14 @@ import {
   type Interest,
 } from '@/lib/profile';
 import { Calculating, STEP_MS } from '@/components/Calculating';
+import { ConsentCheckbox } from '@/components/ConsentCheckbox';
 import {
   Chip,
   Field,
   GradientButton,
   SCREEN_TOP_GUTTER,
 } from '@/components/ui';
+import { markConsentCurrent } from '@/lib/consent';
 import { dbErrorText } from '@/lib/errors';
 import { accountNote, openedByProvider } from '@/lib/oauth';
 import { abandonEmptyAccount } from '@/lib/safety';
@@ -188,6 +190,9 @@ export default function Onboarding() {
         device,
       });
       await heldFor(started);
+      // The row was written with this build's notice version: the tabs'
+      // consent gate need not read it back.
+      if (result.ok) markConsentCurrent(session.session.user.id);
       if (result.ok || result.reason === 'exists') {
         // ONE router call into the tab tree, never two. A replace followed
         // by a push in the same handler both run in one queue flush, before
@@ -365,18 +370,16 @@ export default function Onboarding() {
 
         <Text style={styles.hint}>{t.onboarding.locationHint}</Text>
 
-        <Pressable
-          testID="consent"
-          style={styles.consentRow}
-          onPress={() => {
-            setConsented((on) => !on);
-          }}
-        >
-          <View style={[styles.box, consented && styles.boxOn]}>
-            {consented ? <Text style={styles.tick}>✓</Text> : null}
-          </View>
-          <Text style={styles.consentText}>{t.onboarding.consent}</Text>
-        </Pressable>
+        <View style={styles.consentRow}>
+          <ConsentCheckbox
+            testID="consent"
+            checked={consented}
+            onToggle={() => {
+              setConsented((on) => !on);
+            }}
+            label={t.onboarding.consent}
+          />
+        </View>
         <LegalLink
           label={t.onboarding.consentLink}
           style={styles.consentLink}
@@ -399,30 +402,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   content: { padding: 24, gap: 8 },
   title: { color: color.text, fontSize: 26, fontFamily: font.semibold },
-  consentRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginTop: 16,
-  },
-  box: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boxOn: { backgroundColor: color.cool, borderColor: color.cool },
-  tick: { color: color.onBright, fontSize: 14, lineHeight: 18 },
-  consentText: {
-    fontFamily: font.regular,
-    color: color.textMuted,
-    fontSize: 13,
-    flex: 1,
-    lineHeight: 19,
-  },
+  consentRow: { marginTop: 16 },
   consentLink: {
     fontFamily: font.regular,
     color: color.textMuted,

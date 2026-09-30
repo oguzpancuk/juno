@@ -30,7 +30,14 @@ export default function Index() {
     if (!userId) return;
     let cancelled = false;
     void fetchOwnProfile(userId).then((state) => {
-      if (!cancelled) setProfile(state);
+      if (cancelled) return;
+      // Known current: the tabs' own gate need not ask again.
+      if (
+        state.status === 'ready' &&
+        !needsConsent(state.profile.consent_version, LEGAL_VERSION)
+      )
+        markConsentCurrent(userId);
+      setProfile(state);
     });
     return () => {
       cancelled = true;
@@ -46,8 +53,6 @@ export default function Index() {
     // before anything else (KVKK re-consent, lib/consent.ts).
     if (needsConsent(profile.profile.consent_version, LEGAL_VERSION))
       return <Redirect href="/consent" />;
-    // Known current: the tabs' own gate need not ask again.
-    markConsentCurrent(profile.profile.id);
     return <Redirect href="/discover" />;
   }
   if (profile.status === 'error') {

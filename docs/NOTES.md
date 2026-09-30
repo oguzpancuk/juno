@@ -8625,6 +8625,20 @@ current)`: older asks, equal or newer does not (a phone on an older
   `lib/strings.ts`; once #18 lands they move into the i18n catalog in
   all three languages.
 
+- **Review round 1 (#19).** The gate now fails closed: while the
+  session is still being read, and when the record cannot be read (after
+  supabase-js's own three retries, 1 + 2 + 4 s), each tab screen is the
+  entry screen's error with a retry, never the screen itself. `/consent`
+  reads the record first (no profile goes to onboarding, a current one
+  goes on), never locks on a throw, and returns to the path the gate
+  stopped the member on (`?next=`, allowlisted in `returnPath` to the
+  tab paths). A match arriving while the member is not known current no
+  longer navigates over `/consent`, and keeps its reveal. Onboarding and
+  accepting mark the member current, so neither pays a second read. The
+  consent box and the delete confirmation are shared components
+  (`ConsentCheckbox`, `DeleteAccountConfirm`), so onboarding's box now
+  has the checkbox role and state too.
+
 ### Open, for the owner
 
 - The gate is the app's. Until an older member opens the app and
