@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, OutlineButton } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { BlockedList } from '@/components/BlockedList';
+import { DeleteAccountConfirm } from '@/components/DeleteAccountConfirm';
 import { LegalText } from '@/components/LegalText';
 import { PremiumPanel } from '@/components/PremiumPanel';
 import { updateLocation } from '@/lib/discover';
@@ -13,7 +14,7 @@ import { LANGUAGE_NAMES } from '@/lib/i18n';
 import { chooseLanguage, useLanguage } from '@/lib/language';
 import type { LanguagePreference } from '@/lib/language-choice';
 import { t } from '@/lib/strings';
-import { color, font, radius, space, type } from '@/theme/tokens';
+import { color, font, space, type } from '@/theme/tokens';
 
 export type SettingsView =
   'menu' | 'blocked' | 'legal' | 'premium' | 'language';
@@ -233,21 +234,11 @@ export function SettingsPanel({
           testID="delete-account"
         />
         {confirmingDelete && !deleting ? (
-          <View style={styles.confirm} testID="delete-confirm">
-            <Text style={styles.hint}>{t.safety.deleteConfirm}</Text>
-            <Pressable
-              testID="delete-yes"
-              style={({ pressed }) => [
-                styles.confirmDanger,
-                pressed && styles.dim,
-              ]}
-              onPress={doDelete}
-            >
-              <Text style={styles.danger}>{t.safety.deleteTitle}</Text>
-            </Pressable>
-            <OutlineButton
-              label={t.safety.cancel}
-              onPress={() => {
+          <View style={styles.confirm}>
+            <DeleteAccountConfirm
+              deleting={false}
+              onConfirm={doDelete}
+              onCancel={() => {
                 setConfirmingDelete(false);
               }}
             />
@@ -363,11 +354,5 @@ const styles = StyleSheet.create({
   error: { fontFamily: font.regular, color: color.danger },
   ok: { fontFamily: font.regular, color: color.ok, fontSize: 13 },
   danger: { ...type.body, color: color.danger, fontFamily: font.semibold },
-  confirm: { gap: space.sm, padding: space.lg, paddingTop: 0 },
-  confirmDanger: {
-    backgroundColor: color.dangerSurface,
-    borderRadius: radius.pill,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
+  confirm: { padding: space.lg, paddingTop: 0 },
 });

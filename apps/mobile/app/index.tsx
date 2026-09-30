@@ -1,12 +1,10 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ErrorRetry } from '@/components/ErrorRetry';
+import { markConsentAsked, markConsentCurrent } from '@/lib/consent';
+import { needsConsent } from '@/lib/consent-rules';
+import { LEGAL_VERSION } from '@/lib/legal';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -27,7 +25,15 @@ export default function Index() {
     if (!userId) return;
     let cancelled = false;
     void fetchOwnProfile(userId).then((state) => {
-      if (!cancelled) setProfile(state);
+      if (cancelled) return;
+      // Known either way: the tabs' gate, or `/consent`, need not read the
+      // record again.
+      if (state.status === 'ready') {
+        if (needsConsent(state.profile.consent_version, LEGAL_VERSION))
+          markConsentAsked(userId);
+        else markConsentCurrent(userId);
+      }
+      setProfile(state);
     });
     return () => {
       cancelled = true;
@@ -39,22 +45,21 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
   if (session.status === 'signed-in' && profile.status === 'ready') {
+    // A member whose record names an older notice accepts the current one
+    // before anything else (KVKK re-consent, lib/consent.ts).
+    if (needsConsent(profile.profile.consent_version, LEGAL_VERSION))
+      return <Redirect href="/consent" />;
     return <Redirect href="/discover" />;
   }
   if (profile.status === 'error') {
     return (
-      <View style={styles.center}>
-        <Text style={styles.text}>{t.errors.generic}</Text>
-        <Pressable
-          testID="retry"
-          onPress={() => {
-            setProfile({ status: 'loading' });
-            setAttempt((n) => n + 1);
-          }}
-        >
-          <Text style={styles.link}>{t.common.retry}</Text>
-        </Pressable>
-      </View>
+      <ErrorRetry
+        retryTestID="retry"
+        onRetry={() => {
+          setProfile({ status: 'loading' });
+          setAttempt((n) => n + 1);
+        }}
+      />
     );
   }
   return (
@@ -68,5 +73,4 @@ export default function Index() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   text: { fontFamily: font.regular, color: color.textMuted },
-  link: { fontFamily: font.regular, color: color.textMuted, padding: 12 },
 });

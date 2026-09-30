@@ -113,6 +113,20 @@ export const en: Strings = {
     locationHint:
       'If you allow location access, distances are more accurate; if not, your birth city is used.',
   },
+  reconsent: {
+    title: 'Our privacy notice has changed',
+    body: (date: string) =>
+      `The notice that explains how we process your personal data changed on ${date}. To continue, read the current notice and accept it.`,
+    agree:
+      'I have read the current privacy notice and agree to my birth details and my location being processed for the purposes it sets out.',
+    submit: 'Accept and continue',
+    busy: 'Saving…',
+    failed:
+      'Your acceptance couldn’t be saved. Check your connection and try again.',
+    declineTitle: 'Don’t want to accept?',
+    decline:
+      'Withdrawing your consent means deleting your account: your profile, chart, matches and messages are deleted. If you only sign out, this screen opens again the next time you sign in.',
+  },
   chart: {
     title: 'Your birth chart',
     sun: 'Sun',

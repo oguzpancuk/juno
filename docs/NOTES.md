@@ -8771,3 +8771,133 @@ sign-up mail.
   through. It still lists forms: "lo/la" before a verb is listed for
   four verbs only, and a new adjective after "eres/estás" is caught
   unless it is on the list of invariable words.
+
+## 2026-09-30 — KVKK: the CHECK, and asking again
+
+ROADMAP "KVKK consent + privacy policy", on the owner's "kvkk onayini
+baslatabilirsin". Two things were owed: the clause's CHECK, and the
+re-consent step this file and the ROADMAP had promised since 2026-09-17.
+
+- **The CHECK.** The clause says a profile insert without `consent_at`
+  is refused by a CHECK. Nothing could be: `consent_at` had a default
+  and a trigger that stamped it on every insert, consented or not, and
+  what actually refused a consent-less insert was `consent_version`'s
+  NOT NULL. Now the trigger stamps only when the row carries a version,
+  `consent_at` has no default, both columns lose NOT NULL, and one
+  named CHECK, `profiles_consent_recorded`, requires both. The rule is
+  as strong as before and is now the thing the clause names. Existing
+  rows all have both halves, so the constraint validates as added. The
+  down path is in the migration's header and was run.
+- **Run by hand, not reasoned about.** No Docker here, so the supabase
+  suite is NOT RUN. The consent parts of migrations 07, 12 and 13 and
+  the new one, verbatim, on a PostgreSQL 16 cluster with a stand-in
+  `profiles` (memory: postgres-without-docker): on main an insert with
+  no version fails `23502` (not-null); after the migration it fails
+  `23514` naming `profiles_consent_recorded`, with or without a forged
+  `consent_at`; clearing the version on update fails the same way;
+  backwards still fails; forward re-stamps; the down path applies.
+- **Re-consent.** `lib/consent-rules.ts` `needsConsent(accepted,
+current)`: older asks, equal or newer does not (a phone on an older
+  bundle after its member accepted on the web). The entry screen sends
+  such a member to `/consent`; `useConsentGate` on the tabs layout
+  catches a web address typed straight into a tab and an app left open
+  across a deploy. The screen: the full text in the popup onboarding
+  uses, a box to tick, "Onayla ve devam et"; and, because settings is
+  behind it, "Çıkış yap" and "Hesabımı sil" with settings' own
+  in-page confirmation. Accepting is an update of `consent_version`
+  alone, read back before it counts.
+- **Default picked: every version asks.** Not only the changes someone
+  judges material: what a member agreed to is the whole text their
+  record names, and one version per day keeps it rare. The first ask is
+  everyone whose record is older than 2026-09-30, which covers the
+  #14 finding (the location purpose widened on 2026-09-28).
+- **The notice text did not change**, so `LEGAL_VERSION` stays
+  2026-09-30 and nothing moved with it. The screen's strings are
+  `reconsent` in `lib/i18n/tr.ts`, `en.ts` and `es.ts` (moved there when
+  #18 and #17 merged); its date is `LEGAL_UPDATED_IN` of the language on
+  screen.
+
+- **Review round 1 (#19).** The gate now fails closed: while the
+  session is still being read, and when the record cannot be read (after
+  supabase-js's own three retries, 1 + 2 + 4 s), each tab screen is the
+  entry screen's error with a retry, never the screen itself. `/consent`
+  reads the record first (no profile goes to onboarding, a current one
+  goes on), never locks on a throw, and returns to the path the gate
+  stopped the member on (`?next=`, allowlisted in `returnPath` to the
+  tab paths). A match arriving while the member is not known current no
+  longer navigates over `/consent`. Onboarding and accepting mark the
+  member current, so neither pays a second read. The consent box and
+  the delete confirmation are shared components (`ConsentCheckbox`,
+  `DeleteAccountConfirm`), so onboarding's box now has the checkbox role
+  and state too.
+- **Review round 2 (#19).** Round 1's match fix only kept the reveal
+  unspent; nothing showed it later, because the Realtime insert fires
+  once, so "Eşleştiniz!" never appeared for that match. Now the root
+  listener holds the match (`lib/held-matches.ts`) and the tabs' layout
+  shows it when its gate answers `current`. Not driven: the stand-in
+  backend has no Realtime; the queue itself is under Vitest. Also: the
+  return keeps the chat's `?page=match` (the Uyum page), and
+  `lib/routes.test.ts` checks `returnPath` against every screen under
+  (tabs); an already-current `/consent` returns with the list anchored
+  like accepting does; `/consent` skips its read when the gate or the
+  entry screen just read the record as older; the delete confirmation
+  on `/consent` is disabled while accepting saves; the error and retry
+  is one component (`ErrorRetry`); the tab layout no longer re-renders
+  on every navigation (a child follows the URL).
+
+### Open, for the owner
+
+- The gate is the app's. Until an older member opens the app and
+  accepts, the database keeps processing their data as before: they
+  stay in other people's decks and in "Seni beğenenler" with the
+  distance the 2026-09-28 text added. Hiding them server-side (the
+  `discover` and `liked_me` views filtering on `consent_version`) is a
+  schema change with a view the 2026-09-23 plan measurement showed is
+  sensitive to shape; not done here. The owner chose a separate PR for
+  it (decision card, 2026-09-30 06:31 UTC).
+
+### Battery gaps
+
+- The gate and the screen are not in the battery: the web target has no
+  component tests. Driven in the web export against a stand-in backend
+  (screenshots in the PR): an older record lands on `/consent` from
+  sign-in and from `/matches` typed in; an unticked box says so; a
+  failed save says so and stays; accepting sends `consent_version
+2026-09-30` and lands on the deck; a current record goes straight in.
+  A URL straight into a tab shows the tab bar with a spinner where the
+  screen would be, one round trip, then `/consent`.
+- **Found by evaluator-qa, fixed before the PR opened.** The first gate
+  let `<Tabs>` render and redirected when its read answered. Tab screens
+  start their own requests on mount, and the chat's is a write: a
+  member with an older record who opened `/chat/<id>` marked the other
+  member's messages read before the gate stopped them (reproduced with
+  300 ms of latency on the stand-in: the `PATCH messages … read_at`
+  left in the same millisecond as the gate's read). Now each tab screen
+  is replaced by a spinner until the record is known current; after the
+  fix the same run sends only the gate's read. Where the wait sits
+  matters, and evaluator-qa caught it twice: holding back the whole
+  `<Tabs>` lost the URL (`/matches` landed on the deck), and a
+  `screenLayout` on the tabs held back each tab's stack, which then
+  mounted on its initial route (`/chat/<id>` landed on the list). The
+  wait is now a `screenLayout` in `TabStack`, around each leaf screen;
+  the navigators mount at once and keep the URL. Checked for a current
+  record: `/chat/abc`, `/match/abc`, `/starter/abc` keep their target. The unread badge's count waits for the
+  gate too. A record the entry screen already read as current is
+  remembered for the life of the bundle, so the usual launch does not
+  wait twice.
+
+- Side finding, not fixed here (evaluator-qa): on the web, `LinkText`
+  (`components/ui.tsx`) renders a div with no role and no tabindex, so
+  "Gizlilik metnini oku" is neither reachable by keyboard nor announced
+  as a link, and `GradientButton` has no button role. Both predate this
+  change and are on every door.
+
+### Upstream candidates
+
+- The notice's "Değişiklikler" section says a new text is published at
+  the same address. It could now add that the app asks again before
+  going on. That is a text change, so it waits for the next one that
+  moves `LEGAL_VERSION` anyway.
+- The stand-in backend for screenshots was rebuilt a third time
+  (`.shots/stub.mjs`, not committed). Still a candidate for
+  `apps/mobile/scripts/` beside the driver.

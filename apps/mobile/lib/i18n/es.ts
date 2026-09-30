@@ -117,6 +117,20 @@ export const es: Strings = {
     locationHint:
       'Si das permiso de ubicación, las distancias serán más exactas; si no, se usa tu ciudad de nacimiento.',
   },
+  reconsent: {
+    title: 'Hemos actualizado el aviso de privacidad',
+    body: (date: string) =>
+      `El aviso que explica cómo tratamos tus datos personales cambió el ${date}. Para continuar, lee el aviso vigente y acéptalo.`,
+    agree:
+      'He leído el aviso de privacidad vigente y acepto que mis datos de nacimiento y mi ubicación se traten con los fines que en él se indican.',
+    submit: 'Aceptar y continuar',
+    busy: 'Guardando…',
+    failed:
+      'No pudimos guardar tu aceptación. Revisa tu conexión e inténtalo de nuevo.',
+    declineTitle: '¿No quieres aceptarlo?',
+    decline:
+      'Retirar tu consentimiento significa eliminar tu cuenta: se eliminan tu perfil, tu carta, tus matches y tus mensajes. Si solo cierras sesión, esta pantalla vuelve a aparecer la próxima vez que entres.',
+  },
   chart: {
     title: 'Tu carta natal',
     sun: 'Sol',
