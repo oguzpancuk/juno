@@ -71,7 +71,18 @@
  * the merge day could not be told apart from the first; it is dated 30
  * Eylül, the next day, which the database accepts from the 29th on
  * (`profiles_consent_version_not_future` allows today plus one).
+ *
+ * Translations (2026-09-29, the owner's "uygulamayı İngilizce ve
+ * İspanyolcaya çevireceğiz, her şey çevrilecek"): each language has the
+ * notice in its own words (`legal-en.ts`, …), shown with a line above it
+ * saying the Turkish text binds, and a link to read that text. The Turkish
+ * here is still the one text: a translation is of the version dated
+ * below, it moves when this text moves, and translating it never moves
+ * the version, because what a member consents to has not changed.
  */
+import type { Language } from '@juno/astro';
+import { legalSectionsEn } from './legal-en';
+
 export interface LegalSection {
   readonly heading: string;
   /** A line starting with "• " is rendered as a bullet. */
@@ -197,3 +208,21 @@ export const legalSections: readonly LegalSection[] = [
     ],
   },
 ];
+
+/** The notice in each language; Turkish is the source and the binding one. */
+export const LEGAL_SECTIONS: Readonly<
+  Record<Language, readonly LegalSection[]>
+> = {
+  tr: legalSections,
+  en: legalSectionsEn,
+};
+
+/**
+ * `LEGAL_UPDATED` as each language writes that date. Moves with
+ * `LEGAL_VERSION` like the Turkish one; `legal.test.ts` checks each
+ * against the version.
+ */
+export const LEGAL_UPDATED_IN: Readonly<Record<Language, string>> = {
+  tr: LEGAL_UPDATED,
+  en: 'September 30, 2026',
+};

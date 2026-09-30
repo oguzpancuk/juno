@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Juno",
+    "NSLocationWhenInUseUsageDescription": "Juno reads your location once to show people near you. It is shared only as a distance; no one is shown your coordinates."
+  }
+}

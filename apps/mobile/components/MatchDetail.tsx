@@ -234,14 +234,14 @@ export function MatchDetail({
         >
           {REPORT_REASONS.map((reason) => (
             <Pressable
-              key={reason.value}
-              testID={`reason-${reason.value}`}
+              key={reason}
+              testID={`reason-${reason}`}
               style={({ pressed }) => [styles.reason, pressed && styles.dim]}
               onPress={() => {
-                file(reason.value);
+                file(reason);
               }}
             >
-              <Text style={styles.body}>{reason.label}</Text>
+              <Text style={styles.body}>{t.safety.reasons[reason]}</Text>
             </Pressable>
           ))}
         </Popup>

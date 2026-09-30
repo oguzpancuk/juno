@@ -1731,8 +1731,10 @@ accept them back` failed with a user the other run had created; each
 - **Transits, daily horoscope, notifications about "today"** — a
   retention feature for a product that first needs to prove matching.
 - **Payments / premium** — nothing to gate yet.
-- **English UI / i18n** — single-market launch; strings already live in
-  one file so the cost later is translation, not refactoring.
+- ~~**English UI / i18n** — single-market launch; strings already live in
+  one file so the cost later is translation, not refactoring.~~ Taken up
+  instead: the owner asked for English and Spanish on 2026-09-29; see
+  ADR-0014. Struck then; the line is kept so the reversal is visible.
 - **Media in chat, voice, video** — text proves the starter works; media
   adds Storage cost and moderation surface.
 - ~~**Web app** — no user in the PRD uses a browser.~~ Shipped instead:

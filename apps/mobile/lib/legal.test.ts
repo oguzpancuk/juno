@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { LEGAL_UPDATED, LEGAL_VERSION, legalSections } from './legal';
+import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
+import { CATALOGS, LOCALE_TAGS } from './i18n';
+import {
+  LEGAL_SECTIONS,
+  LEGAL_UPDATED,
+  LEGAL_UPDATED_IN,
+  LEGAL_VERSION,
+  legalSections,
+} from './legal';
 import { t } from './strings';
 
 describe('the privacy notice', () => {
@@ -33,4 +41,69 @@ describe('the privacy notice', () => {
     }).format(new Date(`${LEGAL_VERSION}T00:00:00Z`));
     expect(LEGAL_UPDATED).toBe(rendered);
   });
+});
+
+describe('the privacy notice in translation', () => {
+  const translations = LANGUAGES.filter((l) => l !== SOURCE_LANGUAGE);
+
+  it.each(LANGUAGES)('%s writes the date its version names', (language) => {
+    const rendered = new Intl.DateTimeFormat(LOCALE_TAGS[language], {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(`${LEGAL_VERSION}T00:00:00Z`));
+    expect(LEGAL_UPDATED_IN[language]).toBe(rendered);
+  });
+
+  it.each(translations)(
+    '%s has every section and every line of the Turkish text',
+    (language) => {
+      // Line for line: a translation that merged two bullets or dropped a
+      // sentence would still read well, and say less than what binds.
+      const shape = (sections: typeof legalSections) =>
+        sections.map((section) =>
+          section.body.map((line) => line.startsWith('• ')),
+        );
+      expect(shape(LEGAL_SECTIONS[language])).toEqual(shape(legalSections));
+    },
+  );
+
+  it.each(translations)(
+    '%s names every processor, contact and law the Turkish names',
+    (language) => {
+      const text = LEGAL_SECTIONS[language]
+        .flatMap((section) => section.body)
+        .join('\n');
+      for (const name of [
+        'Oğuz Pançuk',
+        'destek@juno-dating.com',
+        'juno-dating.com',
+        'Supabase',
+        'Resend',
+        'Cloudflare',
+        'Namecheap',
+        'Apple',
+        'Google',
+        'GeoNames',
+        'astronomy-engine',
+        '6698',
+        'KVKK',
+        '18',
+      ])
+        expect(text, name).toContain(name);
+    },
+  );
+
+  it.each(translations)(
+    '%s names the onboarding link by its label in that language',
+    (language) => {
+      const text = LEGAL_SECTIONS[language]
+        .flatMap((section) => section.body)
+        .join('\n');
+      expect(text).toContain(
+        `“${CATALOGS[language].onboarding.switchAccount}”`,
+      );
+    },
+  );
 });

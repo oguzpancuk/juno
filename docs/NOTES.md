@@ -8580,3 +8580,100 @@ stood in for it.
   or visual tests, so a screen whose content outgrows a short page passes
   every step. `doorSize` is tested; that the door fits is the screenshots'
   measurement above.
+
+## 2026-09-29 — English, and room for more languages
+
+The owner's ask: "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her
+şey çevrilecek. 2 ayrı threadde yapabilirsin." This thread: the
+structure, the Turkish source catalog and English. A second thread adds
+Spanish on this branch. English UI was on the ROADMAP's deferred list;
+the owner has now asked for it. Decisions in ADR-0014.
+
+- **Where the words were.** `lib/strings.ts` held almost every UI string;
+  outside it were the report reasons (`lib/safety.ts`), the date field
+  placeholders (`app/onboarding.tsx`), a `tr-TR` date format
+  (`PremiumPanel`), the
+  notice, and in the engine the names, the placement line
+  ("Güneş Koç'ta · 5. ev"), the swipe card's aspect sentence and natal
+  aspect titles, plus 1,139 interpretation texts (~107k characters).
+  All of it now reads from the language showing.
+- **Translation.** The engine texts and the notice were translated by
+  sub-agents against a written brief (glossary, voice, the content
+  rules), each file checked by a script for keys, lengths, question
+  marks, sign names in aspect texts and tempo words in house texts; the
+  UI catalog by hand. The content tests, now run per language, caught
+  one English fragment (`mars-trine-jupiter`, "People follow you.").
+- **Web screenshots** at 390x844 against a stand-in backend, both
+  locales, and the switch from Turkish to English, which lands on the
+  profile: `screenshots/i18n-*.png`. They show the UI only.
+
+### For the owner
+
+- The hosted project's sign-up mail template and subject are pasted by
+  hand (`docs/auth-setup.md` step 4); until then the hosted mail stays
+  Turkish only.
+- The App Store listing, and anything else outside the repo, is not
+  translated here.
+- iOS needs a fresh native build for the permission sentence and the
+  Apple button to follow the phone's language (`app.json` locales).
+
+### Side findings, not fixed here
+
+- `lib/chartText.ts` was imported by nothing since the v1 content
+  landed; review round 1 had it deleted with its ten planet themes rather
+  than translated into every language.
+- `lib/tab-a11y.ts` rebuilds React Navigation's iOS tab label in English
+  ("tab, 1 of 3") for every language, as it did for Turkish.
+- On Android the device's language comes from `Intl`, one tag, not the
+  phone's ordered list; `expo-localization`'s `getLocales()` would give
+  the list, but it is a new dependency and Android is deferred. A
+  browser's list changing while the page is open is followed
+  (`languagechange`); an iPhone restarts the app when its language
+  changes.
+
+- Three notes from the #17 review on this change's code, left as they
+  are: every language's content JSON is imported statically, so each
+  language adds its texts (~150 KB for English) to every bundle; loading
+  them lazily would make the engine asynchronous. The Descendant cases
+  of the aspect sentence and title are written in each `Words` (`tr.ts`,
+  `en.ts`, `es.ts`); moving the dispatch into `words.ts` would change
+  every `Words` shape, the Spanish one included, for the same output.
+  `LEGAL_UPDATED_IN` is typed by hand rather than formatted from
+  `LEGAL_VERSION` at run time, so the date a member reads does not
+  depend on the phone's `Intl`; `lib/legal.test.ts` checks each against
+  `Intl` instead.
+- Review of #17 asked the layering rules (no shared four-word run
+  between a planet's sign text and its house texts) to cover the
+  translations; English broke it in nine pairs ("put you at ease",
+  "spurs you into action", "the balance of power"…), reworded on the
+  sign side. The Spanish thread adds English to that test on #17.
+
+### Battery gaps
+
+- Whether a translated string fits its box is not tested; English runs
+  longer than Turkish in places (the match page's starter pushes its link
+  below the fold). The screenshots are the check. evaluator-qa found
+  one the battery passed: the big-three row cuts long English sign
+  names on the web ("Sagittar…", "Caprico…" at 390 and 375 wide), where
+  `adjustsFontSizeToFit` does nothing. The Spanish thread found the same
+  and put two layouts to the owner, who picked "küçük" (2026-09-30):
+  smaller badge, glyph and words, same layout, in this change. Checked
+  by evaluator-qa across all twelve signs: nothing clipped at 414, 390,
+  375 and 360 in either language (360 with about 1 px to spare for
+  "Sagittarius" in Chromium); at 320 English "Sagittarius", "Capricorn"
+  and "Aquarius" are still cut on the web, Turkish now fits. On iOS the
+  fit-to-width shrink may cover them, which is the owner's device check.
+  A clip check comparing `scrollWidth` with `clientWidth` misses
+  overflows under about 1.5 px that the browser still draws as "…";
+  measure the text with a DOM Range instead.
+- The switch's remount and return to the profile is seen in the web
+  screenshots only; nothing in the battery drives it. Review round 1
+  found what that let through: a "return to" the index was meant to
+  take after the remount stayed set, because the remounted navigator is
+  rebuilt from the navigation state and never passes the index, so a
+  later sign-in in the same session landed on the profile instead of
+  the deck. Reproduced on the web and removed; the member stays on the
+  profile without it.
+- When the device names none of the app's languages the app shows
+  English (owner, 2026-09-30), and iOS's development region is English
+  to match; Turkish stays the source the catalogs are written from.
