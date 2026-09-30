@@ -61,7 +61,7 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "lang": "tr"
+      "lang": "en"
     }
   }
 }
