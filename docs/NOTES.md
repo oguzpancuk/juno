@@ -8635,9 +8635,13 @@ the owner has now asked for it. Decisions in ADR-0014.
   `adjustsFontSizeToFit` does nothing. The Spanish thread found the same
   and put two layouts to the owner, who picked "küçük" (2026-09-30):
   smaller badge, glyph and words, same layout, in this change. Checked
-  by a script that lists clipped text: nothing clipped at 390, 375 and
-  360 in either language; at 320 English "Sagittarius" and "Capricorn"
-  are still cut on the web (Turkish fits); on iOS the fit-to-width
-  shrink may cover them, which is the owner's device check.
+  by evaluator-qa across all twelve signs: nothing clipped at 414, 390,
+  375 and 360 in either language (360 with about 1 px to spare for
+  "Sagittarius" in Chromium); at 320 English "Sagittarius", "Capricorn"
+  and "Aquarius" are still cut on the web, Turkish now fits. On iOS the
+  fit-to-width shrink may cover them, which is the owner's device check.
+  A clip check comparing `scrollWidth` with `clientWidth` misses
+  overflows under about 1.5 px that the browser still draws as "…";
+  measure the text with a DOM Range instead.
 - The switch's remount and return to the profile is seen in the web
   screenshots only; nothing in the battery drives it.
