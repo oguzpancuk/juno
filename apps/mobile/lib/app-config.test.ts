@@ -15,6 +15,7 @@ const AppJson = z.object({
         .optional(),
     }),
     locales: z.record(z.string(), z.string()).optional(),
+    web: z.object({ lang: z.string() }).partial().optional(),
     plugins: z.array(z.union([z.string(), z.tuple([z.string(), z.unknown()])])),
   }),
 });
@@ -73,5 +74,13 @@ describe('the iOS bundle', () => {
     expect(tr.ios.NSLocationWhenInUseUsageDescription).toBe(
       options.locationWhenInUsePermission,
     );
+  });
+});
+
+describe('the web page', () => {
+  it('starts in the fallback language, before any script runs', () => {
+    // `<html lang>` of the static page: what a browser or a screen reader
+    // assumes until `lib/language.ts` sets the member's own at import.
+    expect(app.expo.web?.lang).toBe(FALLBACK_LANGUAGE);
   });
 });
