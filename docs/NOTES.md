@@ -8631,6 +8631,23 @@ the owner has now asked for it. Decisions in ADR-0014.
   (`languagechange`); an iPhone restarts the app when its language
   changes.
 
+- Three notes from the #17 review on this change's code, left as they
+  are: every language's content JSON is imported statically, so each
+  language adds its texts (~150 KB for English) to every bundle; loading
+  them lazily would make the engine asynchronous. The Descendant cases
+  of the aspect sentence and title are written in each `Words` (`tr.ts`,
+  `en.ts`, `es.ts`); moving the dispatch into `words.ts` would change
+  every `Words` shape, the Spanish one included, for the same output.
+  `LEGAL_UPDATED_IN` is typed by hand rather than formatted from
+  `LEGAL_VERSION` at run time, so the date a member reads does not
+  depend on the phone's `Intl`; `lib/legal.test.ts` checks each against
+  `Intl` instead.
+- Review of #17 asked the layering rules (no shared four-word run
+  between a planet's sign text and its house texts) to cover the
+  translations; English broke it in nine pairs ("put you at ease",
+  "spurs you into action", "the balance of power"…), reworded on the
+  sign side. The Spanish thread adds English to that test on #17.
+
 ### Battery gaps
 
 - Whether a translated string fits its box is not tested; English runs
