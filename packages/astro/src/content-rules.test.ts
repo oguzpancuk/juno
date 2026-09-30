@@ -3,7 +3,7 @@ import { PLANETS } from './bodies';
 import { SIGNS } from './signs';
 import { CONTENT_FILES, KEY_SPACES, contentFiles } from './content';
 import type { HouseNumber } from './houses';
-import type { Language } from './language';
+import { LANGUAGES, SOURCE_LANGUAGE } from './language';
 import { SIGN_TR } from './tr';
 import SYNASTRY_RAW from '../content/tr/synastry.json';
 
@@ -195,16 +195,12 @@ describe('content/tr · layering rules', () => {
 });
 
 /**
- * The two rules above that do not depend on a word list hold for a
+ * The two rules above that do not depend on a word list hold for every
  * translation too: a translator reworking one layer can bring back a
  * repeated sentence or a shared phrase as easily as the source can. The
  * tempo, flavour and antonym rules are Turkish word lists and stay there.
- * English joins once its nine shared phrases are reworded (docs/NOTES.md,
- * 2026-09-30); then this is every language but the source.
  */
-const LAYERED: readonly Language[] = ['es'];
-
-describe.each(LAYERED)(
+describe.each(LANGUAGES.filter((l) => l !== SOURCE_LANGUAGE))(
   'content/%s · layering rules that hold in any language',
   (language) => {
     const files = contentFiles(language);

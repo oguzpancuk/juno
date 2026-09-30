@@ -8697,10 +8697,10 @@ sign-up mail.
 - **Content rules in Spanish.** The tempo, flavour and antonym rules
   are Turkish word lists and do not read Spanish; they were run by hand
   on the Spanish texts. The two that need no word list run on Spanish in
-  the battery (`content-rules.test.ts`): no sentence repeated and no
-  4-word sequence shared between a planet's sign and house texts (six
-  sign texts were rewritten for it). English fails the second on nine
-  pairs, left to the English change. "No sign name in an aspect text"
+  the battery (`content-rules.test.ts`), for English too since its nine
+  shared phrases were reworded: no sentence repeated and no 4-word
+  sequence shared between a planet's sign and house texts (six Spanish
+  sign texts were rewritten for it). "No sign name in an aspect text"
   runs for every translation, over the overlays too, case- and
   accent-insensitive and with plurals, because "leo" and "libra" are
   also ordinary Spanish words.
@@ -8716,8 +8716,10 @@ sign-up mail.
   not the reader's ("sentir que no te entienden", not "sentirte
   malinterpretado"), not the pair's ("mutuamente", "en pareja", not
   "juntos", "el uno al otro"), and least of all in a starter, which the
-  member sends as their own words. A test holds the unambiguous forms;
-  adjectives that agree with a thing ("un vínculo generoso") stay.
+  member sends as their own words. The same holds in the app catalog
+  ("¿Por qué denuncias este perfil?", "Todo el mundo"). A test on each
+  side holds the unambiguous forms; adjectives that agree with a thing
+  ("un vínculo generoso") stay.
 
 ### For the owner
 
@@ -8751,3 +8753,9 @@ sign-up mail.
   it fits, and iOS can shrink the text to 0.8 of its size, which is
   enough at 360. On the web at 360, a common Android width, it is still
   cut.
+- The no-gender test first read the chart texts only. evaluator-qa
+  (review round 1) found four app strings it let through, among them
+  the report sheet's "¿Por qué lo denuncias?", which made the reported
+  member male; the test reads the app catalog now. It lists forms, so a
+  new gendered phrasing can still pass: "lo/la" before a verb is listed
+  for four verbs only.
