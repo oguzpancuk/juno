@@ -8661,7 +8661,8 @@ current)`: older asks, equal or newer does not (a phone on an older
   distance the 2026-09-28 text added. Hiding them server-side (the
   `discover` and `liked_me` views filtering on `consent_version`) is a
   schema change with a view the 2026-09-23 plan measurement showed is
-  sensitive to shape; not done here.
+  sensitive to shape; not done here. The owner chose a separate PR for
+  it (decision card, 2026-09-30 06:31 UTC).
 
 ### Battery gaps
 
