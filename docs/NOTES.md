@@ -8591,8 +8591,8 @@ the owner has now asked for it. Decisions in ADR-0014.
 
 - **Where the words were.** `lib/strings.ts` held almost every UI string;
   outside it were the report reasons (`lib/safety.ts`), the date field
-  placeholders (`app/onboarding.tsx`), the planet themes
-  (`lib/chartText.ts`), a `tr-TR` date format (`PremiumPanel`), the
+  placeholders (`app/onboarding.tsx`), a `tr-TR` date format
+  (`PremiumPanel`), the
   notice, and in the engine the names, the placement line
   ("Güneş Koç'ta · 5. ev"), the swipe card's aspect sentence and natal
   aspect titles, plus 1,139 interpretation texts (~107k characters).
@@ -8619,11 +8619,17 @@ the owner has now asked for it. Decisions in ADR-0014.
 
 ### Side findings, not fixed here
 
-- `lib/chartText.ts` is imported by nothing since the v1 content landed;
-  it was translated rather than deleted, to keep this change about
-  language.
+- `lib/chartText.ts` was imported by nothing since the v1 content
+  landed; review round 1 had it deleted with its ten planet themes rather
+  than translated into every language.
 - `lib/tab-a11y.ts` rebuilds React Navigation's iOS tab label in English
   ("tab, 1 of 3") for every language, as it did for Turkish.
+- On Android the device's language comes from `Intl`, one tag, not the
+  phone's ordered list; `expo-localization`'s `getLocales()` would give
+  the list, but it is a new dependency and Android is deferred. A
+  browser's list changing while the page is open is followed
+  (`languagechange`); an iPhone restarts the app when its language
+  changes.
 
 ### Battery gaps
 
@@ -8644,7 +8650,16 @@ the owner has now asked for it. Decisions in ADR-0014.
   overflows under about 1.5 px that the browser still draws as "…";
   measure the text with a DOM Range instead.
 - The switch's remount and return to the profile is seen in the web
-  screenshots only; nothing in the battery drives it.
+  screenshots only; nothing in the battery drives it. Review round 1
+  found what that let through: a "return to" the index was meant to
+  take after the remount stayed set, because the remounted navigator is
+  rebuilt from the navigation state and never passes the index, so a
+  later sign-in in the same session landed on the profile instead of
+  the deck. Reproduced on the web and removed; the member stays on the
+  profile without it.
+- When the device names none of the app's languages the app shows
+  English (owner, 2026-09-30), and iOS's development region is English
+  to match; Turkish stays the source the catalogs are written from.
 
 ## 2026-09-29 — Spanish
 
@@ -8662,13 +8677,16 @@ sign-up mail.
   held to is in the PR body.
 - **The notice** is a translation of the 30 Eylül 2026 text, line for
   line; the Turkish binds and `LEGAL_VERSION` did not move.
-- **Content rules in Spanish.** The Turkish layering tests are
-  lexicon-bound and do not read Spanish. Run by hand on the Spanish texts
-  before committing: no sign or house text of one planet shares a
-  4-word sequence (six sign texts rewritten), no tempo words in house
-  texts, no antonym pair across sign and house. Only "no sign name in an
-  aspect text" became a test, case-insensitive because "leo" and "libra"
-  are also ordinary Spanish words.
+- **Content rules in Spanish.** The tempo, flavour and antonym rules
+  are Turkish word lists and do not read Spanish; they were run by hand
+  on the Spanish texts. The two that need no word list run on Spanish in
+  the battery (`content-rules.test.ts`): no sentence repeated and no
+  4-word sequence shared between a planet's sign and house texts (six
+  sign texts were rewritten for it). English fails the second on nine
+  pairs, left to the English change. "No sign name in an aspect text"
+  runs for every translation, over the overlays too, case- and
+  accent-insensitive and with plurals, because "leo" and "libra" are
+  also ordinary Spanish words.
 - **Labels that must not say "your".** The placement labels are shown on
   other people's profiles too; "Tu esencia" read as the viewer's. The
   Turkish and English Sun, Moon and Ascendant labels are nouns, and the

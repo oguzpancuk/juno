@@ -138,18 +138,6 @@ export const es: Strings = {
     orb: (deg: string) => `orbe de ${deg}`,
     noAspects:
       'Tu carta no tiene aspectos mayores; tus planetas funcionan de forma independiente.',
-    planetThemes: {
-      sun: 'habla de tu identidad y tu energía vital',
-      moon: 'habla de tus necesidades emocionales y tu mundo interior',
-      mercury: 'habla de tu forma de pensar y de comunicarte',
-      venus: 'habla de tu forma de amar y de relacionarte',
-      mars: 'habla de lo que deseas y de cómo pasas a la acción',
-      jupiter: 'habla de dónde te expandes y de tu suerte',
-      saturn: 'habla de tus responsabilidades y tus límites',
-      uranus: 'habla de dónde eres diferente',
-      neptune: 'habla de tus sueños y tus intuiciones',
-      pluto: 'habla de tu poder de transformación',
-    },
   },
   tabs: {
     profile: 'Perfil',

@@ -1,9 +1,4 @@
-import {
-  LANGUAGES,
-  SOURCE_LANGUAGE,
-  isLanguage,
-  type Language,
-} from '@juno/astro';
+import { LANGUAGES, isLanguage, type Language } from '@juno/astro';
 import { z } from 'zod';
 
 /**
@@ -15,10 +10,17 @@ import { z } from 'zod';
  * ("device", the default). The device gives an ordered list of language
  * tags — the iPhone's language list, the browser's `navigator.languages`
  * — and the first one the app has a catalog for wins, so a phone set to
- * German then English reads English. When none matches, Turkish: the
- * source language, and the one the app was made for (2026-09-29).
+ * German then English reads English. When none matches, English
+ * (`FALLBACK_LANGUAGE`).
  */
 export type LanguagePreference = Language | 'device';
+
+/**
+ * What a device that names none of the app's languages gets: English, the
+ * one most such members can read (owner, 2026-09-30). Turkish stays the
+ * source the catalogs are written from; that is a different thing.
+ */
+export const FALLBACK_LANGUAGE: Language = 'en';
 
 export const LanguagePreferenceSchema = z.enum(['device', ...LANGUAGES]);
 
@@ -47,5 +49,5 @@ export function resolveLanguage(
     const language = languageOfTag(tag);
     if (language !== null) return language;
   }
-  return SOURCE_LANGUAGE;
+  return FALLBACK_LANGUAGE;
 }
