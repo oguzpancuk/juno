@@ -8581,6 +8581,197 @@ stood in for it.
   every step. `doorSize` is tested; that the door fits is the screenshots'
   measurement above.
 
+## 2026-09-29 — English, and room for more languages
+
+The owner's ask: "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her
+şey çevrilecek. 2 ayrı threadde yapabilirsin." This thread: the
+structure, the Turkish source catalog and English. A second thread adds
+Spanish on this branch. English UI was on the ROADMAP's deferred list;
+the owner has now asked for it. Decisions in ADR-0014.
+
+- **Where the words were.** `lib/strings.ts` held almost every UI string;
+  outside it were the report reasons (`lib/safety.ts`), the date field
+  placeholders (`app/onboarding.tsx`), a `tr-TR` date format
+  (`PremiumPanel`), the
+  notice, and in the engine the names, the placement line
+  ("Güneş Koç'ta · 5. ev"), the swipe card's aspect sentence and natal
+  aspect titles, plus 1,139 interpretation texts (~107k characters).
+  All of it now reads from the language showing.
+- **Translation.** The engine texts and the notice were translated by
+  sub-agents against a written brief (glossary, voice, the content
+  rules), each file checked by a script for keys, lengths, question
+  marks, sign names in aspect texts and tempo words in house texts; the
+  UI catalog by hand. The content tests, now run per language, caught
+  one English fragment (`mars-trine-jupiter`, "People follow you.").
+- **Web screenshots** at 390x844 against a stand-in backend, both
+  locales, and the switch from Turkish to English, which lands on the
+  profile: `screenshots/i18n-*.png`. They show the UI only.
+
+### For the owner
+
+- The hosted project's sign-up mail template and subject are pasted by
+  hand (`docs/auth-setup.md` step 4); until then the hosted mail stays
+  Turkish only.
+- The App Store listing, and anything else outside the repo, is not
+  translated here.
+- iOS needs a fresh native build for the permission sentence and the
+  Apple button to follow the phone's language (`app.json` locales).
+
+### Side findings, not fixed here
+
+- `lib/chartText.ts` was imported by nothing since the v1 content
+  landed; review round 1 had it deleted with its ten planet themes rather
+  than translated into every language.
+- `lib/tab-a11y.ts` rebuilds React Navigation's iOS tab label in English
+  ("tab, 1 of 3") for every language, as it did for Turkish.
+- On Android the device's language comes from `Intl`, one tag, not the
+  phone's ordered list; `expo-localization`'s `getLocales()` would give
+  the list, but it is a new dependency and Android is deferred. A
+  browser's list changing while the page is open is followed
+  (`languagechange`); an iPhone restarts the app when its language
+  changes.
+
+- Three notes from the #17 review on this change's code, left as they
+  are: every language's content JSON is imported statically, so each
+  language adds its texts (~150 KB for English) to every bundle; loading
+  them lazily would make the engine asynchronous. The Descendant cases
+  of the aspect sentence and title are written in each `Words` (`tr.ts`,
+  `en.ts`, `es.ts`); moving the dispatch into `words.ts` would change
+  every `Words` shape, the Spanish one included, for the same output.
+  `LEGAL_UPDATED_IN` is typed by hand rather than formatted from
+  `LEGAL_VERSION` at run time, so the date a member reads does not
+  depend on the phone's `Intl`; `lib/legal.test.ts` checks each against
+  `Intl` instead.
+- Review of #17 asked the layering rules (no shared four-word run
+  between a planet's sign text and its house texts) to cover the
+  translations; English broke it in nine pairs ("put you at ease",
+  "spurs you into action", "the balance of power"…), reworded on the
+  sign side. The Spanish thread adds English to that test on #17.
+
+### Battery gaps
+
+- Whether a translated string fits its box is not tested; English runs
+  longer than Turkish in places (the match page's starter pushes its link
+  below the fold). The screenshots are the check. evaluator-qa found
+  one the battery passed: the big-three row cuts long English sign
+  names on the web ("Sagittar…", "Caprico…" at 390 and 375 wide), where
+  `adjustsFontSizeToFit` does nothing. The Spanish thread found the same
+  and put two layouts to the owner, who picked "küçük" (2026-09-30):
+  smaller badge, glyph and words, same layout, in this change. Checked
+  by evaluator-qa across all twelve signs: nothing clipped at 414, 390,
+  375 and 360 in either language (360 with about 1 px to spare for
+  "Sagittarius" in Chromium); at 320 English "Sagittarius", "Capricorn"
+  and "Aquarius" are still cut on the web, Turkish now fits. On iOS the
+  fit-to-width shrink may cover them, which is the owner's device check.
+  A clip check comparing `scrollWidth` with `clientWidth` misses
+  overflows under about 1.5 px that the browser still draws as "…";
+  measure the text with a DOM Range instead.
+- The switch's remount and return to the profile is seen in the web
+  screenshots only; nothing in the battery drives it. Review round 1
+  found what that let through: a "return to" the index was meant to
+  take after the remount stayed set, because the remounted navigator is
+  rebuilt from the navigation state and never passes the index, so a
+  later sign-in in the same session landed on the profile instead of
+  the deck. Reproduced on the web and removed; the member stays on the
+  profile without it.
+- When the device names none of the app's languages the app shows
+  English (owner, 2026-09-30), and iOS's development region is English
+  to match; Turkish stays the source the catalogs are written from.
+
+## 2026-09-29 — Spanish
+
+The owner's "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her şey
+çevrilecek": Spanish on top of the English thread's catalogs (ADR-0014),
+nothing but `es` files and registrations, plus a Spanish part in the
+sign-up mail.
+
+- **Which Spanish.** Neutral international Spanish under `es`, with "tú"
+  as the Turkish says "sen": no vosotros, no voseo, no word only one
+  country uses. Any `es-*` device tag lands on it. `LOCALE_TAGS.es` is
+  `es-ES` because the tag must be `xx-YY`; dates read the same in es-MX
+  ("30 de septiembre de 2026"). "Match", "like" and "superlike" stay as
+  Spanish-language dating apps say them. The glossary the translation was
+  held to is in the PR body.
+- **The notice** is a translation of the 30 Eylül 2026 text, line for
+  line; the Turkish binds and `LEGAL_VERSION` did not move.
+- **Content rules in Spanish.** The tempo, flavour and antonym rules
+  are Turkish word lists and do not read Spanish; they were run by hand
+  on the Spanish texts. The two that need no word list run on Spanish in
+  the battery (`content-rules.test.ts`), for English too since its nine
+  shared phrases were reworded: no sentence repeated and no 4-word
+  sequence shared between a planet's sign and house texts (six Spanish
+  sign texts were rewritten for it). "No sign name in an aspect text"
+  runs for every translation, over the overlays too, case- and
+  accent-insensitive and with plurals, because "leo" and "libra" are
+  also ordinary Spanish words.
+- **Labels that must not say "your".** The placement labels are shown on
+  other people's profiles too; "Tu esencia" read as the viewer's. The
+  Turkish and English Sun, Moon and Ascendant labels are nouns, and the
+  Spanish now are too ("Esencia", "Mundo emocional"). Mercury to Pluto
+  use a generic "you" in all three languages ("Nasıl seversin", "How you
+  love", "Cómo amas"), as the Turkish source does; the Spanish follows
+  it. Making them neutral is a choice for every language at once.
+- **No gender.** Turkish marks none, and the app matches women with
+  women and men with men, so the Spanish marks nobody's gender either:
+  not the reader's ("sentir que no te entienden", not "sentirte
+  malinterpretado"), not the pair's ("mutuamente", "en pareja", not
+  "juntos", "el uno al otro"), and least of all in a starter, which the
+  member sends as their own words. The same holds in the app catalog
+  ("¿Por qué denuncias este perfil?", "Todo el mundo"). One list,
+  `packages/astro/src/testing/spanish-gender.ts`, reads every Spanish
+  text: the content files, every line the engine writes, the app
+  catalog and the notice. Adjectives that agree with a thing ("un
+  vínculo generoso") stay.
+- **Who does what to whom.** Synastry is directional ("Tu Luna … su
+  Júpiter"). Where the Turkish is one-way ("biri diğerinin kalbini
+  genişletir") the Spanish stays one-way without gender: "una persona le
+  ensancha el corazón a la otra", not "se lo ensanchan mutuamente". The
+  other member is "la otra persona", never "su pareja": right after "su
+  Luna", "su pareja" reads as a third person, and the texts show on the
+  swipe screen before any match.
+
+### For the owner
+
+- The hosted project's sign-up mail subject and body are pasted by hand
+  (`docs/auth-setup.md` step 4) — the subject now names Spanish too.
+- iOS needs a fresh native build for the Spanish permission sentence
+  (`locales/es.json`).
+
+### Side findings, not fixed here
+
+- City search knows Turkish exonyms only (`packages/geo` `EXONYMS`): a
+  Spanish speaker finds "London" and "Munich" by their GeoNames names but
+  not "Londres" or "Múnich". A Spanish list is drafted in the project
+  files (`i18n-es/exonyms-es.json`); wiring it is a `geo` change.
+- The big-three row (`BigThreeRow`) cut "Capricornio" and "Ascendente"
+  to "Caprico…" / "Ascende…" on the web, where `adjustsFontSizeToFit` is
+  a no-op. Put to the owner as two layouts; he picked "küçük"
+  (2026-09-30) and the English change carries it, merged in here.
+
+### Battery gaps
+
+- Nothing checks that a Spanish string fits its box; Spanish runs longer
+  than Turkish and English. Two fits were only seen in screenshots: the
+  big-three row above, and the filter's band buttons, where "Equilibrada"
+  and "Excepcional" were cut until the band names became "Mixta" and
+  "Insólita".
+- With the smaller big-three row, measured with a DOM Range on the web
+  (2026-09-30): the Spanish words fit at 414, 390 and 375 wide. At 360
+  "Capricornio" is about 3 px too wide and ends in "…"; at 320
+  "Capricornio" and "Ascendente" are cut. iPhones are 375 and up, where
+  it fits, and iOS can shrink the text to 0.8 of its size, which is
+  enough at 360. On the web at 360, a common Android width, it is still
+  cut.
+- The no-gender test first read the chart texts only. evaluator-qa
+  (review round 1) found four app strings it let through, among them
+  the report sheet's "¿Por qué lo denuncias?", which made the reported
+  member male; review round 2 found forms its patterns missed ("del
+  otro", "tarea de los dos", "sentirte atraída", "estás listo"). The
+  list now has those, with a spec test of what it must catch and let
+  through. It still lists forms: "lo/la" before a verb is listed for
+  four verbs only, and a new adjective after "eres/estás" is caught
+  unless it is on the list of invariable words.
+
 ## 2026-09-30 — KVKK: the CHECK, and asking again
 
 ROADMAP "KVKK consent + privacy policy", on the owner's "kvkk onayini
@@ -8621,9 +8812,10 @@ current)`: older asks, equal or newer does not (a phone on an older
   everyone whose record is older than 2026-09-30, which covers the
   #14 finding (the location purpose widened on 2026-09-28).
 - **The notice text did not change**, so `LEGAL_VERSION` stays
-  2026-09-30 and nothing moved with it. The strings are new UI copy in
-  `lib/strings.ts`; once #18 lands they move into the i18n catalog in
-  all three languages.
+  2026-09-30 and nothing moved with it. The screen's strings are
+  `reconsent` in `lib/i18n/tr.ts`, `en.ts` and `es.ts` (moved there when
+  #18 and #17 merged); its date is `LEGAL_UPDATED_IN` of the language on
+  screen.
 
 - **Review round 1 (#19).** The gate now fails closed: while the
   session is still being read, and when the record cannot be read (after

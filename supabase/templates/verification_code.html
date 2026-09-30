@@ -6,6 +6,13 @@
   differently. `{{ .Token }}` is the six-digit code
   (`[auth.email] otp_length`); "10 dakika" is `otp_expiry = 600`, so the
   two move together.
+
+  One mail in every language the app speaks, Turkish first. The mail
+  leaves before the person has a profile, and GoTrue knows nothing about
+  them but the address, so it cannot pick one: keying it on the app's
+  language would mean storing that language on the account, which is
+  personal data the privacy notice does not list. The code is the same
+  in each part; each part says it in its own words.
 -->
 <h2>Juno doğrulama kodun</h2>
 <p>
@@ -15,4 +22,31 @@
 <p>10 dakika geçerli. Uygulamadaki ekrana yaz, hesabın açılsın.</p>
 <p style="color: #888">
   Sen istemediysen bu e-postayı yok say; kimse hesabına giremez.
+</p>
+<hr style="border: none; border-top: 1px solid #ddd" />
+<h2 lang="en">Your Juno code</h2>
+<p lang="en">
+  Your code:
+  <strong style="font-size: 24px; letter-spacing: 4px">{{ .Token }}</strong>
+</p>
+<p lang="en">
+  It is valid for 10 minutes. Type it into the screen in the app to open your
+  account.
+</p>
+<p lang="en" style="color: #888">
+  If you didn't ask for this, ignore this email; no one can get into your
+  account.
+</p>
+<hr style="border: none; border-top: 1px solid #ddd" />
+<h2 lang="es">Tu código de Juno</h2>
+<p lang="es">
+  Tu código:
+  <strong style="font-size: 24px; letter-spacing: 4px">{{ .Token }}</strong>
+</p>
+<p lang="es">
+  Es válido durante 10 minutos. Escríbelo en la pantalla de la app para abrir tu
+  cuenta.
+</p>
+<p lang="es" style="color: #888">
+  Si no lo pediste, ignora este correo; nadie puede entrar en tu cuenta.
 </p>

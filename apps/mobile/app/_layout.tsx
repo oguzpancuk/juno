@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { isConsentKnownCurrent } from '@/lib/consent';
 import { holdMatch } from '@/lib/held-matches';
+import { loadLanguage, useLanguage } from '@/lib/language';
 import { firstSightOf, useMatchListener } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
@@ -30,9 +31,17 @@ export default function RootLayout() {
     Outfit_500Medium,
     Outfit_600SemiBold,
   });
+  // The member's stored language, if they picked one, is read before the
+  // first frame too: a screen drawn in the device's language and redrawn
+  // in the chosen one a moment later is the same glitch as the fonts.
+  const { language, loaded: languageLoaded } = useLanguage();
   useEffect(() => {
-    if (fontsLoaded || fontError) void SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
+    void loadLanguage();
+  }, []);
+  const ready = (fontsLoaded || fontError !== null) && languageLoaded;
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
   const session = useSession();
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
@@ -55,11 +64,17 @@ export default function RootLayout() {
   );
   useMatchListener(userId, onMatch);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!ready) return null;
 
   return (
     <>
+      {/* Keyed by the language: a switch in settings remounts every
+          screen, so nothing drawn in the old language — a memoised
+          reading, a label computed once — outlives it. The new navigator
+          is rebuilt from the navigation state, so the member stays on the
+          screen they switched on (the profile, under the settings sheet). */}
       <Stack
+        key={language}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: color.bg },

@@ -24,7 +24,8 @@ import {
 } from '@/lib/consent';
 import { returnPath } from '@/lib/consent-rules';
 import { useBottomGap, useTopClearance } from '@/lib/insets';
-import { LEGAL_UPDATED } from '@/lib/legal';
+import { useLanguage } from '@/lib/language';
+import { LEGAL_UPDATED_IN } from '@/lib/legal';
 import { deleteAccount } from '@/lib/safety';
 import { RedirectToSignIn, signOutAndLeave, useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -56,6 +57,8 @@ import { color, font, space } from '@/theme/tokens';
  */
 export default function Consent() {
   const session = useSession();
+  // The notice's date as the language on screen writes it.
+  const { language } = useLanguage();
   const { next } = useLocalSearchParams<{ next?: string | string[] }>();
   const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const bottomGap = useBottomGap(32);
@@ -156,7 +159,9 @@ export default function Consent() {
         <Text style={styles.title} role="heading">
           {t.reconsent.title}
         </Text>
-        <Text style={styles.body}>{t.reconsent.body(LEGAL_UPDATED)}</Text>
+        <Text style={styles.body}>
+          {t.reconsent.body(LEGAL_UPDATED_IN[language])}
+        </Text>
         <LegalLink
           label={t.onboarding.consentLink}
           style={styles.link}

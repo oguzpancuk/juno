@@ -135,3 +135,24 @@ export {
   formatDegree,
 } from './tr';
 export { aspectKind, type AspectKind } from './compatibility';
+export {
+  LANGUAGES,
+  SOURCE_LANGUAGE,
+  currentLanguage,
+  isLanguage,
+  setLanguage,
+  type Language,
+} from './language';
+export {
+  WORDS,
+  aspectName,
+  bodyName,
+  describeAspect,
+  natalAspectTitle,
+  placementName,
+  planetName,
+  signName,
+  type Words,
+} from './words';
+export { contentFiles } from './content';
+export { ordinalEn } from './en';

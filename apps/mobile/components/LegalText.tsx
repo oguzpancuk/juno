@@ -6,7 +6,10 @@ import {
   type StyleProp,
   type TextStyle,
 } from 'react-native';
-import { LEGAL_UPDATED, legalSections } from '@/lib/legal';
+import { SOURCE_LANGUAGE } from '@juno/astro';
+import { CATALOGS } from '@/lib/i18n';
+import { LEGAL_SECTIONS, LEGAL_UPDATED_IN } from '@/lib/legal';
+import { useLanguage } from '@/lib/language';
 import { Popup } from '@/components/Popup';
 import { LinkText } from '@/components/ui';
 import { t } from '@/lib/strings';
@@ -21,10 +24,31 @@ const BULLET = '• ';
  * 2026-09-15); and `LegalLink` below, which is how the three doors show it.
  */
 export function LegalText() {
+  const { language } = useLanguage();
+  // A translation says first that the Turkish binds, and offers it: the
+  // Turkish is what the member consented to (`lib/legal.ts`).
+  const [original, setOriginal] = useState(false);
+  const translated = language !== SOURCE_LANGUAGE;
+  const shown = translated && !original ? language : SOURCE_LANGUAGE;
   return (
     <View>
-      <Text style={styles.updated}>{t.legal.updated(LEGAL_UPDATED)}</Text>
-      {legalSections.map((section) => (
+      <Text style={styles.updated}>
+        {/* In the language of the text under it, the original's own
+            date included. */}
+        {CATALOGS[shown].legal.updated(LEGAL_UPDATED_IN[shown])}
+      </Text>
+      {translated ? (
+        <View style={styles.note} testID="legal-translation-note">
+          <Text style={styles.paragraph}>{t.legal.translationNote}</Text>
+          <LinkText
+            testID="legal-toggle-original"
+            onPress={() => setOriginal((on) => !on)}
+          >
+            {original ? t.legal.showTranslation : t.legal.showOriginal}
+          </LinkText>
+        </View>
+      ) : null}
+      {LEGAL_SECTIONS[shown].map((section) => (
         <View key={section.heading} style={styles.section}>
           <Text style={styles.heading}>{section.heading}</Text>
           {section.body.map((line) =>
@@ -49,6 +73,7 @@ export function LegalText() {
 
 const styles = StyleSheet.create({
   updated: { fontFamily: font.regular, color: color.textFaint, fontSize: 12 },
+  note: { marginTop: 12, gap: 6 },
   section: { marginTop: 20, gap: 8 },
   heading: { color: color.text, fontSize: 17, fontFamily: font.semibold },
   paragraph: {

@@ -1,0 +1,24 @@
+{
+  "emotional-soft": ["Easy closeness", "Relaxed warmth", "Feeling understood"],
+  "emotional-hard": ["Different needs", "Charged closeness", "Warmth in waves"],
+  "chemistry-soft": ["Natural chemistry", "Easy attraction", "Same rhythm"],
+  "chemistry-hard": ["Charged chemistry", "Different tempos", "Push and pull"],
+  "communication-soft": [
+    "Same wavelength",
+    "Easy conversation",
+    "Minds that click"
+  ],
+  "communication-hard": [
+    "Different minds",
+    "Needs translating",
+    "From different directions"
+  ],
+  "stability-soft": [
+    "Solid ground",
+    "Something that holds",
+    "Feet on the ground"
+  ],
+  "stability-hard": ["Heavier ground", "A kind of test", "Slowing things down"],
+  "growth-soft": ["Expanding", "Gets you moving", "Opening up"],
+  "growth-hard": ["Shaking things up", "Transformative", "Hard to ignore"]
+}

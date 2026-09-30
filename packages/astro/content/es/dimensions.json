@@ -1,0 +1,32 @@
+{
+  "emotional": {
+    "name": "Cercanía",
+    "low": "Se calienta despacio",
+    "mid": "Hay calidez",
+    "high": "Cercanía fácil"
+  },
+  "chemistry": {
+    "name": "Atracción",
+    "low": "Fuego lento",
+    "mid": "Hay atracción",
+    "high": "Magnetismo"
+  },
+  "communication": {
+    "name": "Comunicación",
+    "low": "Idiomas distintos",
+    "mid": "Se entienden",
+    "high": "Misma frecuencia"
+  },
+  "stability": {
+    "name": "Estabilidad",
+    "low": "Libre",
+    "mid": "Hay base",
+    "high": "Base sólida"
+  },
+  "growth": {
+    "name": "Crecimiento",
+    "low": "Aguas tranquilas",
+    "mid": "Estimulante",
+    "high": "Transformación"
+  }
+}

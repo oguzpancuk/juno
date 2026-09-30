@@ -1,4 +1,4 @@
-import { SIGN_GLYPH, SIGN_TR, elementOf, type BigThree } from '@juno/astro';
+import { SIGN_GLYPH, signName, elementOf, type BigThree } from '@juno/astro';
 import { StyleSheet, Text, View } from 'react-native';
 import { t } from '@/lib/strings';
 import { color, element, font, radius, space, type } from '@/theme/tokens';
@@ -11,6 +11,11 @@ import { color, element, font, radius, space, type } from '@/theme/tokens';
  * which replaced the pill form of the same morning). One component so the
  * deck, the match page and another person's page cannot drift apart. Each
  * cell is one spoken element: "Güneş Koç".
+ *
+ * The badge, glyph and words are a size smaller than the sheet's frame so
+ * the longest names ("Sagittarius", "Capricornio") fit a third of a
+ * 375-point phone on the web too, where fitting is a no-op (owner,
+ * 2026-09-30: "küçük", over stacking the words under the symbol).
  */
 const CELLS = [
   { key: 'sun', label: () => t.chart.sun },
@@ -19,7 +24,7 @@ const CELLS = [
 ] as const;
 
 /** The circle; the glyph inside is sized to it. */
-const BADGE = 40;
+const BADGE = 32;
 
 export function BigThreeRow({
   three,
@@ -46,7 +51,7 @@ export function BigThreeRow({
             testID={`big-three-${key}`}
             accessible
             role="listitem"
-            aria-label={`${label()} ${SIGN_TR[sign]}`}
+            aria-label={`${label()} ${signName(sign)}`}
           >
             <View style={[styles.badge, { backgroundColor: tone.tint }]}>
               <Text
@@ -64,7 +69,7 @@ export function BigThreeRow({
                 minimumFontScale={0.8}
                 maxFontSizeMultiplier={maxFontSizeMultiplier}
               >
-                {SIGN_TR[sign]}
+                {signName(sign)}
               </Text>
               {/* Fits itself like the sign: "Yükselen" at a large text
                   size is wider than a third of a small phone (review,
@@ -93,7 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.sm,
+    gap: space.xs,
   },
   badge: {
     width: BADGE,
@@ -104,8 +109,8 @@ const styles = StyleSheet.create({
   },
   // The system face: Outfit has no zodiac glyphs, and naming it would
   // only route the fallback through one more font.
-  glyph: { fontSize: 22, lineHeight: 26 },
+  glyph: { fontSize: 18, lineHeight: 22 },
   words: { flexShrink: 1, gap: 1 },
-  sign: { ...type.bodySmall, fontFamily: font.semibold, color: color.text },
-  body: { ...type.caption, color: color.textFaint },
+  sign: { ...type.caption, fontFamily: font.semibold, color: color.text },
+  body: { ...type.caption, fontSize: 11.5, color: color.textFaint },
 });

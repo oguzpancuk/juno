@@ -12,9 +12,14 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.oguzpancuk.juno",
       "infoPlist": {
-        "CFBundleDevelopmentRegion": "tr",
-        "CFBundleLocalizations": ["tr"]
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["tr", "en", "es"]
       }
+    },
+    "locales": {
+      "tr": "./locales/tr.json",
+      "en": "./locales/en.json",
+      "es": "./locales/es.json"
     },
     "android": {
       "package": "com.oguzpancuk.juno",
@@ -56,7 +61,7 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "lang": "tr"
+      "lang": "en"
     }
   }
 }
