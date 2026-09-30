@@ -8717,9 +8717,18 @@ sign-up mail.
   malinterpretado"), not the pair's ("mutuamente", "en pareja", not
   "juntos", "el uno al otro"), and least of all in a starter, which the
   member sends as their own words. The same holds in the app catalog
-  ("¿Por qué denuncias este perfil?", "Todo el mundo"). A test on each
-  side holds the unambiguous forms; adjectives that agree with a thing
-  ("un vínculo generoso") stay.
+  ("¿Por qué denuncias este perfil?", "Todo el mundo"). One list,
+  `packages/astro/src/testing/spanish-gender.ts`, reads every Spanish
+  text: the content files, every line the engine writes, the app
+  catalog and the notice. Adjectives that agree with a thing ("un
+  vínculo generoso") stay.
+- **Who does what to whom.** Synastry is directional ("Tu Luna … su
+  Júpiter"). Where the Turkish is one-way ("biri diğerinin kalbini
+  genişletir") the Spanish stays one-way without gender: "una persona le
+  ensancha el corazón a la otra", not "se lo ensanchan mutuamente". The
+  other member is "la otra persona", never "su pareja": right after "su
+  Luna", "su pareja" reads as a third person, and the texts show on the
+  swipe screen before any match.
 
 ### For the owner
 
@@ -8756,6 +8765,9 @@ sign-up mail.
 - The no-gender test first read the chart texts only. evaluator-qa
   (review round 1) found four app strings it let through, among them
   the report sheet's "¿Por qué lo denuncias?", which made the reported
-  member male; the test reads the app catalog now. It lists forms, so a
-  new gendered phrasing can still pass: "lo/la" before a verb is listed
-  for four verbs only.
+  member male; review round 2 found forms its patterns missed ("del
+  otro", "tarea de los dos", "sentirte atraída", "estás listo"). The
+  list now has those, with a spec test of what it must catch and let
+  through. It still lists forms: "lo/la" before a verb is listed for
+  four verbs only, and a new adjective after "eres/estás" is caught
+  unless it is on the list of invariable words.
