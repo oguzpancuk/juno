@@ -77,10 +77,13 @@ describe('the string catalogs', () => {
   });
 
   it.each(translations)('%s leaves nothing in Turkish', (l) => {
+    const turkish = new Map(
+      leaves(source).map(({ path, value }) => [path, value]),
+    );
     const copied = leaves(CATALOGS[l])
       .filter(({ path }) => !SAME_EVERYWHERE.has(path.replace(/\[\d+\]$/, '')))
       .filter(({ path, value }) => {
-        const twin = leaves(source).find((x) => x.path === path)?.value;
+        const twin = turkish.get(path);
         const mine = render(value);
         return (
           JSON.stringify(mine) === JSON.stringify(render(twin)) &&

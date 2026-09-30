@@ -9,7 +9,8 @@ import { CATALOGS, type Strings } from './i18n';
  * next read. What makes the screens read again is the root layout, which
  * remounts the navigator under a key of the language (`app/_layout.tsx`),
  * so nothing drawn before the switch survives it with the old words.
- * Turkish until then: the source language, and the fallback.
+ * Turkish until then, the source language; `lib/language.ts` sets the
+ * device's (or the English fallback) at import, before the first frame.
  */
 export let t: Strings = CATALOGS[SOURCE_LANGUAGE];
 

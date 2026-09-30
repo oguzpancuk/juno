@@ -189,23 +189,31 @@ const Calibration = z.object({
 });
 export const CALIBRATION = Calibration.parse(calibrationRaw);
 
+/**
+ * The Turkish source's files. Their names are the list of content files:
+ * every other language has the same ones (`RAW` below, and the content
+ * tests), so a new file is added here first.
+ */
+const TR_RAW = {
+  'bands.json': trBands,
+  'dimensions.json': trDimensions,
+  'elements.json': trElements,
+  'houses.json': trHouses,
+  'natal-aspects.json': trNatalAspects,
+  'overlay-houses.json': trOverlayHouses,
+  'overlays.json': trOverlays,
+  'placements.json': trPlacements,
+  'retrograde.json': trRetrograde,
+  'signs.json': trSigns,
+  'synastry.json': trSynastry,
+  'titles.json': trTitles,
+} as const;
+type ContentFile = keyof typeof TR_RAW;
+
 /** One language's texts, as the files under `content/<language>/` hold them. */
 const RAW: Readonly<Record<Language, Readonly<Record<ContentFile, unknown>>>> =
   {
-    tr: {
-      'bands.json': trBands,
-      'dimensions.json': trDimensions,
-      'elements.json': trElements,
-      'houses.json': trHouses,
-      'natal-aspects.json': trNatalAspects,
-      'overlay-houses.json': trOverlayHouses,
-      'overlays.json': trOverlays,
-      'placements.json': trPlacements,
-      'retrograde.json': trRetrograde,
-      'signs.json': trSigns,
-      'synastry.json': trSynastry,
-      'titles.json': trTitles,
-    },
+    tr: TR_RAW,
     en: {
       'bands.json': enBands,
       'dimensions.json': enDimensions,
@@ -221,20 +229,6 @@ const RAW: Readonly<Record<Language, Readonly<Record<ContentFile, unknown>>>> =
       'titles.json': enTitles,
     },
   };
-
-type ContentFile =
-  | 'bands.json'
-  | 'dimensions.json'
-  | 'elements.json'
-  | 'houses.json'
-  | 'natal-aspects.json'
-  | 'overlay-houses.json'
-  | 'overlays.json'
-  | 'placements.json'
-  | 'retrograde.json'
-  | 'signs.json'
-  | 'synastry.json'
-  | 'titles.json';
 
 function parseBundle(language: Language) {
   const raw = RAW[language];
@@ -394,8 +388,10 @@ export function bandText(score: number): string {
 }
 
 function mustBand(band: Band): { name: string; text: string } {
-  const entry = bundle().bands[band];
-  if (entry === undefined) throw new Error(`bands.json has no "${band}"`);
+  const b = bundle();
+  const entry = b.bands[band];
+  if (entry === undefined)
+    throw new Error(`content/${b.language}/bands.json: missing "${band}"`);
   return entry;
 }
 
@@ -445,9 +441,12 @@ export function dimensionLabelText(dimension: string, level: Level): string {
 }
 
 function mustDimension(dimension: string): z.infer<typeof DimensionEntry> {
-  const entry = bundle().dimensionLabels[dimension];
+  const b = bundle();
+  const entry = b.dimensionLabels[dimension];
   if (entry === undefined)
-    throw new Error(`dimensions.json has no "${dimension}"`);
+    throw new Error(
+      `content/${b.language}/dimensions.json: missing "${dimension}"`,
+    );
   return entry;
 }
 
@@ -567,9 +566,12 @@ export function aspectTitle(
   taken: ReadonlySet<string> = new Set(),
 ): string {
   const valence = term >= 0 ? 'soft' : 'hard';
-  const entry = bundle().titles[`${dimension}-${valence}`];
+  const b = bundle();
+  const entry = b.titles[`${dimension}-${valence}`];
   if (entry === undefined)
-    throw new Error(`titles.json has no "${dimension}-${valence}"`);
+    throw new Error(
+      `content/${b.language}/titles.json: missing "${dimension}-${valence}"`,
+    );
   // Start at the stable variant, then step on if that title is already on
   // the screen: two cards reading "Anlaşılan taraf" in one section looks
   // like a bug, and there are only three variants per bucket to collide in.
@@ -579,6 +581,7 @@ export function aspectTitle(
     if (choice !== undefined && !taken.has(choice)) return choice;
   }
   const fallback = entry[start];
-  if (fallback === undefined) throw new Error('titles.json short of variants');
+  if (fallback === undefined)
+    throw new Error(`content/${b.language}/titles.json: short of variants`);
   return fallback;
 }

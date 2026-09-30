@@ -165,19 +165,6 @@ export const tr = {
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Haritanda majör açı yok; gezegenlerin birbirinden bağımsız çalışıyor.',
-    /** What each planet is about, one clause each (`lib/chartText.ts`). */
-    planetThemes: {
-      sun: 'kimliğini ve yaşam enerjini anlatır',
-      moon: 'duygusal ihtiyaçlarını ve iç dünyanı anlatır',
-      mercury: 'düşünme ve iletişim biçimini anlatır',
-      venus: 'sevme ve ilişki kurma biçimini anlatır',
-      mars: 'isteklerini ve harekete geçme tarzını anlatır',
-      jupiter: 'nerede genişlediğini ve şansını anlatır',
-      saturn: 'sorumluluklarını ve sınırlarını anlatır',
-      uranus: 'nerede farklı olduğunu anlatır',
-      neptune: 'hayallerini ve sezgilerini anlatır',
-      pluto: 'dönüşüm gücünü anlatır',
-    },
   },
   tabs: {
     profile: 'Profil',

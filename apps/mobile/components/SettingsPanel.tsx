@@ -117,7 +117,7 @@ export function SettingsPanel({
               key={option}
               label={nameOf(option)}
               selected={option === preference}
-              onPress={() => void chooseLanguage(option, '/profile')}
+              onPress={() => void chooseLanguage(option)}
               testID={`language-${option}`}
             />
           ))}

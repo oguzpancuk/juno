@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { LANGUAGES } from '@juno/astro';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { FALLBACK_LANGUAGE } from './language-choice';
 
 const AppJson = z.object({
   expo: z.object({
@@ -31,15 +32,18 @@ const read = (path: string): unknown =>
 const app = AppJson.parse(read('../app.json'));
 
 describe('the iOS bundle', () => {
-  it('declares every language the app speaks, Turkish first', () => {
+  it('declares every language the app speaks, the fallback as the base', () => {
     // Apple's Sign in with Apple button titles itself in a language the
     // app bundle declares, not simply the phone's. With none declared a
     // prebuild makes the bundle English-only, and a Turkish phone shows
     // "Sign in with Apple" between two Turkish buttons. Declaring each
     // catalog's language is also what lets iOS offer the app's own
     // language in the system Settings, which `lib/language.ts` follows.
+    // A phone in none of them gets the development region's, so that is
+    // the app's own fallback: an English prompt and button beside English
+    // screens.
     const plist = app.expo.ios.infoPlist;
-    expect(plist?.CFBundleDevelopmentRegion).toBe('tr');
+    expect(plist?.CFBundleDevelopmentRegion).toBe(FALLBACK_LANGUAGE);
     expect(plist?.CFBundleLocalizations).toEqual([...LANGUAGES]);
   });
 

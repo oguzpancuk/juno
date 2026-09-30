@@ -135,18 +135,6 @@ export const en: Strings = {
     orb: (deg: string) => `${deg} orb`,
     noAspects:
       'Your chart has no major aspects; your planets work independently of each other.',
-    planetThemes: {
-      sun: 'describes your identity and your life energy',
-      moon: 'describes your emotional needs and your inner world',
-      mercury: 'describes how you think and communicate',
-      venus: 'describes how you love and relate',
-      mars: 'describes what you want and how you act on it',
-      jupiter: 'describes where you expand and where your luck lies',
-      saturn: 'describes your responsibilities and your limits',
-      uranus: 'describes where you are different',
-      neptune: 'describes your dreams and your intuition',
-      pluto: 'describes your power to transform',
-    },
   },
   tabs: {
     profile: 'Profile',

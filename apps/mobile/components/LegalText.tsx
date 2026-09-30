@@ -7,6 +7,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { SOURCE_LANGUAGE } from '@juno/astro';
+import { CATALOGS } from '@/lib/i18n';
 import { LEGAL_SECTIONS, LEGAL_UPDATED_IN } from '@/lib/legal';
 import { useLanguage } from '@/lib/language';
 import { Popup } from '@/components/Popup';
@@ -32,7 +33,9 @@ export function LegalText() {
   return (
     <View>
       <Text style={styles.updated}>
-        {t.legal.updated(LEGAL_UPDATED_IN[language])}
+        {/* In the language of the text under it, the original's own
+            date included. */}
+        {CATALOGS[shown].legal.updated(LEGAL_UPDATED_IN[shown])}
       </Text>
       {translated ? (
         <View style={styles.note} testID="legal-translation-note">

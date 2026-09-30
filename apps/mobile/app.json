@@ -12,7 +12,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.oguzpancuk.juno",
       "infoPlist": {
-        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleDevelopmentRegion": "en",
         "CFBundleLocalizations": ["tr", "en"]
       }
     },

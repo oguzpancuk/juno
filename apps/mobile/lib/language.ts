@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setLanguage as setEngineLanguage, type Language } from '@juno/astro';
-import type { Href } from 'expo-router';
 import { useSyncExternalStore } from 'react';
 import { Platform, Settings } from 'react-native';
 import { LOCALE_TAGS, SHORT_DATE } from './i18n';
@@ -70,6 +69,17 @@ function apply(next: State): void {
 
 apply(state);
 
+// A browser's language list can change while the page is open; a member
+// following the device follows it. (An iPhone restarts the app when its
+// language changes.)
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  window.addEventListener('languagechange', () => {
+    if (state.preference !== 'device') return;
+    const language = resolveLanguage('device', deviceTags());
+    if (language !== state.language) apply({ ...state, language });
+  });
+}
+
 /** Read the stored choice once; a failed read keeps following the device. */
 export async function loadLanguage(): Promise<void> {
   if (state.loaded) return;
@@ -87,23 +97,9 @@ export async function loadLanguage(): Promise<void> {
   });
 }
 
-/**
- * Where the app goes after the language changes. The root layout remounts
- * the navigator under the new language, which starts it over from the
- * index; the index sends the member back here instead of to the deck.
- */
-let returnTo: Href | null = null;
-
-export function takeReturnTo(): Href | null {
-  const href = returnTo;
-  returnTo = null;
-  return href;
-}
-
 /** The member's pick in settings: store it, then show it. */
 export async function chooseLanguage(
   preference: LanguagePreference,
-  back: Href,
 ): Promise<void> {
   try {
     if (preference === 'device') await AsyncStorage.removeItem(STORAGE_KEY);
@@ -111,9 +107,11 @@ export async function chooseLanguage(
   } catch {
     // why: an unsaved pick still applies now; it is only forgotten later
   }
-  const language = resolveLanguage(preference, deviceTags());
-  if (language !== state.language) returnTo = back;
-  apply({ preference, language, loaded: true });
+  apply({
+    preference,
+    language: resolveLanguage(preference, deviceTags()),
+    loaded: true,
+  });
 }
 
 export function useLanguage(): State {
@@ -124,15 +122,6 @@ export function useLanguage(): State {
     },
     () => state,
   );
-}
-
-/** A date as the current language writes it: "30 Eylül 2026", "September 30, 2026". */
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat(LOCALE_TAGS[state.language], {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
 }
 
 /** A short date as the current language writes it: "29.09.2026", "Sep 29, 2026". */

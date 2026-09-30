@@ -35,9 +35,16 @@ notice in `lib/legal.ts`, and a handful of strings outside all three.
    (`src/words.ts`) for the sentences the engine builds from names, since
    Turkish builds them from case endings and English from word order.
    The engine's language is one setting (`src/language.ts`); nothing it
-   computes depends on it.
+   computes depends on it, only which words it reads. A setting rather
+   than a parameter on every text function: the app's `t` is one setting
+   too (point 2), so a switch remounts the screens either way (point 5),
+   and a `language` argument would run through every reading, label and
+   starter call in the app for no change in what a member sees. Tests
+   that set it reset it after each case (review, 2026-09-30).
 4. **Which language.** The member's pick in settings, else the device's
-   (the iPhone's language list, the browser's languages), else Turkish.
+   (the iPhone's language list, the browser's languages), else English
+   (owner, 2026-09-30: "cihaz dili bilinmediğinde default dil İngilizce
+   olsun"): the source language and the fallback are separate settings.
    The language list is `LANGUAGES` in `@juno/astro`; the app's catalog
    record is typed by it, so the two cannot disagree.
 5. **A switch remounts the navigator** under the new language and returns

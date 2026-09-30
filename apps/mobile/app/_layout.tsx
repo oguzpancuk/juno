@@ -55,8 +55,9 @@ export default function RootLayout() {
     <>
       {/* Keyed by the language: a switch in settings remounts every
           screen, so nothing drawn in the old language — a memoised
-          reading, a label computed once — outlives it. The index then
-          takes the member back to where they switched (`takeReturnTo`). */}
+          reading, a label computed once — outlives it. The new navigator
+          is rebuilt from the navigation state, so the member stays on the
+          screen they switched on (the profile, under the settings sheet). */}
       <Stack
         key={language}
         screenOptions={{

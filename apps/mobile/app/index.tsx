@@ -7,7 +7,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { takeReturnTo } from '@/lib/language';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -21,10 +20,6 @@ export default function Index() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const [attempt, setAttempt] = useState(0);
-  // Set when the member has just switched language: the navigator was
-  // remounted under the new one and starts over here, and they go back to
-  // the screen they switched on rather than to the deck.
-  const [returnTo] = useState(takeReturnTo);
 
   // Keyed on the user id, not the session object: token refreshes must not
   // refetch the profile.
@@ -44,7 +39,7 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
   if (session.status === 'signed-in' && profile.status === 'ready') {
-    return <Redirect href={returnTo ?? '/discover'} />;
+    return <Redirect href="/discover" />;
   }
   if (profile.status === 'error') {
     return (
