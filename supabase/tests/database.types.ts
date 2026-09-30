@@ -414,8 +414,8 @@ export type Database = {
           birth_local: string
           birth_utc: string
           chart: Json
-          consent_at: string
-          consent_version: string
+          consent_at: string | null
+          consent_version: string | null
           created_at: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
@@ -446,8 +446,8 @@ export type Database = {
           birth_local: string
           birth_utc: string
           chart: Json
-          consent_at?: string
-          consent_version: string
+          consent_at?: string | null
+          consent_version?: string | null
           created_at?: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"]
@@ -478,8 +478,8 @@ export type Database = {
           birth_local?: string
           birth_utc?: string
           chart?: Json
-          consent_at?: string
-          consent_version?: string
+          consent_at?: string | null
+          consent_version?: string | null
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"]

@@ -28,6 +28,10 @@ const SIGNED_OUT = new Set([
   // mailed code is spent here.
   'verify.tsx',
   'onboarding.tsx',
+  // Re-consent: like onboarding, a signed-in screen that stands before the
+  // tabs rather than inside one, and the only route on the root stack
+  // while it is up.
+  'consent.tsx',
   'legal.tsx',
 ]);
 

@@ -22,6 +22,7 @@ import {
   type Interest,
   type SunElement,
 } from './profile-enums';
+import { ConsentVersionSchema } from './consent-rules';
 import { LEGAL_VERSION } from './legal';
 import { SORT_ORDERS } from './premium-rules';
 import {
@@ -73,6 +74,11 @@ export const OwnProfileSchema = z.object({
   is_premium: z.boolean(),
   premium_since: z.string().nullable(),
   sort_by: z.enum(SORT_ORDERS),
+  /**
+   * The notice the member last accepted. Older than `LEGAL_VERSION` means
+   * the app asks again before going on (`lib/consent-rules.ts`).
+   */
+  consent_version: ConsentVersionSchema,
 });
 
 export type OwnProfile = z.infer<typeof OwnProfileSchema>;
@@ -87,7 +93,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileState> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      `id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos, is_premium, premium_since, sort_by, ${PROFILE_DETAIL_COLUMNS}`,
+      `id, display_name, birth_date, birth_city_id, chart, big_three, gender, interested_in, radius_km, age_min, age_max, min_band, sun_elements, bio, photos, is_premium, premium_since, sort_by, consent_version, ${PROFILE_DETAIL_COLUMNS}`,
     )
     .eq('id', userId)
     // Bounded for the same reason as `fetchMatch`: several screens show
@@ -245,9 +251,9 @@ export async function createProfile(
       gender: input.gender,
       interested_in: input.interestedIn,
       location: `SRID=4326;POINT(${point.longitude} ${point.latitude})`,
-      // Which version of the privacy notice was accepted. The column has no
-      // default, so a profile cannot be created without one; the timestamp
-      // is stamped by the server.
+      // Which version of the privacy notice was accepted. Without it the
+      // server stamps no `consent_at` and `profiles_consent_recorded`
+      // refuses the row; the timestamp is the server's.
       consent_version: LEGAL_VERSION,
     })
     // supabase-js has no request timeout of its own. Without this a

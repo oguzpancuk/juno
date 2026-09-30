@@ -83,16 +83,17 @@ export const LEGAL_UPDATED = '30 Eylül 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
- * notice the member accepted (`profiles.consent_version`, written once at
- * onboarding), so a later version can be told apart from this one.
+ * notice the member accepted (`profiles.consent_version`, written at
+ * onboarding and again at re-consent), so a later version can be told
+ * apart from this one.
  *
- * Moves with `LEGAL_UPDATED`: the value is written once, at onboarding,
- * as the version of the text the person read before agreeing, so a
- * profile created under a later wording must say so. `supabase/seed.sql`
- * carries it too: rerun `supabase/scripts/gen-seed.ts` when it moves. It
- * does not touch existing members — nothing re-asks consent yet, and the DB
- * trigger refuses moving a stored version backwards — so a re-consent
- * step, when it exists, starts from an honest record.
+ * Moves with `LEGAL_UPDATED`: the value is the version of the text the
+ * person read before agreeing, so a profile created under a later wording
+ * must say so. `supabase/seed.sql` carries it too: rerun
+ * `supabase/scripts/gen-seed.ts` when it moves. Moving it reaches every
+ * existing member as well: anyone whose record is older is stopped at
+ * `/consent` until they accept this text (`lib/consent.ts`), and the DB
+ * trigger refuses moving a stored version backwards.
  */
 export const LEGAL_VERSION = '2026-09-30';
 

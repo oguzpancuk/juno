@@ -7,6 +7,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { needsConsent } from '@/lib/consent-rules';
+import { LEGAL_VERSION } from '@/lib/legal';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
@@ -39,7 +41,13 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
   if (session.status === 'signed-in' && profile.status === 'ready') {
-    return <Redirect href="/discover" />;
+    // A member whose record names an older notice accepts the current one
+    // before anything else (KVKK re-consent, lib/consent.ts).
+    return needsConsent(profile.profile.consent_version, LEGAL_VERSION) ? (
+      <Redirect href="/consent" />
+    ) : (
+      <Redirect href="/discover" />
+    );
   }
   if (profile.status === 'error') {
     return (

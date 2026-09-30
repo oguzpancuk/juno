@@ -297,6 +297,23 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       compares the two values (`20260909000013_birth_instant.sql`), so any
       suffixed scheme has to redesign that ordering too. Belongs with the
       re-consent work._
+      _2026-09-30: the clause's CHECK and the re-consent step are built.
+      `profiles_consent_recorded`
+      (`20260930000001_consent_recorded.sql`) refuses a row without a
+      version or a `consent_at`; the trigger now stamps `consent_at` only
+      when there is a version, so an insert without consent is an insert
+      without `consent_at`, refused by that CHECK
+      (`supabase/tests/rls.test.ts`, "consent"). A member whose
+      `consent_version` is older than `LEGAL_VERSION` meets `/consent`
+      before anything else — from the entry screen and from a gate on the
+      tabs — and accepts the current text, deletes the account, or signs
+      out (`lib/consent.ts`, `lib/consent-rules.ts`). Every version change
+      asks again; every member whose record is older than 2026-09-30 is
+      asked once. The
+      date-typed version stays: one version per day is the rule
+      (`lib/legal.ts`), and nothing here needs two in a day. `/legal`
+      answers 200 from `wrangler dev` on the export (every request mode);
+      the hosted URL after the next deploy is the owner's check._
 - [x] **Full Turkish content (owner priority, before chat).** _Built,
       source-verified (`docs/astro-sources.md`), owner signed off on the
       texts on 2026-09-09 (NOTES)._ Professional

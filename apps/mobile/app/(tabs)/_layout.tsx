@@ -4,6 +4,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import { TabIcon } from '@/components/TabIcon';
+import { useConsentGate } from '@/lib/consent';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
@@ -39,9 +40,11 @@ const INDICATOR_STRIP = 14;
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const session = useSession();
-  const unread = useUnreadTotal(
-    session.status === 'signed-in' ? session.session.user.id : null,
-  );
+  const userId =
+    session.status === 'signed-in' ? session.session.user.id : null;
+  const unread = useUnreadTotal(userId);
+  // Every tab stands behind the current privacy notice (lib/consent.ts).
+  useConsentGate(userId);
   const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it
   // rather than stopping above the home indicator, and the items are

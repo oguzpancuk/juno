@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { allCities } from '@juno/geo';
-import type { Database, Json } from './database.types';
+import type { Database, Json, TablesInsert } from './database.types';
 import {
   ANKARA,
   ISTANBUL,
@@ -88,7 +88,6 @@ const LikeRows = z.array(
 const PERMISSION_DENIED = '42501';
 const UNDEFINED_COLUMN = '42703';
 const UNIQUE_VIOLATION = '23505';
-const NOT_NULL_VIOLATION = '23502';
 const INVALID_DATE = '22007';
 const CHECK_VIOLATION = '23514';
 /** forbid_message_edit's refusal of any change but the receipt. */
@@ -2337,7 +2336,12 @@ describe('consent', () => {
     umut = await user('umut');
   });
 
-  it('refuses a profile with no accepted version', async () => {
+  it('refuses a profile insert without consent_at, by a CHECK', async () => {
+    // The ROADMAP clause. `consent_at` is the server's to write, so what a
+    // client can leave out is the consent itself: with no version the
+    // trigger stamps nothing, and `profiles_consent_recorded` refuses a
+    // row missing either half. A timestamp of the client's own is no way
+    // round it — the trigger overwrites it.
     const complete = profileRow({
       id: umut.id,
       display_name: 'Umut',
@@ -2346,16 +2350,16 @@ describe('consent', () => {
       lonLat: ISTANBUL_NEARBY,
       photos: [],
     });
-    const withoutConsent = Object.fromEntries(
-      Object.entries(complete).filter(([key]) => key !== 'consent_version'),
-    );
-    const { error } = await umut.client
-      .from('profiles')
-      // @ts-expect-error why: this is exactly the payload the generated
-      // types forbid — a client that never sends the column. The server
-      // has to refuse it on its own.
-      .insert(withoutConsent);
-    expect(error?.code).toBe(NOT_NULL_VIOLATION);
+    const withoutConsent: TablesInsert<'profiles'> = { ...complete };
+    delete withoutConsent.consent_version;
+    for (const payload of [
+      withoutConsent,
+      { ...withoutConsent, consent_at: new Date().toISOString() },
+    ]) {
+      const { error } = await umut.client.from('profiles').insert(payload);
+      expect(error?.code).toBe(CHECK_VIOLATION);
+      expect(error?.message).toContain('profiles_consent_recorded');
+    }
   });
 
   it('refuses a version that is not a date', async () => {
@@ -2452,6 +2456,47 @@ describe('consent', () => {
       .single();
     const stamp = z.object({ consent_at: z.string() }).parse(after.data);
     expect(Date.parse(stamp.consent_at)).toBeGreaterThanOrEqual(first);
+  });
+
+  it('takes a newer version from a member, and never takes one away', async () => {
+    // Re-consent: a member who accepted an older text accepts the current
+    // one from the app (lib/consent.ts), which is an update of the
+    // version alone. The row Umut has at this point is the fixture's
+    // 2026-09-09.
+    const before = z
+      .object({ consent_at: z.string() })
+      .parse(
+        (
+          await umut.client
+            .from('profiles')
+            .select('consent_at')
+            .eq('id', umut.id)
+            .single()
+        ).data,
+      );
+    const accepted = await umut.client
+      .from('profiles')
+      .update({ consent_version: '2026-09-30' })
+      .eq('id', umut.id)
+      .select('consent_version, consent_at')
+      .single();
+    expect(accepted.error).toBeNull();
+    const row = z
+      .object({ consent_version: z.string(), consent_at: z.string() })
+      .parse(accepted.data);
+    expect(row.consent_version).toBe('2026-09-30');
+    expect(Date.parse(row.consent_at)).toBeGreaterThan(
+      Date.parse(before.consent_at),
+    );
+
+    // Withdrawing is deleting the account; a row with no version is the
+    // same missing record the CHECK refuses at insert.
+    const cleared = await umut.client
+      .from('profiles')
+      .update({ consent_version: null })
+      .eq('id', umut.id);
+    expect(cleared.error?.code).toBe(CHECK_VIOLATION);
+    expect(cleared.error?.message).toContain('profiles_consent_recorded');
   });
 });
 

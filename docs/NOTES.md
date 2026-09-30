@@ -8580,3 +8580,78 @@ stood in for it.
   or visual tests, so a screen whose content outgrows a short page passes
   every step. `doorSize` is tested; that the door fits is the screenshots'
   measurement above.
+
+## 2026-09-30 — KVKK: the CHECK, and asking again
+
+ROADMAP "KVKK consent + privacy policy", on the owner's "kvkk onayini
+baslatabilirsin". Two things were owed: the clause's CHECK, and the
+re-consent step this file and the ROADMAP had promised since 2026-09-17.
+
+- **The CHECK.** The clause says a profile insert without `consent_at`
+  is refused by a CHECK. Nothing could be: `consent_at` had a default
+  and a trigger that stamped it on every insert, consented or not, and
+  what actually refused a consent-less insert was `consent_version`'s
+  NOT NULL. Now the trigger stamps only when the row carries a version,
+  `consent_at` has no default, both columns lose NOT NULL, and one
+  named CHECK, `profiles_consent_recorded`, requires both. The rule is
+  as strong as before and is now the thing the clause names. Existing
+  rows all have both halves, so the constraint validates as added. The
+  down path is in the migration's header and was run.
+- **Run by hand, not reasoned about.** No Docker here, so the supabase
+  suite is NOT RUN. The consent parts of migrations 07, 12 and 13 and
+  the new one, verbatim, on a PostgreSQL 16 cluster with a stand-in
+  `profiles` (memory: postgres-without-docker): on main an insert with
+  no version fails `23502` (not-null); after the migration it fails
+  `23514` naming `profiles_consent_recorded`, with or without a forged
+  `consent_at`; clearing the version on update fails the same way;
+  backwards still fails; forward re-stamps; the down path applies.
+- **Re-consent.** `lib/consent-rules.ts` `needsConsent(accepted,
+current)`: older asks, equal or newer does not (a phone on an older
+  bundle after its member accepted on the web). The entry screen sends
+  such a member to `/consent`; `useConsentGate` on the tabs layout
+  catches a web address typed straight into a tab and an app left open
+  across a deploy. The screen: the full text in the popup onboarding
+  uses, a box to tick, "Onayla ve devam et"; and, because settings is
+  behind it, "Çıkış yap" and "Hesabımı sil" with settings' own
+  in-page confirmation. Accepting is an update of `consent_version`
+  alone, read back before it counts.
+- **Default picked: every version asks.** Not only the changes someone
+  judges material: what a member agreed to is the whole text their
+  record names, and one version per day keeps it rare. The first ask is
+  everyone whose record is older than 2026-09-30, which covers the
+  #14 finding (the location purpose widened on 2026-09-28).
+- **The notice text did not change**, so `LEGAL_VERSION` stays
+  2026-09-30 and nothing moved with it. The strings are new UI copy in
+  `lib/strings.ts`; once #18 lands they move into the i18n catalog in
+  all three languages.
+
+### Open, for the owner
+
+- The gate is the app's. Until an older member opens the app and
+  accepts, the database keeps processing their data as before: they
+  stay in other people's decks and in "Seni beğenenler" with the
+  distance the 2026-09-28 text added. Hiding them server-side (the
+  `discover` and `liked_me` views filtering on `consent_version`) is a
+  schema change with a view the 2026-09-23 plan measurement showed is
+  sensitive to shape; not done here.
+
+### Battery gaps
+
+- The gate and the screen are not in the battery: the web target has no
+  component tests. Driven in the web export against a stand-in backend
+  (screenshots in the PR): an older record lands on `/consent` from
+  sign-in and from `/matches` typed in; an unticked box says so; a
+  failed save says so and stays; accepting sends `consent_version
+2026-09-30` and lands on the deck; a current record goes straight in.
+  A deep link into a tab draws that tab for one round trip before the
+  gate replaces it.
+
+### Upstream candidates
+
+- The notice's "Değişiklikler" section says a new text is published at
+  the same address. It could now add that the app asks again before
+  going on. That is a text change, so it waits for the next one that
+  moves `LEGAL_VERSION` anyway.
+- The stand-in backend for screenshots was rebuilt a third time
+  (`.shots/stub.mjs`, not committed). Still a candidate for
+  `apps/mobile/scripts/` beside the driver.

@@ -118,6 +118,26 @@ export const t = {
     locationHint:
       'Konum izni verirsen mesafeler daha doğru olur; vermezsen doğum şehrin kullanılır.',
   },
+  /**
+   * Re-consent (KVKK): the screen a member meets when the privacy notice
+   * changed after they accepted it (lib/consent.ts). The rest of the app
+   * waits behind it. Declining is leaving: withdrawing consent is deleting
+   * the account, as the notice itself says, and signing out only puts the
+   * question off to the next sign-in.
+   */
+  reconsent: {
+    title: 'Gizlilik metni güncellendi',
+    body: (date: string) =>
+      `Kişisel verilerini nasıl işlediğimizi anlatan metin ${date} tarihinde değişti. Devam etmek için güncel metni okuyup onaylaman gerekiyor.`,
+    agree:
+      'Güncel gizlilik metnini okudum; doğum bilgilerimin ve konumumun bu metinde yazan amaçlarla işlenmesini kabul ediyorum.',
+    submit: 'Onayla ve devam et',
+    busy: 'Kaydediliyor…',
+    failed: 'Onayın kaydedilemedi. Bağlantını kontrol edip tekrar dene.',
+    declineTitle: 'Onaylamak istemiyor musun?',
+    decline:
+      'Rızanı geri almak hesabını silmek demek: profilin, haritan, eşleşmelerin ve mesajların silinir. Yalnızca çıkış yaparsan bir sonraki girişinde bu ekran yeniden açılır.',
+  },
   chart: {
     title: 'Doğum haritan',
     sun: 'Güneş',
