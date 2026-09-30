@@ -4,8 +4,9 @@ Date: 2026-09-29
 
 ## Status
 
-Accepted with this pull request; the library question below is the
-owner's (1 i18next, 2 no library) and was open when this was written.
+Accepted with this pull request. The library question was the owner's
+(1 i18next, 2 no library); he chose 2 on 2026-09-30: "ok 2den devam
+edelim".
 
 ## Context
 
@@ -61,6 +62,6 @@ notice in `lib/legal.ts`, and a handful of strings outside all three.
 - A new UI string is a change in every catalog in the same pull request.
 - Members' own text (bio, messages, school) is not translated; a starter
   sent in one language reads in that language to the other person.
-- If the owner picks i18next, points 2 and 5 change (JSON catalogs with
-  `{{placeholders}}`, `t('key')` call sites, expo-localization); the key
-  names, the engine side and points 4, 6–8 do not.
+- Moving to i18next later would change points 2 and 5 (JSON catalogs
+  with `{{placeholders}}`, `t('key')` call sites, expo-localization); the
+  key names, the engine side and points 4, 6–8 would not.
