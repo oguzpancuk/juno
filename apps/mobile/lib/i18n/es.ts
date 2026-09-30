@@ -73,7 +73,7 @@ export const es: Strings = {
       unspecified: 'Prefiero no decirlo',
     },
     interest: '¿A quién quieres conocer?',
-    interests: { women: 'Mujeres', men: 'Hombres', everyone: 'A todos' },
+    interests: { women: 'Mujeres', men: 'Hombres', everyone: 'Todo el mundo' },
     consent:
       'Acepto que mis datos de nacimiento se traten para calcular la compatibilidad, y mi ubicación para mostrarme personas cercanas.',
     consentLink: 'Leer el aviso de privacidad',
@@ -309,7 +309,7 @@ export const es: Strings = {
     blockConfirm: (name: string) =>
       `${name} ya no podrá verte, y el match y el chat se cerrarán para las dos partes.`,
     report: 'Denunciar',
-    reportTitle: '¿Por qué lo denuncias?',
+    reportTitle: '¿Por qué denuncias este perfil?',
     reasons: {
       harassment: 'Acoso o insultos',
       spam: 'Spam o publicidad',
@@ -387,7 +387,7 @@ export const es: Strings = {
     signOut: 'Cerrar sesión',
     radius: 'Radio de búsqueda',
     radiusHint:
-      'Te mostramos a las personas dentro de esta distancia; quién te ve a ti lo decide su propio radio. Los demás solo ven tu ubicación como una distancia en km.',
+      'Te mostramos a las personas dentro de esta distancia; quién te ve a ti lo decide su propio radio. Nadie más ve tu ubicación, solo una distancia en km.',
     location: 'Ubicación',
     updateLocation: 'Actualizar ubicación',
     locating: 'Obteniendo tu ubicación…',
@@ -436,8 +436,7 @@ export const es: Strings = {
     empty: 'Todavía no le gustas a nadie. Sigue descubriendo.',
     lockedTitle: (n: number) =>
       n === 1 ? 'Le gustas a una persona' : `Le gustas a ${n} personas`,
-    lockedHint:
-      'Ver quiénes son y darles like uno por uno es exclusivo de Premium.',
+    lockedHint: 'Ver quiénes son y darles like es exclusivo de Premium.',
     superBadge: 'Superlike',
     likeBack: 'Me gusta',
     passBack: 'Pasar',

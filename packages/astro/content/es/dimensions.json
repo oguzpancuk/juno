@@ -9,7 +9,7 @@
     "name": "Atracción",
     "low": "Fuego lento",
     "mid": "Hay atracción",
-    "high": "Magnética"
+    "high": "Magnetismo"
   },
   "communication": {
     "name": "Comunicación",
@@ -21,12 +21,12 @@
     "name": "Estabilidad",
     "low": "Libre",
     "mid": "Hay base",
-    "high": "Sólida"
+    "high": "Base sólida"
   },
   "growth": {
     "name": "Crecimiento",
     "low": "Aguas tranquilas",
     "mid": "Estimulante",
-    "high": "Transformadora"
+    "high": "Transformación"
   }
 }

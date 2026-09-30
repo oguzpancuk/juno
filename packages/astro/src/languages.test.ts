@@ -131,7 +131,8 @@ describe("Spanish marks nobody's gender", () => {
     /\b(al|el) otro\b(?! (lado|extremo|polo))/iu,
     /\bnosotr[oa]s\b/iu,
     /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
-    /\bcada uno\b/iu,
+    /\b(cada uno|uno por uno|los demás)\b/iu,
+    /(^|\b(a|para|con|de) )todos\b(?! (los|las|tus|sus|mis|estos|esos)\b)/iu,
     /\b(te sientes|sentirte|se sienten|sentirse|te vuelves|volverte) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
     /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
   ];

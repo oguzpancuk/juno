@@ -110,6 +110,32 @@ describe('the string catalogs', () => {
     expect(unused).toEqual(unusedByDesign[l] ?? []);
   });
 
+  it("Spanish marks nobody's gender", () => {
+    // Turkish has none, and the app matches women with women and men with
+    // men: the Spanish agrees with no reader, match or member. The same
+    // list guards the chart texts in packages/astro (languages.test.ts).
+    const PERSON_FORMS = [
+      /\bjunt[oa]s\b/iu,
+      /\b(el uno|la una)\b/iu,
+      /\b(al|el) otro\b(?! (lado|extremo|polo))/iu,
+      /\bnosotr[oa]s\b/iu,
+      /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
+      /\b(cada uno|uno por uno|los demás)\b/iu,
+      /(^|\b(a|para|con|de) )todos\b(?! (los|las|tus|sus|mis|estos|esos)\b)/iu,
+      /\b(lo|la) (denuncias|bloqueas|desbloqueas|conoces)\b/iu,
+      /\b(te sientes|sentirte|se sienten|sentirse) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
+      /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
+    ];
+    const hits = leaves(CATALOGS.es).flatMap(({ path, value }) => {
+      const text = String(render(value));
+      return PERSON_FORMS.flatMap((form) => {
+        const found = form.exec(text);
+        return found ? [`${path}: ${found[0]}`] : [];
+      });
+    });
+    expect(hits).toEqual([]);
+  });
+
   it('names every language in its own name, with a locale tag', () => {
     for (const l of LANGUAGES) {
       expect(LANGUAGE_NAMES[l].length).toBeGreaterThan(0);
