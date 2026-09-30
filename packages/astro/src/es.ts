@@ -67,7 +67,7 @@ export const ES_WORDS: Words = {
     // The same Descendant reading as the Turkish (ADR-0003 amendment 1).
     if (aspect === 'opposition') {
       if (planetA === 'ascendant' && planetB === 'ascendant')
-        return 'Cada Ascendente está en el Descendente del otro.';
+        return 'Cada Ascendente está en el Descendente ajeno.';
       if (planetB === 'ascendant')
         return `Tu ${BODY_ES[planetA]} está en su Descendente.`;
       if (planetA === 'ascendant')

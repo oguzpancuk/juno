@@ -1,5 +1,6 @@
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
 import { describe, expect, it } from 'vitest';
+import { LEGAL_SECTIONS } from '../legal';
 import { CATALOGS, LANGUAGE_NAMES, LOCALE_TAGS, SHORT_DATE } from './index';
 
 /**
@@ -121,12 +122,17 @@ describe('the string catalogs', () => {
       /\bnosotr[oa]s\b/iu,
       /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
       /\b(cada uno|uno por uno|los demás)\b/iu,
+      /\b(otros|los) usuarios\b/iu,
       /(^|\b(a|para|con|de) )todos\b(?! (los|las|tus|sus|mis|estos|esos)\b)/iu,
       /\b(lo|la) (denuncias|bloqueas|desbloqueas|conoces)\b/iu,
       /\b(te sientes|sentirte|se sienten|sentirse) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
       /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
     ];
-    const hits = leaves(CATALOGS.es).flatMap(({ path, value }) => {
+    const texts = [
+      ...leaves(CATALOGS.es),
+      ...leaves(LEGAL_SECTIONS.es, 'legal'),
+    ];
+    const hits = texts.flatMap(({ path, value }) => {
       const text = String(render(value));
       return PERSON_FORMS.flatMap((form) => {
         const found = form.exec(text);

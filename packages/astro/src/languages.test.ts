@@ -246,7 +246,7 @@ describe('Spanish words', () => {
         aspect: 'opposition',
         planetB: 'ascendant',
       }),
-    ).toBe('Cada Ascendente está en el Descendente del otro.');
+    ).toBe('Cada Ascendente está en el Descendente ajeno.');
   });
 
   it('titles a natal aspect, the Descendant included', () => {
