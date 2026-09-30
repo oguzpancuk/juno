@@ -1,6 +1,7 @@
 import type { Planet } from './bodies';
 import type { Aspect, Body, InterAspect } from './compatibility';
 import { EN_WORDS } from './en';
+import { ES_WORDS } from './es';
 import { currentLanguage, type Language } from './language';
 import type { Sign } from './signs';
 import { TR_WORDS } from './tr';
@@ -32,6 +33,7 @@ export interface Words {
 export const WORDS: Readonly<Record<Language, Words>> = {
   tr: TR_WORDS,
   en: EN_WORDS,
+  es: ES_WORDS,
 };
 
 const words = (): Words => WORDS[currentLanguage()];

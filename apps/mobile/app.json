@@ -13,12 +13,13 @@
       "bundleIdentifier": "com.oguzpancuk.juno",
       "infoPlist": {
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleLocalizations": ["tr", "en"]
+        "CFBundleLocalizations": ["tr", "en", "es"]
       }
     },
     "locales": {
       "tr": "./locales/tr.json",
-      "en": "./locales/en.json"
+      "en": "./locales/en.json",
+      "es": "./locales/es.json"
     },
     "android": {
       "package": "com.oguzpancuk.juno",

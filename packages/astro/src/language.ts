@@ -13,7 +13,7 @@
  * `Words` in `words.ts`; the compiler and `content.test.ts` point at
  * whatever is still missing.
  */
-export const LANGUAGES = ['tr', 'en'] as const;
+export const LANGUAGES = ['tr', 'en', 'es'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 /** Turkish: the source every translation is made from. */

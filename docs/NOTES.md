@@ -8677,3 +8677,97 @@ the owner has now asked for it. Decisions in ADR-0014.
 - When the device names none of the app's languages the app shows
   English (owner, 2026-09-30), and iOS's development region is English
   to match; Turkish stays the source the catalogs are written from.
+
+## 2026-09-29 — Spanish
+
+The owner's "uygulamayı İngilizce ve İspanyolcaya çevireceğiz, her şey
+çevrilecek": Spanish on top of the English thread's catalogs (ADR-0014),
+nothing but `es` files and registrations, plus a Spanish part in the
+sign-up mail.
+
+- **Which Spanish.** Neutral international Spanish under `es`, with "tú"
+  as the Turkish says "sen": no vosotros, no voseo, no word only one
+  country uses. Any `es-*` device tag lands on it. `LOCALE_TAGS.es` is
+  `es-ES` because the tag must be `xx-YY`; dates read the same in es-MX
+  ("30 de septiembre de 2026"). "Match", "like" and "superlike" stay as
+  Spanish-language dating apps say them. The glossary the translation was
+  held to is in the PR body.
+- **The notice** is a translation of the 30 Eylül 2026 text, line for
+  line; the Turkish binds and `LEGAL_VERSION` did not move.
+- **Content rules in Spanish.** The tempo, flavour and antonym rules
+  are Turkish word lists and do not read Spanish; they were run by hand
+  on the Spanish texts. The two that need no word list run on Spanish in
+  the battery (`content-rules.test.ts`), for English too since its nine
+  shared phrases were reworded: no sentence repeated and no 4-word
+  sequence shared between a planet's sign and house texts (six Spanish
+  sign texts were rewritten for it). "No sign name in an aspect text"
+  runs for every translation, over the overlays too, case- and
+  accent-insensitive and with plurals, because "leo" and "libra" are
+  also ordinary Spanish words.
+- **Labels that must not say "your".** The placement labels are shown on
+  other people's profiles too; "Tu esencia" read as the viewer's. The
+  Turkish and English Sun, Moon and Ascendant labels are nouns, and the
+  Spanish now are too ("Esencia", "Mundo emocional"). Mercury to Pluto
+  use a generic "you" in all three languages ("Nasıl seversin", "How you
+  love", "Cómo amas"), as the Turkish source does; the Spanish follows
+  it. Making them neutral is a choice for every language at once.
+- **No gender.** Turkish marks none, and the app matches women with
+  women and men with men, so the Spanish marks nobody's gender either:
+  not the reader's ("sentir que no te entienden", not "sentirte
+  malinterpretado"), not the pair's ("mutuamente", "en pareja", not
+  "juntos", "el uno al otro"), and least of all in a starter, which the
+  member sends as their own words. The same holds in the app catalog
+  ("¿Por qué denuncias este perfil?", "Todo el mundo"). One list,
+  `packages/astro/src/testing/spanish-gender.ts`, reads every Spanish
+  text: the content files, every line the engine writes, the app
+  catalog and the notice. Adjectives that agree with a thing ("un
+  vínculo generoso") stay.
+- **Who does what to whom.** Synastry is directional ("Tu Luna … su
+  Júpiter"). Where the Turkish is one-way ("biri diğerinin kalbini
+  genişletir") the Spanish stays one-way without gender: "una persona le
+  ensancha el corazón a la otra", not "se lo ensanchan mutuamente". The
+  other member is "la otra persona", never "su pareja": right after "su
+  Luna", "su pareja" reads as a third person, and the texts show on the
+  swipe screen before any match.
+
+### For the owner
+
+- The hosted project's sign-up mail subject and body are pasted by hand
+  (`docs/auth-setup.md` step 4) — the subject now names Spanish too.
+- iOS needs a fresh native build for the Spanish permission sentence
+  (`locales/es.json`).
+
+### Side findings, not fixed here
+
+- City search knows Turkish exonyms only (`packages/geo` `EXONYMS`): a
+  Spanish speaker finds "London" and "Munich" by their GeoNames names but
+  not "Londres" or "Múnich". A Spanish list is drafted in the project
+  files (`i18n-es/exonyms-es.json`); wiring it is a `geo` change.
+- The big-three row (`BigThreeRow`) cut "Capricornio" and "Ascendente"
+  to "Caprico…" / "Ascende…" on the web, where `adjustsFontSizeToFit` is
+  a no-op. Put to the owner as two layouts; he picked "küçük"
+  (2026-09-30) and the English change carries it, merged in here.
+
+### Battery gaps
+
+- Nothing checks that a Spanish string fits its box; Spanish runs longer
+  than Turkish and English. Two fits were only seen in screenshots: the
+  big-three row above, and the filter's band buttons, where "Equilibrada"
+  and "Excepcional" were cut until the band names became "Mixta" and
+  "Insólita".
+- With the smaller big-three row, measured with a DOM Range on the web
+  (2026-09-30): the Spanish words fit at 414, 390 and 375 wide. At 360
+  "Capricornio" is about 3 px too wide and ends in "…"; at 320
+  "Capricornio" and "Ascendente" are cut. iPhones are 375 and up, where
+  it fits, and iOS can shrink the text to 0.8 of its size, which is
+  enough at 360. On the web at 360, a common Android width, it is still
+  cut.
+- The no-gender test first read the chart texts only. evaluator-qa
+  (review round 1) found four app strings it let through, among them
+  the report sheet's "¿Por qué lo denuncias?", which made the reported
+  member male; review round 2 found forms its patterns missed ("del
+  otro", "tarea de los dos", "sentirte atraída", "estás listo"). The
+  list now has those, with a spec test of what it must catch and let
+  through. It still lists forms: "lo/la" before a verb is listed for
+  four verbs only, and a new adjective after "eres/estás" is caught
+  unless it is on the list of invariable words.

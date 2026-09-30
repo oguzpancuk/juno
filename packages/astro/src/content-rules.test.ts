@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { PLANETS } from './bodies';
 import { SIGNS } from './signs';
-import { CONTENT_FILES, KEY_SPACES } from './content';
+import { CONTENT_FILES, KEY_SPACES, contentFiles } from './content';
 import type { HouseNumber } from './houses';
+import { LANGUAGES, SOURCE_LANGUAGE } from './language';
 import { SIGN_TR } from './tr';
 import SYNASTRY_RAW from '../content/tr/synastry.json';
 
@@ -192,3 +193,61 @@ describe('content/tr · layering rules', () => {
         expect(houseKeys.has(`${planet}-${house}`)).toBe(true);
   });
 });
+
+/**
+ * The two rules above that do not depend on a word list hold for every
+ * translation too: a translator reworking one layer can bring back a
+ * repeated sentence or a shared phrase as easily as the source can. The
+ * tempo, flavour and antonym rules are Turkish word lists and stay there.
+ */
+describe.each(LANGUAGES.filter((l) => l !== SOURCE_LANGUAGE))(
+  'content/%s · layering rules that hold in any language',
+  (language) => {
+    const files = contentFiles(language);
+
+    it('no sentence is repeated between the sign and house layers', () => {
+      const seen = new Map<string, string>();
+      const dupes: string[] = [];
+      for (const [key, text] of Object.entries(files.signs))
+        for (const s of sentences(text)) seen.set(s, `signs/${key}`);
+      for (const [key, text] of Object.entries(files.houses))
+        for (const s of sentences(text)) {
+          const prior = seen.get(s);
+          if (prior) dupes.push(`houses/${key} repeats ${prior}: "${s}"`);
+        }
+      expect(dupes).toEqual([]);
+    });
+
+    it('sign and house texts of one planet share no 4-word sequence (1,440 pairs)', () => {
+      const grams = (text: string): Set<string> => {
+        const words = text
+          .toLocaleLowerCase(language)
+          .replace(/[^\p{L}\s]/gu, ' ')
+          .split(/\s+/)
+          .filter((w) => w.length > 0);
+        const out = new Set<string>();
+        for (let i = 0; i + 4 <= words.length; i++)
+          out.add(words.slice(i, i + 4).join(' '));
+        return out;
+      };
+      const hits: string[] = [];
+      let pairs = 0;
+      for (const planet of PLANETS) {
+        const houseGrams = HOUSES.map(
+          (h) => [h, grams(textOf(files.houses, `${planet}-${h}`))] as const,
+        );
+        for (const sign of SIGNS) {
+          const sg = grams(textOf(files.signs, `${planet}-${sign}`));
+          for (const [h, hg] of houseGrams) {
+            pairs++;
+            const shared = [...sg].find((g) => hg.has(g));
+            if (shared)
+              hits.push(`${planet}-${sign} × ${planet}-${h}: "${shared}"`);
+          }
+        }
+      }
+      expect(pairs).toBe(1440);
+      expect(hits).toEqual([]);
+    });
+  },
+);

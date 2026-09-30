@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { computeChart } from './chart';
+import { ASPECTS, BODIES } from './compatibility';
 import { contentFiles } from './content';
 import { ordinalEn } from './en';
 import {
@@ -13,8 +14,8 @@ import {
 } from './language';
 import { toPublicChart } from './public';
 import { SIGNS } from './signs';
+import { spanishGenderHits } from './testing/spanish-gender';
 import { natalReading, starterFromKey } from './summary';
-import { SIGN_EN } from './en';
 import { WORDS, describeAspect, natalAspectTitle, signName } from './words';
 import istanbul from './__fixtures__/istanbul-1995.json';
 
@@ -78,14 +79,74 @@ describe('translations of content/', () => {
     },
   );
 
-  it('English aspect texts name no sign, as the Turkish ones do not', () => {
-    const files = contentFiles('en');
+  // Case- and accent-insensitive, singular or plural: "Leo" and "Libra"
+  // are also everyday Spanish words ("leo", "se libra") that would read
+  // as the sign, and "Geminis" or "los Escorpios" name a sign as surely
+  // as "Géminis". Overlay texts sit beside the aspects on the same page.
+  it.each(LANGUAGES.filter((l) => l !== SOURCE_LANGUAGE))(
+    '%s aspect, starter and overlay texts name no sign, as the Turkish ones do not',
+    (language) => {
+      const fold = (text: string): string =>
+        text
+          .normalize('NFD')
+          .replace(/\p{M}/gu, '')
+          .toLocaleLowerCase(language);
+      const synastry = filesOf(language).get('synastry.json') as Record<
+        string,
+        { meaning: string; question: string }
+      >;
+      const files = contentFiles(language);
+      const texts = [
+        ...Object.entries(files.natalAspects),
+        ...Object.entries(files.overlays),
+        ...Object.entries(synastry).flatMap(([key, entry]) => [
+          [key, entry.meaning] as const,
+          [key, entry.question] as const,
+        ]),
+      ];
+      const hits: string[] = [];
+      for (const [key, text] of texts)
+        for (const sign of SIGNS) {
+          const name = fold(WORDS[language].sign[sign]);
+          if (
+            new RegExp(`(^|[^\\p{L}])${name}(e?s)?(?![\\p{L}])`, 'u').test(
+              fold(text),
+            )
+          )
+            hits.push(`${key}: ${WORDS[language].sign[sign]}`);
+        }
+      expect(hits).toEqual([]);
+    },
+  );
+});
+
+describe("Spanish marks nobody's gender", () => {
+  // The one list for every Spanish text lives in testing/spanish-gender.ts;
+  // the app's catalog and notice are read against it in apps/mobile.
+  it('in any content text, including every starter', () => {
     const hits: string[] = [];
-    for (const map of [files.natalAspects, files.synastry])
-      for (const [key, text] of Object.entries(map))
-        for (const sign of SIGNS)
-          if (new RegExp(`\\b${SIGN_EN[sign]}\\b`, 'u').test(text))
-            hits.push(`${key}: ${SIGN_EN[sign]}`);
+    const walk = (value: unknown, path: string): void => {
+      if (typeof value === 'string')
+        for (const hit of spanishGenderHits(value))
+          hits.push(`${path}: ${hit}`);
+      else if (value !== null && typeof value === 'object')
+        for (const [k, v] of Object.entries(value)) walk(v, `${path}.${k}`);
+    };
+    for (const [name, data] of filesOf('es')) walk(data, name);
+    expect(hits).toEqual([]);
+  });
+
+  it('in any line the engine writes', () => {
+    setLanguage('es');
+    const hits: string[] = [];
+    for (const planetA of BODIES)
+      for (const planetB of BODIES)
+        for (const aspect of ASPECTS) {
+          const pair = { planetA, aspect, planetB };
+          for (const line of [describeAspect(pair), natalAspectTitle(pair)])
+            for (const hit of spanishGenderHits(line))
+              hits.push(`${planetA}-${aspect}-${planetB}: ${hit}`);
+        }
     expect(hits).toEqual([]);
   });
 });
@@ -136,6 +197,79 @@ describe('the engine speaks the language it is set to', () => {
     expect(en.headline).toBe('Your Sun is trine their Venus.');
     expect(en.question).not.toBe(tr.question);
     expect(en.question.endsWith('?')).toBe(true);
+  });
+});
+
+describe('Spanish words', () => {
+  it('reads Spanish texts and Spanish names once set to Spanish', () => {
+    const chart = toPublicChart(
+      computeChart({
+        utc: new Date(istanbul.input.utc),
+        latitude: istanbul.input.latitude,
+        longitude: istanbul.input.longitude,
+      }),
+    );
+    const tr = natalReading(chart);
+    setLanguage('es');
+    const es = natalReading(chart);
+    expect(es.placements[0]?.technical).toMatch(/^Sol en /);
+    expect(es.risingText).not.toBe(tr.risingText);
+    expect(es.placements.find((p) => p.house !== null)?.technical).toMatch(
+      / · casa \d+$/,
+    );
+  });
+
+  it('describes an aspect from the viewer’s side', () => {
+    setLanguage('es');
+    expect(
+      describeAspect({ planetA: 'moon', aspect: 'square', planetB: 'mars' }),
+    ).toBe('Tu Luna forma una cuadratura con su Marte.');
+    expect(
+      describeAspect({
+        planetA: 'venus',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Tu Venus está en su Descendente.');
+    expect(
+      describeAspect({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'moon',
+      }),
+    ).toBe('Su Luna está en tu Descendente.');
+    expect(
+      describeAspect({
+        planetA: 'ascendant',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Cada Ascendente está en el Descendente de la otra persona.');
+  });
+
+  it('titles a natal aspect, the Descendant included', () => {
+    setLanguage('es');
+    expect(
+      natalAspectTitle({ planetA: 'venus', aspect: 'square', planetB: 'mars' }),
+    ).toBe('Venus cuadratura Marte');
+    expect(
+      natalAspectTitle({
+        planetA: 'sun',
+        aspect: 'opposition',
+        planetB: 'ascendant',
+      }),
+    ).toBe('Sol en el Descendente');
+    expect(signName('scorpio')).toBe('Escorpio');
+  });
+
+  it('gives the starter in Spanish, as a question', () => {
+    setLanguage('es');
+    const starter = starterFromKey(
+      { planetA: 'sun', aspect: 'trine', planetB: 'venus' },
+      true,
+    );
+    expect(starter.headline).toBe('Tu Sol forma un trígono con su Venus.');
+    expect(starter.question).toMatch(/^¿.*\?$/u);
   });
 });
 

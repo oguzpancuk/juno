@@ -51,6 +51,18 @@ import enRetrograde from '../content/en/retrograde.json';
 import enSigns from '../content/en/signs.json';
 import enSynastry from '../content/en/synastry.json';
 import enTitles from '../content/en/titles.json';
+import esBands from '../content/es/bands.json';
+import esDimensions from '../content/es/dimensions.json';
+import esElements from '../content/es/elements.json';
+import esHouses from '../content/es/houses.json';
+import esNatalAspects from '../content/es/natal-aspects.json';
+import esOverlayHouses from '../content/es/overlay-houses.json';
+import esOverlays from '../content/es/overlays.json';
+import esPlacements from '../content/es/placements.json';
+import esRetrograde from '../content/es/retrograde.json';
+import esSigns from '../content/es/signs.json';
+import esSynastry from '../content/es/synastry.json';
+import esTitles from '../content/es/titles.json';
 import { currentLanguage, type Language } from './language';
 
 /**
@@ -227,6 +239,20 @@ const RAW: Readonly<Record<Language, Readonly<Record<ContentFile, unknown>>>> =
       'signs.json': enSigns,
       'synastry.json': enSynastry,
       'titles.json': enTitles,
+    },
+    es: {
+      'bands.json': esBands,
+      'dimensions.json': esDimensions,
+      'elements.json': esElements,
+      'houses.json': esHouses,
+      'natal-aspects.json': esNatalAspects,
+      'overlay-houses.json': esOverlayHouses,
+      'overlays.json': esOverlays,
+      'placements.json': esPlacements,
+      'retrograde.json': esRetrograde,
+      'signs.json': esSigns,
+      'synastry.json': esSynastry,
+      'titles.json': esTitles,
     },
   };
 

@@ -1,5 +1,7 @@
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
+import { spanishGenderHits } from '@juno/astro/src/testing/spanish-gender';
 import { describe, expect, it } from 'vitest';
+import { LEGAL_SECTIONS } from '../legal';
 import { CATALOGS, LANGUAGE_NAMES, LOCALE_TAGS, SHORT_DATE } from './index';
 
 /**
@@ -110,6 +112,19 @@ describe('the string catalogs', () => {
     expect(unused).toEqual(unusedByDesign[l] ?? []);
   });
 
+  it("Spanish marks nobody's gender", () => {
+    // Turkish has none, and the app matches women with women and men with
+    // men. One list for every Spanish text, the chart texts included.
+    const texts = [
+      ...leaves(CATALOGS.es),
+      ...leaves(LEGAL_SECTIONS.es, 'legal'),
+    ];
+    const hits = texts.flatMap(({ path, value }) =>
+      spanishGenderHits(String(render(value))).map((hit) => `${path}: ${hit}`),
+    );
+    expect(hits).toEqual([]);
+  });
+
   it('names every language in its own name, with a locale tag', () => {
     for (const l of LANGUAGES) {
       expect(LANGUAGE_NAMES[l].length).toBeGreaterThan(0);
@@ -126,6 +141,8 @@ describe('the string catalogs', () => {
     // Turkish as it read before there was a second language.
     expect(format('tr')).toBe('10.09.2026');
     expect(format('en')).toBe('Sep 10, 2026');
+    // Day first, as every Spanish-speaking country writes it.
+    expect(format('es')).toBe('10/09/2026');
   });
 });
 
