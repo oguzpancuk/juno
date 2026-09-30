@@ -8633,7 +8633,11 @@ the owner has now asked for it. Decisions in ADR-0014.
   one the battery passed: the big-three row cuts long English sign
   names on the web ("Sagittar…", "Caprico…" at 390 and 375 wide), where
   `adjustsFontSizeToFit` does nothing. The Spanish thread found the same
-  and put two layouts to the owner; the pick lands in #17 for all three
-  languages.
+  and put two layouts to the owner, who picked "küçük" (2026-09-30):
+  smaller badge, glyph and words, same layout, in this change. Checked
+  by a script that lists clipped text: nothing clipped at 390, 375 and
+  360 in either language; at 320 English "Sagittarius" and "Capricorn"
+  are still cut on the web (Turkish fits); on iOS the fit-to-width
+  shrink may cover them, which is the owner's device check.
 - The switch's remount and return to the profile is seen in the web
   screenshots only; nothing in the battery drives it.
