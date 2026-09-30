@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { computeChart } from './chart';
+import { ASPECTS, BODIES } from './compatibility';
 import { contentFiles } from './content';
 import { ordinalEn } from './en';
 import {
@@ -13,6 +14,7 @@ import {
 } from './language';
 import { toPublicChart } from './public';
 import { SIGNS } from './signs';
+import { spanishGenderHits } from './testing/spanish-gender';
 import { natalReading, starterFromKey } from './summary';
 import { WORDS, describeAspect, natalAspectTitle, signName } from './words';
 import istanbul from './__fixtures__/istanbul-1995.json';
@@ -119,36 +121,32 @@ describe('translations of content/', () => {
 });
 
 describe("Spanish marks nobody's gender", () => {
-  // Turkish has no grammatical gender and the app matches women with
-  // women and men with men, so a Spanish text that agrees with "tú", the
-  // other person or the pair picks a gender the source never did; in a
-  // starter the member says it in their own voice. These are the forms
-  // that are about people wherever they appear. Adjectives that agree
-  // with a thing ("un vínculo generoso") are fine and not listed.
-  const PERSON_FORMS = [
-    /\bjunt[oa]s\b/iu,
-    /\b(el uno|la una)\b/iu,
-    /\b(al|el) otro\b(?! (lado|extremo|polo))/iu,
-    /\bnosotr[oa]s\b/iu,
-    /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
-    /\b(cada uno|uno por uno|los demás)\b/iu,
-    /(^|\b(a|para|con|de) )todos\b(?! (los|las|tus|sus|mis|estos|esos)\b)/iu,
-    /\b(te sientes|sentirte|se sienten|sentirse|te vuelves|volverte) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
-    /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
-  ];
-
+  // The one list for every Spanish text lives in testing/spanish-gender.ts;
+  // the app's catalog and notice are read against it in apps/mobile.
   it('in any content text, including every starter', () => {
     const hits: string[] = [];
     const walk = (value: unknown, path: string): void => {
-      if (typeof value === 'string') {
-        for (const form of PERSON_FORMS) {
-          const found = form.exec(value);
-          if (found) hits.push(`${path}: ${found[0]}`);
-        }
-      } else if (value !== null && typeof value === 'object')
+      if (typeof value === 'string')
+        for (const hit of spanishGenderHits(value))
+          hits.push(`${path}: ${hit}`);
+      else if (value !== null && typeof value === 'object')
         for (const [k, v] of Object.entries(value)) walk(v, `${path}.${k}`);
     };
     for (const [name, data] of filesOf('es')) walk(data, name);
+    expect(hits).toEqual([]);
+  });
+
+  it('in any line the engine writes', () => {
+    setLanguage('es');
+    const hits: string[] = [];
+    for (const planetA of BODIES)
+      for (const planetB of BODIES)
+        for (const aspect of ASPECTS) {
+          const pair = { planetA, aspect, planetB };
+          for (const line of [describeAspect(pair), natalAspectTitle(pair)])
+            for (const hit of spanishGenderHits(line))
+              hits.push(`${planetA}-${aspect}-${planetB}: ${hit}`);
+        }
     expect(hits).toEqual([]);
   });
 });
@@ -246,7 +244,7 @@ describe('Spanish words', () => {
         aspect: 'opposition',
         planetB: 'ascendant',
       }),
-    ).toBe('Cada Ascendente está en el Descendente ajeno.');
+    ).toBe('Cada Ascendente está en el Descendente de la otra persona.');
   });
 
   it('titles a natal aspect, the Descendant included', () => {

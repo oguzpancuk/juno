@@ -1,4 +1,5 @@
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
+import { spanishGenderHits } from '@juno/astro/src/testing/spanish-gender';
 import { describe, expect, it } from 'vitest';
 import { LEGAL_SECTIONS } from '../legal';
 import { CATALOGS, LANGUAGE_NAMES, LOCALE_TAGS, SHORT_DATE } from './index';
@@ -113,32 +114,14 @@ describe('the string catalogs', () => {
 
   it("Spanish marks nobody's gender", () => {
     // Turkish has none, and the app matches women with women and men with
-    // men: the Spanish agrees with no reader, match or member. The same
-    // list guards the chart texts in packages/astro (languages.test.ts).
-    const PERSON_FORMS = [
-      /\bjunt[oa]s\b/iu,
-      /\b(el uno|la una)\b/iu,
-      /\b(al|el) otro\b(?! (lado|extremo|polo))/iu,
-      /\bnosotr[oa]s\b/iu,
-      /\b(ti|sí|uno|ustedes) mism[oa]s?\b/iu,
-      /\b(cada uno|uno por uno|los demás)\b/iu,
-      /\b(otros|los) usuarios\b/iu,
-      /(^|\b(a|para|con|de) )todos\b(?! (los|las|tus|sus|mis|estos|esos)\b)/iu,
-      /\b(lo|la) (denuncias|bloqueas|desbloqueas|conoces)\b/iu,
-      /\b(te sientes|sentirte|se sienten|sentirse) (muy |tan |más )?\p{L}+(ad|id)[oa]s?\b/iu,
-      /\beres (muy |tan |más )?\p{L}+(os|iv|ad|id)[oa]\b/iu,
-    ];
+    // men. One list for every Spanish text, the chart texts included.
     const texts = [
       ...leaves(CATALOGS.es),
       ...leaves(LEGAL_SECTIONS.es, 'legal'),
     ];
-    const hits = texts.flatMap(({ path, value }) => {
-      const text = String(render(value));
-      return PERSON_FORMS.flatMap((form) => {
-        const found = form.exec(text);
-        return found ? [`${path}: ${found[0]}`] : [];
-      });
-    });
+    const hits = texts.flatMap(({ path, value }) =>
+      spanishGenderHits(String(render(value))).map((hit) => `${path}: ${hit}`),
+    );
     expect(hits).toEqual([]);
   });
 
