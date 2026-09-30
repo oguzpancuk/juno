@@ -12,27 +12,28 @@ import { color, font, radius, space, type } from '@/theme/tokens';
  */
 export function DeleteAccountConfirm({
   deleting,
+  disabled = false,
   onConfirm,
   onCancel,
   testIDPrefix = '',
 }: {
   deleting: boolean;
+  /** Something else on the screen is saving (`/consent`'s accept). */
+  disabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   /** Keeps each screen's existing test IDs (`delete-confirm`, …). */
   testIDPrefix?: string;
 }) {
+  const off = deleting || disabled;
   return (
     <View style={styles.confirm} testID={`${testIDPrefix}delete-confirm`}>
       <Text style={styles.hint}>{t.safety.deleteConfirm}</Text>
       <Pressable
         testID={`${testIDPrefix}delete-yes`}
         role="button"
-        disabled={deleting}
-        style={({ pressed }) => [
-          styles.danger,
-          (pressed || deleting) && styles.dim,
-        ]}
+        disabled={off}
+        style={({ pressed }) => [styles.danger, (pressed || off) && styles.dim]}
         onPress={onConfirm}
       >
         <Text style={styles.dangerText}>
@@ -41,7 +42,7 @@ export function DeleteAccountConfirm({
       </Pressable>
       <OutlineButton
         label={t.safety.cancel}
-        disabled={deleting}
+        disabled={off}
         onPress={onCancel}
       />
     </View>

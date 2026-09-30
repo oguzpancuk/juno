@@ -1,13 +1,8 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { markConsentCurrent } from '@/lib/consent';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ErrorRetry } from '@/components/ErrorRetry';
+import { markConsentAsked, markConsentCurrent } from '@/lib/consent';
 import { needsConsent } from '@/lib/consent-rules';
 import { LEGAL_VERSION } from '@/lib/legal';
 import { fetchOwnProfile, type ProfileState } from '@/lib/profile';
@@ -31,12 +26,13 @@ export default function Index() {
     let cancelled = false;
     void fetchOwnProfile(userId).then((state) => {
       if (cancelled) return;
-      // Known current: the tabs' own gate need not ask again.
-      if (
-        state.status === 'ready' &&
-        !needsConsent(state.profile.consent_version, LEGAL_VERSION)
-      )
-        markConsentCurrent(userId);
+      // Known either way: the tabs' gate, or `/consent`, need not read the
+      // record again.
+      if (state.status === 'ready') {
+        if (needsConsent(state.profile.consent_version, LEGAL_VERSION))
+          markConsentAsked(userId);
+        else markConsentCurrent(userId);
+      }
       setProfile(state);
     });
     return () => {
@@ -57,18 +53,13 @@ export default function Index() {
   }
   if (profile.status === 'error') {
     return (
-      <View style={styles.center}>
-        <Text style={styles.text}>{t.errors.generic}</Text>
-        <Pressable
-          testID="retry"
-          onPress={() => {
-            setProfile({ status: 'loading' });
-            setAttempt((n) => n + 1);
-          }}
-        >
-          <Text style={styles.link}>{t.common.retry}</Text>
-        </Pressable>
-      </View>
+      <ErrorRetry
+        retryTestID="retry"
+        onRetry={() => {
+          setProfile({ status: 'loading' });
+          setAttempt((n) => n + 1);
+        }}
+      />
     );
   }
   return (
@@ -82,5 +73,4 @@ export default function Index() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   text: { fontFamily: font.regular, color: color.textMuted },
-  link: { fontFamily: font.regular, color: color.textMuted, padding: 12 },
 });

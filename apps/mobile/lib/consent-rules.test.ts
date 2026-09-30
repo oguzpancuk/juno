@@ -4,6 +4,7 @@ import {
   ConsentVersionSchema,
   needsConsent,
   returnPath,
+  stoppedAt,
 } from './consent-rules';
 
 describe('re-consent', () => {
@@ -46,6 +47,16 @@ describe('where accepting returns to', () => {
     expect(returnPath('/profile')).toBe('/profile');
   });
 
+  it("keeps the match detail's page", () => {
+    // The Uyum page is the chat route with `?page=match`
+    // (`matchDetailHref`); without it the member lands on the thread.
+    expect(returnPath('/chat/abc?page=match')).toBe('/chat/abc?page=match');
+    expect(stoppedAt('/chat/abc', 'match')).toBe('/chat/abc?page=match');
+    // Any other page, or none, is the path alone.
+    expect(stoppedAt('/chat/abc', undefined)).toBe('/chat/abc');
+    expect(stoppedAt('/profile', ['match'])).toBe('/profile');
+  });
+
   it('falls back to the deck for anything else', () => {
     // The param arrives in a URL anyone can type: it must not become a
     // way off the site, or a loop back to the consent screen itself.
@@ -58,6 +69,9 @@ describe('where accepting returns to', () => {
       'https://evil.example',
       '/consent',
       '/consent?next=/x',
+      '/chat/abc?page=other',
+      '/chat/abc?page=match&next=//evil.example',
+      '/discover?page=match',
       '/sign-in',
       '/onboarding',
       '/',

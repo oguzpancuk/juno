@@ -31,10 +31,32 @@ const ConsentRow = z.object({ consent_version: ConsentVersionSchema });
  * a read; what counts as current is still this build's `LEGAL_VERSION`.
  */
 const current = new Set<string>();
+/**
+ * Who this build has just read as on an older notice: the tabs' gate or
+ * the entry screen, the moment before sending them to `/consent`, which
+ * then need not read the row a third time (review of #19, round 2). A URL
+ * typed straight to `/consent` is not in it and reads.
+ */
+const asking = new Set<string>();
+
+function know(userId: string, isCurrent: boolean): void {
+  (isCurrent ? current : asking).add(userId);
+  (isCurrent ? asking : current).delete(userId);
+}
 
 /** A record this build has just seen or written as current. */
 export function markConsentCurrent(userId: string): void {
-  current.add(userId);
+  know(userId, true);
+}
+
+/** A record this build has just read as on an older notice. */
+export function markConsentAsked(userId: string): void {
+  know(userId, false);
+}
+
+/** Whether this build has just read the member's record as older. */
+export function isConsentKnownAsking(userId: string): boolean {
+  return asking.has(userId);
 }
 
 /**
@@ -68,7 +90,7 @@ export async function acceptCurrentNotice(userId: string): Promise<boolean> {
     const row = ConsentRow.safeParse(data);
     const ok =
       row.success && !needsConsent(row.data.consent_version, LEGAL_VERSION);
-    if (ok) current.add(userId);
+    if (ok) know(userId, true);
     return ok;
   } catch {
     return false;
@@ -94,9 +116,9 @@ export async function readConsent(
     if (!data) return 'missing';
     const row = ConsentRow.safeParse(data);
     if (!row.success) return 'error';
-    if (needsConsent(row.data.consent_version, LEGAL_VERSION)) return 'ask';
-    current.add(userId);
-    return 'current';
+    const ask = needsConsent(row.data.consent_version, LEGAL_VERSION);
+    know(userId, !ask);
+    return ask ? 'ask' : 'current';
   } catch {
     return 'error';
   }
@@ -108,6 +130,17 @@ export interface ConsentGateState {
   readonly gate: ConsentGate;
   /** Read the record again, after `error`. */
   readonly retry: () => void;
+}
+
+/** The gate, and how the tabs tell it where the member is. */
+export interface ConsentGateHandle {
+  readonly state: ConsentGateState;
+  /**
+   * The URL the member is at (`stoppedAt`). Stable; called from a small
+   * child of the tab layout, so following the route re-renders that
+   * child, not the whole bar (review of #19, round 2).
+   */
+  readonly track: (url: string) => void;
 }
 
 /**
@@ -143,13 +176,10 @@ export const ConsentGateContext = createContext<ConsentGateState>({
  * answers `current` too: the screens send it to onboarding, which writes
  * the current version.
  *
- * `ask` sends the member to `/consent`, carrying the path they were on
+ * `ask` sends the member to `/consent`, carrying the URL they were at
  * so accepting returns there (`returnPath`).
  */
-export function useConsentGate(
-  session: SessionState,
-  path: string,
-): ConsentGateState {
+export function useConsentGate(session: SessionState): ConsentGateHandle {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const known = userId !== null && current.has(userId);
@@ -159,14 +189,12 @@ export function useConsentGate(
     attempt: number;
     gate: ConsentGate;
   } | null>(null);
-  // The path at the moment of asking, not a dependency: moving between
+  // The URL at the moment of asking, not a dependency: moving between
   // tabs must not read the record again.
-  const pathRef = useRef(path);
-  // Declared before the read, so it has run by the time the read's
-  // answer arrives.
-  useEffect(() => {
-    pathRef.current = path;
-  }, [path]);
+  const urlRef = useRef('/discover');
+  const track = useCallback((url: string) => {
+    urlRef.current = url;
+  }, []);
   useEffect(() => {
     if (!userId || current.has(userId)) return;
     let cancelled = false;
@@ -178,7 +206,7 @@ export function useConsentGate(
       if (gate === 'ask')
         router.replace({
           pathname: '/consent',
-          params: { next: pathRef.current },
+          params: { next: urlRef.current },
         });
     });
     return () => {
@@ -195,5 +223,6 @@ export function useConsentGate(
           ? answer.gate
           : 'checking';
   // One object per answer, not per render: it is a context value.
-  return useMemo(() => ({ gate, retry }), [gate, retry]);
+  const state = useMemo(() => ({ gate, retry }), [gate, retry]);
+  return useMemo(() => ({ state, track }), [state, track]);
 }

@@ -1,10 +1,15 @@
 import { BlurView } from 'expo-blur';
-import { Tabs, usePathname } from 'expo-router';
+import { Tabs, router, useGlobalSearchParams, usePathname } from 'expo-router';
+import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CosmicGround } from '@/components/CosmicGround';
 import { TabIcon } from '@/components/TabIcon';
 import { ConsentGateContext, useConsentGate } from '@/lib/consent';
+import { stoppedAt } from '@/lib/consent-rules';
+import { takeHeldMatches } from '@/lib/held-matches';
+import { firstSightOf } from '@/lib/matches';
+import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
 import { t } from '@/lib/strings';
 import { tabAccessibilityLabel } from '@/lib/tab-a11y';
@@ -37,6 +42,20 @@ const ITEM_CENTRE = 28.85;
  */
 const INDICATOR_STRIP = 14;
 
+/**
+ * Tells the notice gate which URL the member is at, so `/consent` can
+ * send them back there. A child of its own: following the route
+ * re-renders this, not the bar (review of #19, round 2).
+ */
+function TrackUrl({ onUrl }: { onUrl: (url: string) => void }) {
+  const pathname = usePathname();
+  const { page } = useGlobalSearchParams<{ page?: string }>();
+  // A child's effect runs before its parent's, so the gate's first read
+  // starts with the URL already set.
+  useEffect(() => onUrl(stoppedAt(pathname, page)), [onUrl, pathname, page]);
+  return null;
+}
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const session = useSession();
@@ -46,9 +65,18 @@ export default function TabLayout() {
   // no screen inside mounts, and so nothing reads or writes, until the
   // member's record is known to be current. The answer reaches the stacks
   // through context; `TabStack` holds back each screen, not the stack.
-  const consent = useConsentGate(session, usePathname());
+  const consent = useConsentGate(session);
+  const through = consent.state.gate === 'current';
   // The badge's count is a read inside the gate too.
-  const unread = useUnreadTotal(consent.gate === 'current' ? userId : null);
+  const unread = useUnreadTotal(through ? userId : null);
+  // A match that arrived while the member stood behind the notice was
+  // held, not shown (app/_layout.tsx): its moment is now.
+  useEffect(() => {
+    if (!through || !userId) return;
+    for (const matchId of takeHeldMatches(userId))
+      if (firstSightOf(matchId))
+        router.navigate(matchArrivedHref(matchId), INTO_MATCHES);
+  }, [through, userId]);
   const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it
   // rather than stopping above the home indicator, and the items are
@@ -99,7 +127,8 @@ export default function TabLayout() {
   return (
     <View style={styles.host}>
       {underBar}
-      <ConsentGateContext.Provider value={consent}>
+      <TrackUrl onUrl={consent.track} />
+      <ConsentGateContext.Provider value={consent.state}>
         <Tabs
           // Keşfet is the middle tab and the one the app opens on; the order
           // is you, then them, then the ones who answered.

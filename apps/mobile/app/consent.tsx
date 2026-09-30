@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,7 +17,11 @@ import {
   OutlineButton,
   SCREEN_TOP_GUTTER,
 } from '@/components/ui';
-import { acceptCurrentNotice, readConsent } from '@/lib/consent';
+import {
+  acceptCurrentNotice,
+  isConsentKnownAsking,
+  readConsent,
+} from '@/lib/consent';
 import { returnPath } from '@/lib/consent-rules';
 import { useBottomGap, useTopClearance } from '@/lib/insets';
 import { LEGAL_UPDATED } from '@/lib/legal';
@@ -44,7 +48,8 @@ import { color, font, space } from '@/theme/tokens';
  * notice promises would be unreachable to exactly the person who wants
  * it. The confirmation is settings' own (`DeleteAccountConfirm`).
  *
- * Reachable by URL, so it reads the record first: no profile yet goes to
+ * Reachable by URL, so it reads the record first, unless the gate or the
+ * entry screen has just read it as older: no profile yet goes to
  * onboarding, which records the current version itself; a record already
  * current goes on. Only an older record, or one that cannot be read, is
  * shown the form — accepting over an unreadable one says so if it fails.
@@ -67,26 +72,30 @@ export default function Consent() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const target = returnPath(next);
+  // The gate or the entry screen read the record as older a moment ago.
+  const knownAsking = userId !== null && isConsentKnownAsking(userId);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || knownAsking) return;
     let cancelled = false;
     void readConsent(userId).then((read) => {
       if (cancelled) return;
       if (read === 'missing') router.replace('/onboarding');
-      else if (read === 'current') router.replace(target as Href);
+      // The same call as accepting's, so a chat has its list beneath it.
+      else if (read === 'current') router.replace(target, { withAnchor: true });
       else setRecord('shown');
     });
     return () => {
       cancelled = true;
     };
-    // why: `target` is read once, with the record; the param does not
-    // change under a mounted screen.
+    // why: `target` and `knownAsking` are read once, with the record: the
+    // param does not change under a mounted screen, and only accepting
+    // here moves the member out of the asking set.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   if (session.status === 'signed-out') return <RedirectToSignIn />;
-  if (userId === null || record === 'reading') {
+  if (userId === null || (record === 'reading' && !knownAsking)) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={color.textMuted} />
@@ -114,7 +123,7 @@ export default function Consent() {
     // ONE router call into the tab tree (app/onboarding.tsx), straight
     // to where the member was going; the anchor seats that tab's list
     // beneath a chat or a match.
-    router.replace(target as Href, { withAnchor: true });
+    router.replace(target, { withAnchor: true });
   };
 
   const remove = async () => {
@@ -195,6 +204,7 @@ export default function Consent() {
               <DeleteAccountConfirm
                 testIDPrefix="consent-"
                 deleting={deleting}
+                disabled={busy}
                 onConfirm={() => void remove()}
                 onCancel={() => setConfirmingDelete(false)}
               />

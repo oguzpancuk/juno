@@ -1,15 +1,9 @@
 import { Stack } from 'expo-router';
 import { useContext } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ErrorRetry } from '@/components/ErrorRetry';
 import { ConsentGateContext } from '@/lib/consent';
-import { t } from '@/lib/strings';
-import { color, font } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
 /**
  * The stack inside each tab. Every signed-in screen is pushed onto one of
@@ -43,16 +37,11 @@ export function TabStack() {
         gate === 'current' ? (
           <>{children}</>
         ) : gate === 'error' ? (
-          <View style={styles.waiting} testID="consent-gate-error">
-            <Text style={styles.text}>{t.errors.generic}</Text>
-            <Pressable
-              testID="consent-gate-retry"
-              role="button"
-              onPress={retry}
-            >
-              <Text style={styles.link}>{t.common.retry}</Text>
-            </Pressable>
-          </View>
+          <ErrorRetry
+            testID="consent-gate-error"
+            retryTestID="consent-gate-retry"
+            onRetry={retry}
+          />
         ) : (
           <View style={styles.waiting} testID="consent-gate">
             <ActivityIndicator color={color.textMuted} />
@@ -68,10 +57,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
     backgroundColor: color.bg,
   },
-  // The entry screen's error and retry, so the two doors read the same.
-  text: { fontFamily: font.regular, color: color.textMuted },
-  link: { fontFamily: font.regular, color: color.textMuted, padding: 12 },
 });

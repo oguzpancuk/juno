@@ -8633,11 +8633,25 @@ current)`: older asks, equal or newer does not (a phone on an older
   goes on), never locks on a throw, and returns to the path the gate
   stopped the member on (`?next=`, allowlisted in `returnPath` to the
   tab paths). A match arriving while the member is not known current no
-  longer navigates over `/consent`, and keeps its reveal. Onboarding and
-  accepting mark the member current, so neither pays a second read. The
-  consent box and the delete confirmation are shared components
-  (`ConsentCheckbox`, `DeleteAccountConfirm`), so onboarding's box now
-  has the checkbox role and state too.
+  longer navigates over `/consent`. Onboarding and accepting mark the
+  member current, so neither pays a second read. The consent box and
+  the delete confirmation are shared components (`ConsentCheckbox`,
+  `DeleteAccountConfirm`), so onboarding's box now has the checkbox role
+  and state too.
+- **Review round 2 (#19).** Round 1's match fix only kept the reveal
+  unspent; nothing showed it later, because the Realtime insert fires
+  once, so "Eşleştiniz!" never appeared for that match. Now the root
+  listener holds the match (`lib/held-matches.ts`) and the tabs' layout
+  shows it when its gate answers `current`. Not driven: the stand-in
+  backend has no Realtime; the queue itself is under Vitest. Also: the
+  return keeps the chat's `?page=match` (the Uyum page), and
+  `lib/routes.test.ts` checks `returnPath` against every screen under
+  (tabs); an already-current `/consent` returns with the list anchored
+  like accepting does; `/consent` skips its read when the gate or the
+  entry screen just read the record as older; the delete confirmation
+  on `/consent` is disabled while accepting saves; the error and retry
+  is one component (`ErrorRetry`); the tab layout no longer re-renders
+  on every navigation (a child follows the URL).
 
 ### Open, for the owner
 

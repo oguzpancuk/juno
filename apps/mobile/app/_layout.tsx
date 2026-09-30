@@ -11,6 +11,7 @@ import { color } from '@/theme/tokens';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { isConsentKnownCurrent } from '@/lib/consent';
+import { holdMatch } from '@/lib/held-matches';
 import { firstSightOf, useMatchListener } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
@@ -37,11 +38,16 @@ export default function RootLayout() {
     session.status === 'signed-in' ? session.session.user.id : null;
   const onMatch = useCallback(
     (matchId: string) => {
+      if (!userId) return;
       // Not over `/consent`, and not before the member is known to be on
       // the current notice (lib/consent.ts): the tabs would open on top of
-      // the consent screen. Checked before `firstSightOf`, so the reveal
-      // is not spent; the match waits in the list.
-      if (!userId || !isConsentKnownCurrent(userId)) return;
+      // the consent screen. The insert fires once, so the match is held,
+      // with its reveal unspent, and the tabs show it when their gate
+      // answers `current` (app/(tabs)/_layout.tsx).
+      if (!isConsentKnownCurrent(userId)) {
+        holdMatch(userId, matchId);
+        return;
+      }
       if (firstSightOf(matchId))
         router.navigate(matchArrivedHref(matchId), INTO_MATCHES);
     },

@@ -1,3 +1,4 @@
+import type { Href } from 'expo-router';
 import { z } from 'zod';
 
 /**
@@ -34,9 +35,22 @@ export const ConsentVersionSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'consent_version is not YYYY-MM-DD');
 
-/** The tab screens a member can be stopped on the way into. */
+/**
+ * The tab screens a member can be stopped on the way into, with the one
+ * query a tab URL carries: the chat's `?page=match`, the Uyum page
+ * (`matchDetailHref`). `lib/routes.test.ts` checks it against the route
+ * tree, so a screen added under (tabs) cannot be left out.
+ */
 const TAB_PATH =
-  /^\/(?:discover|matches|profile|(?:chat|match|starter)\/[A-Za-z0-9-]+)$/;
+  /^\/(?:discover|matches|profile|(?:match|starter)\/[A-Za-z0-9-]+|chat\/[A-Za-z0-9-]+(?:\?page=match)?)$/;
+
+/**
+ * The URL the gate stopped a member at, as `returnPath` takes it back:
+ * the path, and the chat's page when it is the Uyum one.
+ */
+export function stoppedAt(pathname: string, page: unknown): string {
+  return page === 'match' ? `${pathname}?page=match` : pathname;
+}
 
 /**
  * Where accepting the notice returns to: the tab screen the gate stopped
@@ -45,6 +59,10 @@ const TAB_PATH =
  * type, so only the app's own tab paths are taken — never another host,
  * never `/consent` itself — and anything else is the deck.
  */
-export function returnPath(raw: string | string[] | undefined): string {
-  return typeof raw === 'string' && TAB_PATH.test(raw) ? raw : '/discover';
+export function returnPath(raw: string | string[] | undefined): Href {
+  // why: typed routes know the tab paths as a union of templates, which a
+  // string cannot be narrowed to; TAB_PATH admits only those paths.
+  return (
+    typeof raw === 'string' && TAB_PATH.test(raw) ? raw : '/discover'
+  ) as Href;
 }

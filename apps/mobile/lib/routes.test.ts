@@ -5,6 +5,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { returnPath } from './consent-rules';
 
 /**
  * The shape of the route tree is a property, not a preference: every
@@ -74,5 +75,28 @@ describe('route tree', () => {
       expect(existsSync(join(tabs, group, `${anchor?.[1]}.tsx`))).toBe(true);
       expect(layout).toContain("from '@/components/TabStack'");
     }
+  });
+
+  it('lets the notice gate return to every screen inside the tabs', () => {
+    // `returnPath` keeps a hand-written list of the tab paths; a screen
+    // added under (tabs) that it does not know would quietly send a
+    // member who accepted the notice there to the deck instead (review
+    // of #19). One sample URL per screen: groups drop out of the URL, a
+    // `[param]` segment becomes a value.
+    const samples: string[] = [];
+    const walk = (dir: string, url: string): void => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name);
+        if (statSync(full).isDirectory()) {
+          walk(full, /^\(.*\)$/.test(name) ? url : `${url}/${name}`);
+        } else if (name.endsWith('.tsx') && name !== '_layout.tsx') {
+          const segment = name.slice(0, -'.tsx'.length);
+          samples.push(`${url}/${segment.replace(/^\[.+\]$/, 'abc-123')}`);
+        }
+      }
+    };
+    walk(join(APP, '(tabs)'), '');
+    expect(samples.length).toBeGreaterThan(0);
+    for (const sample of samples) expect(returnPath(sample)).toBe(sample);
   });
 });
