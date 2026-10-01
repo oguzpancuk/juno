@@ -34,6 +34,9 @@ const SIGNED_OUT = new Set([
   // while it is up.
   'consent.tsx',
   'legal.tsx',
+  // The forced test crash (ROADMAP Metrics): no screen at all, and shut
+  // unless the build sets EXPO_PUBLIC_CRASH_TEST.
+  'crash-test.tsx',
 ]);
 
 describe('route tree', () => {

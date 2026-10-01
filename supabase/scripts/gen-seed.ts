@@ -101,24 +101,32 @@ const SEEDS: readonly Seed[] = [
 const pad = (n: number) => String(n).padStart(2, '0');
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 
-function birthOf(seed: Seed) {
-  return resolveBirth({ cityId: seed.cityId, local: seed.local });
-}
+/** Each seed's birth and chart, computed once: the matches need them too. */
+const derived = new Map(
+  SEEDS.map((seed) => {
+    const birth = resolveBirth({ cityId: seed.cityId, local: seed.local });
+    const chart = toPublicChart(
+      computeChart({
+        utc: birth.utc,
+        latitude: birth.latitude,
+        longitude: birth.longitude,
+      }),
+    );
+    return [seed.id, { birth, chart }] as const;
+  }),
+);
 
-function chartOf(seed: Seed): PublicChart {
-  const birth = birthOf(seed);
-  return toPublicChart(
-    computeChart({
-      utc: birth.utc,
-      latitude: birth.latitude,
-      longitude: birth.longitude,
-    }),
-  );
+function derivedOf(seed: Seed): {
+  readonly birth: ReturnType<typeof resolveBirth>;
+  readonly chart: PublicChart;
+} {
+  const found = derived.get(seed.id);
+  if (!found) throw new Error(`no birth computed for ${seed.name}`);
+  return found;
 }
 
 function rows(seed: Seed): string {
-  const birth = birthOf(seed);
-  const chart = chartOf(seed);
+  const { birth, chart } = derivedOf(seed);
   const three = bigThree(chart);
   const { local } = seed;
   const date = `${local.year}-${pad(local.month)}-${pad(local.day)}`;
@@ -219,21 +227,25 @@ on conflict (provider_id, provider) do nothing;`;
 function matchRows(match: SeedMatch): string {
   const [x, y] = match.between.map(byName) as [Seed, Seed];
   const [lo, hi] = isLesserId(x.id, y.id) ? [x, y] : [y, x];
-  const key = starterKey(chartOf(lo), chartOf(hi));
+  const key = starterKey(derivedOf(lo).chart, derivedOf(hi).chart);
   if (!key) throw new Error(`${x.name} and ${y.name} share no aspect`);
   const like = (from: Seed, to: Seed) => `
 insert into public.likes (from_id, to_id, kind, starter_key)
 values (${q(from.id)}, ${q(to.id)}, 'like', ${q(key)})
 on conflict (from_id, to_id) do nothing;`;
   const likes = like(x, y) + like(y, x);
-  // One statement per message: the server stamps `created_at` with the
-  // statement's transaction time, so separate statements keep the order.
+  // In order: `messages_server_times` stamps `created_at` with
+  // clock_timestamp() row by row, so the thread reads as written even
+  // though `db reset` sends the whole seed as one transaction. Guarded
+  // like every other row here, so applying the seed twice does not write
+  // each conversation twice.
   const messages = match.messages
     .map(
       ([sender, body]) => `
 insert into public.messages (match_id, sender_id, body)
-select id, ${q(byName(sender).id)}, ${q(body)}
-  from public.matches where a = ${q(lo.id)} and b = ${q(hi.id)};`,
+select m.id, ${q(byName(sender).id)}, ${q(body)}
+  from public.matches m where m.a = ${q(lo.id)} and m.b = ${q(hi.id)}
+   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = ${q(byName(sender).id)} and x.body = ${q(body)});`,
     )
     .join('');
   return `

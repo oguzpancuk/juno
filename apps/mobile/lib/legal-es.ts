@@ -44,6 +44,8 @@ export const legalSectionsEs: readonly LegalSection[] = [
       '• Los mensajes que intercambias con tus matches y la información de lectura.',
       '• Las personas que bloqueaste.',
       '• Las denuncias que envías: a quién denunciaste, por qué motivo y, si la escribiste, tu explicación.',
+      'Informes de fallos',
+      '• Cuando la aplicación se cierra por un fallo o se encuentra con un error inesperado: el registro técnico del error (el mensaje de error y la línea de código en la que ocurrió), el modelo de tu dispositivo, el sistema operativo y la versión de la aplicación, la pantalla en la que ocurrió el error y si la sesión terminó con un fallo. A este registro no se añade nada que te identifique: no se envían tu nombre, tu correo, tu número de cuenta, tu ubicación ni tus mensajes; los números de cuenta, de match y de mensaje y las direcciones de correo que aparezcan en el texto del error se eliminan antes de que el registro salga del dispositivo, y tu dirección IP no se guarda.',
       'La aplicación no accede a tus contactos, a tu historial de llamadas ni a toda tu fototeca. Del selector de fotos solo se sube la imagen que tú eliges. No se recopila el identificador de publicidad ni se usan herramientas de publicidad o seguimiento de terceros.',
     ],
   },
@@ -55,6 +57,7 @@ export const legalSectionsEs: readonly LegalSection[] = [
       '• Membresía. Tu información de membresía Premium se trata para ofrecer lo que incluye la membresía (likes ilimitados, superlikes, ver a quién le gustas, ordenar por compatibilidad) y para aplicar el límite diario de likes de los miembros gratuitos y el límite semanal de superlikes de los miembros Premium; para estos límites se usan el número y el momento de tus likes recientes (incluidos los superlikes). Es necesario para la celebración y ejecución del contrato (art. 5/2-c de la KVKK).',
       '• Matches y mensajería. Es necesario para la celebración y ejecución del contrato (art. 5/2-c de la KVKK).',
       '• Seguridad. Los registros de bloqueos y denuncias se tratan para prevenir el uso abusivo del servicio; interés legítimo del responsable del tratamiento (art. 5/2-f de la KVKK).',
+      '• Estabilidad de la aplicación. Los informes de fallos se tratan para encontrar y corregir errores y para medir con qué frecuencia falla la aplicación; interés legítimo del responsable del tratamiento (art. 5/2-f de la KVKK).',
     ],
   },
   {
@@ -67,6 +70,7 @@ export const legalSectionsEs: readonly LegalSection[] = [
       '• Proveedor de correo electrónico. Tu código de verificación se envía a través de Resend, como encargado del tratamiento; a este proveedor solo le llegan tu dirección de correo y el contenido del correo, y el envío se hace desde la región de la Unión Europea.',
       '• Distribuidor de la versión web. Cuando abres juno-dating.com en el navegador, la página se sirve a través de Cloudflare, como encargado del tratamiento; Cloudflare ve la dirección IP de la conexión y la página solicitada, y guarda registros. No tiene acceso a la base de datos, a las fotos ni a los mensajes. Si usas la aplicación de iOS, esta vía no interviene en absoluto.',
       '• Proveedor del dominio y del reenvío de correo. Cuando escribes a la dirección de contacto que figura en este texto, tu correo nos llega a través del servicio de reenvío de Namecheap, como encargado del tratamiento, y se guarda en el buzón donde se lee. Los registros DNS del dominio juno-dating.com también los mantiene Cloudflare.',
+      '• Proveedor de informes de fallos. Los informes de fallos, tanto de la aplicación para iOS como de la versión web, se envían a la infraestructura de Sentry (Functional Software, Inc.), como encargado del tratamiento, y se guardan en la región de la Unión Europea (Alemania). A Sentry no se le envía nada más que el registro técnico descrito arriba; no tiene acceso a la base de datos, a las fotos ni a los mensajes.',
       '• Fuera de estos, no se transfieren a ningún tercero, no se venden ni se comparten con fines de marketing. Ante un requerimiento legal, pueden compartirse en la medida que exija la normativa.',
     ],
   },
@@ -76,6 +80,7 @@ export const legalSectionsEs: readonly LegalSection[] = [
       'Tus datos se guardan mientras tu cuenta siga abierta. Cuando eliminas tu cuenta desde la aplicación, se eliminan tu perfil, tu carta, tus fotos, tus likes, tus matches y tus mensajes.',
       'Hay dos excepciones. Los registros de denuncias presentadas sobre ti se siguen guardando para que el rastro del abuso no se pierda al eliminar la cuenta; en este registro se eliminan la identidad de la persona denunciada y el texto de la denuncia, y solo quedan la existencia de la denuncia, su motivo y su fecha. Los registros de auditoría de la infraestructura de identidad (eventos de registro, inicio de sesión y eliminación de cuenta) también permanecen, incluida la dirección de correo. Hoy no hay un plazo de eliminación automática definido para estos dos tipos de registro; cuando se fije un plazo, este texto se actualizará.',
       'Una cuenta abierta con Apple o Google y abandonada sin introducir los datos de nacimiento se elimina con “Entrar con otra cuenta” en la pantalla de datos de nacimiento. Si la eliminación no puede hacerse en ese momento (por ejemplo, si no hay conexión), la pantalla lo indica y la cuenta se mantiene; si cierras la pantalla y la dejas, también se mantiene. En ambos casos puedes volver a entrar con el mismo proveedor y eliminarla allí.',
+      'Los informes de fallos se guardan en Sentry durante 90 días como máximo y después se eliminan automáticamente.',
     ],
   },
   {

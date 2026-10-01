@@ -7,7 +7,9 @@ import {
   ISTANBUL,
   ISTANBUL_NEARBY,
   NOWHERE,
+  NOWHERE_THIRD,
   STARTER,
+  insertDemoProfile,
   insertProfileRow,
   profileRow,
   uploadPhotos,
@@ -2321,16 +2323,15 @@ describe('metrics', () => {
         }),
       )
       .parse((await admin.from('metrics_conversations').select('*')).data);
-    // The suite creates matches with a message or two, never three each,
-    // so the one there is the seed's Deniz and Selin.
-    expect(conversations[0]?.two_sided_three_each).toBe(1);
+    // The seed's Deniz and Selin wrote three each; the suite itself never
+    // does. At least, not exactly: a local stack can carry more of its own.
+    expect(conversations[0]?.two_sided_three_each).toBeGreaterThanOrEqual(1);
   });
 
   describe('leave the launch demos out', () => {
     // A demo is a whole account with a finished profile, and a like on
     // one matches at once. Counted, it would raise both sides of
     // onboarding completion and meet "≥ 10 matches" on ten swipes.
-    const WATER: readonly [number, number] = [-40.0, -10.0];
     const Onboarding = z.tuple([
       z.object({
         accounts: z.number(),
@@ -2385,24 +2386,16 @@ describe('metrics', () => {
           display_name: 'Metrics Member',
           gender: 'woman',
           interested_in: 'everyone',
-          lonLat: WATER,
+          lonLat: NOWHERE_THIRD,
         }),
       );
-      // Written the way the seeding script writes a demo: as the service
-      // role, with the flag set.
-      await uploadPhotos(demo.client, [`${demo.id}/1.png`]);
-      const demoRow = {
-        ...profileRow({
-          id: demo.id,
-          display_name: 'Metrics Demo',
-          gender: 'man',
-          interested_in: 'everyone',
-          lonLat: WATER,
-        }),
-        is_demo: true,
-      };
-      const inserted = await admin.from('profiles').insert(demoRow);
-      expect(inserted.error).toBeNull();
+      await insertDemoProfile(admin, demo, {
+        id: demo.id,
+        display_name: 'Metrics Demo',
+        gender: 'man',
+        interested_in: 'everyone',
+        lonLat: NOWHERE_THIRD,
+      });
 
       const liked = await member.client.from('likes').insert({
         from_id: member.id,
@@ -2411,6 +2404,15 @@ describe('metrics', () => {
         starter_key: STARTER,
       });
       expect(liked.error).toBeNull();
+      // Read between the match and the message: a match with nobody
+      // writing is what `silent` counts, and a demo's would be one.
+      const matched = await read();
+      expect({
+        matches: matched.matches - before.matches,
+        demo_matches: matched.demo_matches - before.demo_matches,
+        silent: matched.silent - before.silent,
+      }).toEqual({ matches: 0, demo_matches: 1, silent: 0 });
+
       const [a, b] = pair(member.id, demo.id);
       const [match] = z
         .tuple([z.object({ id: z.string().uuid() })])

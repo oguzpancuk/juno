@@ -8954,3 +8954,79 @@ ROADMAP "Metrics", the next unstarted item. The views were built on
   launch demos as members for two weeks: the demo migration added a
   kind of account and no test asked what the views made of it ·
   "count the member, not the demo, its match or the message to it".
+
+## 2026-10-01 — Metrics: crash reporting, Sentry EU
+
+The second half of the Metrics clause, after the owner picked Sentry's
+EU region on the thread's decision card (ADR-0016). Also review round 1
+on #21.
+
+- **Built.** `@sentry/react-native` ~7.11.0 (Expo 57's pinned version;
+  installed with npm 11 so the lockfile keeps its `libc` fields — npm 10
+  rewrote 36 unrelated entries). `lib/crash-reporting.ts` starts it before
+  the first render, only with `EXPO_PUBLIC_SENTRY_DSN`; `lib/crash-rules.ts`
+  holds the DSN to the EU ingest host, drops the user, replaces ids and
+  e-mail addresses everywhere they can appear, and keeps only navigation
+  breadcrumbs. `/crash-test` throws in render when the build sets
+  `EXPO_PUBLIC_CRASH_TEST=1` and redirects home otherwise.
+- **Seen working without an account.** The web export, built with a DSN
+  pointing at a stand-in ingest on this machine and the crash flag on,
+  sent one event for `/crash-test`: the error, `"infer_ip":"never"`, no
+  user, one navigation breadcrumb. Built again with the flag off (and
+  `--clear`), `/crash-test` landed on `/welcome` and nothing was sent.
+  The native crash path is the owner's to see, on a device.
+- **The notice.** Sentry under "İşlenen veriler" (a "Çökme raporları"
+  block), the purposes, "Kimlerle paylaşılır" and "Saklama süresi", in
+  all three languages line for line. The 30 Eylül text is live, so the
+  version is 2026-10-01 and everyone is asked again. `legal.test.ts` now
+  fails when a processor's client is in `package.json` and its name is
+  not in the Turkish text (seen red before the text was written, with
+  the translation checks for "Sentry").
+- **Review round 1.** The blocking finding was right: the test's single
+  message to the demo left `silent` unmoved under the old view too.
+  The test now reads the views between the like and the message; on
+  `main`'s views that read is `silent` +1 (SQL mirror on the PostgreSQL
+  cluster), so it goes red without the conversations filter. The demo
+  predicate is now one private view both metrics views read, onboarding
+  aggregates once, the seed's messages are guarded like its other rows
+  (applied twice: still 8 messages), the seed computes each chart once,
+  the demo-profile insert is one fixture (`insertDemoProfile`) used by
+  three files, and `NOWHERE_THIRD` sits with the other two waters.
+
+### For the owner
+
+1. sentry.io → sign up with **Data Storage Location: EU (Frankfurt)**
+   (it cannot be changed later) → new project, platform React Native,
+   name `juno`.
+2. Project Settings → Security & Privacy: turn on **Prevent Storing of
+   IP Addresses** (the notice says the IP is not stored); leave the data
+   scrubbers on.
+3. Project Settings → Client Keys (DSN): copy the DSN; it must end in
+   `.ingest.de.sentry.io/<number>`. Put it in `apps/mobile/.env` as
+   `EXPO_PUBLIC_SENTRY_DSN` (and in the EAS build's env when there is
+   one). It is not a secret; the auth token is, and is not needed yet.
+4. The check: a local web build with the DSN and
+   `EXPO_PUBLIC_CRASH_TEST=1`, open `/crash-test`, and the error shows
+   under Issues within a minute. Then rebuild without the flag, with
+   `--clear`.
+5. The 1 Ekim notice goes live only with a web deploy, and providers
+   aside, it should be live before a build with a DSN reaches anyone.
+
+### Side findings, not fixed here
+
+- Metro reused `EXPO_PUBLIC_CRASH_TEST` from the previous export when
+  the next one ran without `--clear`: the "flag off" build still
+  crashed. `npm run deploy` passes `--clear`; anyone exporting by hand
+  for a check should too.
+- On the web the SDK sent no session envelope within the page's first
+  seconds, so crash-free sessions are a native figure here; the PRD
+  asks for them on TestFlight, which is native.
+- Source maps are not uploaded (no config plugin, no auth token, no EAS
+  project), so production frames are minified. A TestFlight-item step.
+
+### Battery gaps
+
+- 2026-10-01 · Metrics · the new test did not cover the third view it
+  was written for; the review caught it, not the battery · the read
+  between the like and the message in "count the member, not the demo,
+  its match or the message to it".

@@ -20,26 +20,36 @@
 create or replace view public.metrics_onboarding as
 with people as (
   select
-    u.id,
-    p.id is not null as onboarded,
-    coalesce(p.is_demo, false) as demo
+    count(*) filter (where p.is_demo is not true) as members,
+    count(*) filter (where p.is_demo is false) as onboarded,
+    count(*) filter (where p.is_demo) as demos
   from auth.users u
   left join public.profiles p on p.id = u.id
   where u.deleted_at is null
 )
 select
-  count(*) filter (where not demo) as accounts,
-  count(*) filter (where not demo and onboarded) as profiles,
-  case
-    when count(*) filter (where not demo) = 0 then null
-    else round(
-      100.0 * count(*) filter (where not demo and onboarded)
-        / count(*) filter (where not demo),
-      1
-    )
-  end as completion_percent,
-  count(*) filter (where demo) as demo_accounts
+  members as accounts,
+  onboarded as profiles,
+  round(100.0 * onboarded / nullif(members, 0), 1) as completion_percent,
+  demos as demo_accounts
 from people;
+
+/**
+ * Every match, and whether a demo is one side of it: the one place that
+ * says what a demo match is, so the two views below cannot disagree.
+ * In `private`, which no client role can read through PostgREST.
+ */
+create or replace view private.metrics_match_sides as
+select
+  m.id,
+  m.a,
+  m.b,
+  m.created_at,
+  exists (
+    select 1 from public.profiles p
+     where p.id in (m.a, m.b) and p.is_demo
+  ) as with_demo
+from public.matches m;
 
 /**
  * Matches between two members, and how many of them ever carried a
@@ -47,16 +57,6 @@ from people;
  * welcome, not a signal.
  */
 create or replace view public.metrics_matches as
-with tagged as (
-  select
-    x.id,
-    x.created_at,
-    exists (
-      select 1 from public.profiles p
-       where p.id in (x.a, x.b) and p.is_demo
-    ) as with_demo
-  from public.matches x
-)
 select
   count(*) filter (where not with_demo) as matches,
   count(*) filter (
@@ -66,7 +66,7 @@ select
   min(t.created_at) filter (where not with_demo) as first_match,
   max(t.created_at) filter (where not with_demo) as last_match,
   count(*) filter (where with_demo) as demo_matches
-from tagged t;
+from private.metrics_match_sides t;
 
 /**
  * Conversations between two members where both sides said something, and
@@ -79,16 +79,13 @@ from tagged t;
 create or replace view public.metrics_conversations as
 with per_match as (
   select
-    m.id,
-    count(*) filter (where msg.sender_id = m.a) as from_a,
-    count(*) filter (where msg.sender_id = m.b) as from_b
-  from public.matches m
-  left join public.messages msg on msg.match_id = m.id
-  where not exists (
-    select 1 from public.profiles p
-     where p.id in (m.a, m.b) and p.is_demo
-  )
-  group by m.id
+    t.id,
+    count(*) filter (where msg.sender_id = t.a) as from_a,
+    count(*) filter (where msg.sender_id = t.b) as from_b
+  from private.metrics_match_sides t
+  left join public.messages msg on msg.match_id = t.id
+  where not t.with_demo
+  group by t.id
 )
 select
   count(*) filter (where from_a > 0 and from_b > 0) as two_sided,
@@ -99,5 +96,6 @@ from per_match;
 revoke all on
   public.metrics_onboarding,
   public.metrics_matches,
-  public.metrics_conversations
+  public.metrics_conversations,
+  private.metrics_match_sides
 from anon, authenticated;

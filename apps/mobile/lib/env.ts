@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { crashTestSchema, sentryDsnSchema } from './crash-rules';
 import { appleServicesIdSchema, googleClientIdSchema } from './oauth';
 
 /**
@@ -46,6 +47,16 @@ const EnvSchema = z.object({
    * Apple provider carries the same value as its first client ID.
    */
   appleServicesId: optionalServicesId,
+  /**
+   * Where crash reports go (`lib/crash-reporting.ts`). Optional like the
+   * client IDs: a build without one reports nothing and is otherwise the
+   * same app, which is what local work and the test runs are.
+   */
+  sentryDsn: z
+    .preprocess(unsetIsUndefined, sentryDsnSchema.optional())
+    .describe('Sentry DSN'),
+  /** Opens `/crash-test`, the route that crashes on purpose. */
+  crashTest: crashTestSchema,
 });
 
 export const env = EnvSchema.parse({
@@ -54,4 +65,6 @@ export const env = EnvSchema.parse({
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   appleServicesId: process.env.EXPO_PUBLIC_APPLE_SERVICES_ID,
+  sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  crashTest: process.env.EXPO_PUBLIC_CRASH_TEST,
 });

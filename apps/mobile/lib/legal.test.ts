@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
 import { CATALOGS, LOCALE_TAGS } from './i18n';
@@ -29,6 +32,23 @@ describe('the privacy notice', () => {
     expect(text).toContain('• Üyelik bilgin:');
     expect(text).toContain('• Giriş sağlayıcıları.');
     expect(text).toContain('• Apple ya da Google ile girersen:');
+  });
+
+  it('names every third party the app ships a client for', () => {
+    // A processor is in the notice in the change that puts it in the
+    // path (lib/legal.ts). The dependency list is where that change
+    // shows, so the notice is checked against it.
+    const pkg = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, '..', 'package.json'), 'utf8'),
+    ) as { dependencies: Record<string, string> };
+    const text = legalSections.flatMap((section) => section.body).join('\n');
+    const processors: Record<string, string> = {
+      '@supabase/supabase-js': 'Supabase',
+      '@sentry/react-native': 'Sentry',
+    };
+    for (const [dependency, name] of Object.entries(processors))
+      if (dependency in pkg.dependencies)
+        expect(text, dependency).toContain(name);
   });
 
   it('shows the date its version names', () => {
@@ -83,6 +103,7 @@ describe('the privacy notice in translation', () => {
         'Resend',
         'Cloudflare',
         'Namecheap',
+        'Sentry',
         'Apple',
         'Google',
         'GeoNames',
