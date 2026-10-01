@@ -9074,3 +9074,16 @@ one random number only.
   described as a one-way digest of Apple's per-developer device id, the
   model and the app). The web carries no locale context, so that moved
   under iOS.
+
+## 2026-10-01 — Metrics: the notice stops claiming "nothing else"
+
+evaluator-qa's third pass on #21: every iOS report also carries device
+state (free memory, battery level and charging, screen size and
+orientation, processor and thermal state, whether the device is
+jailbroken) and, on native reports, every thread's stack trace and the
+loaded images. None identifies a person, but the Sentry bullet under
+"Kimlerle paylaşılır" said nothing beyond the listed record was sent.
+The crash bullet now lists the device state and the thread stack traces
+(three languages), and the Sentry bullet says instead that nothing from
+the profile, chart, photos or messages is sent. Text only; no code
+change.
