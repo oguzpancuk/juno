@@ -90,6 +90,10 @@
  * out is enforced on the device (`lib/crash-rules.ts`), the region by the
  * DSN's shape, and the IP address by the project's "Prevent Storing of IP
  * Addresses" setting, which the setup steps require before a DSN is set.
+ * The iOS SDK's own crash reports skip the JS-side scrubbing, which is
+ * why the text scopes that sentence to the app's own code, keeps no
+ * breadcrumbs on either SDK, and names the random installation id the
+ * native SDK puts on every report.
  * `legal.test.ts` now checks the notice against the dependency list. The
  * 30 Eylül text was live (the owner's deploy of #15), so this one is 1
  * Ekim, and every member is asked to accept it.
@@ -160,7 +164,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Engellediğin kişiler.',
       '• Gönderdiğin şikâyetler: kimi, hangi sebeple şikâyet ettiğin ve yazdıysan açıklaman.',
       'Çökme raporları',
-      '• Uygulama çöktüğünde ya da beklenmedik bir hatayla karşılaştığında: hatanın teknik kaydı (hata mesajı ve kodun hangi satırında olduğu), cihazının modeli, işletim sistemi ve uygulama sürümü, hatanın hangi ekranda olduğu ve kullanım oturumunun bir çökmeyle bitip bitmediği. Bu kayda seni tanıtan bir şey eklenmez: adın, e-postan, hesap numaran, konumun ve mesajların gönderilmez; hata metninde geçen hesap, eşleşme ve mesaj numaraları ile e-posta adresleri kayıt cihazdan çıkmadan silinir ve IP adresin saklanmaz.',
+      '• Uygulama çöktüğünde ya da beklenmedik bir hatayla karşılaştığında: hatanın teknik kaydı (hata mesajı ve kodun hangi satırında olduğu), cihazının modeli, işletim sistemi, dil ve saat dilimi ayarı, uygulama sürümü, kullanım oturumunun bir çökmeyle bitip bitmediği; web sürümünde hatanın hangi sayfada olduğu; iOS uygulamasında da uygulamanın o cihazdaki kurulumu için rastgele üretilmiş bir numara (hesabına bağlı değildir, uygulamayı silip yeniden kurunca değişir). Bu kayda adın, e-postan, hesap numaran, konumun ve mesajların eklenmez; uygulamanın kendi kodundaki hatalarda, hata metninde geçen hesap, eşleşme ve mesaj numaraları ile e-posta adresleri kayıt cihazdan çıkmadan silinir; IP adresin saklanmaz.',
       'Uygulama; rehberine, arama geçmişine veya fotoğraf kütüphanenin tamamına erişmez. Fotoğraf seçicisinden yalnızca senin seçtiğin görsel yüklenir. Reklam kimliği toplanmaz, üçüncü taraf reklam veya izleme aracı kullanılmaz.',
     ],
   },

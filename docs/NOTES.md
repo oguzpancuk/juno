@@ -9030,3 +9030,28 @@ on #21.
   was written for; the review caught it, not the battery · the read
   between the like and the message in "count the member, not the demo,
   its match or the message to it".
+
+## 2026-10-01 — Metrics: what the iOS SDK sends on its own
+
+evaluator-qa on #21 (NEEDS_WORK) read the native side: the options
+object reaches the iOS SDK minus `beforeSend` and `beforeBreadcrumb`, and
+a native crash report is written and sent by that SDK alone. The entry
+"Metrics: crash reporting, Sentry EU" said only navigation breadcrumbs
+were kept and ids were removed on the device; on the native path that
+was not enforced. Its automatic breadcrumbs include network requests
+(Supabase URLs carry account and match ids), and it puts a random
+installation id on each report as `user.id`.
+
+- Now `maxBreadcrumbs: 0`, which both SDKs read: no breadcrumbs at all.
+  The options are one pure function (`crashReportingOptions`) with a test
+  (seen red: the function did not exist, and the inline options it
+  replaces had no `maxBreadcrumbs`).
+- The notice names the installation id ("rastgele üretilmiş bir numara",
+  not linked to the account, new on reinstall), the language and time
+  zone setting that native reports carry, and scopes the id-removal
+  sentence to errors in the app's own code. ADR-0016 says the same.
+- Still the owner's, from a local session on the simulator: a native
+  crash against a stand-in or the real DSN, then look at `user`,
+  `breadcrumbs` and `user.geo` on the event, after the setup steps in
+  "Metrics: crash reporting, Sentry EU". Also a native-only crash
+  (not `/crash-test`, which is a JS one).

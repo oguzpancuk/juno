@@ -1,6 +1,7 @@
 import type { Breadcrumb, ErrorEvent } from '@sentry/react-native';
 import { describe, expect, it } from 'vitest';
 import {
+  crashReportingOptions,
   crashTestSchema,
   keepBreadcrumb,
   scrub,
@@ -97,5 +98,30 @@ describe('crash reporting', () => {
     expect(sent.breadcrumbs).toEqual([
       { category: 'navigation', data: { from: '/', to: '/chat/<id>' } },
     ]);
+  });
+
+  it('starts with no breadcrumbs, no PII and nothing attached, on both SDKs', () => {
+    // The options object reaches the native SDK too (minus the
+    // callbacks), and the native SDK's own crash reports never pass
+    // through `scrubEvent`. Its automatic breadcrumbs include every
+    // network request, with Supabase URLs that carry account and match
+    // ids, so the only rule both SDKs obey is "keep none".
+    const dsn = 'http://0123456789abcdef0123456789abcdef@127.0.0.1:9999/1';
+    const options = crashReportingOptions(dsn, false);
+    expect(options).toMatchObject({
+      dsn,
+      environment: 'production',
+      sendDefaultPii: false,
+      maxBreadcrumbs: 0,
+      attachScreenshot: false,
+      attachViewHierarchy: false,
+      enableAutoSessionTracking: true,
+      enableCaptureFailedRequests: false,
+    });
+    expect(options.tracesSampleRate).toBeUndefined();
+    expect(options.replaysSessionSampleRate).toBeUndefined();
+    expect(options.beforeSend).toBe(scrubEvent);
+    expect(options.beforeBreadcrumb).toBe(keepBreadcrumb);
+    expect(crashReportingOptions(dsn, true).environment).toBe('development');
   });
 });

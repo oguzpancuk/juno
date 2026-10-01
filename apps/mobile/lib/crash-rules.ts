@@ -1,4 +1,8 @@
-import type { Breadcrumb, ErrorEvent } from '@sentry/react-native';
+import type {
+  Breadcrumb,
+  ErrorEvent,
+  ReactNativeOptions,
+} from '@sentry/react-native';
 import { z } from 'zod';
 
 /**
@@ -113,5 +117,39 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
             return kept ? [kept] : [];
           }),
         }),
+  };
+}
+
+/**
+ * What `Sentry.init` is given. The same object, minus the two callbacks,
+ * is handed to the native iOS SDK, whose own crash reports are written
+ * and sent natively and never pass through `scrubEvent` or
+ * `keepBreadcrumb`. So what has to hold on both paths is set here, as an
+ * option both SDKs read:
+ * - `maxBreadcrumbs: 0`: the native SDK records every network request
+ *   as a breadcrumb, and Supabase URLs carry account and match ids;
+ *   none are kept, on either side.
+ * - `sendDefaultPii: false`: no IP inference requested, no user details.
+ * - no screenshots, no view hierarchy, no tracing, no replays, no
+ *   failed-request events (each would be something else to name).
+ * What is left on a native report is the crash, the device and OS, the
+ * locale and time zone, the app version, and the random installation id
+ * the SDK makes per install — which the notice names.
+ */
+export function crashReportingOptions(
+  dsn: string,
+  dev: boolean,
+): ReactNativeOptions {
+  return {
+    dsn,
+    environment: dev ? 'development' : 'production',
+    sendDefaultPii: false,
+    maxBreadcrumbs: 0,
+    enableAutoSessionTracking: true,
+    enableCaptureFailedRequests: false,
+    attachScreenshot: false,
+    attachViewHierarchy: false,
+    beforeBreadcrumb: keepBreadcrumb,
+    beforeSend: scrubEvent,
   };
 }

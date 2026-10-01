@@ -28,14 +28,20 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   `sentryDsnSchema` accepts `…@o<org>.ingest.de.sentry.io/<project>` (or
   a stand-in on this machine), so a project created in the US region
   fails the build instead of making the notice false.
-- **Nothing that identifies the member leaves the device.**
-  `sendDefaultPii: false` (the SDK then tells Sentry never to infer an
-  IP), no user is ever set and any is removed, account/match/message ids
-  and e-mail addresses are replaced in every message, exception, URL and
-  header, and only navigation breadcrumbs are kept (touch and click ones
-  carry labels with people's names). Tracing, replays, screenshots and
-  the view hierarchy are off. On the project, "Prevent Storing of IP
-  Addresses" is on before a DSN is set.
+- **Nothing that names the member is sent, on either SDK.** The options
+  (`crashReportingOptions`) reach the native iOS SDK too, minus the
+  callbacks, and the native SDK's own crash reports never pass through
+  the JS `beforeSend`. So what must hold on both paths is an option both
+  read: `maxBreadcrumbs: 0` (the native SDK otherwise records every
+  network request, and Supabase URLs carry account and match ids),
+  `sendDefaultPii: false` (the JS SDK then tells Sentry never to infer an
+  IP), no screenshots, view hierarchy, tracing, replays or failed-request
+  events. On the JS path, `scrubEvent` also removes the user and replaces
+  ids and e-mail addresses in messages, exceptions, URLs and headers. The
+  native SDK puts a random installation id on its reports as `user.id`;
+  it is not the account and changes on reinstall, and the notice names
+  it. On the project, "Prevent Storing of IP Addresses" is on before a
+  DSN is set.
 - **Named in the notice in the same change** (`lib/legal.ts`, version
   2026-10-01, all three languages), with a test that checks the notice
   against the dependency list.
