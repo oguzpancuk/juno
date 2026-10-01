@@ -101,27 +101,27 @@ on conflict (from_id, to_id) do nothing;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000001', 'Merhaba! Başlangıç sorusuna ne dersin?'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000001' and x.body = 'Merhaba! Başlangıç sorusuna ne dersin?');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 0;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000003', 'Bence iyi bir başlangıç :)'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000003' and x.body = 'Bence iyi bir başlangıç :)');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 1;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000001', 'Hafta sonu kahve?'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000001' and x.body = 'Hafta sonu kahve?');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 2;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000003', 'Olur, cumartesi uyar mı?'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000003' and x.body = 'Olur, cumartesi uyar mı?');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 3;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000001', 'Uyar, Moda olsun.'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000001' and x.body = 'Uyar, Moda olsun.');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 4;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000003', 'Tamam, görüşürüz!'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000001' and m.b = '00000000-0000-4000-8000-000000000003'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000003' and x.body = 'Tamam, görüşürüz!');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 5;
 
 -- Emre and Zeynep: 2 messages.
 insert into public.likes (from_id, to_id, kind, starter_key)
@@ -133,11 +133,11 @@ on conflict (from_id, to_id) do nothing;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000002', 'Selam, başlangıç sorusu güzelmiş.'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000002' and m.b = '00000000-0000-4000-8000-000000000004'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000002' and x.body = 'Selam, başlangıç sorusu güzelmiş.');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 0;
 insert into public.messages (match_id, sender_id, body)
 select m.id, '00000000-0000-4000-8000-000000000004', 'Selam! Evet, çok isabetli.'
   from public.matches m where m.a = '00000000-0000-4000-8000-000000000002' and m.b = '00000000-0000-4000-8000-000000000004'
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = '00000000-0000-4000-8000-000000000004' and x.body = 'Selam! Evet, çok isabetli.');
+   and (select count(*) from public.messages x where x.match_id = m.id) = 1;
 
 -- Kaan and Zeynep: 0 messages.
 insert into public.likes (from_id, to_id, kind, starter_key)

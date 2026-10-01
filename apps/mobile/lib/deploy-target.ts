@@ -40,6 +40,8 @@
  * filter and expand, in one place that cannot drift from itself.
  */
 
+import { crashTestSchema, deployableDsnSchema } from './crash-rules';
+
 export type Check =
   | { readonly ok: true; readonly detail: string }
   | { readonly ok: false; readonly reason: string };
@@ -168,4 +170,35 @@ export function effectiveValue(
   key: string,
 ): string | undefined {
   return shell !== undefined ? shell : files[key];
+}
+
+/**
+ * Crash reporting in a deployed build: no DSN (nothing is reported), or
+ * one in Sentry's EU region — not a stand-in on this machine, whose
+ * reports would go nowhere, and not another region, which would make the
+ * notice's "kept in the EU" false. And never a crash-test build: on the
+ * web anyone could open `/crash-test` and crash the app at will.
+ *
+ * `lib/env.ts` treats a malformed DSN as "no reporting" rather than
+ * failing every launch, so this is where a wrong one is caught.
+ */
+export function checkCrashReporting(
+  dsn: string | undefined,
+  crashTest: string | undefined,
+): Check {
+  if (crashTestSchema.parse(crashTest)) {
+    return {
+      ok: false,
+      reason:
+        'EXPO_PUBLIC_CRASH_TEST=1: bu paket /crash-test adresinde bilerek çöker',
+    };
+  }
+  if (!dsn) return { ok: true, detail: 'çökme raporu yok' };
+  if (!deployableDsnSchema.safeParse(dsn).success) {
+    return {
+      ok: false,
+      reason: `EXPO_PUBLIC_SENTRY_DSN, Sentry'nin AB bölgesinin (…ingest.de.sentry.io) adresi değil: ${dsn}`,
+    };
+  }
+  return { ok: true, detail: 'Sentry (AB)' };
 }

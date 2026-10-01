@@ -15,5 +15,10 @@ import { env } from './env';
  */
 export function startCrashReporting(): void {
   if (!env.sentryDsn) return;
-  Sentry.init(crashReportingOptions(env.sentryDsn, __DEV__));
+  Sentry.init(
+    crashReportingOptions(env.sentryDsn, {
+      dev: __DEV__,
+      crashTest: env.crashTest,
+    }),
+  );
 }

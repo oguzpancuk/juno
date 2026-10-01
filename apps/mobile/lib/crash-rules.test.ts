@@ -1,11 +1,13 @@
-import type { Breadcrumb, ErrorEvent } from '@sentry/react-native';
+import type { ErrorEvent } from '@sentry/react-native';
 import { describe, expect, it } from 'vitest';
 import {
   crashReportingOptions,
   crashTestSchema,
-  keepBreadcrumb,
+  deployableDsnSchema,
+  reportingDsnSchema,
   scrub,
   scrubEvent,
+  scrubUrl,
   sentryDsnSchema,
 } from './crash-rules';
 
@@ -57,17 +59,32 @@ describe('crash reporting', () => {
     expect(scrub(ID.toUpperCase())).toBe('<id>');
   });
 
-  it('keeps only navigation breadcrumbs, with the ids out', () => {
-    // Touch and click breadcrumbs carry labels ("Selin'i beğen"), console
-    // ones carry whatever was logged, and request ones carry query
-    // strings with ids in them.
-    for (const category of ['touch', 'ui.click', 'console', 'fetch', 'xhr'])
-      expect(keepBreadcrumb({ category, message: 'x' })).toBeNull();
-    const kept = keepBreadcrumb({
-      category: 'navigation',
-      data: { from: `/chat/${ID}`, to: '/matches' },
-    } satisfies Breadcrumb);
-    expect(kept?.data).toEqual({ from: '/chat/<id>', to: '/matches' });
+  it('takes tokens out of text, before their payload can be read', () => {
+    // A JWT's payload is the account id and the e-mail address in base64,
+    // so neither UUID nor e-mail pattern would see them.
+    const jwt =
+      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzZjJiOGMxZSIsImVtYWlsIjoiZGVuaXpAc2VlZC5sb2NhbCJ9.c2lnbmF0dXJl';
+    expect(scrub(`fetch failed: /photos/a.jpg?token=${jwt}&t=1`)).toBe(
+      'fetch failed: /photos/a.jpg?token=<token>&t=1',
+    );
+    expect(scrub(`refresh_token=v1.abcDEF123&code=4f9e`)).toBe(
+      'refresh_token=<token>&code=<token>',
+    );
+  });
+
+  it("keeps a URL's origin and path only: a sign-in fragment carries the session", () => {
+    // The web client's implicit flow comes back from Google and Apple with
+    // the tokens in the fragment, and supabase-js clears it only after a
+    // round trip; the first render can fail before that.
+    expect(
+      scrubUrl(
+        'https://juno-dating.com/#access_token=eyJa.eyJb.c&expires_in=3600&refresh_token=v1.xyz&provider_token=ya29.abc',
+      ),
+    ).toBe('https://juno-dating.com/');
+    expect(
+      scrubUrl(`https://www.juno-dating.com/chat/${ID}?from=match#top`),
+    ).toBe('https://www.juno-dating.com/chat/<id>');
+    expect(scrubUrl(`/chat/${ID}#access_token=eyJa.eyJb.c`)).toBe('/chat/<id>');
   });
 
   it('sends an event with no user and no ids in it', () => {
@@ -76,28 +93,24 @@ describe('crash reporting', () => {
       message: `failed for ${ID}`,
       user: { id: ID, email: 'deniz@seed.local', ip_address: '{{auto}}' },
       request: {
-        url: `https://www.juno-dating.com/chat/${ID}`,
-        headers: { Referer: `https://www.juno-dating.com/match/${ID}` },
+        url: 'https://juno-dating.com/#access_token=eyJa.eyJb.c&refresh_token=v1.xyz',
+        headers: {
+          Referer: `https://www.juno-dating.com/match/${ID}?token=eyJa.eyJb.c`,
+        },
       },
       exception: {
         values: [{ type: 'Error', value: `duplicate key (${ID})` }],
       },
-      breadcrumbs: [
-        { category: 'console', message: 'deniz@seed.local' },
-        { category: 'navigation', data: { from: '/', to: `/chat/${ID}` } },
-      ],
     };
     const sent = scrubEvent(event);
     expect(sent.user).toBeUndefined();
     expect(sent.message).toBe('failed for <id>');
-    expect(sent.request?.url).toBe('https://www.juno-dating.com/chat/<id>');
+    expect(sent.request?.url).toBe('https://juno-dating.com/');
     expect(sent.request?.headers).toEqual({
       Referer: 'https://www.juno-dating.com/match/<id>',
     });
     expect(sent.exception?.values?.[0]?.value).toBe('duplicate key (<id>)');
-    expect(sent.breadcrumbs).toEqual([
-      { category: 'navigation', data: { from: '/', to: '/chat/<id>' } },
-    ]);
+    expect(JSON.stringify(sent)).not.toMatch(/token=|eyJ|deniz/u);
   });
 
   it("drops the native SDK's device hash from what the JS side sends", () => {
@@ -120,12 +133,15 @@ describe('crash reporting', () => {
 
   it('starts with no breadcrumbs, no PII and nothing attached, on both SDKs', () => {
     // The options object reaches the native SDK too (minus the
-    // callbacks), and the native SDK's own crash reports never pass
+    // callback), and the native SDK's own crash reports never pass
     // through `scrubEvent`. Its automatic breadcrumbs include every
     // network request, with Supabase URLs that carry account and match
     // ids, so the only rule both SDKs obey is "keep none".
     const dsn = 'http://0123456789abcdef0123456789abcdef@127.0.0.1:9999/1';
-    const options = crashReportingOptions(dsn, false);
+    const options = crashReportingOptions(dsn, {
+      dev: false,
+      crashTest: false,
+    });
     expect(options).toMatchObject({
       dsn,
       environment: 'production',
@@ -139,7 +155,42 @@ describe('crash reporting', () => {
     expect(options.tracesSampleRate).toBeUndefined();
     expect(options.replaysSessionSampleRate).toBeUndefined();
     expect(options.beforeSend).toBe(scrubEvent);
-    expect(options.beforeBreadcrumb).toBe(keepBreadcrumb);
-    expect(crashReportingOptions(dsn, true).environment).toBe('development');
+  });
+
+  it('files a crash-test build apart from production', () => {
+    // A crash-test build is a release build, so `__DEV__` is false; its
+    // crashes must not count against production's crash-free sessions.
+    const dsn = 'http://0123456789abcdef0123456789abcdef@127.0.0.1:9999/1';
+    const environment = (dev: boolean, crashTest: boolean) =>
+      crashReportingOptions(dsn, { dev, crashTest }).environment;
+    expect(environment(false, true)).toBe('crash-test');
+    expect(environment(true, true)).toBe('crash-test');
+    expect(environment(true, false)).toBe('development');
+    expect(environment(false, false)).toBe('production');
+  });
+
+  it('reads a wrong DSN as no reporting, not as a failed start', () => {
+    const eu =
+      'https://0123456789abcdef0123456789abcdef@o4508000000000000.ingest.de.sentry.io/4508000000000001';
+    expect(reportingDsnSchema.parse(eu)).toBe(eu);
+    expect(reportingDsnSchema.parse(undefined)).toBeUndefined();
+    expect(reportingDsnSchema.parse('')).toBeUndefined();
+    expect(reportingDsnSchema.parse(`${eu}/`)).toBeUndefined();
+    expect(
+      reportingDsnSchema.parse(eu.replace('ingest.de.', 'ingest.us.')),
+    ).toBeUndefined();
+  });
+
+  it('lets only an EU DSN be deployed, not the stand-in', () => {
+    expect(
+      deployableDsnSchema.safeParse(
+        'https://0123456789abcdef0123456789abcdef@o4508000000000000.ingest.de.sentry.io/4508000000000001',
+      ).success,
+    ).toBe(true);
+    expect(
+      deployableDsnSchema.safeParse(
+        'http://0123456789abcdef0123456789abcdef@127.0.0.1:9999/1',
+      ).success,
+    ).toBe(false);
   });
 });

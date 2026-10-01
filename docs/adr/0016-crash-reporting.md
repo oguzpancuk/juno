@@ -24,10 +24,17 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   the first render, and only when the build carries
   `EXPO_PUBLIC_SENTRY_DSN`; without one the app reports nothing and is
   otherwise the same, which is what local work and the test runs are.
-- **EU only, by the DSN's shape.** `lib/crash-rules.ts`
-  `sentryDsnSchema` accepts `…@o<org>.ingest.de.sentry.io/<project>` (or
-  a stand-in on this machine), so a project created in the US region
-  fails the build instead of making the notice false.
+- **EU only, by the DSN's shape, checked at deploy.** `npm run deploy`
+  (`scripts/check-deploy-env.ts`, `lib/deploy-target.ts`
+  `checkCrashReporting`) refuses a DSN that is not
+  `…@o<org>.ingest.de.sentry.io/<project>`, so a project created in the
+  US region, or a leftover stand-in on this machine, stops the deploy
+  instead of making the notice false. The app itself reads a DSN of the
+  wrong shape as "no reporting" (`reportingDsnSchema`) rather than
+  refusing to start: a startup failure would blank the app for every
+  visitor, with Sentry not yet running to see it. EAS builds do not pass
+  through that gate yet (no EAS project exists); the TestFlight item adds
+  the same check there.
 - **Nothing that names the member is sent, on either SDK.** The options
   (`crashReportingOptions`) reach the native iOS SDK too, minus the
   callbacks, and the native SDK's own crash reports never pass through
@@ -36,8 +43,13 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   network request, and Supabase URLs carry account and match ids),
   `sendDefaultPii: false` (the JS SDK then tells Sentry never to infer an
   IP), no screenshots, view hierarchy, tracing, replays or failed-request
-  events. On the JS path, `scrubEvent` also removes the user and replaces
-  ids and e-mail addresses in messages, exceptions, URLs and headers. The
+  events. On the JS path, `scrubEvent` also removes the user, cuts URLs
+  (the page and the `Referer`) down to origin and path, and replaces
+  tokens, ids and e-mail addresses in messages and exceptions. The cut is
+  for the web's sign-in: Google and Apple come back to
+  `/#access_token=…&refresh_token=…`, and supabase-js clears that
+  fragment only after a round trip, so an error in the first render
+  would otherwise carry a live session. The
   native SDK puts two numbers on its reports: a random installation id
   as `user.id`, and `contexts.app.device_app_hash`, a one-way hash of
   Apple's `identifierForVendor`, the model and the bundle id. Neither is
@@ -49,7 +61,9 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   against the dependency list.
 - **The forced crash is a route**, `/crash-test`, that throws during
   render when the build sets `EXPO_PUBLIC_CRASH_TEST=1` and sends
-  everyone home otherwise: on the web anyone can type the address.
+  everyone home otherwise: on the web anyone can type the address. Such a
+  build reports to the `crash-test` environment, so its crashes stay out
+  of production's crash-free sessions, and `npm run deploy` refuses it.
 - **No Expo config plugin yet.** It adds build phases that upload source
   maps and debug symbols with an auth token, which is a secret, and no
   EAS project exists. Without it crashes are reported with minified JS

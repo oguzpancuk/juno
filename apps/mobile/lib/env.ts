@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { crashTestSchema, sentryDsnSchema } from './crash-rules';
+import { crashTestSchema, reportingDsnSchema } from './crash-rules';
 import { appleServicesIdSchema, googleClientIdSchema } from './oauth';
 
 /**
@@ -50,11 +50,11 @@ const EnvSchema = z.object({
   /**
    * Where crash reports go (`lib/crash-reporting.ts`). Optional like the
    * client IDs: a build without one reports nothing and is otherwise the
-   * same app, which is what local work and the test runs are.
+   * same app, which is what local work and the test runs are. Unlike
+   * them, a wrong one means "no reporting" rather than a failed start
+   * (`reportingDsnSchema`); the deploy gate refuses it.
    */
-  sentryDsn: z
-    .preprocess(unsetIsUndefined, sentryDsnSchema.optional())
-    .describe('Sentry DSN'),
+  sentryDsn: reportingDsnSchema.describe('Sentry DSN'),
   /** Opens `/crash-test`, the route that crashes on purpose. */
   crashTest: crashTestSchema,
 });

@@ -101,32 +101,26 @@ const SEEDS: readonly Seed[] = [
 const pad = (n: number) => String(n).padStart(2, '0');
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 
-/** Each seed's birth and chart, computed once: the matches need them too. */
-const derived = new Map(
-  SEEDS.map((seed) => {
-    const birth = resolveBirth({ cityId: seed.cityId, local: seed.local });
-    const chart = toPublicChart(
-      computeChart({
-        utc: birth.utc,
-        latitude: birth.latitude,
-        longitude: birth.longitude,
-      }),
-    );
-    return [seed.id, { birth, chart }] as const;
-  }),
-);
-
-function derivedOf(seed: Seed): {
+/** Each seed with its birth and chart, computed once: the matches need them too. */
+interface Seeded {
+  readonly seed: Seed;
   readonly birth: ReturnType<typeof resolveBirth>;
   readonly chart: PublicChart;
-} {
-  const found = derived.get(seed.id);
-  if (!found) throw new Error(`no birth computed for ${seed.name}`);
-  return found;
 }
 
-function rows(seed: Seed): string {
-  const { birth, chart } = derivedOf(seed);
+const SEEDED: readonly Seeded[] = SEEDS.map((seed) => {
+  const birth = resolveBirth({ cityId: seed.cityId, local: seed.local });
+  const chart = toPublicChart(
+    computeChart({
+      utc: birth.utc,
+      latitude: birth.latitude,
+      longitude: birth.longitude,
+    }),
+  );
+  return { seed, birth, chart };
+});
+
+function rows({ seed, birth, chart }: Seeded): string {
   const three = bigThree(chart);
   const { local } = seed;
   const date = `${local.year}-${pad(local.month)}-${pad(local.day)}`;
@@ -208,10 +202,10 @@ const MATCHES: readonly SeedMatch[] = [
   { between: ['Kaan', 'Zeynep'], messages: [] },
 ];
 
-function byName(name: string): Seed {
-  const seed = SEEDS.find((s) => s.name === name);
-  if (!seed) throw new Error(`no seed user named ${name}`);
-  return seed;
+function byName(name: string): Seeded {
+  const found = SEEDED.find(({ seed }) => seed.name === name);
+  if (!found) throw new Error(`no seed user named ${name}`);
+  return found;
 }
 
 function account(id: string, email: string): string {
@@ -225,31 +219,33 @@ on conflict (provider_id, provider) do nothing;`;
 }
 
 function matchRows(match: SeedMatch): string {
-  const [x, y] = match.between.map(byName) as [Seed, Seed];
-  const [lo, hi] = isLesserId(x.id, y.id) ? [x, y] : [y, x];
-  const key = starterKey(derivedOf(lo).chart, derivedOf(hi).chart);
-  if (!key) throw new Error(`${x.name} and ${y.name} share no aspect`);
+  const [x, y] = match.between.map(byName) as [Seeded, Seeded];
+  const [lo, hi] = isLesserId(x.seed.id, y.seed.id) ? [x, y] : [y, x];
+  const key = starterKey(lo.chart, hi.chart);
+  if (!key)
+    throw new Error(`${x.seed.name} and ${y.seed.name} share no aspect`);
   const like = (from: Seed, to: Seed) => `
 insert into public.likes (from_id, to_id, kind, starter_key)
 values (${q(from.id)}, ${q(to.id)}, 'like', ${q(key)})
 on conflict (from_id, to_id) do nothing;`;
-  const likes = like(x, y) + like(y, x);
+  const likes = like(x.seed, y.seed) + like(y.seed, x.seed);
   // In order: `messages_server_times` stamps `created_at` with
   // clock_timestamp() row by row, so the thread reads as written even
-  // though `db reset` sends the whole seed as one transaction. Guarded
-  // like every other row here, so applying the seed twice does not write
-  // each conversation twice.
+  // though `db reset` sends the whole seed as one transaction. Each line
+  // is written only when the thread holds exactly the lines before it,
+  // so applying the seed twice writes nothing twice, and a line repeated
+  // word for word (two "Tamam"s) is still written both times.
   const messages = match.messages
     .map(
-      ([sender, body]) => `
+      ([sender, body], position) => `
 insert into public.messages (match_id, sender_id, body)
-select m.id, ${q(byName(sender).id)}, ${q(body)}
-  from public.matches m where m.a = ${q(lo.id)} and m.b = ${q(hi.id)}
-   and not exists (select 1 from public.messages x where x.match_id = m.id and x.sender_id = ${q(byName(sender).id)} and x.body = ${q(body)});`,
+select m.id, ${q(byName(sender).seed.id)}, ${q(body)}
+  from public.matches m where m.a = ${q(lo.seed.id)} and m.b = ${q(hi.seed.id)}
+   and (select count(*) from public.messages x where x.match_id = m.id) = ${position};`,
     )
     .join('');
   return `
--- ${x.name} and ${y.name}: ${match.messages.length} messages.${likes}${messages}`;
+-- ${x.seed.name} and ${y.seed.name}: ${match.messages.length} messages.${likes}${messages}`;
 }
 
 const metrics = `
@@ -263,7 +259,7 @@ ${MATCHES.map(matchRows).join('\n')}
 `;
 
 const out = resolve(import.meta.dirname, '../seed.sql');
-writeFileSync(out, header + SEEDS.map(rows).join('\n') + '\n' + metrics);
+writeFileSync(out, header + SEEDED.map(rows).join('\n') + '\n' + metrics);
 console.log(
   `wrote ${SEEDS.length} seed users and ${MATCHES.length} matches to ${out}`,
 );

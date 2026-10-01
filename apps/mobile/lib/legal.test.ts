@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { LANGUAGES, SOURCE_LANGUAGE } from '@juno/astro';
 import { CATALOGS, LOCALE_TAGS } from './i18n';
 import {
@@ -34,20 +35,69 @@ describe('the privacy notice', () => {
     expect(text).toContain('• Apple ya da Google ile girersen:');
   });
 
-  it('names every third party the app ships a client for', () => {
+  it('has decided, for every dependency the app ships, whether the notice names it', () => {
     // A processor is in the notice in the change that puts it in the
     // path (lib/legal.ts). The dependency list is where that change
-    // shows, so the notice is checked against it.
-    const pkg = JSON.parse(
-      readFileSync(resolve(import.meta.dirname, '..', 'package.json'), 'utf8'),
-    ) as { dependencies: Record<string, string> };
+    // shows, so every runtime dependency is listed here with the name the
+    // notice must carry, or null and the reason it carries none. A new
+    // dependency fails until someone has made that decision.
+    const pkg = z
+      .object({ dependencies: z.record(z.string()) })
+      .parse(
+        JSON.parse(
+          readFileSync(
+            resolve(import.meta.dirname, '..', 'package.json'),
+            'utf8',
+          ),
+        ) as unknown,
+      );
     const text = legalSections.flatMap((section) => section.body).join('\n');
-    const processors: Record<string, string> = {
+    const NOT_A_RECIPIENT = null;
+    const decided: Record<string, string | null> = {
       '@supabase/supabase-js': 'Supabase',
       '@sentry/react-native': 'Sentry',
+      '@react-native-google-signin/google-signin': 'Google',
+      'expo-apple-authentication': 'Apple',
+      // Font files bundled with the app; nothing is fetched.
+      '@expo-google-fonts/outfit': NOT_A_RECIPIENT,
+      // This repo's own engine and city list, on the device.
+      '@juno/astro': NOT_A_RECIPIENT,
+      '@juno/geo': NOT_A_RECIPIENT,
+      // On-device storage, UI, navigation, platform glue and validation:
+      // none of these sends anything anywhere.
+      '@expo/metro-runtime': NOT_A_RECIPIENT,
+      '@react-native-async-storage/async-storage': NOT_A_RECIPIENT,
+      expo: NOT_A_RECIPIENT,
+      'expo-blur': NOT_A_RECIPIENT,
+      'expo-constants': NOT_A_RECIPIENT,
+      'expo-dev-client': NOT_A_RECIPIENT,
+      // The picker hands back the one image chosen; the upload is Supabase.
+      'expo-image-picker': NOT_A_RECIPIENT,
+      'expo-linear-gradient': NOT_A_RECIPIENT,
+      'expo-linking': NOT_A_RECIPIENT,
+      // The device's own position; the app neither geocodes nor sends it
+      // anywhere but Supabase.
+      'expo-location': NOT_A_RECIPIENT,
+      'expo-router': NOT_A_RECIPIENT,
+      'expo-secure-store': NOT_A_RECIPIENT,
+      'expo-splash-screen': NOT_A_RECIPIENT,
+      'expo-status-bar': NOT_A_RECIPIENT,
+      react: NOT_A_RECIPIENT,
+      'react-dom': NOT_A_RECIPIENT,
+      'react-native': NOT_A_RECIPIENT,
+      'react-native-safe-area-context': NOT_A_RECIPIENT,
+      'react-native-screens': NOT_A_RECIPIENT,
+      'react-native-svg': NOT_A_RECIPIENT,
+      'react-native-url-polyfill': NOT_A_RECIPIENT,
+      'react-native-web': NOT_A_RECIPIENT,
+      zod: NOT_A_RECIPIENT,
     };
-    for (const [dependency, name] of Object.entries(processors))
-      if (dependency in pkg.dependencies)
+    expect(
+      Object.keys(pkg.dependencies).filter((name) => !(name in decided)),
+      'dependencies with no decision about the notice',
+    ).toEqual([]);
+    for (const [dependency, name] of Object.entries(decided))
+      if (name !== null && dependency in pkg.dependencies)
         expect(text, dependency).toContain(name);
   });
 

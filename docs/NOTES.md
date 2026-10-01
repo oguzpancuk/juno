@@ -9120,8 +9120,10 @@ on #21.
    one). It is not a secret; the auth token is, and is not needed yet.
 4. The check: a local web build with the DSN and
    `EXPO_PUBLIC_CRASH_TEST=1`, open `/crash-test`, and the error shows
-   under Issues within a minute. Then rebuild without the flag, with
-   `--clear`.
+   under Issues within a minute, in the **crash-test** environment
+   (pick it in the environment filter; production does not show it).
+   Then take the flag out of the `.env*` file: `npm run deploy` refuses
+   to run while it is set.
 5. The 1 Ekim notice goes live only with a web deploy, and providers
    aside, it should be live before a build with a DSN reaches anyone.
 
@@ -9200,3 +9202,45 @@ The crash bullet now lists the device state and the thread stack traces
 (three languages), and the Sentry bullet says instead that nothing from
 the profile, chart, photos or messages is sent. Text only; no code
 change.
+
+## 2026-10-01 — Metrics: review round 2
+
+The review of 15a784e found one blocking problem and nine smaller ones,
+all fixed in this round:
+
+- **Blocking: a web sign-in's tokens could reach Sentry.** The web
+  client uses supabase-js's implicit flow, so Google and Apple come back
+  to `/#access_token=…&refresh_token=…`. supabase-js clears that
+  fragment only after a round trip, and the browser SDK copies
+  `location.href` into `request.url`. `scrubEvent` now cuts the page URL
+  and the `Referer` down to origin and path (`scrubUrl`), and `scrub`
+  replaces JWTs and `…token=`/`code=` values in error text, before the
+  UUID and e-mail patterns, since a JWT's payload hides both in base64.
+- A DSN of the wrong shape blanked the app at launch (`env` threw on
+  import, before Sentry started). It now means "no reporting"
+  (`reportingDsnSchema`), and `npm run deploy` refuses it instead
+  (`checkCrashReporting`), together with `EXPO_PUBLIC_CRASH_TEST=1` and
+  the local stand-in DSN.
+- A crash-test build reports to the `crash-test` environment, so the
+  forced crashes stay out of production's crash-free sessions.
+- `keepBreadcrumb` and the breadcrumb branch of `scrubEvent` were dead
+  under `maxBreadcrumbs: 0` and suggested a filter that the native path
+  does not have. They are gone; the option is the guarantee.
+- `legal.test.ts` lists every runtime dependency with the name the
+  notice must carry, or null. A new dependency (payments PR 2's
+  `react-native-purchases`, for one) fails it until that is decided.
+  The package file is parsed with Zod rather than cast.
+- The seed's message guard was keyed on (match, sender, body), so a line
+  repeated word for word would have been written once. Each line is now
+  written only when the thread holds exactly the lines before it. Seeded
+  twice on the stand-in cluster: 8 messages, the same view numbers.
+- Smaller: `gen-seed.ts` computes each seed's chart into one array
+  instead of a map with an unreachable error; `insertDemoProfile` reuses
+  `insertProfileRow`.
+
+### Upstream candidates
+
+- The deploy gate covers `npm run deploy` only. When the EAS project
+  exists, the same `checkCrashReporting` should run before
+  `eas build`/`eas update`, or a crash-test flag left in a `.env*` file
+  ships to TestFlight.

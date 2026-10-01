@@ -125,13 +125,15 @@ export async function uploadPhotos(
   }
 }
 
-/** Uploads the row's photos, then inserts it as that user. */
+/** Uploads the row's photos as that user, then inserts it as them (or as `inserter`). */
 export async function insertProfileRow(
   client: Client,
-  row: ReturnType<typeof profileRow>,
+  row: ReturnType<typeof profileRow> & { readonly is_demo?: boolean },
+  /** Who inserts the row, when not the member who uploads the photos. */
+  inserter: Client = client,
 ): Promise<void> {
   await uploadPhotos(client, row.photos);
-  const { error } = await client.from('profiles').insert(row);
+  const { error } = await inserter.from('profiles').insert(row);
   if (error)
     throw new Error(`insert profile for ${row.display_name}: ${error.message}`);
 }
@@ -146,11 +148,9 @@ export async function insertDemoProfile(
   demo: { readonly client: Client },
   input: ProfileInput,
 ): Promise<void> {
-  const row = profileRow(input);
-  await uploadPhotos(demo.client, row.photos);
-  const { error } = await admin
-    .from('profiles')
-    .insert({ ...row, is_demo: true });
-  if (error)
-    throw new Error(`insert demo ${row.display_name}: ${error.message}`);
+  await insertProfileRow(
+    demo.client,
+    { ...profileRow(input), is_demo: true },
+    admin,
+  );
 }

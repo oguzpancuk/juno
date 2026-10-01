@@ -14,6 +14,7 @@
 import { parseProjectEnv } from '@expo/env';
 import { join } from 'node:path';
 import {
+  checkCrashReporting,
   checkDeployKey,
   checkDeployTarget,
   effectiveValue,
@@ -22,6 +23,8 @@ import {
 
 const URL_KEY = 'EXPO_PUBLIC_SUPABASE_URL';
 const ANON_KEY = 'EXPO_PUBLIC_SUPABASE_ANON_KEY';
+const DSN_KEY = 'EXPO_PUBLIC_SENTRY_DSN';
+const CRASH_TEST_KEY = 'EXPO_PUBLIC_CRASH_TEST';
 
 // `expo export` forces production before it loads anything, which decides
 // which `.env*` files exist for it. Saying so here rather than inheriting
@@ -42,6 +45,10 @@ const key = checkDeployKey(
   effectiveValue(process.env[ANON_KEY], files, ANON_KEY),
   projectRef(url),
 );
+const crash = checkCrashReporting(
+  effectiveValue(process.env[DSN_KEY], files, DSN_KEY),
+  effectiveValue(process.env[CRASH_TEST_KEY], files, CRASH_TEST_KEY),
+);
 
 function refuse(reason: string): never {
   console.error(`\ndeploy durduruldu: ${reason}`);
@@ -60,5 +67,17 @@ function refuse(reason: string): never {
 
 if (!target.ok) refuse(target.reason);
 if (!key.ok) refuse(key.reason);
+if (!crash.ok) {
+  console.error(`\ndeploy durduruldu: ${crash.reason}`);
+  console.error(
+    'Kontrol et: apps/mobile altındaki .env* dosyaları ve bu kabuk.\n' +
+      'Çökme testi için konan EXPO_PUBLIC_CRASH_TEST kaldırılsın;\n' +
+      "EXPO_PUBLIC_SENTRY_DSN ya boş olsun ya da Sentry'deki AB projesinin\n" +
+      'DSN adresi (…ingest.de.sentry.io).\n',
+  );
+  process.exit(1);
+}
 
-console.log(`deploy hedefi: ${target.detail} (anahtar: ${key.detail})`);
+console.log(
+  `deploy hedefi: ${target.detail} (anahtar: ${key.detail}; ${crash.detail})`,
+);
