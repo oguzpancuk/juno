@@ -8901,3 +8901,56 @@ current)`: older asks, equal or newer does not (a phone on an older
 - The stand-in backend for screenshots was rebuilt a third time
   (`.shots/stub.mjs`, not committed). Still a candidate for
   `apps/mobile/scripts/` beside the driver.
+
+## 2026-10-01 — Metrics: the views counted the demos
+
+ROADMAP "Metrics", the next unstarted item. The views were built on
+2026-09-09; what was left was the clause's manual check and Sentry.
+
+- **The views were wrong, not missing.** `20260909000011_metrics`
+  predates the launch demos (`20260917000001`). A demo is an
+  `auth.users` row plus a finished profile, and a like on one matches in
+  the same round trip, so in production every demo raised both sides of
+  onboarding completion, the PRD's "≥ 10 matches" would have been met by
+  ten swipes on demos, and a member's opening line to a demo counted as
+  a match that carried a message. `20261001120001_metrics_members_only`
+  replaces the three member views: demo accounts and matches with a demo
+  are left out and reported in their own columns (`demo_accounts`,
+  `demo_matches`), appended so `create or replace` keeps every existing
+  column. A profile now counts only while its account is not
+  soft-deleted, so the numerator stays inside the denominator.
+- **Test.** `rls.test.ts` › metrics › "leave the launch demos out" ›
+  "count the member, not the demo, its match or the message to it":
+  reads the views, creates a member and a demo, likes, writes, reads
+  again, and expects the member's account and profile and nothing else.
+  Seen red without Docker: every migration applied to a PostgreSQL 16
+  cluster with stand-ins for `auth`, `storage` and the Supabase roles
+  (postgis from apt), then the test's rows in SQL. Before the migration
+  the deltas were accounts 2, profiles 2, matches 1, with a message 1;
+  after it 1, 1, 0, 0. The Vitest itself runs only in CI's `verify`.
+- **The seed now has something to count**, generated like the rest
+  (`gen-seed.ts`; the six users' rows are byte-identical): an account
+  that never onboarded (`yarim@seed.local`) and three matches made by
+  mutual likes with the pair's real starter key — Deniz–Selin six
+  messages, Emre–Zeynep two, Kaan–Zeynep none. On it the views return
+  accounts 7, profiles 6, completion 85.7, matches 3 with 2 carrying a
+  message, two-sided 2, three each 1, silent 1, reports 0 — read on the
+  same cluster after `seed.sql`. The existing "count what the PRD asks
+  about" expected `two_sided_three_each` 0 and now expects the seed's 1.
+- **Not built, on purpose.** Starter usage and the "first two weeks"
+  cohort window are PRD signals the clause does not name: the first
+  needs either a "used starter" tap or a person reading first messages,
+  which would be the first place message bodies leave a thread; the
+  second is a filter on `created_at` the owner can add when the cohort
+  has a start date. Accounts deleted through `abandon_empty_account` or
+  account deletion vanish from both sides of completion, which reads
+  high for people who signed up and left at once.
+- **Crash reporting** waits on the owner's choice of service (asked in
+  the thread); nothing was added for it.
+
+### Battery gaps
+
+- 2026-10-01 · Metrics · the battery passed views that counted the
+  launch demos as members for two weeks: the demo migration added a
+  kind of account and no test asked what the views made of it ·
+  "count the member, not the demo, its match or the message to it".

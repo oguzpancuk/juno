@@ -77,3 +77,64 @@ on conflict (provider_id, provider) do nothing;
 insert into public.profiles (id, display_name, birth_date, birth_local, birth_city_id, birth_utc, chart, big_three, gender, interested_in, location, radius_km, consent_version)
 values ('00000000-0000-4000-8000-000000000006', 'Burak', '1995-12-25', '1995-12-25T09:00:00', 323786, '1995-12-25T07:00:00.000Z', '{"version":1,"planets":{"sun":{"longitude":273.0029,"sign":"capricorn","degree":3.0029,"house":11,"retrograde":false},"moon":{"longitude":318.0924,"sign":"aquarius","degree":18.0924,"house":1,"retrograde":false},"mercury":{"longitude":290.1572,"sign":"capricorn","degree":20.1572,"house":12,"retrograde":false},"venus":{"longitude":304.3542,"sign":"aquarius","degree":4.3542,"house":1,"retrograde":false},"mars":{"longitude":288.9521,"sign":"capricorn","degree":18.9521,"house":12,"retrograde":false},"jupiter":{"longitude":267.9542,"sign":"sagittarius","degree":27.9542,"house":11,"retrograde":false},"saturn":{"longitude":348.9758,"sign":"pisces","degree":18.9758,"house":2,"retrograde":false},"uranus":{"longitude":298.9767,"sign":"capricorn","degree":28.9767,"house":12,"retrograde":false},"neptune":{"longitude":294.4359,"sign":"capricorn","degree":24.4359,"house":12,"retrograde":false},"pluto":{"longitude":241.7203,"sign":"sagittarius","degree":1.7203,"house":10,"retrograde":false}},"houses":{"ascendant":301.3608,"mc":233.5658,"cusps":[301.3608,347.3785,25.8965,53.5658,75.6001,96.5352,121.3608,167.3785,205.8965,233.5658,255.6001,276.5352]}}', '{"sun":"capricorn","moon":"aquarius","rising":"aquarius"}', 'man', 'women', 'SRID=4326;POINT(32.85 39.93)', 50, '2026-09-30')
 on conflict (id) do nothing;
+
+-- Metrics fixture: an account that never finished onboarding, and three
+-- matches made by mutual likes. Read against the views this gives:
+--   metrics_onboarding     accounts 7, profiles 6, completion_percent 85.7
+--   metrics_matches        matches 3, matches_with_a_message 2
+--   metrics_conversations  two_sided 2, two_sided_three_each 1, silent 1
+
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
+values ('00000000-0000-4000-8000-000000000007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'yarim@seed.local', extensions.crypt('seed-password', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '')
+on conflict (id) do nothing;
+insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+values ('00000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000007', 'yarim@seed.local', 'email', '{"sub":"00000000-0000-4000-8000-000000000007","email":"yarim@seed.local"}', now(), now(), now())
+on conflict (provider_id, provider) do nothing;
+
+-- Deniz and Selin: 6 messages.
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000003', 'like', 'ascendant-conjunction-sun')
+on conflict (from_id, to_id) do nothing;
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000001', 'like', 'ascendant-conjunction-sun')
+on conflict (from_id, to_id) do nothing;
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000001', 'Merhaba! Başlangıç sorusuna ne dersin?'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000003', 'Bence iyi bir başlangıç :)'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000001', 'Hafta sonu kahve?'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000003', 'Olur, cumartesi uyar mı?'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000001', 'Uyar, Moda olsun.'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000003', 'Tamam, görüşürüz!'
+  from public.matches where a = '00000000-0000-4000-8000-000000000001' and b = '00000000-0000-4000-8000-000000000003';
+
+-- Emre and Zeynep: 2 messages.
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000004', 'like', 'moon-square-saturn')
+on conflict (from_id, to_id) do nothing;
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000002', 'like', 'moon-square-saturn')
+on conflict (from_id, to_id) do nothing;
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000002', 'Selam, başlangıç sorusu güzelmiş.'
+  from public.matches where a = '00000000-0000-4000-8000-000000000002' and b = '00000000-0000-4000-8000-000000000004';
+insert into public.messages (match_id, sender_id, body)
+select id, '00000000-0000-4000-8000-000000000004', 'Selam! Evet, çok isabetli.'
+  from public.matches where a = '00000000-0000-4000-8000-000000000002' and b = '00000000-0000-4000-8000-000000000004';
+
+-- Kaan and Zeynep: 0 messages.
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000004', 'like', 'ascendant-trine-ascendant')
+on conflict (from_id, to_id) do nothing;
+insert into public.likes (from_id, to_id, kind, starter_key)
+values ('00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000005', 'like', 'ascendant-trine-ascendant')
+on conflict (from_id, to_id) do nothing;
