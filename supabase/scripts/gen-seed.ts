@@ -1,6 +1,8 @@
 /**
  * Generates supabase/seed.sql: six local-only users with real charts so the
- * discover screen has cards. Deterministic (fixed ids, fixed birth data).
+ * discover screen has cards, plus the rows the metrics views are read
+ * against (an account that never finished onboarding, three matches and
+ * their messages). Deterministic (fixed ids, fixed birth data).
  *
  *   npx tsx supabase/scripts/gen-seed.ts && npx supabase db reset
  *
@@ -8,7 +10,14 @@
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { bigThree, computeChart, toPublicChart } from '@juno/astro';
+import {
+  bigThree,
+  computeChart,
+  isLesserId,
+  starterKey,
+  toPublicChart,
+  type PublicChart,
+} from '@juno/astro';
 import { resolveBirth } from '@juno/geo';
 import { LEGAL_VERSION } from '../../apps/mobile/lib/legal';
 
@@ -92,7 +101,14 @@ const SEEDS: readonly Seed[] = [
 const pad = (n: number) => String(n).padStart(2, '0');
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 
-function rows(seed: Seed): string {
+/** Each seed with its birth and chart, computed once: the matches need them too. */
+interface Seeded {
+  readonly seed: Seed;
+  readonly birth: ReturnType<typeof resolveBirth>;
+  readonly chart: PublicChart;
+}
+
+const SEEDED: readonly Seeded[] = SEEDS.map((seed) => {
   const birth = resolveBirth({ cityId: seed.cityId, local: seed.local });
   const chart = toPublicChart(
     computeChart({
@@ -101,17 +117,15 @@ function rows(seed: Seed): string {
       longitude: birth.longitude,
     }),
   );
+  return { seed, birth, chart };
+});
+
+function rows({ seed, birth, chart }: Seeded): string {
   const three = bigThree(chart);
   const { local } = seed;
   const date = `${local.year}-${pad(local.month)}-${pad(local.day)}`;
   const email = `${seed.name.toLowerCase()}@seed.local`;
-  return `
-insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
-values (${q(seed.id)}, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', ${q(email)}, extensions.crypt('seed-password', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '')
-on conflict (id) do nothing;
-insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
-values (${q(seed.id)}, ${q(seed.id)}, ${q(email)}, 'email', ${q(JSON.stringify({ sub: seed.id, email }))}, now(), now(), now())
-on conflict (provider_id, provider) do nothing;
+  return `${account(seed.id, email)}
 insert into public.profiles (id, display_name, birth_date, birth_local, birth_city_id, birth_utc, chart, big_three, gender, interested_in, location, radius_km, consent_version)
 values (${q(seed.id)}, ${q(seed.name)}, ${q(date)}, ${q(`${date}T${pad(local.hour)}:${pad(local.minute)}:00`)}, ${seed.cityId}, ${q(birth.utc.toISOString())}, ${q(JSON.stringify(chart))}, ${q(JSON.stringify(three))}, ${q(seed.gender)}, ${q(seed.interestedIn)}, ${q(`SRID=4326;POINT(${seed.home[0]} ${seed.home[1]})`)}, 50, ${q(CONSENT_VERSION)})
 on conflict (id) do nothing;`;
@@ -141,6 +155,111 @@ revoke all on function public.profile_location_text(uuid) from public, anon, aut
 -- screen: five around Istanbul, one in Ankara (outside a 50 km radius).
 `;
 
+/**
+ * The rows `docs/ROADMAP.md`'s Metrics clause is read against: each view
+ * has something to count, and what it should say is written down here
+ * and in the seed's own comment, so the manual check has an answer to
+ * compare with.
+ *
+ *   metrics_onboarding     accounts 7, profiles 6, completion_percent 85.7
+ *   metrics_matches        matches 3, matches_with_a_message 2
+ *   metrics_conversations  two_sided 2, two_sided_three_each 1, silent 1
+ *
+ * Matches are made the way the app makes them — a like each way with the
+ * key `@juno/astro` gives the pair — so a seed user signing in locally
+ * sees an ordinary match, not a row the deck still offers.
+ */
+const UNFINISHED = {
+  id: '00000000-0000-4000-8000-000000000007',
+  email: 'yarim@seed.local',
+};
+
+interface SeedMatch {
+  readonly between: readonly [string, string];
+  /** In order; each entry is [sender name, body]. */
+  readonly messages: readonly (readonly [string, string])[];
+}
+
+const MATCHES: readonly SeedMatch[] = [
+  {
+    between: ['Deniz', 'Selin'],
+    messages: [
+      ['Deniz', 'Merhaba! Başlangıç sorusuna ne dersin?'],
+      ['Selin', 'Bence iyi bir başlangıç :)'],
+      ['Deniz', 'Hafta sonu kahve?'],
+      ['Selin', 'Olur, cumartesi uyar mı?'],
+      ['Deniz', 'Uyar, Moda olsun.'],
+      ['Selin', 'Tamam, görüşürüz!'],
+    ],
+  },
+  {
+    between: ['Emre', 'Zeynep'],
+    messages: [
+      ['Emre', 'Selam, başlangıç sorusu güzelmiş.'],
+      ['Zeynep', 'Selam! Evet, çok isabetli.'],
+    ],
+  },
+  { between: ['Kaan', 'Zeynep'], messages: [] },
+];
+
+function byName(name: string): Seeded {
+  const found = SEEDED.find(({ seed }) => seed.name === name);
+  if (!found) throw new Error(`no seed user named ${name}`);
+  return found;
+}
+
+function account(id: string, email: string): string {
+  return `
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
+values (${q(id)}, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', ${q(email)}, extensions.crypt('seed-password', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '')
+on conflict (id) do nothing;
+insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+values (${q(id)}, ${q(id)}, ${q(email)}, 'email', ${q(JSON.stringify({ sub: id, email }))}, now(), now(), now())
+on conflict (provider_id, provider) do nothing;`;
+}
+
+function matchRows(match: SeedMatch): string {
+  const [x, y] = match.between.map(byName) as [Seeded, Seeded];
+  const [lo, hi] = isLesserId(x.seed.id, y.seed.id) ? [x, y] : [y, x];
+  const key = starterKey(lo.chart, hi.chart);
+  if (!key)
+    throw new Error(`${x.seed.name} and ${y.seed.name} share no aspect`);
+  const like = (from: Seed, to: Seed) => `
+insert into public.likes (from_id, to_id, kind, starter_key)
+values (${q(from.id)}, ${q(to.id)}, 'like', ${q(key)})
+on conflict (from_id, to_id) do nothing;`;
+  const likes = like(x.seed, y.seed) + like(y.seed, x.seed);
+  // In order: `messages_server_times` stamps `created_at` with
+  // clock_timestamp() row by row, so the thread reads as written even
+  // though `db reset` sends the whole seed as one transaction. Each line
+  // is written only when the thread holds exactly the lines before it,
+  // so applying the seed twice writes nothing twice, and a line repeated
+  // word for word (two "Tamam"s) is still written both times.
+  const messages = match.messages
+    .map(
+      ([sender, body], position) => `
+insert into public.messages (match_id, sender_id, body)
+select m.id, ${q(byName(sender).seed.id)}, ${q(body)}
+  from public.matches m where m.a = ${q(lo.seed.id)} and m.b = ${q(hi.seed.id)}
+   and (select count(*) from public.messages x where x.match_id = m.id) = ${position};`,
+    )
+    .join('');
+  return `
+-- ${x.seed.name} and ${y.seed.name}: ${match.messages.length} messages.${likes}${messages}`;
+}
+
+const metrics = `
+-- Metrics fixture: an account that never finished onboarding, and three
+-- matches made by mutual likes. Read against the views this gives:
+--   metrics_onboarding     accounts 7, profiles 6, completion_percent 85.7
+--   metrics_matches        matches 3, matches_with_a_message 2
+--   metrics_conversations  two_sided 2, two_sided_three_each 1, silent 1
+${account(UNFINISHED.id, UNFINISHED.email)}
+${MATCHES.map(matchRows).join('\n')}
+`;
+
 const out = resolve(import.meta.dirname, '../seed.sql');
-writeFileSync(out, header + SEEDS.map(rows).join('\n') + '\n');
-console.log(`wrote ${SEEDS.length} seed users to ${out}`);
+writeFileSync(out, header + SEEDED.map(rows).join('\n') + '\n' + metrics);
+console.log(
+  `wrote ${SEEDS.length} seed users and ${MATCHES.length} matches to ${out}`,
+);

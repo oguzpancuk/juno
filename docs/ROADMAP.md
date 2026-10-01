@@ -402,7 +402,21 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       so the grant is the boundary, and a test proves a member and anon
       are both refused. Read on the seed data through psql rather than
       Studio. Sentry is parked: it needs an account, and the owner takes
-      third-party sign-ups at the step that needs them._
+      third-party sign-ups at the step that needs them.
+      2026-10-01 (`20261001120001`): the views count members only — the
+      launch demos (2026-09-17) are full accounts whose likes match at
+      once, so they had been raising onboarding completion and matches;
+      they now show in `demo_accounts` and `demo_matches` instead. The
+      seed carries what the views are read against; on it they return
+      accounts 7, profiles 6, completion 85.7 %, matches 3 (2 with a
+      message), conversations two-sided 2, three each 1, silent 1.
+      Same day, on the owner's pick of Sentry's EU region (ADR-0016):
+      `@sentry/react-native`, off unless the build carries
+      `EXPO_PUBLIC_SENTRY_DSN`; the forced crash is `/crash-test` in a
+      build with `EXPO_PUBLIC_CRASH_TEST=1`. A stand-in Sentry received
+      the event from the web export; the owner's account, DSN and the
+      check in Sentry itself are what remain. The notice names Sentry
+      from the 2026-10-01 version._
 - [x] **Web client (ADR-0005).** Expo Router web output of the same
       screens, so people can use the product without the App Store, as
       `pati` does.

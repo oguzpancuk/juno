@@ -4,6 +4,7 @@ import {
   ISTANBUL,
   ISTANBUL_NEARBY,
   STARTER,
+  insertDemoProfile,
   insertProfileRow,
   profileRow,
   uploadPhotos,
@@ -63,21 +64,13 @@ describe('demo profiles', () => {
         lonLat: ISTANBUL,
       }),
     );
-    // The demo's own row is written the way the seeding script writes it:
-    // as the service role, with the flag set.
-    await uploadPhotos(demo.client, [`${demo.id}/1.png`]);
-    const demoRow = {
-      ...profileRow({
-        id: demo.id,
-        display_name: 'Demo',
-        gender: 'man',
-        interested_in: 'everyone',
-        lonLat: ISTANBUL_NEARBY,
-      }),
-      is_demo: true,
-    };
-    const { error } = await admin.from('profiles').insert(demoRow);
-    if (error) throw new Error(`insert demo profile: ${error.message}`);
+    await insertDemoProfile(admin, demo, {
+      id: demo.id,
+      display_name: 'Demo',
+      gender: 'man',
+      interested_in: 'everyone',
+      lonLat: ISTANBUL_NEARBY,
+    });
 
     await insertProfileRow(
       plain.client,

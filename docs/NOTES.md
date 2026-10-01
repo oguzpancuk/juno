@@ -8953,6 +8953,59 @@ folder; each applied on today's main.
   after "los dos" or "ambos" fails the content test for a correct
   sentence; the fix is to add the noun, not to reword the text.
 
+## 2026-10-01 — Metrics: the views counted the demos
+
+ROADMAP "Metrics", the next unstarted item. The views were built on
+2026-09-09; what was left was the clause's manual check and Sentry.
+
+- **The views were wrong, not missing.** `20260909000011_metrics`
+  predates the launch demos (`20260917000001`). A demo is an
+  `auth.users` row plus a finished profile, and a like on one matches in
+  the same round trip, so in production every demo raised both sides of
+  onboarding completion, the PRD's "≥ 10 matches" would have been met by
+  ten swipes on demos, and a member's opening line to a demo counted as
+  a match that carried a message. `20261001120001_metrics_members_only`
+  replaces the three member views: demo accounts and matches with a demo
+  are left out and reported in their own columns (`demo_accounts`,
+  `demo_matches`), appended so `create or replace` keeps every existing
+  column. A profile now counts only while its account is not
+  soft-deleted, so the numerator stays inside the denominator.
+- **Test.** `rls.test.ts` › metrics › "leave the launch demos out" ›
+  "count the member, not the demo, its match or the message to it":
+  reads the views, creates a member and a demo, likes, writes, reads
+  again, and expects the member's account and profile and nothing else.
+  Seen red without Docker: every migration applied to a PostgreSQL 16
+  cluster with stand-ins for `auth`, `storage` and the Supabase roles
+  (postgis from apt), then the test's rows in SQL. Before the migration
+  the deltas were accounts 2, profiles 2, matches 1, with a message 1;
+  after it 1, 1, 0, 0. The Vitest itself runs only in CI's `verify`.
+- **The seed now has something to count**, generated like the rest
+  (`gen-seed.ts`; the six users' rows are byte-identical): an account
+  that never onboarded (`yarim@seed.local`) and three matches made by
+  mutual likes with the pair's real starter key — Deniz–Selin six
+  messages, Emre–Zeynep two, Kaan–Zeynep none. On it the views return
+  accounts 7, profiles 6, completion 85.7, matches 3 with 2 carrying a
+  message, two-sided 2, three each 1, silent 1, reports 0 — read on the
+  same cluster after `seed.sql`. The existing "count what the PRD asks
+  about" expected `two_sided_three_each` 0 and now expects the seed's 1.
+- **Not built, on purpose.** Starter usage and the "first two weeks"
+  cohort window are PRD signals the clause does not name: the first
+  needs either a "used starter" tap or a person reading first messages,
+  which would be the first place message bodies leave a thread; the
+  second is a filter on `created_at` the owner can add when the cohort
+  has a start date. Accounts deleted through `abandon_empty_account` or
+  account deletion vanish from both sides of completion, which reads
+  high for people who signed up and left at once.
+- **Crash reporting** waits on the owner's choice of service (asked in
+  the thread); nothing was added for it.
+
+### Battery gaps
+
+- 2026-10-01 · Metrics · the battery passed views that counted the
+  launch demos as members for two weeks: the demo migration added a
+  kind of account and no test asked what the views made of it ·
+  "count the member, not the demo, its match or the message to it".
+
 ## 2026-10-01 — Payments, PR 1: the entitlement on the server
 
 ROADMAP: "Payments: premium bought in the App Store" is a new v1 item after
@@ -9014,3 +9067,204 @@ start --debug` parses the config before it needs Docker, so a thread
 - `docs/project-instructions.md` "About" still lists payments and English
   UI under Deferred; /mvp-scope should be re-run and the field pasted
   again.
+
+## 2026-10-01 — Metrics: crash reporting, Sentry EU
+
+The second half of the Metrics clause, after the owner picked Sentry's
+EU region on the thread's decision card (ADR-0016). Also review round 1
+on #21.
+
+- **Built.** `@sentry/react-native` ~7.11.0 (Expo 57's pinned version;
+  installed with npm 11 so the lockfile keeps its `libc` fields — npm 10
+  rewrote 36 unrelated entries). `lib/crash-reporting.ts` starts it before
+  the first render, only with `EXPO_PUBLIC_SENTRY_DSN`; `lib/crash-rules.ts`
+  holds the DSN to the EU ingest host, drops the user, replaces ids and
+  e-mail addresses everywhere they can appear, and keeps only navigation
+  breadcrumbs. `/crash-test` throws in render when the build sets
+  `EXPO_PUBLIC_CRASH_TEST=1` and redirects home otherwise.
+- **Seen working without an account.** The web export, built with a DSN
+  pointing at a stand-in ingest on this machine and the crash flag on,
+  sent one event for `/crash-test`: the error, `"infer_ip":"never"`, no
+  user, one navigation breadcrumb. Built again with the flag off (and
+  `--clear`), `/crash-test` landed on `/welcome` and nothing was sent.
+  The native crash path is the owner's to see, on a device.
+- **The notice.** Sentry under "İşlenen veriler" (a "Çökme raporları"
+  block), the purposes, "Kimlerle paylaşılır" and "Saklama süresi", in
+  all three languages line for line. The 30 Eylül text is live, so the
+  version is 2026-10-01 and everyone is asked again. `legal.test.ts` now
+  fails when a processor's client is in `package.json` and its name is
+  not in the Turkish text (seen red before the text was written, with
+  the translation checks for "Sentry").
+- **Review round 1.** The blocking finding was right: the test's single
+  message to the demo left `silent` unmoved under the old view too.
+  The test now reads the views between the like and the message; on
+  `main`'s views that read is `silent` +1 (SQL mirror on the PostgreSQL
+  cluster), so it goes red without the conversations filter. The demo
+  predicate is now one private view both metrics views read, onboarding
+  aggregates once, the seed's messages are guarded like its other rows
+  (applied twice: still 8 messages), the seed computes each chart once,
+  the demo-profile insert is one fixture (`insertDemoProfile`) used by
+  three files, and `NOWHERE_THIRD` sits with the other two waters.
+
+### For the owner
+
+1. sentry.io → sign up with **Data Storage Location: EU (Frankfurt)**
+   (it cannot be changed later) → new project, platform React Native,
+   name `juno`.
+2. Project Settings → Security & Privacy: turn on **Prevent Storing of
+   IP Addresses** (the notice says the IP is not stored); leave the data
+   scrubbers on.
+3. Project Settings → Client Keys (DSN): copy the DSN; it must end in
+   `.ingest.de.sentry.io/<number>`. Put it in `apps/mobile/.env` as
+   `EXPO_PUBLIC_SENTRY_DSN` (and in the EAS build's env when there is
+   one). It is not a secret; the auth token is, and is not needed yet.
+4. The check: a local web build with the DSN and
+   `EXPO_PUBLIC_CRASH_TEST=1`, open `/crash-test`, and the error shows
+   under Issues within a minute, in the **crash-test** environment
+   (pick it in the environment filter; production does not show it).
+   Then take the flag out of the `.env*` file: `npm run deploy` refuses
+   to run while it is set.
+5. The 1 Ekim notice goes live only with a web deploy, and providers
+   aside, it should be live before a build with a DSN reaches anyone.
+
+### Side findings, not fixed here
+
+- Metro reused `EXPO_PUBLIC_CRASH_TEST` from the previous export when
+  the next one ran without `--clear`: the "flag off" build still
+  crashed. `npm run deploy` passes `--clear`; anyone exporting by hand
+  for a check should too.
+- On the web the SDK sent no session envelope within the page's first
+  seconds, so crash-free sessions are a native figure here; the PRD
+  asks for them on TestFlight, which is native.
+- Source maps are not uploaded (no config plugin, no auth token, no EAS
+  project), so production frames are minified. A TestFlight-item step.
+
+### Battery gaps
+
+- 2026-10-01 · Metrics · the new test did not cover the third view it
+  was written for; the review caught it, not the battery · the read
+  between the like and the message in "count the member, not the demo,
+  its match or the message to it".
+
+## 2026-10-01 — Metrics: what the iOS SDK sends on its own
+
+evaluator-qa on #21 (NEEDS_WORK) read the native side: the options
+object reaches the iOS SDK minus `beforeSend` and `beforeBreadcrumb`, and
+a native crash report is written and sent by that SDK alone. The entry
+"Metrics: crash reporting, Sentry EU" said only navigation breadcrumbs
+were kept and ids were removed on the device; on the native path that
+was not enforced. Its automatic breadcrumbs include network requests
+(Supabase URLs carry account and match ids), and it puts a random
+installation id on each report as `user.id`.
+
+- Now `maxBreadcrumbs: 0`, which both SDKs read: no breadcrumbs at all.
+  The options are one pure function (`crashReportingOptions`) with a test
+  (seen red: the function did not exist, and the inline options it
+  replaces had no `maxBreadcrumbs`).
+- The notice names the installation id ("rastgele üretilmiş bir numara",
+  not linked to the account, new on reinstall), the language and time
+  zone setting that native reports carry, and scopes the id-removal
+  sentence to errors in the app's own code. ADR-0016 says the same.
+- Still the owner's, from a local session on the simulator: a native
+  crash against a stand-in or the real DSN, then look at `user`,
+  `breadcrumbs` and `user.geo` on the event, after the setup steps in
+  "Metrics: crash reporting, Sentry EU". Also a native-only crash
+  (not `/crash-test`, which is a JS one).
+
+## 2026-10-01 — Metrics: the second number on iOS reports
+
+evaluator-qa's second pass on #21 read sentry-cocoa 8.58.0 (fetched by
+tag; it is not on disk): `maxBreadcrumbs: 0` does reach the native
+options and stops every breadcrumb, but the native SDK also puts
+`contexts.app.device_app_hash` on its scope — a hash of
+`identifierForVendor`, `hw.machine`, `hw.model` and the bundle id — and
+the RN SDK copies that scope into JS events. The 2026-10-01 notice named
+one random number only.
+
+- `scrubEvent` now drops the hash from JS events (test seen red first).
+  Native crash reports keep it; no option in 8.58.0 turns it off.
+- The notice's crash bullet, in all three languages, now splits what
+  every report carries from what the web adds (the page) and what iOS
+  adds (language and time zone, the installation number, and the hash,
+  described as a one-way digest of Apple's per-developer device id, the
+  model and the app). The web carries no locale context, so that moved
+  under iOS.
+
+## 2026-10-01 — Metrics: the notice stops claiming "nothing else"
+
+evaluator-qa's third pass on #21: every iOS report also carries device
+state (free memory, battery level and charging, screen size and
+orientation, processor and thermal state, whether the device is
+jailbroken) and, on native reports, every thread's stack trace and the
+loaded images. None identifies a person, but the Sentry bullet under
+"Kimlerle paylaşılır" said nothing beyond the listed record was sent.
+The crash bullet now lists the device state and the thread stack traces
+(three languages), and the Sentry bullet says instead that nothing from
+the profile, chart, photos or messages is sent. Text only; no code
+change.
+
+## 2026-10-01 — Metrics: review round 2
+
+The review of 15a784e found one blocking problem and nine smaller ones,
+all fixed in this round:
+
+- **Blocking: a web sign-in's tokens could reach Sentry.** The web
+  client uses supabase-js's implicit flow, so Google and Apple come back
+  to `/#access_token=…&refresh_token=…`. supabase-js clears that
+  fragment only after a round trip, and the browser SDK copies
+  `location.href` into `request.url`. `scrubEvent` now cuts the page URL
+  and the `Referer` down to origin and path (`scrubUrl`), and `scrub`
+  replaces JWTs and `…token=`/`code=` values in error text, before the
+  UUID and e-mail patterns, since a JWT's payload hides both in base64.
+- A DSN of the wrong shape blanked the app at launch (`env` threw on
+  import, before Sentry started). It now means "no reporting"
+  (`reportingDsnSchema`), and `npm run deploy` refuses it instead
+  (`checkCrashReporting`), together with `EXPO_PUBLIC_CRASH_TEST=1` and
+  the local stand-in DSN.
+- A crash-test build reports to the `crash-test` environment, so the
+  forced crashes stay out of production's crash-free sessions.
+- `keepBreadcrumb` and the breadcrumb branch of `scrubEvent` were dead
+  under `maxBreadcrumbs: 0` and suggested a filter that the native path
+  does not have. They are gone; the option is the guarantee.
+- `legal.test.ts` lists every runtime dependency with the name the
+  notice must carry, or null. A new dependency (payments PR 2's
+  `react-native-purchases`, for one) fails it until that is decided.
+  The package file is parsed with Zod rather than cast.
+- The seed's message guard was keyed on (match, sender, body), so a line
+  repeated word for word would have been written once. Each line is now
+  written only when the thread holds exactly the lines before it. Seeded
+  twice on the stand-in cluster: 8 messages, the same view numbers.
+- Smaller: `gen-seed.ts` computes each seed's chart into one array
+  instead of a map with an unreachable error; `insertDemoProfile` reuses
+  `insertProfileRow`.
+
+### Upstream candidates
+
+- The deploy gate covers `npm run deploy` only. When the EAS project
+  exists, the same `checkCrashReporting` should run before
+  `eas build`/`eas update`, or a crash-test flag left in a `.env*` file
+  ships to TestFlight.
+
+## 2026-10-01 — Metrics: review round 3
+
+The review of d4bd503 found the token leak's second path, and six
+smaller points, all fixed:
+
+- **Stack frames.** On the web, an error with no script URL gets a first
+  frame whose `filename` is `location.href`; the RN SDK rewrites it to
+  `app:///…` with the sign-in fragment intact, and `scrubEvent` passed
+  frames through. Seen on a web build of d4bd503 against the stand-in
+  ingest (fragment put back with `history.replaceState`, then an
+  `ErrorEvent` dispatched on `window`): the frame carried
+  `app:///welcome#access_token=…&refresh_token=…`. The same run on this
+  round's build sent `app:///welcome` and no token. Frames now go
+  through `scrubUrl` (cut at `?`/`#` as text, since `app:` has no
+  origin), and then every string in the event is scrubbed.
+- An opaque refresh token in JSON (`"refresh_token":"…"`) or behind
+  `Bearer` is now replaced; `code=` is no longer, so Postgres and HTTP
+  error codes survive.
+- A set but ignored DSN logs a console warning (without the value).
+- The deploy refusal names a rejected DSN's host, never the value, which
+  may be the auth token. One `refuse(reason, hint)` path.
+- Sentry ignores `window.onerror` events whose message is "Script
+  error." by default, which is why the check above used another message.

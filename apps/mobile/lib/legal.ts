@@ -79,6 +79,26 @@
  * here is still the one text: a translation is of the version dated
  * below, it moves when this text moves, and translating it never moves
  * the version, because what a member consents to has not changed.
+ *
+ * Crash reporting (2026-10-01, ROADMAP Metrics, the owner's pick of
+ * Sentry's EU region): the second claim at the top stopped being
+ * "nothing of the kind" that day, in the change that added
+ * `@sentry/react-native`. Sentry is named under "İşlenen veriler" (what a
+ * report holds), the purposes (stability, legitimate interest), "Kimlerle
+ * paylaşılır" and "Saklama süresi" (90 days at most, the longest any of
+ * Sentry's plans keeps an event). What the notice says a report leaves
+ * out is enforced on the device (`lib/crash-rules.ts`), the region by the
+ * DSN's shape, and the IP address by the project's "Prevent Storing of IP
+ * Addresses" setting, which the setup steps require before a DSN is set.
+ * The iOS SDK's own crash reports skip the JS-side scrubbing, which is
+ * why the text scopes that sentence to the app's own code, keeps no
+ * breadcrumbs on either SDK, and names the two numbers the native SDK
+ * puts on every report: a random installation id and `device_app_hash`,
+ * a one-way hash of Apple's vendor id with the model and the bundle
+ * (the JS path drops the hash; the native path cannot).
+ * `legal.test.ts` now checks the notice against the dependency list. The
+ * 30 Eylül text was live (the owner's deploy of #15), so this one is 1
+ * Ekim, and every member is asked to accept it.
  */
 import type { Language } from '@juno/astro';
 import { legalSectionsEn } from './legal-en';
@@ -91,7 +111,7 @@ export interface LegalSection {
 }
 
 /** Shown to the reader. */
-export const LEGAL_UPDATED = '30 Eylül 2026';
+export const LEGAL_UPDATED = '1 Ekim 2026';
 
 /**
  * Machine-readable: it is stored on the profile as the version of the
@@ -107,7 +127,7 @@ export const LEGAL_UPDATED = '30 Eylül 2026';
  * `/consent` until they accept this text (`lib/consent.ts`), and the DB
  * trigger refuses moving a stored version backwards.
  */
-export const LEGAL_VERSION = '2026-09-30';
+export const LEGAL_VERSION = '2026-10-01';
 
 export const legalSections: readonly LegalSection[] = [
   {
@@ -145,6 +165,8 @@ export const legalSections: readonly LegalSection[] = [
       '• Eşleşmelerinle yazıştığın mesajlar ve okunma bilgileri.',
       '• Engellediğin kişiler.',
       '• Gönderdiğin şikâyetler: kimi, hangi sebeple şikâyet ettiğin ve yazdıysan açıklaman.',
+      'Çökme raporları',
+      "• Uygulama çöktüğünde ya da beklenmedik bir hatayla karşılaştığında: hatanın teknik kaydı (hata mesajı, kodun hangi satırında olduğu ve uygulamanın o anki iş parçacıklarının yığın izleri), cihazının modeli, işletim sistemi ve tarayıcısı, uygulama sürümü ve kullanım oturumunun bir çökmeyle bitip bitmediği. Web sürümünde buna hatanın hangi sayfada olduğu eklenir. iOS uygulamasında dil ve saat dilimi ayarın, cihazın o anki durumu (boş bellek, pil seviyesi ve şarj olup olmadığı, ekran boyutu ve yönü, işlemci ve ısı durumu, cihazın jailbreak'li olup olmadığı) ve iki numara eklenir: uygulamanın o cihazdaki kurulumu için rastgele üretilmiş bir numara ve Apple'ın bu cihaza, bu uygulamanın geliştiricisi için verdiği kimlikten, cihaz modelinden ve uygulamadan tek yönlü olarak türetilmiş bir özet. İkisi de hesabına bağlı değildir ve seni adınla tanıtmaz. Bu kayda adın, e-postan, hesap numaran, konumun ve mesajların eklenmez; uygulamanın kendi kodundaki hatalarda, hata metninde geçen hesap, eşleşme ve mesaj numaraları ile e-posta adresleri kayıt cihazdan çıkmadan silinir; IP adresin saklanmaz.",
       'Uygulama; rehberine, arama geçmişine veya fotoğraf kütüphanenin tamamına erişmez. Fotoğraf seçicisinden yalnızca senin seçtiğin görsel yüklenir. Reklam kimliği toplanmaz, üçüncü taraf reklam veya izleme aracı kullanılmaz.',
     ],
   },
@@ -156,6 +178,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Üyelik. Premium üyelik bilgin, üyeliğin sağladıklarını sunmak (sınırsız beğeni, süper beğeni, seni beğenenleri görme, uyuma göre sıralama), ücretsiz üyelerin günlük beğeni sınırını ve premium üyelerin haftalık süper beğeni sınırını uygulamak için işlenir; bu sınırlar için son beğenilerinin (süper beğeniler dahil) sayısı ve zamanı kullanılır. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Eşleşme ve mesajlaşma. Sözleşmenin kurulması ve ifası için gereklidir (KVKK m. 5/2-c).',
       '• Güvenlik. Engelleme ve şikâyet kayıtları, hizmetin kötüye kullanımını önlemek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
+      '• Uygulamanın kararlılığı. Çökme raporları, hataları bulup düzeltmek ve uygulamanın ne sıklıkla çöktüğünü ölçmek için işlenir; veri sorumlusunun meşru menfaati (KVKK m. 5/2-f).',
     ],
   },
   {
@@ -168,6 +191,7 @@ export const legalSections: readonly LegalSection[] = [
       '• E-posta sağlayıcısı. Doğrulama kodun, veri işleyen sıfatıyla Resend üzerinden gönderilir; bu sağlayıcıya yalnızca e-posta adresin ve mailin içeriği ulaşır, gönderim Avrupa Birliği bölgesinden yapılır.',
       '• Web sürümünün dağıtıcısı. juno-dating.com adresini tarayıcıdan açtığında sayfa, veri işleyen sıfatıyla Cloudflare üzerinden sunulur; Cloudflare bağlantının IP adresini ve istenen sayfayı görür ve kayıt tutar. Veritabanına, fotoğraflara ve mesajlara erişimi yoktur. iOS uygulamasını kullanıyorsan bu yol hiç devreye girmez.',
       "• Alan adı ve mail yönlendirme sağlayıcısı. Bu metinde yazan iletişim adresine yazdığında mailin, veri işleyen sıfatıyla Namecheap'in yönlendirme servisi üzerinden bize ulaşır ve okunduğu posta kutusunda saklanır. juno-dating.com alan adının DNS kayıtlarını da Cloudflare tutar.",
+      "• Çökme raporlama sağlayıcısı. Çökme raporları, hem iOS uygulamasından hem web sürümünden, veri işleyen sıfatıyla Sentry (Functional Software, Inc.) altyapısına gönderilir ve Avrupa Birliği bölgesinde (Almanya) saklanır. Sentry'ye profilinden, haritandan, fotoğraflarından ya da mesajlarından hiçbir şey gönderilmez; veritabanına, fotoğraflara ve mesajlara erişimi yoktur.",
       '• Bunların dışında hiçbir üçüncü tarafa aktarılmaz, satılmaz veya pazarlama amacıyla paylaşılmaz. Yasal bir talep hâlinde mevzuatın gerektirdiği ölçüde paylaşım yapılabilir.',
     ],
   },
@@ -180,6 +204,7 @@ export const legalSections: readonly LegalSection[] = [
       // must not change this text under an unchanged version. lib/legal.test.ts
       // goes red when the label is renamed, so both move together.
       'Apple ya da Google ile açılıp doğum bilgileri girilmeden bırakılan bir hesap, doğum bilgileri ekranındaki “Farklı bir hesapla gir” ile silinir. Silme o an yapılamazsa (örneğin bağlantı yoksa) ekranda söylenir ve hesap kalır; ekranı kapatıp bırakırsan da kalır. İkisinde de aynı sağlayıcıyla yeniden girip orada silebilirsin.',
+      "Çökme raporları Sentry'de en fazla 90 gün tutulur, sonra kendiliğinden silinir.",
     ],
   },
   {
@@ -227,6 +252,6 @@ export const LEGAL_SECTIONS: Readonly<
  */
 export const LEGAL_UPDATED_IN: Readonly<Record<Language, string>> = {
   tr: LEGAL_UPDATED,
-  en: 'September 30, 2026',
-  es: '30 de septiembre de 2026',
+  en: 'October 1, 2026',
+  es: '1 de octubre de 2026',
 };

@@ -11,6 +11,7 @@ import { color } from '@/theme/tokens';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { isConsentKnownCurrent } from '@/lib/consent';
+import { startCrashReporting } from '@/lib/crash-reporting';
 import { holdMatch } from '@/lib/held-matches';
 import { loadLanguage, useLanguage } from '@/lib/language';
 import { firstSightOf, useMatchListener } from '@/lib/matches';
@@ -23,6 +24,10 @@ import { useSession } from '@/lib/session';
 // `loaded` false with the error in the second slot — so the gate is
 // released on either, and a failure is a system-font app, not a blank one.
 void SplashScreen.preventAutoHideAsync();
+
+// Before the first render, so a crash in it is reported too. A build with
+// no DSN starts nothing (lib/crash-reporting.ts).
+startCrashReporting();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({

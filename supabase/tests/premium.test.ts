@@ -7,9 +7,9 @@ import {
   NOWHERE,
   NOWHERE_ELSE,
   STARTER,
+  insertDemoProfile,
   insertProfileRow,
   profileRow,
-  uploadPhotos,
 } from './fixtures';
 import {
   adminClient,
@@ -545,20 +545,13 @@ describe('liked_me and the demo accounts', () => {
     name: string,
     lonLat: readonly [number, number],
   ) {
-    // Written the way the seeding script writes it: as the service role,
-    // with the flag set.
-    await uploadPhotos(who.client, [`${who.id}/1.png`]);
-    const { error } = await admin.from('profiles').insert({
-      ...profileRow({
-        id: who.id,
-        display_name: name,
-        gender: 'man',
-        interested_in: 'everyone',
-        lonLat,
-      }),
-      is_demo: true,
+    await insertDemoProfile(admin, who, {
+      id: who.id,
+      display_name: name,
+      gender: 'man',
+      interested_in: 'everyone',
+      lonLat,
     });
-    if (error) throw new Error(`insert demo ${name}: ${error.message}`);
   }
 
   beforeAll(async () => {
@@ -686,18 +679,13 @@ describe('discover says who has already chosen you', () => {
         }),
       );
     }
-    await uploadPhotos(dem.client, [`${dem.id}/1.png`]);
-    const { error } = await admin.from('profiles').insert({
-      ...profileRow({
-        id: dem.id,
-        display_name: 'Dem',
-        gender: 'woman',
-        interested_in: 'everyone',
-        lonLat: NOWHERE_ELSE,
-      }),
-      is_demo: true,
+    await insertDemoProfile(admin, dem, {
+      id: dem.id,
+      display_name: 'Dem',
+      gender: 'woman',
+      interested_in: 'everyone',
+      lonLat: NOWHERE_ELSE,
     });
-    if (error) throw new Error(`insert demo Dem: ${error.message}`);
 
     expect((await like(ivy.client, ivy.id, ray.id)).error).toBeNull();
     await setPremium(lea, true);

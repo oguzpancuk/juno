@@ -36,6 +36,8 @@ export const legalSectionsEn: readonly LegalSection[] = [
       '• The messages you exchange with your matches, and read receipts.',
       '• The people you block.',
       '• The reports you submit: whom you reported, for what reason and, if you wrote one, your explanation.',
+      'Crash reports',
+      "• When the app crashes or runs into an unexpected error: the technical record of the error (the error message, the line of code it happened on and the stack traces of the app's threads at that moment), your device model, operating system and browser, the app version, and whether the session ended in a crash. On the web version, the page the error happened on is added. In the iOS app, your language and time zone setting, the device's state at that moment (free memory, battery level and whether it is charging, screen size and orientation, processor and thermal state, whether the device is jailbroken) and two numbers are added: a number generated at random for the app's installation on that device, and a one-way digest derived from the identifier Apple gives this device for this app's developer, the device model and the app. Neither is linked to your account or identifies you by name. Your name, e-mail, account number, location and messages are not added to this record; for errors in the app's own code, account, match and message numbers and e-mail addresses appearing in the error text are removed before the record leaves the device; your IP address is not stored.",
       'The app does not access your contacts, your call history or your entire photo library. From the photo picker, only the image you select is uploaded. No advertising ID is collected, and no third-party advertising or tracking tools are used.',
     ],
   },
@@ -47,6 +49,7 @@ export const legalSectionsEn: readonly LegalSection[] = [
       '• Membership. Your premium membership information is processed to provide what membership offers (unlimited likes, super likes, seeing who liked you, sorting by compatibility) and to enforce the daily like limit for free members and the weekly super like limit for premium members; for these limits, the number and time of your recent likes (including super likes) are used. It is necessary for the establishment and performance of the contract (KVKK Art. 5(2)(c)).',
       '• Matching and messaging. Necessary for the establishment and performance of the contract (KVKK Art. 5(2)(c)).',
       '• Security. Block and report records are processed to prevent abuse of the service; legitimate interest of the data controller (KVKK Art. 5(2)(f)).',
+      '• App stability. Crash reports are processed to find and fix errors and to measure how often the app crashes; legitimate interest of the data controller (KVKK Art. 5(2)(f)).',
     ],
   },
   {
@@ -59,6 +62,7 @@ export const legalSectionsEn: readonly LegalSection[] = [
       '• E-mail provider. Your verification code is sent through Resend, acting as data processor; only your e-mail address and the content of the e-mail reach this provider, and sending takes place from a European Union region.',
       '• Distributor of the web version. When you open juno-dating.com in a browser, the page is served through Cloudflare, acting as data processor; Cloudflare sees the IP address of your connection and the requested page, and keeps logs. It has no access to the database, photos or messages. If you use the iOS app, this path is not involved at all.',
       "• Domain name and mail forwarding provider. When you write to the contact address given in this text, your e-mail reaches us through Namecheap's forwarding service, acting as data processor, and is stored in the mailbox where it is read. The DNS records of the juno-dating.com domain are also kept by Cloudflare.",
+      '• Crash reporting provider. Crash reports, from both the iOS app and the web version, are sent to the infrastructure of Sentry (Functional Software, Inc.), acting as data processor, and stored in a European Union region (Germany). Nothing from your profile, your chart, your photos or your messages is sent to Sentry; it has no access to the database, photos or messages.',
       '• Beyond these, data is not transferred to any third party, sold or shared for marketing purposes. In the event of a legal request, it may be shared to the extent required by legislation.',
     ],
   },
@@ -70,6 +74,7 @@ export const legalSectionsEn: readonly LegalSection[] = [
       // The label is typed out, not imported from the English UI strings:
       // UI copy must not change this text under an unchanged version.
       'An account opened with Apple or Google and left without birth details being entered is deleted with “Use a different account” on the birth details screen. If the deletion cannot be done at that moment (for example, if there is no connection), this is said on screen and the account remains; it also remains if you close the screen and leave. In either case, you can sign in again with the same provider and delete it there.',
+      'Crash reports are kept at Sentry for at most 90 days, then deleted automatically.',
     ],
   },
   {

@@ -732,6 +732,7 @@ export type Database = {
       }
       metrics_matches: {
         Row: {
+          demo_matches: number | null
           first_match: string | null
           last_match: string | null
           matches: number | null
@@ -743,6 +744,7 @@ export type Database = {
         Row: {
           accounts: number | null
           completion_percent: number | null
+          demo_accounts: number | null
           profiles: number | null
         }
         Relationships: []

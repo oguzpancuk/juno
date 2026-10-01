@@ -7,7 +7,9 @@ import {
   ISTANBUL,
   ISTANBUL_NEARBY,
   NOWHERE,
+  NOWHERE_THIRD,
   STARTER,
+  insertDemoProfile,
   insertProfileRow,
   profileRow,
   uploadPhotos,
@@ -2321,8 +2323,131 @@ describe('metrics', () => {
         }),
       )
       .parse((await admin.from('metrics_conversations').select('*')).data);
-    // The suite creates matches with a message or two, never three each.
-    expect(conversations[0]?.two_sided_three_each).toBe(0);
+    // The seed's Deniz and Selin wrote three each; the suite itself never
+    // does. At least, not exactly: a local stack can carry more of its own.
+    expect(conversations[0]?.two_sided_three_each).toBeGreaterThanOrEqual(1);
+  });
+
+  describe('leave the launch demos out', () => {
+    // A demo is a whole account with a finished profile, and a like on
+    // one matches at once. Counted, it would raise both sides of
+    // onboarding completion and meet "≥ 10 matches" on ten swipes.
+    const Onboarding = z.tuple([
+      z.object({
+        accounts: z.number(),
+        profiles: z.number(),
+        demo_accounts: z.number(),
+      }),
+    ]);
+    const Matches = z.tuple([
+      z.object({
+        matches: z.number(),
+        matches_with_a_message: z.number(),
+        demo_matches: z.number(),
+      }),
+    ]);
+    const Conversations = z.tuple([
+      z.object({ two_sided: z.number(), silent: z.number() }),
+    ]);
+
+    async function read() {
+      const [onboarding, matches, conversations] = await Promise.all([
+        admin.from('metrics_onboarding').select('*'),
+        admin.from('metrics_matches').select('*'),
+        admin.from('metrics_conversations').select('*'),
+      ]);
+      return {
+        ...Onboarding.parse(onboarding.data)[0],
+        ...Matches.parse(matches.data)[0],
+        ...Conversations.parse(conversations.data)[0],
+      };
+    }
+
+    // Created inside the test, after the first read, so both accounts
+    // fall inside the delta. Removed here rather than at the end of the
+    // file: a demo left standing matches anyone who likes it.
+    const mine: TestUser[] = [];
+    afterAll(async () => {
+      await deleteUsers(admin, mine);
+      for (const u of mine) users.splice(users.indexOf(u), 1);
+    });
+
+    it('count the member, not the demo, its match or the message to it', async () => {
+      const before = await read();
+
+      const member = await user('metrics-member');
+      mine.push(member);
+      const demo = await user('metrics-demo');
+      mine.push(demo);
+      await insertProfile(
+        member,
+        profileRow({
+          id: member.id,
+          display_name: 'Metrics Member',
+          gender: 'woman',
+          interested_in: 'everyone',
+          lonLat: NOWHERE_THIRD,
+        }),
+      );
+      await insertDemoProfile(admin, demo, {
+        id: demo.id,
+        display_name: 'Metrics Demo',
+        gender: 'man',
+        interested_in: 'everyone',
+        lonLat: NOWHERE_THIRD,
+      });
+
+      const liked = await member.client.from('likes').insert({
+        from_id: member.id,
+        to_id: demo.id,
+        kind: 'like',
+        starter_key: STARTER,
+      });
+      expect(liked.error).toBeNull();
+      // Read between the match and the message: a match with nobody
+      // writing is what `silent` counts, and a demo's would be one.
+      const matched = await read();
+      expect({
+        matches: matched.matches - before.matches,
+        demo_matches: matched.demo_matches - before.demo_matches,
+        silent: matched.silent - before.silent,
+      }).toEqual({ matches: 0, demo_matches: 1, silent: 0 });
+
+      const [a, b] = pair(member.id, demo.id);
+      const [match] = z
+        .tuple([z.object({ id: z.string().uuid() })])
+        .parse(
+          (await admin.from('matches').select('id').eq('a', a).eq('b', b)).data,
+        );
+      const sent = await member.client.from('messages').insert({
+        match_id: match.id,
+        sender_id: member.id,
+        body: 'Merhaba',
+      });
+      expect(sent.error).toBeNull();
+
+      const after = await read();
+      expect({
+        accounts: after.accounts - before.accounts,
+        profiles: after.profiles - before.profiles,
+        demo_accounts: after.demo_accounts - before.demo_accounts,
+        matches: after.matches - before.matches,
+        matches_with_a_message:
+          after.matches_with_a_message - before.matches_with_a_message,
+        demo_matches: after.demo_matches - before.demo_matches,
+        two_sided: after.two_sided - before.two_sided,
+        silent: after.silent - before.silent,
+      }).toEqual({
+        accounts: 1,
+        profiles: 1,
+        demo_accounts: 1,
+        matches: 0,
+        matches_with_a_message: 0,
+        demo_matches: 1,
+        two_sided: 0,
+        silent: 0,
+      });
+    });
   });
 });
 

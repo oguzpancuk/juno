@@ -31,6 +31,8 @@ export const NOWHERE: readonly [number, number] = [-30.0, -20.0];
  * radius make every count in both blocks depend on which ran first.
  */
 export const NOWHERE_ELSE: readonly [number, number] = [-35.0, -25.0];
+/** A third, for the metrics describe's demo (rls.test.ts, "metrics"). */
+export const NOWHERE_THIRD: readonly [number, number] = [-40.0, -10.0];
 /** A valid starter key (a<b orientation); its content is irrelevant to RLS. */
 export const STARTER = 'moon-trine-venus';
 
@@ -123,13 +125,32 @@ export async function uploadPhotos(
   }
 }
 
-/** Uploads the row's photos, then inserts it as that user. */
+/** Uploads the row's photos as that user, then inserts it as them (or as `inserter`). */
 export async function insertProfileRow(
   client: Client,
-  row: ReturnType<typeof profileRow>,
+  row: ReturnType<typeof profileRow> & { readonly is_demo?: boolean },
+  /** Who inserts the row, when not the member who uploads the photos. */
+  inserter: Client = client,
 ): Promise<void> {
   await uploadPhotos(client, row.photos);
-  const { error } = await client.from('profiles').insert(row);
+  const { error } = await inserter.from('profiles').insert(row);
   if (error)
     throw new Error(`insert profile for ${row.display_name}: ${error.message}`);
+}
+
+/**
+ * A launch demo's profile, written the way the seeding script writes it:
+ * its photos uploaded as the demo, the row inserted by the service role
+ * with the flag set, which no member can set for themselves.
+ */
+export async function insertDemoProfile(
+  admin: Client,
+  demo: { readonly client: Client },
+  input: ProfileInput,
+): Promise<void> {
+  await insertProfileRow(
+    demo.client,
+    { ...profileRow(input), is_demo: true },
+    admin,
+  );
 }
