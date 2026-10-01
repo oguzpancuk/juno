@@ -62,7 +62,6 @@ export default function Consent() {
   const { next } = useLocalSearchParams<{ next?: string | string[] }>();
   const topPadding = useTopClearance(SCREEN_TOP_GUTTER);
   const bottomGap = useBottomGap(32);
-  const [record, setRecord] = useState<'reading' | 'shown'>('reading');
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -75,11 +74,17 @@ export default function Consent() {
   const userId =
     session.status === 'signed-in' ? session.session.user.id : null;
   const target = returnPath(next);
-  // The gate or the entry screen read the record as older a moment ago.
-  const knownAsking = userId !== null && isConsentKnownAsking(userId);
+  // Settled once, when the screen mounts: the gate or the entry screen
+  // read the record as older a moment ago, so the form shows at once.
+  // Rendering follows `record` alone; accepting takes the member out of
+  // the asking set before this screen unmounts, and the form must not
+  // turn back into a spinner then (review of #19, round 3).
+  const [record, setRecord] = useState<'reading' | 'shown'>(() =>
+    userId !== null && isConsentKnownAsking(userId) ? 'shown' : 'reading',
+  );
 
   useEffect(() => {
-    if (!userId || knownAsking) return;
+    if (!userId || record === 'shown') return;
     let cancelled = false;
     void readConsent(userId).then((read) => {
       if (cancelled) return;
@@ -91,14 +96,14 @@ export default function Consent() {
     return () => {
       cancelled = true;
     };
-    // why: `target` and `knownAsking` are read once, with the record: the
-    // param does not change under a mounted screen, and only accepting
-    // here moves the member out of the asking set.
+    // why: `target` and `record` are read once, with the record: the
+    // param does not change under a mounted screen, and `record` only
+    // ever moves to 'shown', after which there is nothing to read.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   if (session.status === 'signed-out') return <RedirectToSignIn />;
-  if (userId === null || (record === 'reading' && !knownAsking)) {
+  if (userId === null || record === 'reading') {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={color.textMuted} />

@@ -22,3 +22,22 @@ export function takeHeldMatches(userId: string): string[] {
   held.delete(userId);
   return ids;
 }
+
+/**
+ * The one held match to reveal now: the newest whose first sight is
+ * still unspent (`firstSight` is `firstSightOf`). One, because two router
+ * calls into the tabs in one flush can split the root stack (the
+ * two-navigator bug, docs/NOTES.md 2026-09-11; review of #19, round 3);
+ * the others stay rows in the matches list. Taking empties the list.
+ */
+export function takeRevealFor(
+  userId: string,
+  firstSight: (matchId: string) => boolean,
+): string | null {
+  const ids = takeHeldMatches(userId);
+  for (let i = ids.length - 1; i >= 0; i--) {
+    const id = ids[i];
+    if (id !== undefined && firstSight(id)) return id;
+  }
+  return null;
+}

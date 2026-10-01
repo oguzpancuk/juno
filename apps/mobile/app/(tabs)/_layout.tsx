@@ -7,7 +7,7 @@ import { CosmicGround } from '@/components/CosmicGround';
 import { TabIcon } from '@/components/TabIcon';
 import { ConsentGateContext, useConsentGate } from '@/lib/consent';
 import { stoppedAt } from '@/lib/consent-rules';
-import { takeHeldMatches } from '@/lib/held-matches';
+import { takeRevealFor } from '@/lib/held-matches';
 import { firstSightOf } from '@/lib/matches';
 import { INTO_MATCHES, matchArrivedHref } from '@/lib/routes';
 import { useSession } from '@/lib/session';
@@ -70,12 +70,12 @@ export default function TabLayout() {
   // The badge's count is a read inside the gate too.
   const unread = useUnreadTotal(through ? userId : null);
   // A match that arrived while the member stood behind the notice was
-  // held, not shown (app/_layout.tsx): its moment is now.
+  // held, not shown (app/_layout.tsx): its moment is now. One reveal,
+  // the newest, in one router call; any others are in the list.
   useEffect(() => {
     if (!through || !userId) return;
-    for (const matchId of takeHeldMatches(userId))
-      if (firstSightOf(matchId))
-        router.navigate(matchArrivedHref(matchId), INTO_MATCHES);
+    const matchId = takeRevealFor(userId, firstSightOf);
+    if (matchId) router.navigate(matchArrivedHref(matchId), INTO_MATCHES);
   }, [through, userId]);
   const badge = badgeText(unread);
   // The bar keeps its standard height, but its row is given all of it

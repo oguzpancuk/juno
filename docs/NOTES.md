@@ -8905,3 +8905,37 @@ current)`: older asks, equal or newer does not (a phone on an older
 - The stand-in backend for screenshots was rebuilt a third time
   (`.shots/stub.mjs`, not committed). Still a candidate for
   `apps/mobile/scripts/` beside the driver.
+
+## 2026-10-01 — The held review notes of #18, #17 and #19
+
+The optional notes from the last review rounds of three merged pull
+requests, held back then so the approved heads stayed as reviewed, land
+together from main 6b4c0ae. They were written as patches in the project
+folder; each applied on today's main.
+
+- **#18 (English).** The web no longer follows `languagechange` while a
+  page is open (it remounted every screen and dropped a half-filled
+  form); the base iOS location prompt in `app.json` is the English one,
+  the fallback's, and `lib/app-config.test.ts` now checks the plugin's
+  sentence against `locales/<FALLBACK_LANGUAGE>.json`; `must<T>` in
+  `packages/astro/src/content.ts` is generic and the four lookups call
+  it. The patch's `content-rules.test.ts` hunk was dropped: #17 had
+  brought the same 'en' row to main. Its NOTES hunk was adjusted too:
+  it would have read "`en.ts`; `es.ts` on #17", which main already
+  says plainly.
+- **#17 (Spanish).** The no-gender list catches "el otro", "se siente",
+  "te ves", "te pones", -dor/-tor adjectives, the pair as subject and
+  "cada una"; the three thing-exemptions are gone, the eleven texts
+  the wider list flagged are reworded, and five synastry texts say
+  "una persona … la otra" instead of "de una parte … de la otra".
+- **#19 (KVKK).** Two matches held behind `/consent` were revealed with
+  two router calls in one flush, which can split the root stack (the
+  2026-09-11 two-navigator bug); now one reveal, the newest
+  (`takeRevealFor`), and the rest stay rows in the matches list. The
+  consent form settles `record` once at mount, so accepting no longer
+  turns the form back into a spinner for a moment before it leaves.
+
+### Battery gaps
+
+- The consent form's spinner flash is not under a test: the web target
+  has no component tests. `takeRevealFor` is.
