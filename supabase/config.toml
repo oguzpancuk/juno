@@ -459,6 +459,15 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# RevenueCat calls this webhook with the Authorization header set in its
+# dashboard, never with a Supabase JWT, so the gateway's JWT check would
+# refuse every delivery. The function checks that header itself against
+# REVENUECAT_WEBHOOK_AUTH (supabase/functions/revenuecat-webhook/index.ts).
+# `supabase functions deploy` reads this too, so the hosted function gets
+# the same setting.
+[functions.revenuecat-webhook]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

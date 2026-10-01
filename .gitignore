@@ -43,3 +43,6 @@ supabase/seed-photos/
 
 # `npm run gen:types -w @juno/supabase` writes this first, then renames it.
 supabase/tests/database.types.ts.new
+
+# The local edge runtime's env: a test value, not a secret (see the file).
+!supabase/functions/.env

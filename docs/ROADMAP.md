@@ -743,6 +743,37 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       the build (manual). Ask-tier: never without the owner's yes. Before
       submitting: the two inert provider buttons on welcome either work or
       come out (Guideline 4.8 — reviewers tap them).
+- [ ] **Payments: premium bought in the App Store (ADR-0015).** The owner
+      pulled payments forward on 2026-10-01, with RevenueCat
+      (`react-native-purchases`). Four pull requests: (1) the server — an
+      `entitlements` table written only by the service role, the
+      `revenuecat-webhook` Edge Function, an expiry sweep on pg_cron;
+      (2) the app — a subscription screen in three languages (price and
+      period, auto-renewal, how to cancel, terms and privacy links,
+      Restore, Manage subscription) replacing `becomePremium()`, with
+      RevenueCat and the purchase record named in the privacy notice;
+      (3) the switch — `is_premium` leaves the member's update grant,
+      today's self-granted members move as the owner decides,
+      `LEGAL_VERSION` advances, the delete screen says to cancel in iOS
+      Settings; (4) the web says premium is bought in the iPhone app. No
+      web sales in v1. After TestFlight because the first subscription is
+      reviewed with a build. Ask-tier: the Paid Apps agreement, bank and
+      tax, products, sandbox testers and the RevenueCat account are the
+      owner's (`docs/payments-setup.md`).
+      — done when: Vitest on the local stack drives the webhook — a
+      purchase makes the member premium, an expiry and a refund end it,
+      a retried or older event changes nothing, a call without
+      RevenueCat's header writes nothing, and the sweep ends a purchase
+      whose expiry never arrived (battery); a member's own write to
+      `is_premium` is refused (battery); `screenshots/payments-subscription.png`
+      shows the subscription screen on the web target (screenshot); a
+      sandbox purchase and a Restore unlock premium on a device (manual,
+      the owner's check).
+      _Server side built (PR 1): `20261001000001_entitlements.sql` and
+      `supabase/functions/revenuecat-webhook`, driven by
+      `supabase/tests/payments.test.ts`. The member's grant stays until
+      PR 3, so today's free tap keeps working until there is something
+      to buy._
 
 ## The five-item pass (owner request 2026-09-11)
 
@@ -1747,7 +1778,10 @@ accept them back` failed with a user the other run had created; each
   location plus manual refresh covers the seed cohort.
 - **Transits, daily horoscope, notifications about "today"** — a
   retention feature for a product that first needs to prove matching.
-- **Payments / premium** — nothing to gate yet.
+- ~~**Payments / premium** — nothing to gate yet.~~ Taken up instead: the
+  owner pulled payments forward on 2026-10-01 (RevenueCat); see
+  "Payments" under v1 and ADR-0015. Struck then; the line is kept so the
+  reversal is visible.
 - ~~**English UI / i18n** — single-market launch; strings already live in
   one file so the cost later is translation, not refactoring.~~ Taken up
   instead: the owner asked for English and Spanish on 2026-09-29; see
