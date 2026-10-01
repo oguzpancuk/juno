@@ -69,17 +69,6 @@ function apply(next: State): void {
 
 apply(state);
 
-// A browser's language list can change while the page is open; a member
-// following the device follows it. (An iPhone restarts the app when its
-// language changes.)
-if (Platform.OS === 'web' && typeof window !== 'undefined') {
-  window.addEventListener('languagechange', () => {
-    if (state.preference !== 'device') return;
-    const language = resolveLanguage('device', deviceTags());
-    if (language !== state.language) apply({ ...state, language });
-  });
-}
-
 /** Read the stored choice once; a failed read keeps following the device. */
 export async function loadLanguage(): Promise<void> {
   if (state.loaded) return;

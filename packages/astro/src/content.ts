@@ -321,16 +321,17 @@ export const elementKey = (
   return `${luminary}:${x}-${y}`;
 };
 
-function must(
-  select: (b: Bundle) => Record<string, string>,
+/** The entry at `key` in the current language's `file`, or a named gap. */
+function must<T>(
+  select: (b: Bundle) => Record<string, T>,
   key: string,
   file: ContentFile,
-): string {
+): T {
   const b = bundle();
-  const text = select(b)[key];
-  if (text === undefined)
+  const entry = select(b)[key];
+  if (entry === undefined)
     throw new Error(`content/${b.language}/${file}: missing "${key}"`);
-  return text;
+  return entry;
 }
 
 export function signText(body: Planet | 'ascendant', sign: Sign): string {
@@ -371,13 +372,7 @@ export function synastryText(
   aspect: Aspect,
   b: Body,
 ): { meaning: string; question: string } {
-  const content = bundle();
-  const entry = content.synastry[pairKey(a, aspect, b)];
-  if (!entry)
-    throw new Error(
-      `content/${content.language}/synastry.json: missing "${pairKey(a, aspect, b)}"`,
-    );
-  return entry;
+  return must((c) => c.synastry, pairKey(a, aspect, b), 'synastry.json');
 }
 
 export function elementText(
@@ -414,11 +409,7 @@ export function bandText(score: number): string {
 }
 
 function mustBand(band: Band): { name: string; text: string } {
-  const b = bundle();
-  const entry = b.bands[band];
-  if (entry === undefined)
-    throw new Error(`content/${b.language}/bands.json: missing "${band}"`);
-  return entry;
+  return must((b) => b.bands, band, 'bands.json');
 }
 
 /**
@@ -467,13 +458,7 @@ export function dimensionLabelText(dimension: string, level: Level): string {
 }
 
 function mustDimension(dimension: string): z.infer<typeof DimensionEntry> {
-  const b = bundle();
-  const entry = b.dimensionLabels[dimension];
-  if (entry === undefined)
-    throw new Error(
-      `content/${b.language}/dimensions.json: missing "${dimension}"`,
-    );
-  return entry;
+  return must((b) => b.dimensionLabels, dimension, 'dimensions.json');
 }
 
 /** All keys the engine can emit, per file — the completeness contract. */
@@ -592,12 +577,7 @@ export function aspectTitle(
   taken: ReadonlySet<string> = new Set(),
 ): string {
   const valence = term >= 0 ? 'soft' : 'hard';
-  const b = bundle();
-  const entry = b.titles[`${dimension}-${valence}`];
-  if (entry === undefined)
-    throw new Error(
-      `content/${b.language}/titles.json: missing "${dimension}-${valence}"`,
-    );
+  const entry = must((b) => b.titles, `${dimension}-${valence}`, 'titles.json');
   // Start at the stable variant, then step on if that title is already on
   // the screen: two cards reading "Anlaşılan taraf" in one section looks
   // like a bug, and there are only three variants per bucket to collide in.
@@ -608,6 +588,8 @@ export function aspectTitle(
   }
   const fallback = entry[start];
   if (fallback === undefined)
-    throw new Error(`content/${b.language}/titles.json: short of variants`);
+    throw new Error(
+      `content/${bundle().language}/titles.json: short of variants`,
+    );
   return fallback;
 }

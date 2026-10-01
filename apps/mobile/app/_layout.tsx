@@ -77,7 +77,7 @@ export default function RootLayout() {
           screen, so nothing drawn in the old language — a memoised
           reading, a label computed once — outlives it. The new navigator
           is rebuilt from the navigation state, so the member stays on the
-          screen they switched on (the profile, under the settings sheet). */}
+          profile; the settings sheet, that screen's own state, closes. */}
       <Stack
         key={language}
         screenOptions={{
