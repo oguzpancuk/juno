@@ -291,6 +291,74 @@ describe('what an event does', () => {
     expect((await premiumOf(to)).is_premium).toBe(true);
   });
 
+  it('a transfer to no account of ours leaves the payer premium', async () => {
+    const nur = await member('nur');
+    await post(event('INITIAL_PURCHASE', nur.id));
+
+    const answer = await post({
+      api_version: '1.0',
+      event: {
+        id: `evt-transfer-anon-${Date.now()}`,
+        type: 'TRANSFER',
+        event_timestamp_ms: Date.now() + 1,
+        transferred_from: [nur.id],
+        transferred_to: ['$RCAnonymousID:9f8e7d'],
+      },
+    });
+    expect(answer).toEqual({ status: 200, outcome: 'ignored: unknown target' });
+    expect((await premiumOf(nur)).is_premium).toBe(true);
+  });
+
+  it('a transfer whose lists RevenueCat sends as null is answered, not failed', async () => {
+    const answer = await post({
+      api_version: '1.0',
+      event: {
+        id: `evt-transfer-null-${Date.now()}`,
+        type: 'TRANSFER',
+        event_timestamp_ms: Date.now(),
+        transferred_from: null,
+        transferred_to: null,
+      },
+    });
+    expect(answer).toEqual({ status: 200, outcome: 'ignored: unknown target' });
+  });
+
+  it('a purchase made before the app logged in finds the member among the aliases', async () => {
+    const oya = await member('oya');
+    const anonymous = '$RCAnonymousID:5c4b3a';
+    const answer = await post(
+      event('INITIAL_PURCHASE', anonymous, {
+        original_app_user_id: anonymous,
+        aliases: [anonymous, oya.id],
+      }),
+    );
+    expect(answer).toEqual({ status: 200, outcome: 'applied' });
+    expect((await premiumOf(oya)).is_premium).toBe(true);
+  });
+
+  it('an account that buys before onboarding is premium once its profile exists', async () => {
+    const pelin = await createUser(admin, 'pelin');
+    users.push(pelin);
+    const answer = await post(event('INITIAL_PURCHASE', pelin.id));
+    expect(answer).toEqual({ status: 200, outcome: 'applied' });
+
+    // The member's own insert, as onboarding makes it.
+    const { error } = await pelin.client.from('profiles').insert(
+      profileRow({
+        id: pelin.id,
+        display_name: 'pelin',
+        gender: 'woman',
+        interested_in: 'men',
+        lonLat: ISTANBUL_NEARBY,
+        photos: [],
+      }),
+    );
+    expect(error).toBeNull();
+    const premium = await premiumOf(pelin);
+    expect(premium.is_premium).toBe(true);
+    expect(premium.premium_since).not.toBeNull();
+  });
+
   it('answers 200 to events it has no use for, and writes nothing', async () => {
     const jale = await member('jale');
     const cases: readonly [unknown, string][] = [

@@ -55,7 +55,11 @@ const WebhookSchema = z.object({
     id: z.string().min(1),
     type: z.string().min(1),
     event_timestamp_ms: Millis,
+    // RevenueCat's `app_user_id` is the id it saw last; a purchase made
+    // before the app logged in carries the Supabase id only among these.
     app_user_id: z.string().nullish(),
+    original_app_user_id: z.string().nullish(),
+    aliases: Ids,
     entitlement_ids: Ids,
     product_id: z.string().nullish(),
     store: z.string().nullish(),

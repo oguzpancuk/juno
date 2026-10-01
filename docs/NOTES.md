@@ -8936,6 +8936,16 @@ the first of its four pull requests. ADR-0015 has the decision,
   hand to what `gen types` should produce; `types-drift.test.ts` in CI is
   the check.
 
+- Review round 1 (four findings, all fixed): JSON `null` lists made a
+  TRANSFER raise (`cannot extract elements from a scalar`) and fail every
+  retry; a TRANSFER to an anonymous id demoted the payer and gave premium
+  to nobody; only `app_user_id` was read, so a purchase made before
+  `logIn` was ignored; a member had to have a profile, so a purchase
+  mid-onboarding was ignored. All four were 200s or permanent 500s that
+  RevenueCat would never usefully retry — the lesson for any webhook
+  here: "ignored" is final, so only answer it when the event can never
+  mean anything. Each seen red on the harness first.
+
 ### Upstream candidates
 
 - CLAUDE.md's privacy rule (name processing infrastructure "in the same

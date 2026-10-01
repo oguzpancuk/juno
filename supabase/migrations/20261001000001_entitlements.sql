@@ -11,7 +11,7 @@
 -- the column out of the grant). The quotas and `liked_me` are untouched:
 -- they read the flag, and this table is one more thing that writes it.
 --
--- Reversible in one commit: a new table, three functions, one trigger and
+-- Reversible in one commit: a new table, its functions and triggers, and
 -- one cron job, none of which rewrites an existing row.
 
 -- ---------------------------------------------------------------- table
@@ -105,6 +105,37 @@ create trigger entitlements_sync_premium
 
 revoke all on function private.entitlements_sync_premium() from public, anon, authenticated;
 
+/**
+ * The other direction: a profile created after its account bought (a
+ * restore during onboarding) starts premium. Named to fire before
+ * `profiles_stamp_premium`, which then stamps `premium_since` — BEFORE
+ * triggers run in name order. Only ever raises the flag: until the member
+ * loses the update grant (PR 3 of 4) a free member's own choice stands.
+ *
+ * Invoker: the insert is the member's own, and `entitlements: read own`
+ * lets them read exactly this row.
+ */
+create or replace function private.profiles_premium_from_entitlement()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if exists (
+    select 1 from public.entitlements e where e.user_id = new.id and e.active
+  ) then
+    new.is_premium := true;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger profiles_entitlement_premium
+  before insert on public.profiles
+  for each row execute function private.profiles_premium_from_entitlement();
+
+revoke all on function private.profiles_premium_from_entitlement() from public, anon, authenticated;
+
 -- --------------------------------------------------------------- events
 /**
  * A RevenueCat app user id, if it is one of ours. The app logs in to
@@ -126,6 +157,38 @@ $$;
 revoke all on function private.revenuecat_member(text) from public, anon, authenticated;
 
 /**
+ * The first of a list of RevenueCat app user ids that names an account
+ * here, or null. `ids` is whatever the event carried: a JSON array, JSON
+ * null, or nothing — RevenueCat sends `null` for an empty list, and
+ * `jsonb_array_elements` raises on a scalar, which would turn one event
+ * into a 500 on every retry (review of PR #22). Non-string elements and
+ * anonymous ids are skipped.
+ *
+ * An account, not a profile: an Apple or Google account can exist before
+ * onboarding finishes (ADR-0013), and a purchase or a restore made then
+ * must not be answered "unknown" with a 200 that RevenueCat never
+ * retries. The profile picks the purchase up when it is created
+ * (`profiles_premium_from_entitlement` below).
+ */
+create or replace function private.revenuecat_account(ids jsonb)
+returns uuid
+language sql
+stable
+set search_path = ''
+as $$
+  select u.id
+    from jsonb_array_elements(
+           case when jsonb_typeof(ids) = 'array' then ids else '[]'::jsonb end
+         ) with ordinality as t (x, n)
+    join auth.users u on u.id = private.revenuecat_member(t.x #>> '{}')
+   where jsonb_typeof(t.x) = 'string'
+   order by t.n
+   limit 1;
+$$;
+
+revoke all on function private.revenuecat_account(jsonb) from public, anon, authenticated;
+
+/**
  * Applies one RevenueCat webhook event and says what it did: 'applied',
  * 'stale' (an older event than the one already applied), or
  * 'ignored: <why>'. Never raises for an event it does not want: the
@@ -142,8 +205,15 @@ revoke all on function private.revenuecat_member(text) from public, anon, authen
  *   - A refund (CANCELLATION with cancel_reason CUSTOMER_SUPPORT) ends it
  *     at the moment of the event. A plain CANCELLATION is auto-renew
  *     switched off: paid-until stays, the member keeps what they paid for.
+ *   - The member is the first of `app_user_id`, `original_app_user_id`
+ *     and `aliases` that names an account. RevenueCat's `app_user_id` is
+ *     the id it saw last, which for a purchase made before the app logged
+ *     in is anonymous; the Supabase id is then among the aliases.
  *   - TRANSFER (a restore on another account) moves the purchase: the
- *     accounts it leaves lose it now, the account it reaches gets it.
+ *     accounts it leaves lose it now, the account it reaches gets it. A
+ *     transfer that reaches no account of ours changes nothing — taking
+ *     premium from the payer and giving it to nobody would hold until
+ *     the next renewal.
  *   - An event with no expiry is a lifetime purchase, which v1 does not
  *     sell; it is ignored rather than turned into premium forever.
  *
@@ -176,12 +246,22 @@ begin
   end if;
 
   if kind = 'TRANSFER' then
+    -- The target first: with nowhere to go, nothing moves.
+    member := private.revenuecat_account(event -> 'transferred_to');
+    if member is null then
+      return 'ignored: unknown target';
+    end if;
     select coalesce(array_agg(m), '{}') into leaving
       from (
-        select private.revenuecat_member(x) as m
-          from jsonb_array_elements_text(coalesce(event -> 'transferred_from', '[]')) as x
+        select private.revenuecat_member(t.x #>> '{}') as m
+          from jsonb_array_elements(
+                 case when jsonb_typeof(event -> 'transferred_from') = 'array'
+                   then event -> 'transferred_from' else '[]'::jsonb end
+               ) as t (x)
+         where jsonb_typeof(t.x) = 'string'
       ) ids
-     where m is not null;
+     where m is not null
+       and m <> member;
     select e.* into source
       from public.entitlements e
      where e.user_id = any (leaving)
@@ -201,19 +281,6 @@ begin
            updated_at = now()
      where user_id = any (leaving)
        and last_event_at <= event_at;
-    select m into member
-      from (
-        select private.revenuecat_member(x) as m, n
-          from jsonb_array_elements_text(coalesce(event -> 'transferred_to', '[]'))
-               with ordinality as t (x, n)
-      ) ids
-     where m is not null
-       and exists (select 1 from public.profiles p where p.id = m)
-     order by n
-     limit 1;
-    if member is null then
-      return 'applied';
-    end if;
     insert into public.entitlements as e (
       user_id, product_id, store, environment, original_transaction_id,
       expires_at, active, last_event_id, last_event_type, last_event_at
@@ -248,8 +315,12 @@ begin
   if not coalesce(event -> 'entitlement_ids' ? 'premium', false) then
     return 'ignored: not premium';
   end if;
-  member := private.revenuecat_member(event ->> 'app_user_id');
-  if member is null or not exists (select 1 from public.profiles p where p.id = member) then
+  member := private.revenuecat_account(
+    pg_catalog.jsonb_build_array(event -> 'app_user_id', event -> 'original_app_user_id')
+    || case when jsonb_typeof(event -> 'aliases') = 'array'
+         then event -> 'aliases' else '[]'::jsonb end
+  );
+  if member is null then
     return 'ignored: unknown member';
   end if;
   if event ->> 'product_id' is null

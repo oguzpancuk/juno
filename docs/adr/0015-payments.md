@@ -49,7 +49,13 @@ tested, at the cost of a third-party processor named in the privacy notice.
      period when later;
    - a refund (`CANCELLATION` with `cancel_reason` `CUSTOMER_SUPPORT`) ends
      it at the event's time; switching auto-renew off does not;
-   - `TRANSFER` (a restore on another account) moves it;
+   - the member is the first of `app_user_id`, `original_app_user_id` and
+     `aliases` that names an account (an `auth.users` row, not a profile: a
+     purchase or restore mid-onboarding is kept, and the profile starts
+     premium when it is created);
+   - `TRANSFER` (a restore on another account) moves it, and a transfer
+     that reaches no account of ours changes nothing;
+   - RevenueCat's `null` for an empty list is read as an empty list;
    - an event older than the one last applied changes nothing, and a
      retried delivery writes the same values again;
    - an event with no expiry (a lifetime purchase, not sold in v1) is
