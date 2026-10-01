@@ -71,6 +71,19 @@ export function keepBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
   };
 }
 
+/**
+ * The iOS SDK's `device_app_hash`, a hash of Apple's vendor id, taken off
+ * the app context. It reaches JS events through the scope the RN SDK
+ * copies from native; native crash reports keep it (no hook reaches
+ * them), and the notice names it.
+ */
+function withoutDeviceHash(
+  app: Record<string, unknown>,
+): Record<string, unknown> {
+  const { device_app_hash: _hash, ...rest } = app;
+  return rest;
+}
+
 /** The event as it may leave the device: no user, no ids, no addresses. */
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
   const { user: _user, ...rest } = event;
@@ -107,6 +120,14 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
                 ? {}
                 : { value: scrub(value.value) }),
             })),
+          },
+        }),
+    ...(rest.contexts?.app === undefined
+      ? {}
+      : {
+          contexts: {
+            ...rest.contexts,
+            app: withoutDeviceHash(rest.contexts.app),
           },
         }),
     ...(rest.breadcrumbs === undefined

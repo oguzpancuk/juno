@@ -9055,3 +9055,22 @@ installation id on each report as `user.id`.
   `breadcrumbs` and `user.geo` on the event, after the setup steps in
   "Metrics: crash reporting, Sentry EU". Also a native-only crash
   (not `/crash-test`, which is a JS one).
+
+## 2026-10-01 — Metrics: the second number on iOS reports
+
+evaluator-qa's second pass on #21 read sentry-cocoa 8.58.0 (fetched by
+tag; it is not on disk): `maxBreadcrumbs: 0` does reach the native
+options and stops every breadcrumb, but the native SDK also puts
+`contexts.app.device_app_hash` on its scope — a hash of
+`identifierForVendor`, `hw.machine`, `hw.model` and the bundle id — and
+the RN SDK copies that scope into JS events. The 2026-10-01 notice named
+one random number only.
+
+- `scrubEvent` now drops the hash from JS events (test seen red first).
+  Native crash reports keep it; no option in 8.58.0 turns it off.
+- The notice's crash bullet, in all three languages, now splits what
+  every report carries from what the web adds (the page) and what iOS
+  adds (language and time zone, the installation number, and the hash,
+  described as a one-way digest of Apple's per-developer device id, the
+  model and the app). The web carries no locale context, so that moved
+  under iOS.

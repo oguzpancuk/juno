@@ -38,9 +38,11 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   IP), no screenshots, view hierarchy, tracing, replays or failed-request
   events. On the JS path, `scrubEvent` also removes the user and replaces
   ids and e-mail addresses in messages, exceptions, URLs and headers. The
-  native SDK puts a random installation id on its reports as `user.id`;
-  it is not the account and changes on reinstall, and the notice names
-  it. On the project, "Prevent Storing of IP Addresses" is on before a
+  native SDK puts two numbers on its reports: a random installation id
+  as `user.id`, and `contexts.app.device_app_hash`, a one-way hash of
+  Apple's `identifierForVendor`, the model and the bundle id. Neither is
+  the account; `scrubEvent` drops the hash from JS events, no hook
+  reaches native ones, and the notice names both. On the project, "Prevent Storing of IP Addresses" is on before a
   DSN is set.
 - **Named in the notice in the same change** (`lib/legal.ts`, version
   2026-10-01, all three languages), with a test that checks the notice

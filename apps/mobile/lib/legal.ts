@@ -92,8 +92,10 @@
  * Addresses" setting, which the setup steps require before a DSN is set.
  * The iOS SDK's own crash reports skip the JS-side scrubbing, which is
  * why the text scopes that sentence to the app's own code, keeps no
- * breadcrumbs on either SDK, and names the random installation id the
- * native SDK puts on every report.
+ * breadcrumbs on either SDK, and names the two numbers the native SDK
+ * puts on every report: a random installation id and `device_app_hash`,
+ * a one-way hash of Apple's vendor id with the model and the bundle
+ * (the JS path drops the hash; the native path cannot).
  * `legal.test.ts` now checks the notice against the dependency list. The
  * 30 Eylül text was live (the owner's deploy of #15), so this one is 1
  * Ekim, and every member is asked to accept it.
@@ -164,7 +166,7 @@ export const legalSections: readonly LegalSection[] = [
       '• Engellediğin kişiler.',
       '• Gönderdiğin şikâyetler: kimi, hangi sebeple şikâyet ettiğin ve yazdıysan açıklaman.',
       'Çökme raporları',
-      '• Uygulama çöktüğünde ya da beklenmedik bir hatayla karşılaştığında: hatanın teknik kaydı (hata mesajı ve kodun hangi satırında olduğu), cihazının modeli, işletim sistemi, dil ve saat dilimi ayarı, uygulama sürümü, kullanım oturumunun bir çökmeyle bitip bitmediği; web sürümünde hatanın hangi sayfada olduğu; iOS uygulamasında da uygulamanın o cihazdaki kurulumu için rastgele üretilmiş bir numara (hesabına bağlı değildir, uygulamayı silip yeniden kurunca değişir). Bu kayda adın, e-postan, hesap numaran, konumun ve mesajların eklenmez; uygulamanın kendi kodundaki hatalarda, hata metninde geçen hesap, eşleşme ve mesaj numaraları ile e-posta adresleri kayıt cihazdan çıkmadan silinir; IP adresin saklanmaz.',
+      "• Uygulama çöktüğünde ya da beklenmedik bir hatayla karşılaştığında: hatanın teknik kaydı (hata mesajı ve kodun hangi satırında olduğu), cihazının modeli, işletim sistemi ve tarayıcısı, uygulama sürümü ve kullanım oturumunun bir çökmeyle bitip bitmediği. Web sürümünde buna hatanın hangi sayfada olduğu eklenir. iOS uygulamasında dil ve saat dilimi ayarın ile iki numara eklenir: uygulamanın o cihazdaki kurulumu için rastgele üretilmiş bir numara ve Apple'ın bu cihaza, bu uygulamanın geliştiricisi için verdiği kimlikten, cihaz modelinden ve uygulamadan tek yönlü olarak türetilmiş bir özet. İkisi de hesabına bağlı değildir ve seni adınla tanıtmaz. Bu kayda adın, e-postan, hesap numaran, konumun ve mesajların eklenmez; uygulamanın kendi kodundaki hatalarda, hata metninde geçen hesap, eşleşme ve mesaj numaraları ile e-posta adresleri kayıt cihazdan çıkmadan silinir; IP adresin saklanmaz.",
       'Uygulama; rehberine, arama geçmişine veya fotoğraf kütüphanenin tamamına erişmez. Fotoğraf seçicisinden yalnızca senin seçtiğin görsel yüklenir. Reklam kimliği toplanmaz, üçüncü taraf reklam veya izleme aracı kullanılmaz.',
     ],
   },

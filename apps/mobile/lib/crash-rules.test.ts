@@ -100,6 +100,24 @@ describe('crash reporting', () => {
     ]);
   });
 
+  it("drops the native SDK's device hash from what the JS side sends", () => {
+    // `contexts.app.device_app_hash` is a hash of Apple's vendor id; the
+    // iOS SDK puts it on the scope, and the RN SDK merges that scope into
+    // JS events too. The JS path can take it out; the native path cannot,
+    // which is why the notice names it.
+    const sent = scrubEvent({
+      type: undefined,
+      contexts: {
+        app: { app_version: '0.0.1', device_app_hash: 'a1b2c3' },
+        os: { name: 'iOS' },
+      },
+    });
+    expect(sent.contexts).toEqual({
+      app: { app_version: '0.0.1' },
+      os: { name: 'iOS' },
+    });
+  });
+
   it('starts with no breadcrumbs, no PII and nothing attached, on both SDKs', () => {
     // The options object reaches the native SDK too (minus the
     // callbacks), and the native SDK's own crash reports never pass
