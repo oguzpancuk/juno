@@ -10,7 +10,8 @@
  * its dashboard, and nothing else identifies it, so that header is
  * compared with `REVENUECAT_WEBHOOK_AUTH` from this function's env. No
  * secret, no service: a function deployed without it refuses every call
- * rather than accepting every call. There is no Supabase JWT on these
+ * rather than accepting every call (the CLI's local stack alone has a
+ * stand-in, `LOCAL_STACK_AUTH` below). There is no Supabase JWT on these
  * requests, so the gateway's JWT check is off for this function
  * (`[functions.revenuecat-webhook]` in supabase/config.toml).
  *
@@ -73,6 +74,31 @@ const WebhookSchema = z.object({
   }),
 });
 
+/**
+ * The local stack's stand-in for the secret, so the test suite can call
+ * this function as RevenueCat would (tests/payments.test.ts reads it from
+ * this file). It applies only when the secret is unset AND the function
+ * runs inside the CLI's local stack, whose gateway the runtime reaches as
+ * `http://kong:8000` — a hosted project's SUPABASE_URL is always its own
+ * https address, so there a missing secret still refuses every call.
+ *
+ * Why it lives here and not in a file the CLI loads (review of PR #22,
+ * round 1): `supabase/functions/.env` is where real local secrets go and
+ * must stay ignored; `[edge_runtime.secrets]` in config.toml is pushed to
+ * the hosted project by every `supabase secrets set`, so a test value
+ * there would overwrite the real one; and a function's `env` in
+ * config.toml only takes references to the project's env files, which
+ * brings back the first problem.
+ */
+const LOCAL_STACK_URL = 'http://kong:8000';
+const LOCAL_STACK_AUTH = 'Bearer local-stack-only';
+
+function webhookAuth(url: string | undefined): string | undefined {
+  const secret = Deno.env.get('REVENUECAT_WEBHOOK_AUTH');
+  if (secret) return secret;
+  return url === LOCAL_STACK_URL ? LOCAL_STACK_AUTH : undefined;
+}
+
 const encoder = new TextEncoder();
 
 /**
@@ -98,8 +124,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' });
 
-  const expected = Deno.env.get('REVENUECAT_WEBHOOK_AUTH');
   const url = Deno.env.get('SUPABASE_URL');
+  const expected = webhookAuth(url);
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!expected || !url || !serviceKey) {
     console.error('revenuecat-webhook: missing env');

@@ -17,10 +17,9 @@ import {
  * `entitlements` table it writes through `apply_revenuecat_event`, and
  * the sweep that ends what a lost webhook would leave running.
  *
- * The function runs on the local edge runtime. The Authorization value
- * RevenueCat would send is read from the function's local `env` in
- * supabase/config.toml, which `supabase start` gives that runtime, so the
- * two cannot drift.
+ * The function runs on the local edge runtime, where no secret is set
+ * and it falls back to its local-stack value; the test reads that value
+ * from the function's own source, so the two cannot drift.
  */
 
 const admin = adminClient();
@@ -31,18 +30,13 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
 const AUTH = (() => {
-  const config = readFileSync(
-    new URL('../config.toml', import.meta.url),
+  const source = readFileSync(
+    new URL('../functions/revenuecat-webhook/index.ts', import.meta.url),
     'utf8',
   );
-  const section = config.split('[functions.revenuecat-webhook.env]')[1];
-  const value = section
-    ?.split(/\n\[/, 1)[0]
-    ?.match(/^REVENUECAT_WEBHOOK_AUTH\s*=\s*"([^"]+)"/m)?.[1];
+  const value = /const LOCAL_STACK_AUTH = '([^']+)';/.exec(source)?.[1];
   if (!value) {
-    throw new Error(
-      'supabase/config.toml has no REVENUECAT_WEBHOOK_AUTH under [functions.revenuecat-webhook.env]',
-    );
+    throw new Error('revenuecat-webhook/index.ts has no LOCAL_STACK_AUTH');
   }
   return value;
 })();

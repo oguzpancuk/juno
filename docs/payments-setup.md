@@ -14,8 +14,9 @@ Nothing here is done from a cloud thread.
    example `Bearer ` followed by the output of `openssl rand -hex 32`, and
    give it to the hosted function:
    `npx supabase secrets set REVENUECAT_WEBHOOK_AUTH='Bearer …'`.
-   The `Bearer local-stack-only` in `supabase/config.toml` is the local
-   test value and is never sent anywhere.
+   The function's built-in `Bearer local-stack-only` applies only inside
+   the CLI's local stack; on the hosted project an unset secret refuses
+   every call.
 3. Until this secret is set, the hosted function answers every call with
    500 and RevenueCat keeps retrying; nothing is written.
 
@@ -48,11 +49,11 @@ Nothing here is done from a cloud thread.
 
 ## Local
 
-`supabase start` gives the local edge runtime the function's `env` from
-`supabase/config.toml` (`[functions.revenuecat-webhook.env]`), which is
-where the test value of `REVENUECAT_WEBHOOK_AUTH` lives;
-`supabase/tests/payments.test.ts` reads the same line. Deploys do not send
-a function's `env`, and `supabase secrets set` reads only
-`[edge_runtime.secrets]` — which is why the value is not there: that
-command pushes every entry of that table to the hosted project, whatever
-name it was asked to set.
+The local stack sets no secret. Inside it (the runtime reaches the gateway
+as `http://kong:8000`) the function falls back to its own
+`LOCAL_STACK_AUTH`, `Bearer local-stack-only`, and
+`supabase/tests/payments.test.ts` reads that constant from the function's
+source. Not in `supabase/functions/.env` (where real local secrets go; it
+stays ignored) and not in `[edge_runtime.secrets]`: `supabase secrets set`
+pushes every entry of that table to the hosted project, whatever name it
+was asked to set.
