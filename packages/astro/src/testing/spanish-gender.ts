@@ -29,30 +29,35 @@ const INVARIABLE = new Set([
   'dentro',
   'miembro',
   'realista',
-  // Agreeing with a thing named before the verb, in today's texts.
   'marca',
-  'parejos',
-  'entrelazados',
-  'difusas',
 ]);
 
-/** "(te sientes|eres|…) (muy )?seguro": the verb and its adjective. */
+/**
+ * "(te sientes|eres|…) (muy )?seguro": the verb and its adjective, which
+ * ends in -o/-a or, masculine only, in -dor/-tor ("encantador"). "Es" and
+ * "está" are left out: they agree with things far more often than with a
+ * person.
+ */
 const PREDICATE =
-  /(^|[^\p{L}])(te sientes|sentirte|sentirse|se sienten|eres|estás|estar|están|pareces|te quedas|quedarte|te vuelves|volverte) (muy |tan |más |demasiado )?(\p{L}+[oa]s?)(?![\p{L}])/giu;
+  /(^|[^\p{L}])(te sientes|sentirte|sentirse|se siente|se sienten|eres|estás|estar|están|pareces|te ves|verte|te pones|ponerte|te quedas|quedarte|te vuelves|volverte) (muy |tan |más |demasiado )?(\p{L}+(?:[oa]s?|[dt]or(?:es)?))(?![\p{L}])/giu;
 
 export const SPANISH_PERSON_FORMS: readonly RegExp[] = [
   /(^|[^\p{L}])junt[oa]s(?![\p{L}])/iu,
   /(^|[^\p{L}])(el uno|la una)(?![\p{L}])/iu,
   // "del otro", "al otro", "el otro", but not "el otro lado".
-  /(^|[^\p{L}])(de|a)?l otro(?![\p{L}])(?! (lado|extremo|polo))/iu,
-  // "los dos" or "las dos" alone is a pair; "los dos Soles" is not.
-  /(^|[^\p{L}])(los|las) dos(?![\p{L}])(?! \p{L})/iu,
+  /(^|[^\p{L}])(del|al|el) otro(?![\p{L}])(?! (lado|extremo|polo))/iu,
+  // "los dos" or "las dos" alone is a pair; "los dos Soles" is not, but
+  // "los dos se quieren" is.
+  /(^|[^\p{L}])(los|las) dos(?![\p{L}])(?! (?!(se|son|saben|pueden|tienen|quieren|están)(?![\p{L}]))\p{L})/iu,
+  // "ambos" after a preposition or opening a sentence ("Ambos saben…").
   /(^|[^\p{L}])(para|a|de|con) (ambos|ambas)(?![\p{L}])/iu,
+  /(^|[.;:!?¿¡]\s*)(ambos|ambas)(?![\p{L}])/iu,
   /(^|[^\p{L}])nosotr[oa]s(?![\p{L}])/iu,
   /(^|[^\p{L}])(tú|ti|sí|uno|ustedes) mism[oa]s?(?![\p{L}])/iu,
-  /(^|[^\p{L}])(cada uno|uno por uno|los demás|(otros|los) usuarios)(?![\p{L}])/iu,
-  // "Todas" alone is a label for bands; "Todos" or "a todas" is people.
-  /(^todos|(^|[^\p{L}])(a|para|con|de) tod[oa]s)(?![\p{L}])(?! (los|las|tus|sus|mis|estos|estas|esos|esas)(?![\p{L}]))/iu,
+  /(^|[^\p{L}])(cada uno|cada una|uno por uno|los demás|(otros|los) usuarios)(?![\p{L}])/iu,
+  // "Todas" alone is a label for bands; "Todos", "a todas" or "Todas
+  // saben…" is people. "Todas las casas" is not.
+  /(^todos|(^|[^\p{L}])(a|para|con|de) tod[oa]s|(^|[.;:!?¿¡]\s*)tod[oa]s(?= \p{L}))(?![\p{L}])(?! (los|las|tus|sus|mis|estos|estas|esos|esas)(?![\p{L}]))/iu,
   /(^|[^\p{L}])(lo|la) (denuncias|bloqueas|desbloqueas|conoces)(?![\p{L}])/iu,
 ];
 
@@ -65,8 +70,8 @@ export function spanishGenderHits(text: string): string[] {
   }
   for (const found of text.matchAll(PREDICATE)) {
     const word = (found[4] ?? '').toLocaleLowerCase('es');
-    // A gerund ("estás acercando") agrees with nobody.
-    if (!INVARIABLE.has(word) && !word.endsWith('ndo'))
+    // A gerund ("estás acercando") agrees with nobody; "profundo" does.
+    if (!INVARIABLE.has(word) && !/(ando|iendo|yendo)$/.test(word))
       hits.push(found[0].trim());
   }
   return hits;

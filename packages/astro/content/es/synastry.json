@@ -156,7 +156,7 @@
     "question": "¿Cuándo fue la última vez que sentiste que alguien te entendía?"
   },
   "moon-opposition-mercury": {
-    "meaning": "Corazón y razón en polos opuestos; mientras una persona siente, la otra analiza. Cada postura tiene razón y hay que hacerle lugar a cada una.",
+    "meaning": "Corazón y razón en polos opuestos; mientras una persona siente, la otra analiza. Las dos posturas tienen razón y merecen su lugar.",
     "question": "¿Tú decides con el corazón o con la cabeza?"
   },
   "moon-conjunction-venus": {
@@ -516,7 +516,7 @@
     "question": "¿La profundidad te atrae o te asusta?"
   },
   "sun-opposition-pluto": {
-    "meaning": "Identidad y poder frente a frente; manipulación o transformación, las dos son posibles. La honestidad es el único camino seguro de este aspecto.",
+    "meaning": "Identidad y poder frente a frente; manipulación o transformación, ambas cosas son posibles. La honestidad es el único camino seguro de este aspecto.",
     "question": "¿En qué parte de una relación te importa más la honestidad?"
   },
   "moon-conjunction-jupiter": {
@@ -556,7 +556,7 @@
     "question": "¿La estabilidad te da calma o te aburre?"
   },
   "moon-opposition-saturn": {
-    "meaning": "Emoción y responsabilidad frente a frente; lo que de una parte se ve como necesidad, de la otra puede verse como deber. Cuando construyen el equilibrio hablando, necesidad y deber se vuelven lo mismo.",
+    "meaning": "Emoción y responsabilidad frente a frente; lo que una persona ve como necesidad, la otra puede verlo como deber. Cuando construyen el equilibrio hablando, necesidad y deber se vuelven lo mismo.",
     "question": "¿Te cuesta decir lo que necesitas?"
   },
   "moon-conjunction-uranus": {
@@ -576,7 +576,7 @@
     "question": "¿Qué tan importante es para ti no aburrirte en una relación?"
   },
   "moon-opposition-uranus": {
-    "meaning": "Emoción y libertad frente a frente; la cercanía y la distancia tiran cada una por su lado. Cuando encuentran el ritmo en común, las dos son posibles.",
+    "meaning": "Emoción y libertad frente a frente; la cercanía y la distancia tiran en direcciones opuestas. Cuando encuentran el ritmo en común, ambas cosas son posibles.",
     "question": "¿Alguna vez huiste de la cercanía?"
   },
   "moon-conjunction-neptune": {
@@ -724,11 +724,11 @@
     "question": "¿Cuál sería nuestro plan más divertido?"
   },
   "venus-sextile-jupiter": {
-    "meaning": "Amor y suerte a la vez; compartir tiempo se siente bonito y fácil. En este vínculo, los pequeños momentos se sienten enormes.",
+    "meaning": "Amor y suerte a la vez; compartir tiempo resulta bonito y fácil. En este vínculo, los pequeños momentos se sienten enormes.",
     "question": "¿Cómo guardas los momentos que te hacen sentir bien?"
   },
   "venus-square-jupiter": {
-    "meaning": "De una parte, el amor se muestra con grandes gestos; de la otra, con mesura. La diferencia de expectativas puede volverse decepción. Cuando encuentran una medida común, la generosidad se vuelve confianza.",
+    "meaning": "Una persona muestra el amor con grandes gestos; la otra, con mesura. La diferencia de expectativas puede volverse decepción. Cuando encuentran una medida común, la generosidad se vuelve confianza.",
     "question": "¿Demuestras el amor con grandes gestos o con pequeños detalles?"
   },
   "venus-trine-jupiter": {
@@ -740,7 +740,7 @@
     "question": "¿Qué significa para ti disfrutar?"
   },
   "venus-conjunction-saturn": {
-    "meaning": "El amor y el límite se superponen: un aspecto que une, pero que puede volverse frío. De una parte se mide y se pesa el amor, y de la otra puede sentirse que no llega nada a cambio; cuando el amor se muestra a propósito y con palabras, ese peso se vuelve permanencia.",
+    "meaning": "El amor y el límite se superponen: un aspecto que une, pero que puede volverse frío. Una persona mide y pesa el amor, y la otra puede sentir que no recibe nada a cambio; cuando el amor se muestra a propósito y con palabras, ese peso se vuelve permanencia.",
     "question": "¿Cómo sabes que te quieren: por las palabras o por los actos?"
   },
   "venus-sextile-saturn": {
@@ -776,7 +776,7 @@
     "question": "¿Es posible una relación que no aburra?"
   },
   "venus-opposition-uranus": {
-    "meaning": "Amor y libertad frente a frente; la cercanía y la distancia tiran cada una por su lado. Cuando encuentran el ritmo en común, las dos se quedan.",
+    "meaning": "Amor y libertad frente a frente; la cercanía y la distancia tiran en direcciones opuestas. Cuando encuentran el ritmo en común, la cercanía y la distancia se quedan.",
     "question": "¿Cuánta cercanía es demasiada para ti?"
   },
   "venus-conjunction-neptune": {
@@ -796,7 +796,7 @@
     "question": "¿Qué cosas te parecen elegantes?"
   },
   "venus-opposition-neptune": {
-    "meaning": "De una parte puede verse más belleza de la que hay, y de la otra sentirse la presión de estar a la altura de ese ideal; ir y venir entre el sueño y la realidad se vuelve familiar. Cuando se ven tal como son, el amor pisa firme.",
+    "meaning": "Una persona puede ver en la otra más belleza de la que hay, y la otra, sentir la presión de estar a la altura de ese ideal; ir y venir entre el sueño y la realidad se vuelve familiar. Cuando se ven tal como son, el amor pisa firme.",
     "question": "¿Qué es más bello: la realidad o el sueño?"
   },
   "venus-conjunction-pluto": {
@@ -840,7 +840,7 @@
     "question": "¿Qué haces cuando tus metas chocan entre sí?"
   },
   "mars-conjunction-saturn": {
-    "meaning": "La acción y el freno se superponen: de una parte hay ganas de moverse mientras de la otra se frena. La fricción y la sensación de bloqueo resultan familiares; cuando marcan el ritmo en común, ese peso se vuelve resistencia.",
+    "meaning": "La acción y el freno se superponen: una persona quiere moverse mientras la otra frena. La fricción y la sensación de bloqueo resultan familiares; cuando marcan el ritmo en común, ese peso se vuelve resistencia.",
     "question": "¿Qué haces cuando sientes que te frenan: presionas o te detienes?"
   },
   "mars-sextile-saturn": {
@@ -916,7 +916,7 @@
     "question": "¿Piensas con estrategia o por instinto?"
   },
   "mars-opposition-pluto": {
-    "meaning": "Acción y poder frente a frente; guerra o alianza, las dos son posibles. Cuando comparten el poder, hacen alianza en vez de rivalizar.",
+    "meaning": "Acción y poder frente a frente; guerra o alianza, ambas cosas son posibles. Cuando comparten el poder, hacen alianza en vez de rivalizar.",
     "question": "¿Qué prefieres entre tú y yo: rivalidad o alianza?"
   },
   "jupiter-conjunction-ascendant": {

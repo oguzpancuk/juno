@@ -16,6 +16,17 @@ describe('spanishGenderHits', () => {
     'Una conexión positiva para ambos.',
     'Pueden hacer mucho juntas.',
     '¿Por qué lo denuncias?',
+    // Review round 3 on #17.
+    'Piensas en el otro.',
+    'Con el otro',
+    'Contigo se siente segura.',
+    'Eres profundo.',
+    'Eres encantador.',
+    'Los dos se quieren.',
+    'Ambos saben escuchar.',
+    'Todas saben lo que quieren.',
+    'Aquí cada una elige.',
+    'Están entrelazados desde el primer día.',
   ])('catches "%s"', (text) => {
     expect(spanishGenderHits(text)).not.toEqual([]);
   });
@@ -30,6 +41,10 @@ describe('spanishGenderHits', () => {
     'Todas',
     'Se entienden mutuamente.',
     'Estás acercando posturas.',
+    'Estás escuchando.',
+    'Eres mejor de lo que crees.',
+    'Todas las casas cuentan.',
+    'El otro lado del espejo.',
   ])('lets "%s" through', (text) => {
     expect(spanishGenderHits(text)).toEqual([]);
   });
