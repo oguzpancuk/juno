@@ -8627,9 +8627,11 @@ the owner has now asked for it. Decisions in ADR-0014.
 - On Android the device's language comes from `Intl`, one tag, not the
   phone's ordered list; `expo-localization`'s `getLocales()` would give
   the list, but it is a new dependency and Android is deferred. A
-  browser's list changing while the page is open is followed
-  (`languagechange`); an iPhone restarts the app when its language
-  changes.
+  browser's list changing while the page is open is picked up at the
+  next load. Following it live (`languagechange`, tried in the first
+  review round) remounted every screen without the member doing
+  anything and dropped a half-filled form (second review round). An
+  iPhone restarts the app when its language changes.
 
 - Three notes from the #17 review on this change's code, left as they
   are: every language's content JSON is imported statically, so each
@@ -8646,7 +8648,9 @@ the owner has now asked for it. Decisions in ADR-0014.
   between a planet's sign text and its house texts) to cover the
   translations; English broke it in nine pairs ("put you at ease",
   "spurs you into action", "the balance of power"…), reworded on the
-  sign side. The Spanish thread adds English to that test on #17.
+  sign side. `content-rules.test.ts` now runs the two rules that hold
+  in any language (no repeated sentence, no shared four-word run) over
+  every translation; the word-list rules stay Turkish.
 
 ### Battery gaps
 
@@ -8901,3 +8905,50 @@ current)`: older asks, equal or newer does not (a phone on an older
 - The stand-in backend for screenshots was rebuilt a third time
   (`.shots/stub.mjs`, not committed). Still a candidate for
   `apps/mobile/scripts/` beside the driver.
+
+## 2026-10-01 — The held review notes of #18, #17 and #19
+
+The optional notes from the last review rounds of three merged pull
+requests, held back then so the approved heads stayed as reviewed, land
+together from main 6b4c0ae. They were written as patches in the project
+folder; each applied on today's main.
+
+- **#18 (English).** The web no longer follows `languagechange` while a
+  page is open (it remounted every screen and dropped a half-filled
+  form); the base iOS location prompt in `app.json` is the English one,
+  the fallback's, and `lib/app-config.test.ts` now checks the plugin's
+  sentence against `locales/<FALLBACK_LANGUAGE>.json`; `must<T>` in
+  `packages/astro/src/content.ts` is generic and the four lookups call
+  it. The patch's `content-rules.test.ts` hunk was dropped: #17 had
+  brought the same 'en' row to main. Its NOTES hunk was adjusted too:
+  it would have read "`en.ts`; `es.ts` on #17", which main already
+  says plainly.
+- **#17 (Spanish).** The no-gender list catches "el otro", "se siente",
+  "te ves", "te pones", -dor/-tor adjectives, the pair as subject and
+  "cada una"; the three thing-exemptions are gone, the eleven texts
+  the wider list flagged are reworded, and five synastry texts say
+  "una persona … la otra" instead of "de una parte … de la otra".
+- **#19 (KVKK).** Two matches held behind `/consent` were revealed with
+  two router calls in one flush, which can split the root stack (the
+  2026-09-11 two-navigator bug); now one reveal, the newest
+  (`takeRevealFor`), and the rest stay rows in the matches list. The
+  consent form settles `record` once at mount, so accepting no longer
+  turns the form back into a spinner for a moment before it leaves.
+
+- **Review round 1 (#20).** The widened Spanish list still let the pair
+  through before most verbs ("Los dos buscan…") and "ambos" mid-sentence
+  ("y ambos saben…"). The rule is inverted: "los dos", "las dos",
+  "ambos", "ambas" and "el otro" are people unless a body name
+  (capitalised) or a listed thing noun follows ("los dos Soles", "ambas
+  cosas", "en ambos casos", "el otro día"). "Son" counts only opening a
+  sentence ("Son muy parecidos"): after a subject it agreed with things
+  23 times in today's texts. Masculine -ón ("juguetón") and "blando"
+  are caught. Two texts that used "ambas" for things are reworded.
+
+### Battery gaps
+
+- The consent form's spinner flash is not under a test: the web target
+  has no component tests. `takeRevealFor` is.
+- The Spanish list is a heuristic. A thing noun missing from `THINGS`
+  after "los dos" or "ambos" fails the content test for a correct
+  sentence; the fix is to add the noun, not to reword the text.
