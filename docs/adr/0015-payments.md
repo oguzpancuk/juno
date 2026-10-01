@@ -103,6 +103,14 @@ Deleting an account deletes its `entitlements` row by cascade from
 it in iOS Settings; App Store guideline 5.1.1(v) wants the delete screen
 to say so, which is PR 3.
 
+An account with no profile can now hold a paid `entitlements` row, and
+`abandon_empty_account()` ("Farklı bir hesapla gir" during onboarding)
+deletes such an account, cascading the row away; a later restore then
+arrives as a TRANSFER from an account with no row and changes nothing.
+Unreachable while the purchase screen sits behind onboarding; PR 2 either
+keeps it there or makes an active entitlement count as "not empty"
+(review of PR #22, round 2).
+
 Undoing this in one commit: `select cron.unschedule('expire-entitlements')`,
 then drop the trigger on `profiles`, the functions and the table.
 
