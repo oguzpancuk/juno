@@ -60,9 +60,10 @@ describe('the iOS bundle', () => {
     }
   });
 
-  it('keeps the Turkish prompt the same as the plugin’s own', () => {
-    // The plugin's sentence is the bundle's base one; the Turkish locale
-    // must not say something else to a Turkish phone.
+  it('writes the base prompt in the fallback language', () => {
+    // The plugin's sentence goes into the base Info.plist, which iOS reads
+    // as the development region's, the fallback's: a phone in a language
+    // the app does not have must not be asked in another one.
     const plugin = app.expo.plugins.find(
       (entry): entry is [string, unknown] =>
         Array.isArray(entry) && entry[0] === 'expo-location',
@@ -70,9 +71,11 @@ describe('the iOS bundle', () => {
     const options = z
       .object({ locationWhenInUsePermission: z.string() })
       .parse(plugin?.[1]);
-    const tr = LocaleJson.parse(read(`../${app.expo.locales?.tr ?? ''}`));
-    expect(tr.ios.NSLocationWhenInUseUsageDescription).toBe(
-      options.locationWhenInUsePermission,
+    const fallback = LocaleJson.parse(
+      read(`../${app.expo.locales?.[FALLBACK_LANGUAGE] ?? ''}`),
+    );
+    expect(options.locationWhenInUsePermission).toBe(
+      fallback.ios.NSLocationWhenInUseUsageDescription,
     );
   });
 });

@@ -8627,9 +8627,11 @@ the owner has now asked for it. Decisions in ADR-0014.
 - On Android the device's language comes from `Intl`, one tag, not the
   phone's ordered list; `expo-localization`'s `getLocales()` would give
   the list, but it is a new dependency and Android is deferred. A
-  browser's list changing while the page is open is followed
-  (`languagechange`); an iPhone restarts the app when its language
-  changes.
+  browser's list changing while the page is open is picked up at the
+  next load. Following it live (`languagechange`, tried in the first
+  review round) remounted every screen without the member doing
+  anything and dropped a half-filled form (second review round). An
+  iPhone restarts the app when its language changes.
 
 - Three notes from the #17 review on this change's code, left as they
   are: every language's content JSON is imported statically, so each
@@ -8646,7 +8648,9 @@ the owner has now asked for it. Decisions in ADR-0014.
   between a planet's sign text and its house texts) to cover the
   translations; English broke it in nine pairs ("put you at ease",
   "spurs you into action", "the balance of power"…), reworded on the
-  sign side. The Spanish thread adds English to that test on #17.
+  sign side. `content-rules.test.ts` now runs the two rules that hold
+  in any language (no repeated sentence, no shared four-word run) over
+  every translation; the word-list rules stay Turkish.
 
 ### Battery gaps
 

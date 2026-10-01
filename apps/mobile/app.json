@@ -54,7 +54,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Juno, yakınındaki kişileri göstermek için konumunu bir kez okur. Konum sadece mesafe olarak paylaşılır, koordinatın kimseye gösterilmez."
+          "locationWhenInUsePermission": "Juno reads your location once to show people near you. It is shared only as a distance; no one is shown your coordinates."
         }
       ]
     ],
