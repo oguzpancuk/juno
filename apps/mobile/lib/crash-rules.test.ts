@@ -1,5 +1,5 @@
 import type { ErrorEvent } from '@sentry/react-native';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   crashReportingOptions,
   crashTestSchema,
@@ -68,8 +68,29 @@ describe('crash reporting', () => {
       'fetch failed: /photos/a.jpg?token=<token>&t=1',
     );
     expect(scrub(`refresh_token=v1.abcDEF123&code=4f9e`)).toBe(
-      'refresh_token=<token>&code=<token>',
+      'refresh_token=<token>&code=4f9e',
     );
+  });
+
+  it('takes out an opaque refresh token by its name, and a bearer token', () => {
+    // Supabase refresh tokens are short random strings, not JWTs.
+    expect(
+      scrub(
+        'session: {"access_token":"eyJa.eyJb.c","refresh_token":"m3kq7vxyz","expires_in":3600}',
+      ),
+    ).toBe(
+      'session: {"access_token":"<token>","refresh_token":"<token>","expires_in":3600}',
+    );
+    expect(scrub('Authorization: Bearer m3kq7vxyz')).toBe(
+      'Authorization: Bearer <token>',
+    );
+  });
+
+  it('keeps error codes, which tell reports apart and name no one', () => {
+    expect(scrub('insert failed: code=23505 duplicate key')).toBe(
+      'insert failed: code=23505 duplicate key',
+    );
+    expect(scrub('HTTP error code=429')).toBe('HTTP error code=429');
   });
 
   it("keeps a URL's origin and path only: a sign-in fragment carries the session", () => {
@@ -85,6 +106,48 @@ describe('crash reporting', () => {
       scrubUrl(`https://www.juno-dating.com/chat/${ID}?from=match#top`),
     ).toBe('https://www.juno-dating.com/chat/<id>');
     expect(scrubUrl(`/chat/${ID}#access_token=eyJa.eyJb.c`)).toBe('/chat/<id>');
+  });
+
+  it('cuts stack-frame files like URLs: a first frame can be the page itself', () => {
+    // On the web, an error with no script URL gets a first frame whose
+    // filename is location.href, and the RN SDK rewrites it to app:///…,
+    // sign-in fragment and all.
+    const sent = scrubEvent({
+      type: undefined,
+      exception: {
+        values: [
+          {
+            type: 'Error',
+            value: 'Script error.',
+            stacktrace: {
+              frames: [
+                {
+                  filename:
+                    'app:///#access_token=eyJa.eyJb.c&refresh_token=m3kq7vxyz',
+                  abs_path:
+                    'https://juno-dating.com/#access_token=eyJa.eyJb.c&refresh_token=m3kq7vxyz',
+                  function: '?',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    expect(sent.exception?.values?.[0]?.stacktrace?.frames?.[0]).toEqual({
+      filename: 'app:///',
+      abs_path: 'https://juno-dating.com/',
+      function: '?',
+    });
+    expect(JSON.stringify(sent)).not.toMatch(/eyJ|m3kq7vxyz/u);
+  });
+
+  it('scrubs a field nobody listed, too', () => {
+    const sent = scrubEvent({
+      type: undefined,
+      extra: { body: `{"refresh_token":"m3kq7vxyz","id":"${ID}"}` },
+    });
+    expect(JSON.stringify(sent)).not.toMatch(/m3kq7vxyz|3f2b8c1e/u);
   });
 
   it('sends an event with no user and no ids in it', () => {
@@ -167,6 +230,20 @@ describe('crash reporting', () => {
     expect(environment(true, true)).toBe('crash-test');
     expect(environment(true, false)).toBe('development');
     expect(environment(false, false)).toBe('production');
+  });
+
+  it('says so, without the value, when it ignores a DSN', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      reportingDsnSchema.parse('sntrys_secret');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).not.toContain('sntrys_secret');
+      reportingDsnSchema.parse('');
+      reportingDsnSchema.parse(undefined);
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('reads a wrong DSN as no reporting, not as a failed start', () => {

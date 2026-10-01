@@ -182,6 +182,22 @@ export function effectiveValue(
  * `lib/env.ts` treats a malformed DSN as "no reporting" rather than
  * failing every launch, so this is where a wrong one is caught.
  */
+/**
+ * What a refusal may say about a rejected DSN: its host, never the value.
+ * The shape is checked because the Sentry auth token, a secret, can be
+ * pasted here by mistake, and a refusal is printed into a terminal and a
+ * session transcript.
+ */
+function describeDsn(dsn: string): string {
+  try {
+    const host = new URL(dsn).hostname;
+    if (host !== '') return `sunucu: ${host}`;
+  } catch {
+    // Not a URL at all; fall through.
+  }
+  return 'adres değil; gizli bir anahtar olabilir, yazdırılmadı';
+}
+
 export function checkCrashReporting(
   dsn: string | undefined,
   crashTest: string | undefined,
@@ -197,7 +213,7 @@ export function checkCrashReporting(
   if (!deployableDsnSchema.safeParse(dsn).success) {
     return {
       ok: false,
-      reason: `EXPO_PUBLIC_SENTRY_DSN, Sentry'nin AB bölgesinin (…ingest.de.sentry.io) adresi değil: ${dsn}`,
+      reason: `EXPO_PUBLIC_SENTRY_DSN, Sentry'nin AB bölgesinin (…ingest.de.sentry.io) adresi değil (${describeDsn(dsn)})`,
     };
   }
   return { ok: true, detail: 'Sentry (AB)' };

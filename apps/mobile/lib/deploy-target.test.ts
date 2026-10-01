@@ -250,6 +250,16 @@ describe('checkCrashReporting', () => {
     expect(checkCrashReporting(EU, '0').ok).toBe(true);
   });
 
+  it('never prints a rejected value, which may be the auth token', () => {
+    const token = 'sntrys_eyJpYXQiOjE3MjcwMDAwMDAuMH0';
+    expect(reason(checkCrashReporting(token, undefined))).not.toContain(token);
+    expect(
+      reason(
+        checkCrashReporting(EU.replace('ingest.de.', 'ingest.us.'), undefined),
+      ),
+    ).toContain('o4508000000000000.ingest.us.sentry.io');
+  });
+
   it('refuses the stand-in, another region and a malformed DSN', () => {
     for (const dsn of [
       'http://0123456789abcdef0123456789abcdef@127.0.0.1:9999/1',

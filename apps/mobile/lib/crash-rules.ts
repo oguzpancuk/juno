@@ -46,7 +46,15 @@ export const reportingDsnSchema = z
     (value) => (value === '' ? undefined : value),
     sentryDsnSchema.optional(),
   )
-  .catch(undefined);
+  .catch(() => {
+    // Said, not thrown, so a crash-test or TestFlight build that reports
+    // nothing shows why. The value itself is not printed: the shape check
+    // exists because a secret (the auth token) can end up here.
+    console.warn(
+      'EXPO_PUBLIC_SENTRY_DSN is set but is not a Sentry DSN in the EU region (…ingest.de.sentry.io); crash reporting is off.',
+    );
+    return undefined;
+  });
 
 /** `EXPO_PUBLIC_CRASH_TEST=1` opens `/crash-test`; anything else keeps it shut. */
 export const crashTestSchema = z
@@ -58,38 +66,71 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/giu;
 const EMAIL = /[^\s@()<>"',;:]+@[^\s@()<>"',;:]+\.[a-z]{2,}/giu;
 /** A JWT: a session's access token, or a signed photo URL's `token`. */
 const JWT = /eyJ[\w-]+\.[\w-]+\.[\w-]*/gu;
-/** `access_token=…`, `refresh_token=…`, `token=…`, `code=…` in a URL. */
-const SECRET_PARAM = /\b([a-z_]*token|code)=[^&#\s"']+/giu;
+/**
+ * Any `…token` named with its value: `refresh_token=…` in a URL,
+ * `"refresh_token":"…"` in serialized JSON. Supabase refresh tokens are
+ * short random strings, not JWTs, so only their name gives them away.
+ */
+const NAMED_TOKEN = /("?\b[a-z_]*token"?\s*[:=]\s*"?)[^"&#\s,;}']+/giu;
+/** `Authorization: Bearer …`, for a token that is not a JWT. */
+const BEARER = /\b(bearer\s+)[^\s"',;}]+/giu;
 
 /**
  * Account, match and message ids, e-mail addresses and tokens, replaced.
  * Tokens go first: a JWT's payload is the account id and the e-mail
- * address in base64, which the later patterns cannot see.
+ * address in base64, which the later patterns cannot see. Error codes
+ * (`code=23505`) stay: they tell reports apart and name no one.
  */
 export function scrub(text: string): string {
   return text
     .replace(JWT, '<token>')
-    .replace(SECRET_PARAM, '$1=<token>')
+    .replace(NAMED_TOKEN, '$1<token>')
+    .replace(BEARER, '$1<token>')
     .replace(UUID, '<id>')
     .replace(EMAIL, '<email>');
 }
 
 /**
- * A URL as a report may carry it: origin and path only, scrubbed. On the
- * web a Google or Apple sign-in comes back as
- * `/#access_token=…&refresh_token=…`, and supabase-js clears that only
- * after a round trip, so an error in the first render would otherwise
- * send a live session; a query can carry a signed photo's token. A value
- * that is not a URL loses everything from its first `?` or `#` the same
- * way.
+ * A URL as a report may carry it: everything from the first `?` or `#`
+ * dropped, the rest scrubbed. On the web a Google or Apple sign-in comes
+ * back as `/#access_token=…&refresh_token=…`, and supabase-js clears that
+ * only after a round trip, so an error in the first render would
+ * otherwise send a live session; a query can carry a signed photo's
+ * token. Cut as text rather than parsed, because the RN SDK rewrites
+ * frame file names to `app:///…`, a scheme `URL` gives no origin.
  */
 export function scrubUrl(value: string): string {
-  try {
-    const url = new URL(value);
-    return scrub(`${url.origin}${url.pathname}`);
-  } catch {
-    return scrub(value.replace(/[?#].*$/su, ''));
-  }
+  return scrub(value.replace(/[?#].*$/su, ''));
+}
+
+/** Every string in a value, scrubbed; objects and arrays walked. */
+function scrubAll(value: unknown): unknown {
+  if (typeof value === 'string') return scrub(value);
+  if (Array.isArray(value)) return value.map(scrubAll);
+  if (value !== null && typeof value === 'object')
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, scrubAll(entry)]),
+    );
+  return value;
+}
+
+/**
+ * A stack frame with its file cut like a URL. On the web, an error with
+ * no script URL gets a first frame whose `filename` is `location.href`,
+ * sign-in fragment included.
+ */
+function scrubFrame<T extends { filename?: string; abs_path?: string }>(
+  frame: T,
+): T {
+  return {
+    ...frame,
+    ...(frame.filename === undefined
+      ? {}
+      : { filename: scrubUrl(frame.filename) }),
+    ...(frame.abs_path === undefined
+      ? {}
+      : { abs_path: scrubUrl(frame.abs_path) }),
+  };
 }
 
 /**
@@ -106,16 +147,18 @@ function withoutDeviceHash(
 }
 
 /**
- * The event as it may leave the device: no user, no ids, no addresses, no
- * tokens. Breadcrumbs are not handled here because there are none:
- * `maxBreadcrumbs: 0` (below) stops both SDKs recording them, and that
- * option, not a filter, is what holds on the native path.
+ * The event as it may leave the device: no user and no device hash; page
+ * URLs, headers and stack-frame files cut at `?` and `#`; and then every
+ * string left in it scrubbed of tokens, ids and e-mail addresses, so a
+ * field nobody thought of is covered too. Breadcrumbs are not handled
+ * here because there are none: `maxBreadcrumbs: 0` (below) stops both
+ * SDKs recording them, and that option, not a filter, is what holds on
+ * the native path.
  */
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
   const { user: _user, ...rest } = event;
-  return {
+  const cut: ErrorEvent = {
     ...rest,
-    ...(rest.message === undefined ? {} : { message: scrub(rest.message) }),
     ...(rest.request === undefined
       ? {}
       : {
@@ -142,9 +185,14 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
             ...rest.exception,
             values: rest.exception.values.map((value) => ({
               ...value,
-              ...(value.value === undefined
+              ...(value.stacktrace?.frames === undefined
                 ? {}
-                : { value: scrub(value.value) }),
+                : {
+                    stacktrace: {
+                      ...value.stacktrace,
+                      frames: value.stacktrace.frames.map(scrubFrame),
+                    },
+                  }),
             })),
           },
         }),
@@ -157,6 +205,9 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
           },
         }),
   };
+  // why: scrubAll keeps the shape and only rewrites strings, so the
+  // result is still the event it was given.
+  return scrubAll(cut) as ErrorEvent;
 }
 
 /** What kind of build is reporting. */

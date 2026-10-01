@@ -50,33 +50,31 @@ const crash = checkCrashReporting(
   effectiveValue(process.env[CRASH_TEST_KEY], files, CRASH_TEST_KEY),
 );
 
-function refuse(reason: string): never {
+const ADDRESS_HINT =
+  'Yayına giden paket bu adresi ve anahtarı içine gömüyor ve kaynağı\n' +
+  'görüntüleyen herkes okuyabilir. Yerel, eksik ya da yanlış rollü bir\n' +
+  'değerle dağıtım, en iyi ihtimalle sadece bu makinede çalışan bir\n' +
+  'site demek.\n\n' +
+  'Kontrol et: apps/mobile altındaki .env* dosyaları hosted projeyi ve\n' +
+  'ANON anahtarı göstersin — service_role asla değil. Ve deploy\n' +
+  'komutunu `contracts/init.sh` çalıştırılmış bir kabuktan verme:\n' +
+  'kabuktaki değer dosyadakini ezer.\n';
+
+const CRASH_HINT =
+  'Kontrol et: apps/mobile altındaki .env* dosyaları ve bu kabuk.\n' +
+  'Çökme testi için konan EXPO_PUBLIC_CRASH_TEST kaldırılsın;\n' +
+  "EXPO_PUBLIC_SENTRY_DSN ya boş olsun ya da Sentry'deki AB projesinin\n" +
+  'DSN adresi (…ingest.de.sentry.io).\n';
+
+function refuse(reason: string, hint = ADDRESS_HINT): never {
   console.error(`\ndeploy durduruldu: ${reason}`);
-  console.error(
-    'Yayına giden paket bu adresi ve anahtarı içine gömüyor ve kaynağı\n' +
-      'görüntüleyen herkes okuyabilir. Yerel, eksik ya da yanlış rollü bir\n' +
-      'değerle dağıtım, en iyi ihtimalle sadece bu makinede çalışan bir\n' +
-      'site demek.\n\n' +
-      'Kontrol et: apps/mobile altındaki .env* dosyaları hosted projeyi ve\n' +
-      'ANON anahtarı göstersin — service_role asla değil. Ve deploy\n' +
-      'komutunu `contracts/init.sh` çalıştırılmış bir kabuktan verme:\n' +
-      'kabuktaki değer dosyadakini ezer.\n',
-  );
+  console.error(hint);
   process.exit(1);
 }
 
 if (!target.ok) refuse(target.reason);
 if (!key.ok) refuse(key.reason);
-if (!crash.ok) {
-  console.error(`\ndeploy durduruldu: ${crash.reason}`);
-  console.error(
-    'Kontrol et: apps/mobile altındaki .env* dosyaları ve bu kabuk.\n' +
-      'Çökme testi için konan EXPO_PUBLIC_CRASH_TEST kaldırılsın;\n' +
-      "EXPO_PUBLIC_SENTRY_DSN ya boş olsun ya da Sentry'deki AB projesinin\n" +
-      'DSN adresi (…ingest.de.sentry.io).\n',
-  );
-  process.exit(1);
-}
+if (!crash.ok) refuse(crash.reason, CRASH_HINT);
 
 console.log(
   `deploy hedefi: ${target.detail} (anahtar: ${key.detail}; ${crash.detail})`,

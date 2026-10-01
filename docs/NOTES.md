@@ -9244,3 +9244,27 @@ all fixed in this round:
   exists, the same `checkCrashReporting` should run before
   `eas build`/`eas update`, or a crash-test flag left in a `.env*` file
   ships to TestFlight.
+
+## 2026-10-01 — Metrics: review round 3
+
+The review of d4bd503 found the token leak's second path, and six
+smaller points, all fixed:
+
+- **Stack frames.** On the web, an error with no script URL gets a first
+  frame whose `filename` is `location.href`; the RN SDK rewrites it to
+  `app:///…` with the sign-in fragment intact, and `scrubEvent` passed
+  frames through. Seen on a web build of d4bd503 against the stand-in
+  ingest (fragment put back with `history.replaceState`, then an
+  `ErrorEvent` dispatched on `window`): the frame carried
+  `app:///welcome#access_token=…&refresh_token=…`. The same run on this
+  round's build sent `app:///welcome` and no token. Frames now go
+  through `scrubUrl` (cut at `?`/`#` as text, since `app:` has no
+  origin), and then every string in the event is scrubbed.
+- An opaque refresh token in JSON (`"refresh_token":"…"`) or behind
+  `Bearer` is now replaced; `code=` is no longer, so Postgres and HTTP
+  error codes survive.
+- A set but ignored DSN logs a console warning (without the value).
+- The deploy refusal names a rejected DSN's host, never the value, which
+  may be the auth token. One `refuse(reason, hint)` path.
+- Sentry ignores `window.onerror` events whose message is "Script
+  error." by default, which is why the check above used another message.

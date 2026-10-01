@@ -44,8 +44,9 @@ chose Sentry EU on 2026-10-01. ADR 0015 is the payments thread's.
   `sendDefaultPii: false` (the JS SDK then tells Sentry never to infer an
   IP), no screenshots, view hierarchy, tracing, replays or failed-request
   events. On the JS path, `scrubEvent` also removes the user, cuts URLs
-  (the page and the `Referer`) down to origin and path, and replaces
-  tokens, ids and e-mail addresses in messages and exceptions. The cut is
+  (the page, the `Referer` and stack-frame files) at `?` and `#`, and
+  then replaces tokens (JWTs, any `…token` named with its value, bearer
+  tokens), ids and e-mail addresses in every string left in the event. The cut is
   for the web's sign-in: Google and Apple come back to
   `/#access_token=…&refresh_token=…`, and supabase-js clears that
   fragment only after a round trip, so an error in the first render
