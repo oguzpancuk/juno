@@ -8935,7 +8935,20 @@ folder; each applied on today's main.
   consent form settles `record` once at mount, so accepting no longer
   turns the form back into a spinner for a moment before it leaves.
 
+- **Review round 1 (#20).** The widened Spanish list still let the pair
+  through before most verbs ("Los dos buscan…") and "ambos" mid-sentence
+  ("y ambos saben…"). The rule is inverted: "los dos", "las dos",
+  "ambos", "ambas" and "el otro" are people unless a body name
+  (capitalised) or a listed thing noun follows ("los dos Soles", "ambas
+  cosas", "en ambos casos", "el otro día"). "Son" counts only opening a
+  sentence ("Son muy parecidos"): after a subject it agreed with things
+  23 times in today's texts. Masculine -ón ("juguetón") and "blando"
+  are caught. Two texts that used "ambas" for things are reworded.
+
 ### Battery gaps
 
 - The consent form's spinner flash is not under a test: the web target
   has no component tests. `takeRevealFor` is.
+- The Spanish list is a heuristic. A thing noun missing from `THINGS`
+  after "los dos" or "ambos" fails the content test for a correct
+  sentence; the fix is to add the noun, not to reword the text.

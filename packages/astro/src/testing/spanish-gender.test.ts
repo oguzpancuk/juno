@@ -27,6 +27,19 @@ describe('spanishGenderHits', () => {
     'Todas saben lo que quieren.',
     'Aquí cada una elige.',
     'Están entrelazados desde el primer día.',
+    // Review of #20, round 1.
+    'Los dos buscan lo mismo.',
+    'Las dos necesitan tiempo.',
+    'Cuando ambos ceden, todo fluye.',
+    'Y ambos saben escuchar.',
+    'Hoy, ambos saben lo que quieren.',
+    'Lo construyen entre ambos.',
+    'Eres juguetón.',
+    'Te pones mandón.',
+    'Eres burlón.',
+    'Son muy parecidos.',
+    '¿Son distintos?',
+    'Eres blando.',
   ])('catches "%s"', (text) => {
     expect(spanishGenderHits(text)).not.toEqual([]);
   });
@@ -45,6 +58,12 @@ describe('spanishGenderHits', () => {
     'Eres mejor de lo que crees.',
     'Todas las casas cuentan.',
     'El otro lado del espejo.',
+    // Review of #20, round 1.
+    'Ambas cosas son posibles.',
+    'El otro día hablamos.',
+    'Buscas el otro camino.',
+    'Ambos Soles brillan.',
+    'Tus emociones son profundas.',
   ])('lets "%s" through', (text) => {
     expect(spanishGenderHits(text)).toEqual([]);
   });

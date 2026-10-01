@@ -32,26 +32,55 @@ const INVARIABLE = new Set([
   'marca',
 ]);
 
+/** Adjectives in -ando, which the gerund test below would let through. */
+const NOT_GERUNDS = new Set(['blando', 'nefando', 'infando', 'venerando']);
+
 /**
- * "(te sientes|eres|…) (muy )?seguro": the verb and its adjective, which
- * ends in -o/-a or, masculine only, in -dor/-tor ("encantador"). "Es" and
- * "está" are left out: they agree with things far more often than with a
- * person.
+ * What "los dos", "ambos" or "el otro" may name instead of people: a body
+ * ("los dos Soles", capitalised) or one of these nouns. Anything else after
+ * them, a verb above all ("los dos buscan"), is the pair or the other
+ * person. Matched case-sensitively, so a capital means a body name.
  */
-const PREDICATE =
-  /(^|[^\p{L}])(te sientes|sentirte|sentirse|se siente|se sienten|eres|estás|estar|están|pareces|te ves|verte|te pones|ponerte|te quedas|quedarte|te vuelves|volverte) (muy |tan |más |demasiado )?(\p{L}+(?:[oa]s?|[dt]or(?:es)?))(?![\p{L}])/giu;
+const THINGS =
+  'cosas|casos|partes|posturas|caras|lados|polos|extremos|mundos|ritmos|planetas|signos|aspectos|casas|elementos|energías|fuerzas|direcciones|necesidades|maneras|formas|caminos';
+const THING =
+  'lado|extremo|polo|día|camino|aspecto|planeta|signo|momento|punto|mundo|tiempo';
+const notAThing = (nouns: string): string =>
+  `(?! (\\p{Lu}|(${nouns})(?![\\p{L}])))`;
+
+/** The adjective after a predicate verb: -o/-a, or masculine -dor/-tor/-ón. */
+const ADJECTIVE = String.raw`(muy |tan |más |demasiado )?(\p{L}+(?:[oa]s?|[dt]or(?:es)?|ón|ones))(?![\p{L}])`;
+
+/**
+ * "(te sientes|eres|…) (muy )?seguro": the verb and its adjective
+ * ("encantador", "juguetón" included). "Es" and "está" are left out: they
+ * agree with things far more often than with a person. So is "son" after
+ * its subject (23 times in the texts of 2026-10-01: "tus emociones son
+ * profundas"); "son" with no subject before it, opening a sentence, is the
+ * pair ("Son muy parecidos").
+ */
+const PREDICATES = [
+  new RegExp(
+    String.raw`(^|[^\p{L}])(te sientes|sentirte|sentirse|se siente|se sienten|eres|estás|estar|están|pareces|te ves|verte|te pones|ponerte|te quedas|quedarte|te vuelves|volverte) ${ADJECTIVE}`,
+    'giu',
+  ),
+  new RegExp(String.raw`(^|[.;:!?¿¡]\s*)(son) ${ADJECTIVE}`, 'giu'),
+];
 
 export const SPANISH_PERSON_FORMS: readonly RegExp[] = [
   /(^|[^\p{L}])junt[oa]s(?![\p{L}])/iu,
   /(^|[^\p{L}])(el uno|la una)(?![\p{L}])/iu,
   // "del otro", "al otro", "el otro", but not "el otro lado".
-  /(^|[^\p{L}])(del|al|el) otro(?![\p{L}])(?! (lado|extremo|polo))/iu,
-  // "los dos" or "las dos" alone is a pair; "los dos Soles" is not, but
-  // "los dos se quieren" is.
-  /(^|[^\p{L}])(los|las) dos(?![\p{L}])(?! (?!(se|son|saben|pueden|tienen|quieren|están)(?![\p{L}]))\p{L})/iu,
-  // "ambos" after a preposition or opening a sentence ("Ambos saben…").
-  /(^|[^\p{L}])(para|a|de|con) (ambos|ambas)(?![\p{L}])/iu,
-  /(^|[.;:!?¿¡]\s*)(ambos|ambas)(?![\p{L}])/iu,
+  new RegExp(
+    `(^|[^\\p{L}])([Dd]el|[Aa]l|[Ee]l) otro(?![\\p{L}])${notAThing(THING)}`,
+    'u',
+  ),
+  // "los dos", "las dos", "ambos", "ambas" are the pair unless a thing
+  // follows: "los dos se quieren", "entre ambos", but "los dos Soles".
+  new RegExp(
+    `(^|[^\\p{L}])([Ll]os dos|[Ll]as dos|[Aa]mbos|[Aa]mbas)(?![\\p{L}])${notAThing(THINGS)}`,
+    'u',
+  ),
   /(^|[^\p{L}])nosotr[oa]s(?![\p{L}])/iu,
   /(^|[^\p{L}])(tú|ti|sí|uno|ustedes) mism[oa]s?(?![\p{L}])/iu,
   /(^|[^\p{L}])(cada uno|cada una|uno por uno|los demás|(otros|los) usuarios)(?![\p{L}])/iu,
@@ -68,11 +97,12 @@ export function spanishGenderHits(text: string): string[] {
     const found = form.exec(text);
     if (found) hits.push(found[0].trim());
   }
-  for (const found of text.matchAll(PREDICATE)) {
-    const word = (found[4] ?? '').toLocaleLowerCase('es');
-    // A gerund ("estás acercando") agrees with nobody; "profundo" does.
-    if (!INVARIABLE.has(word) && !/(ando|iendo|yendo)$/.test(word))
-      hits.push(found[0].trim());
-  }
+  for (const predicate of PREDICATES)
+    for (const found of text.matchAll(predicate)) {
+      const word = (found[4] ?? '').toLocaleLowerCase('es');
+      // A gerund ("estás acercando") agrees with nobody; "profundo" does.
+      const gerund = /(ando|iendo|yendo)$/.test(word) && !NOT_GERUNDS.has(word);
+      if (!INVARIABLE.has(word) && !gerund) hits.push(found[0].trim());
+    }
   return hits;
 }
