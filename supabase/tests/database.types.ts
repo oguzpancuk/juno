@@ -127,6 +127,48 @@ export type Database = {
         }
         Relationships: []
       }
+      entitlements: {
+        Row: {
+          active: boolean
+          environment: string
+          expires_at: string
+          last_event_at: string
+          last_event_id: string
+          last_event_type: string
+          original_transaction_id: string | null
+          product_id: string
+          store: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active: boolean
+          environment: string
+          expires_at: string
+          last_event_at: string
+          last_event_id: string
+          last_event_type: string
+          original_transaction_id?: string | null
+          product_id: string
+          store: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          environment?: string
+          expires_at?: string
+          last_event_at?: string
+          last_event_id?: string
+          last_event_type?: string
+          original_transaction_id?: string | null
+          product_id?: string
+          store?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -788,10 +830,12 @@ export type Database = {
     }
     Functions: {
       abandon_empty_account: { Args: never; Returns: boolean }
+      apply_revenuecat_event: { Args: { event: Json }; Returns: string }
       birth_instant: {
         Args: { city_id: number; local_time: string }
         Returns: string
       }
+      expire_entitlements: { Args: never; Returns: number }
       profile_location_text: { Args: { profile_id: string }; Returns: string }
     }
     Enums: {

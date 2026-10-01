@@ -8952,3 +8952,65 @@ folder; each applied on today's main.
 - The Spanish list is a heuristic. A thing noun missing from `THINGS`
   after "los dos" or "ambos" fails the content test for a correct
   sentence; the fix is to add the noun, not to reword the text.
+
+## 2026-10-01 — Payments, PR 1: the entitlement on the server
+
+ROADMAP: "Payments: premium bought in the App Store" is a new v1 item after
+TestFlight (the owner pulled it out of Deferred, "1", 2026-10-01); this is
+the first of its four pull requests. ADR-0015 has the decision,
+`docs/payments-setup.md` the owner's steps.
+
+- `public.entitlements`, one row per member, written only by
+  `public.apply_revenuecat_event` (service role). The rules are in SQL so
+  ordering and a transfer's two-account write are one transaction.
+  `revenuecat-webhook` checks the Authorization header against
+  `REVENUECAT_WEBHOOK_AUTH`, validates with Zod, drops what the rules do
+  not read, and calls it. JWT check off for that function in config.toml.
+- Expiry without a webhook: `public.expire_entitlements()` on pg_cron
+  every five minutes. `active` on the row is what it last told the
+  profile, so the flag only moves when the purchase changes state.
+- The member's `is_premium` grant stays until PR 3, so the free tap keeps
+  working until there is something to buy (plan.md's split; the owner was
+  asked on a card, default taken meanwhile). The question about today's
+  self-granted members moves with the grant to PR 3.
+- No Docker here: the payments suite (`tests/payments.test.ts`) runs in
+  CI's `verify` job. The SQL was run on a plain PostgreSQL 16 cluster with
+  Supabase stubbed (harness in
+  `/mnt/project-files/premium-payments/pr1-sql-harness/`): red before the
+  migration (function missing), red with the refund clause and the
+  ordering guard removed (a refund left the member premium, an older
+  EXPIRATION took premium away), green on the migration.
+- The local test value of the webhook header: the function falls back to
+  `LOCAL_STACK_AUTH` only when `REVENUECAT_WEBHOOK_AUTH` is unset and
+  `SUPABASE_URL` is the CLI's internal `http://kong:8000`. Three places
+  the CLI (2.117) loads were read and refused: `supabase/functions/.env`
+  (where real local secrets go; the first version un-ignored it, review
+  round 1); `[edge_runtime.secrets]` (`supabase secrets set NAME=…` pushes
+  every entry of that table to the hosted project with the one named, so
+  a test value there would overwrite the real secret); and
+  `[functions.<slug>.env]` (round 1's second try: its values must be
+  `env(…)` references, and a literal fails config parsing — `supabase
+start` died with `CliConfigParseError` in CI). `npx supabase@2.117.0
+start --debug` parses the config before it needs Docker, so a thread
+  can check a config.toml change without containers. `database.types.ts`
+  was edited by hand to what `gen types` should produce;
+  `types-drift.test.ts` in CI is the check.
+
+- Review round 1 (four findings, all fixed): JSON `null` lists made a
+  TRANSFER raise (`cannot extract elements from a scalar`) and fail every
+  retry; a TRANSFER to an anonymous id demoted the payer and gave premium
+  to nobody; only `app_user_id` was read, so a purchase made before
+  `logIn` was ignored; a member had to have a profile, so a purchase
+  mid-onboarding was ignored. All four were 200s or permanent 500s that
+  RevenueCat would never usefully retry — the lesson for any webhook
+  here: "ignored" is final, so only answer it when the event can never
+  mean anything. Each seen red on the harness first.
+
+### Upstream candidates
+
+- CLAUDE.md's privacy rule (name processing infrastructure "in the same
+  change that puts it in the path") puts RevenueCat in the privacy notice
+  in PR 2, the app's SDK, not PR 3 as plan.md had it. ADR-0015 says PR 2.
+- `docs/project-instructions.md` "About" still lists payments and English
+  UI under Deferred; /mvp-scope should be re-run and the field pasted
+  again.
