@@ -18,8 +18,9 @@ import {
  * the sweep that ends what a lost webhook would leave running.
  *
  * The function runs on the local edge runtime. The Authorization value
- * RevenueCat would send is read from supabase/functions/.env, the file
- * `supabase start` loads into that runtime, so the two cannot drift.
+ * RevenueCat would send is read from the function's local `env` in
+ * supabase/config.toml, which `supabase start` gives that runtime, so the
+ * two cannot drift.
  */
 
 const admin = adminClient();
@@ -30,17 +31,20 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
 const AUTH = (() => {
-  const env = readFileSync(
-    new URL('../functions/.env', import.meta.url),
+  const config = readFileSync(
+    new URL('../config.toml', import.meta.url),
     'utf8',
   );
-  const line = env
-    .split('\n')
-    .find((entry) => entry.startsWith('REVENUECAT_WEBHOOK_AUTH='));
-  if (!line) {
-    throw new Error('supabase/functions/.env has no REVENUECAT_WEBHOOK_AUTH');
+  const section = config.split('[functions.revenuecat-webhook.env]')[1];
+  const value = section
+    ?.split(/\n\[/, 1)[0]
+    ?.match(/^REVENUECAT_WEBHOOK_AUTH\s*=\s*"([^"]+)"/m)?.[1];
+  if (!value) {
+    throw new Error(
+      'supabase/config.toml has no REVENUECAT_WEBHOOK_AUTH under [functions.revenuecat-webhook.env]',
+    );
   }
-  return line.slice('REVENUECAT_WEBHOOK_AUTH='.length).trim();
+  return value;
 })();
 
 const endpoint = (): string =>
@@ -391,14 +395,18 @@ describe('what an event does', () => {
 describe('when no webhook comes', () => {
   it('the sweep ends a purchase whose time is up', async () => {
     const kaan = await member('kaan');
-    await post(
-      event('INITIAL_PURCHASE', kaan.id, {
-        expiration_at_ms: Date.now() + 1500,
-      }),
-    );
+    await post(event('INITIAL_PURCHASE', kaan.id));
     expect((await premiumOf(kaan)).is_premium).toBe(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // The expiry passes with no webhook: moved into the past by hand
+    // rather than waited for, so no request latency is in the test.
+    const moved = await admin
+      .from('entitlements')
+      .update({ expires_at: new Date(Date.now() - HOUR).toISOString() })
+      .eq('user_id', kaan.id);
+    expect(moved.error).toBeNull();
+    expect((await premiumOf(kaan)).is_premium).toBe(true);
+
     // No count asserted: pg_cron runs the same sweep every five minutes
     // and may have got there first. What matters is the flag.
     const swept = await admin.rpc('expire_entitlements');

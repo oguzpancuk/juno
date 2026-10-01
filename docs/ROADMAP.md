@@ -769,7 +769,7 @@ code-reviewer run, remotes + CI (`ci.yml`) live, NOTES entry written.
       shows the subscription screen on the web target (screenshot); a
       sandbox purchase and a Restore unlock premium on a device (manual,
       the owner's check).
-      _Server side built (PR 1): `20261001000001_entitlements.sql` and
+      _Server side built (PR 1): `20261001130001_entitlements.sql` and
       `supabase/functions/revenuecat-webhook`, driven by
       `supabase/tests/payments.test.ts`. The member's grant stays until
       PR 3, so today's free tap keeps working until there is something

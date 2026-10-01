@@ -468,6 +468,17 @@ deno_version = 2
 [functions.revenuecat-webhook]
 verify_jwt = false
 
+# The LOCAL edge runtime's value for the webhook's Authorization header:
+# what tests/payments.test.ts sends as RevenueCat would. Not a secret, and
+# not where a secret goes. A function's `env` here is given only to the
+# local runtime: `supabase functions deploy` does not send it and
+# `supabase secrets set` does not read it (it reads [edge_runtime.secrets],
+# which is why the value is not there). The hosted project gets its own
+# value with `npx supabase secrets set REVENUECAT_WEBHOOK_AUTH=...`
+# (docs/payments-setup.md).
+[functions.revenuecat-webhook.env]
+REVENUECAT_WEBHOOK_AUTH = "Bearer local-stack-only"
+
 [analytics]
 enabled = true
 port = 54327

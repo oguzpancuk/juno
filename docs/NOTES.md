@@ -8929,12 +8929,16 @@ the first of its four pull requests. ADR-0015 has the decision,
   migration (function missing), red with the refund clause and the
   ordering guard removed (a refund left the member premium, an older
   EXPIRATION took premium away), green on the migration.
-- The local test value of the webhook header is in
-  `supabase/functions/.env`, which `supabase start` loads into the edge
-  runtime (CLI 2.117: `envFile` unset falls back to that path); the root
-  `.gitignore` has an exception for it. `database.types.ts` was edited by
-  hand to what `gen types` should produce; `types-drift.test.ts` in CI is
-  the check.
+- The local test value of the webhook header is in config.toml under
+  `[functions.revenuecat-webhook.env]`, which the CLI (2.117) gives only to
+  the local runtime. Two other places were read in the CLI and refused:
+  `supabase/functions/.env` (the usual home of real local secrets; the
+  first version un-ignored it, review round 1) and `[edge_runtime.secrets]`
+  (`supabase secrets set NAME=…` pushes every entry of that table to the
+  hosted project along with the one named, so a test value there would
+  overwrite the real secret). `database.types.ts` was edited by hand to
+  what `gen types` should produce; `types-drift.test.ts` in CI is the
+  check.
 
 - Review round 1 (four findings, all fixed): JSON `null` lists made a
   TRANSFER raise (`cannot extract elements from a scalar`) and fail every

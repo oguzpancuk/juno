@@ -103,5 +103,8 @@ Deleting an account deletes its `entitlements` row by cascade from
 it in iOS Settings; App Store guideline 5.1.1(v) wants the delete screen
 to say so, which is PR 3.
 
+Undoing this in one commit: `select cron.unschedule('expire-entitlements')`,
+then drop the trigger on `profiles`, the functions and the table.
+
 Enabling pg_cron is new infrastructure in the hosted database, inside
 Postgres; it carries no personal data off the server.
